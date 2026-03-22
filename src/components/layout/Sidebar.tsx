@@ -101,7 +101,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       <div className="px-4 py-5 border-b border-[#2a2a4a] flex items-center justify-between">
         <div>
           <div className="text-[#64ffda] font-bold text-sm tracking-widest uppercase">
-            ATT&amp;CK
+            MITRE ATT&amp;CK
           </div>
           <div className="text-[#8892b0] text-xs mt-0.5">Explorer Plus</div>
         </div>
