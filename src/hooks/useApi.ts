@@ -265,3 +265,11 @@ export function useExternalActors(params: Record<string, string> = {}) {
     queryFn: () => apiFetch<PaginatedResponse<ExternalActor>>('/external-actors', params),
   });
 }
+
+export function useExternalActorByGroup(mitreGroupId: string) {
+  return useQuery({
+    queryKey: ['external-actor-by-group', mitreGroupId],
+    queryFn: () => apiFetch<{ data: ExternalActor[] }>(`/external-actors?mitre_group=${mitreGroupId}&limit=10`),
+    enabled: Boolean(mitreGroupId),
+  });
+}

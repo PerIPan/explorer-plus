@@ -12,6 +12,7 @@ const querySchema = paginationSchema.extend({
   country: z.string().max(20).optional(),
   category: z.string().max(50).optional(),
   source: z.string().max(50).optional(),
+  mitre_group: z.string().max(20).optional(),
 });
 
 async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
@@ -25,7 +26,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     return;
   }
 
-  const { page, limit, sort, order, search, country, category, source } = parsed.data;
+  const { page, limit, sort, order, search, country, category, source, mitre_group } = parsed.data;
   const sortCol = sort ?? 'name';
   const SORT_MAP: Record<string, string> = { name: "ea.name", country: "ea.country", category: "ea.category", source: "ea.source" };
   const sortClause = `ORDER BY ${SORT_MAP[sortCol] ?? "ea.name"} ${order === "desc" ? "DESC" : "ASC"}`;
@@ -54,6 +55,11 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   if (source) {
     params.push(source);
     conditions.push(`ea.source = $${params.length}`);
+  }
+
+  if (mitre_group) {
+    params.push(mitre_group);
+    conditions.push(`ea.mitre_group_id = $${params.length}`);
   }
 
   const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';

@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { useGroup, useCampaign } from '../../hooks/useApi';
+import { useGroup, useCampaign, useExternalActorByGroup } from '../../hooks/useApi';
 import { EntityLink } from '../shared/EntityLink';
 import { Badge } from '../shared/Badge';
-import type { GroupTechnique, GroupSoftware, GroupCampaign, GroupSector } from '../../lib/types';
+import type { GroupTechnique, GroupSoftware, GroupCampaign, GroupSector, ExternalActor } from '../../lib/types';
 
 // ── Tactic ordering ────────────────────────────────────────────────────────────
 
@@ -292,6 +292,7 @@ interface ActorProfileViewProps {
 export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps) {
   const groupResult = useGroup(entityType === 'group' ? attackId : '');
   const campaignResult = useCampaign(entityType === 'campaign' ? attackId : '');
+  const thaiCertResult = useExternalActorByGroup(entityType === 'group' ? attackId : '');
 
   const isLoading = entityType === 'group' ? groupResult.isLoading : campaignResult.isLoading;
   const error = entityType === 'group' ? groupResult.error : campaignResult.error;
@@ -374,6 +375,70 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
         {software.length > 0 && (
           <CollapsibleSection title="Software Arsenal" count={software.length} defaultOpen>
             <SoftwareArsenal software={software} />
+          </CollapsibleSection>
+        )}
+
+        {/* ThaiCERT Extended Intelligence */}
+        {thaiCertResult.data?.data && thaiCertResult.data.data.length > 0 && (
+          <CollapsibleSection
+            title="ThaiCERT Intelligence"
+            count={thaiCertResult.data.data.length}
+            defaultOpen
+          >
+            <div className="space-y-3">
+              {thaiCertResult.data.data.map((actor: ExternalActor) => (
+                <div key={actor.id} className="bg-[#0a0a1a] border border-[#2a2a4a] rounded-lg p-4 space-y-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-sm font-medium text-[#94a3b8]">{actor.name}</span>
+                    <Badge label="ThaiCERT / ETDA" variant="neutral" />
+                    {actor.country && <Badge label={actor.country} variant="blue" />}
+                    {actor.attributionConfidence && (
+                      <span className="text-[10px] text-[#8892b0]">confidence: {actor.attributionConfidence}</span>
+                    )}
+                  </div>
+                  {actor.motivation && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-[#8892b0]">Motivation:</span>
+                      <span className="text-xs text-[#ccd6f6]">{actor.motivation}</span>
+                    </div>
+                  )}
+                  {actor.suspectedStateSponsor && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-[#8892b0]">State sponsor:</span>
+                      <Badge label={actor.suspectedStateSponsor} variant="orange" />
+                    </div>
+                  )}
+                  {actor.suspectedVictims && actor.suspectedVictims.length > 0 && (
+                    <div>
+                      <span className="text-xs text-[#8892b0]">Suspected victims:</span>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {actor.suspectedVictims.map((v) => (
+                          <Badge key={v} label={v} variant="purple" />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {actor.targetCategories && actor.targetCategories.length > 0 && (
+                    <div>
+                      <span className="text-xs text-[#8892b0]">Target categories:</span>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {actor.targetCategories.map((c) => (
+                          <Badge key={c} label={c} variant="green" />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {actor.refs && actor.refs.length > 0 && (
+                    <div>
+                      <span className="text-xs text-[#8892b0]">{actor.refs.length} references</span>
+                    </div>
+                  )}
+                </div>
+              ))}
+              <p className="text-[10px] text-[#4a4a6a] pt-1">
+                Source: ThaiCERT / ETDA Threat Actor Encyclopedia — not affiliated with MITRE
+              </p>
+            </div>
           </CollapsibleSection>
         )}
 
