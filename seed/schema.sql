@@ -368,6 +368,7 @@ CREATE TABLE IF NOT EXISTS feed_sync_log (
   records_inserted  INTEGER      NOT NULL DEFAULT 0,
   records_skipped   INTEGER      NOT NULL DEFAULT 0,
   error_message     TEXT,
+  metadata          JSONB,
   UNIQUE (source, started_at)
 );
 
