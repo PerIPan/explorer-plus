@@ -61,18 +61,19 @@ export function DataSourceDetail() {
             Data Components ({data.components.length})
           </h3>
           <div className="space-y-3">
-            {data.components.map((comp) => {
-              const compDesc = comp.description
-                ? sanitize(sanitizeMarkdown(comp.description))
-                : null;
+            {data.components.map((comp: any) => {
+              const name = comp.componentName ?? comp.name ?? '';
+              const desc = comp.componentDescription ?? comp.description ?? '';
+              const compDesc = desc ? sanitize(sanitizeMarkdown(desc)) : null;
+              const key = comp.componentId ?? comp.id ?? name;
               return (
                 <div
-                  key={comp.id}
+                  key={key}
                   className="border border-[#2a2a4a] rounded-lg p-3 bg-[#1a1a2e]"
                 >
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-sm font-medium text-[#f472b6]">
-                      {comp.name}
+                      {name}
                     </span>
                   </div>
                   {compDesc && (
