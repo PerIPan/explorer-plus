@@ -91,38 +91,84 @@ export function Relationships() {
         subtitle="D3 force graph — click a node to expand its connections"
       />
 
-      {/* Entity search */}
-      <div className="relative max-w-lg" ref={containerRef}>
-        <input
-          type="text"
-          value={searchInput}
-          onChange={(e) => {
-            setSearchInput(e.target.value);
-            setShowSuggestions(true);
-          }}
-          onFocus={() => setShowSuggestions(true)}
-          onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-          placeholder="Search for a technique, group, software... (ATT&CK ID or name)"
-          className="w-full px-4 py-2 rounded-md text-sm bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6] placeholder-[#8892b0] focus:outline-none focus:border-[#64ffda]"
-        />
+      {/* Entity search — combobox with autocomplete dropdown */}
+      <div className="relative max-w-2xl" ref={containerRef}>
+        <div className={`flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#16213e] border transition-colors ${showSuggestions && suggestions.length > 0 ? 'border-[#64ffda] rounded-b-none' : 'border-[#2a2a4a]'} focus-within:border-[#64ffda]`}>
+          <svg className="w-4 h-4 text-[#8892b0] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          {selectedId && !showSuggestions && graphData?.center && (
+            <Badge
+              label={graphData.center.type.replace('_', ' ')}
+              variant={TYPE_VARIANT[graphData.center.type] ?? 'neutral'}
+            />
+          )}
+          <input
+            type="text"
+            value={searchInput}
+            onChange={(e) => {
+              setSearchInput(e.target.value);
+              setShowSuggestions(true);
+            }}
+            onFocus={() => {
+              setShowSuggestions(true);
+              if (selectedId) setSearchInput('');
+            }}
+            onBlur={() => setTimeout(() => {
+              setShowSuggestions(false);
+              if (!searchInput && selectedId && graphData?.center) {
+                setSearchInput(graphData.center.name);
+              }
+            }, 200)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                setShowSuggestions(false);
+                (e.target as HTMLInputElement).blur();
+              }
+              if (e.key === 'Enter' && suggestions.length > 0) {
+                selectEntity(suggestions[0].attackId);
+              }
+            }}
+            placeholder={selectedId ? 'Search for another entity...' : 'Type to search: APT29, PowerShell, T1059...'}
+            className="flex-1 bg-transparent text-sm text-[#ccd6f6] placeholder-[#8892b0] focus:outline-none"
+          />
+          {searchInput && (
+            <button
+              type="button"
+              onClick={() => { setSearchInput(''); setShowSuggestions(false); }}
+              className="text-[#8892b0] hover:text-[#ccd6f6] text-xs"
+            >
+              Clear
+            </button>
+          )}
+        </div>
 
         {showSuggestions && suggestions.length > 0 && (
-          <div className="absolute top-full mt-1 w-full z-50 bg-[#16213e] border border-[#2a2a4a] rounded-lg shadow-xl overflow-hidden">
-            {suggestions.map((s) => (
+          <div className="absolute top-full w-full z-50 bg-[#16213e] border border-t-0 border-[#64ffda] rounded-b-lg shadow-2xl overflow-hidden max-h-80 overflow-y-auto">
+            <div className="px-3 py-1.5 text-[10px] uppercase tracking-wider text-[#8892b0] bg-[#0a0a1a]">
+              {suggestions.length} results — click to explore
+            </div>
+            {suggestions.map((s, i) => (
               <button
                 key={s.attackId}
                 type="button"
                 onMouseDown={() => selectEntity(s.attackId)}
-                className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-[#ffffff08] transition-colors text-left"
+                className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-[#64ffda10] transition-colors text-left ${i === 0 ? 'bg-[#ffffff05]' : ''}`}
               >
                 <Badge
                   label={s.type.replace('_', ' ')}
                   variant={TYPE_VARIANT[s.type] ?? 'neutral'}
                 />
-                <span className="font-mono text-xs text-[#8892b0]">{s.attackId}</span>
+                <span className="font-mono text-xs text-[#64ffda] w-20 flex-shrink-0">{s.attackId}</span>
                 <span className="text-sm text-[#ccd6f6] truncate">{s.name}</span>
               </button>
             ))}
+          </div>
+        )}
+
+        {showSuggestions && searchInput.length >= 3 && suggestions.length === 0 && (
+          <div className="absolute top-full w-full z-50 bg-[#16213e] border border-t-0 border-[#64ffda] rounded-b-lg shadow-2xl p-4 text-center text-sm text-[#8892b0]">
+            No results for "{searchInput}"
           </div>
         )}
       </div>
