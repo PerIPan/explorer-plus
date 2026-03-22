@@ -24,7 +24,7 @@ const NODES: ModelNode[] = [
   // Core ATT&CK — spread out to avoid line overlaps
   { id: 'sector', label: 'Sector', x: 80, y: 60, color: '#f472b6', bg: '#f472b618', path: '/sectors', description: 'Industries targeted by threat groups', category: 'core' },
   { id: 'group', label: 'Threat Group', x: 80, y: 200, color: '#f97316', bg: '#f9731618', path: '/groups', description: 'Tracked adversary groups (APT29, Lazarus, etc.)', category: 'core' },
-  { id: 'campaign', label: 'Campaign', x: 280, y: 100, color: '#60a5fa', bg: '#60a5fa18', path: '/campaigns', description: 'Named intrusion operations with timelines', category: 'core' },
+  { id: 'campaign', label: 'Campaign', x: 380, y: 80, color: '#60a5fa', bg: '#60a5fa18', path: '/campaigns', description: 'Named intrusion operations with timelines', category: 'core' },
   { id: 'software', label: 'Software', x: 80, y: 380, color: '#a78bfa', bg: '#a78bfa18', path: '/software', description: 'Malware and tools used in attacks', category: 'core' },
   { id: 'technique', label: 'Technique', x: 480, y: 300, color: '#64ffda', bg: '#64ffda18', path: '/techniques', description: 'Attack methods and sub-techniques used by adversaries', category: 'core' },
   { id: 'tactic', label: 'Tactic', x: 300, y: 480, color: '#fbbf24', bg: '#fbbf2418', path: '/tactics', description: 'Kill chain phases: Reconnaissance to Impact', category: 'core' },
@@ -42,7 +42,7 @@ const NODES: ModelNode[] = [
   // Intelligence (below technique)
   { id: 'report', label: 'Threat Reports', x: 480, y: 520, color: '#f97316', bg: '#f9731618', path: '/cti/reports', description: 'Live threat intelligence from OTX, RSS feeds', category: 'intelligence' },
   { id: 'atomic', label: 'Atomic Tests', x: 600, y: 600, color: '#ef4444', bg: '#ef444418', path: '/techniques', description: 'red team test procedures per technique', category: 'intelligence' },
-  { id: 'thaicert', label: 'ETDA Actors', x: 30, y: 30, color: '#94a3b8', bg: '#94a3b818', path: '/external-actors', description: '500+ extended threat actors from ThaiCERT encyclopedia', category: 'intelligence' },
+  { id: 'thaicert', label: 'ETDA Actors', x: 220, y: 30, color: '#94a3b8', bg: '#94a3b818', path: '/external-actors', description: '500+ extended threat actors from ThaiCERT encyclopedia', category: 'intelligence' },
 ];
 
 const EDGES: ModelEdge[] = [
