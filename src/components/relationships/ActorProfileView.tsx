@@ -437,7 +437,7 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
 
         {/* Techniques — last, largest section */}
         {techniques.length > 0 && (
-          <CollapsibleSection title="Techniques" count={techniques.length}>
+          <CollapsibleSection title="Techniques" count={techniques.length} defaultOpen>
             <TechniquesByTactic techniques={techniques} />
           </CollapsibleSection>
         )}
