@@ -2,6 +2,7 @@ import { lazy, Suspense, useState } from 'react';
 import { Routes, Route, Outlet } from 'react-router-dom';
 import { Sidebar } from './components/layout/Sidebar';
 import { SearchBar } from './components/layout/SearchBar';
+import { RelationshipModel } from './components/relationships/RelationshipModel';
 
 // Lazy-loaded pages
 const Dashboard       = lazy(() => import('./pages/Dashboard').then((m) => ({ default: m.Dashboard })));
@@ -47,6 +48,7 @@ function LoadingSpinner() {
 /** Root layout — sidebar + top bar + page content */
 function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [modelOpen, setModelOpen] = useState(false);
 
   return (
     <div className="flex min-h-screen bg-[#0a0a1a]">
@@ -84,6 +86,14 @@ function Layout() {
             </svg>
           </button>
           <SearchBar />
+          <button
+            type="button"
+            onClick={() => setModelOpen(true)}
+            className="flex-shrink-0 px-3 py-1.5 text-xs rounded-md border border-[#2a2a4a] text-[#8892b0] hover:text-[#64ffda] hover:border-[#64ffda33] transition-colors"
+            title="ATT&CK relationship model"
+          >
+            Model
+          </button>
         </header>
 
         {/* Page content */}
@@ -91,6 +101,8 @@ function Layout() {
           <Outlet />
         </main>
       </div>
+
+      <RelationshipModel open={modelOpen} onClose={() => setModelOpen(false)} />
     </div>
   );
 }
@@ -112,8 +124,11 @@ export default function App() {
     <Routes>
       <Route element={<Layout />}>
         <Route element={<Suspense fallback={<LoadingSpinner />}><Outlet /></Suspense>}>
+          {/* Relationships is the default landing page */}
+          <Route index element={<Relationships />} />
+          <Route path="relationships" element={<Relationships />} />
+
           {/* Dashboard */}
-          <Route index element={<Matrix />} />
           <Route path="dashboard" element={<Dashboard />} />
 
           {/* Matrix */}
@@ -152,7 +167,6 @@ export default function App() {
           <Route path="sectors/:sectorName" element={<SectorDetail />} />
 
           {/* Relationships */}
-          <Route path="relationships" element={<Relationships />} />
 
           {/* Search */}
           <Route path="search" element={<Search />} />

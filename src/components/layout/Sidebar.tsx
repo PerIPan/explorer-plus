@@ -19,7 +19,9 @@ interface NavSection {
 const mainSections: NavSection[] = [
   {
     items: [
-      { path: '/', label: 'Matrix', tooltip: 'att&ck technique matrix heatmap — tactics vs techniques' },
+      { path: '/', label: 'Relationships', tooltip: 'explore entity connections — graph, actor profiles, technique maps' },
+      { path: '/matrix', label: 'Matrix', tooltip: 'att&ck technique matrix heatmap — tactics vs techniques' },
+      { path: '/dashboard', label: 'Overview', tooltip: 'summary stats, charts, and top threat groups' },
     ],
   },
   {
@@ -43,12 +45,6 @@ const mainSections: NavSection[] = [
     items: [
       { path: '/mitigations', label: 'Mitigations', tooltip: 'countermeasures to prevent or limit techniques' },
       { path: '/data-sources', label: 'Data Sources', tooltip: 'telemetry sources for detecting techniques' },
-    ],
-  },
-  {
-    items: [
-      { path: '/relationships', label: 'Relationships', tooltip: 'd3 force graph — explore entity connections visually' },
-      { path: '/dashboard', label: 'Overview', tooltip: 'summary stats, charts, and top threat groups' },
     ],
   },
 ];
