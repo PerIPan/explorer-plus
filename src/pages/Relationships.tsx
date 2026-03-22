@@ -4,9 +4,12 @@ import { useRelationships, useSearch } from '../hooks/useApi';
 import { PageHeader } from '../components/layout/PageHeader';
 import { ForceGraph, type ForceGraphHandle } from '../components/graph/ForceGraph';
 import { Badge } from '../components/shared/Badge';
+import { ActorProfileView } from '../components/relationships/ActorProfileView';
+import { TechniqueMapView } from '../components/relationships/TechniqueMapView';
 import type { GraphNode } from '../lib/types';
 
-/** Entity type → badge variant */
+// ── Entity type → badge variant ───────────────────────────────────────────────
+
 const TYPE_VARIANT: Record<string, 'teal' | 'orange' | 'purple' | 'blue' | 'green' | 'pink' | 'yellow' | 'neutral'> = {
   technique: 'teal',
   group: 'orange',
@@ -17,13 +20,45 @@ const TYPE_VARIANT: Record<string, 'teal' | 'orange' | 'purple' | 'blue' | 'gree
   tactic: 'yellow',
 };
 
+// ── Tab definitions ────────────────────────────────────────────────────────────
+
+type TabId = 'graph' | 'actor' | 'technique-map';
+
+interface TabDef {
+  id: TabId;
+  label: string;
+  /** Which entity types show this tab. Undefined means always visible. */
+  forTypes?: string[];
+}
+
+const TABS: TabDef[] = [
+  { id: 'graph', label: 'Graph' },
+  { id: 'actor', label: 'Actor Profile', forTypes: ['group', 'campaign'] },
+  { id: 'technique-map', label: 'Technique Map', forTypes: ['technique'] },
+];
+
+/** Derive the entity type from the graph center node or from search suggestions */
+function inferEntityType(
+  graphCenter: GraphNode | undefined,
+  suggestions: Array<{ attackId: string; type: string }>,
+  selectedId: string,
+): string | null {
+  if (graphCenter?.type) return graphCenter.type;
+  const match = suggestions.find((s) => s.attackId === selectedId);
+  return match?.type ?? null;
+}
+
+// ── Page component ─────────────────────────────────────────────────────────────
+
 export function Relationships() {
   const [searchParams, setSearchParams] = useSearchParams();
   const entityParam = searchParams.get('entity') ?? '';
+  const tabParam = (searchParams.get('tab') ?? 'graph') as TabId;
 
   const [selectedId, setSelectedId] = useState<string>(entityParam);
   const [searchInput, setSearchInput] = useState(entityParam);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabId>(tabParam);
   const graphRef = useRef<ForceGraphHandle>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -36,9 +71,17 @@ export function Relationships() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entityParam]);
 
+  /** Keep tab in sync with URL param */
+  useEffect(() => {
+    if (tabParam && tabParam !== activeTab) {
+      setActiveTab(tabParam);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tabParam]);
+
   const { data: graphData, isLoading, error } = useRelationships(selectedId);
 
-  /** Search suggestions (reuse useSearch) */
+  /** Search suggestions */
   const { data: searchData } = useSearch(
     showSuggestions && searchInput.trim().length >= 3 ? searchInput : ''
   );
@@ -66,6 +109,27 @@ export function Relationships() {
     })),
   ].slice(0, 12);
 
+  const entityType = inferEntityType(graphData?.center, suggestions, selectedId);
+
+  /** Determine which tabs are visible for the current entity */
+  const visibleTabs = TABS.filter(
+    (tab) => !tab.forTypes || (entityType && tab.forTypes.includes(entityType))
+  );
+
+  /** When entity changes, fall back to 'graph' if active tab is no longer visible */
+  useEffect(() => {
+    const isVisible = visibleTabs.some((t) => t.id === activeTab);
+    if (!isVisible && visibleTabs.length > 0) {
+      setActiveTab('graph');
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        next.set('tab', 'graph');
+        return next;
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [entityType]);
+
   const selectEntity = useCallback(
     (attackId: string) => {
       setSelectedId(attackId);
@@ -74,6 +138,21 @@ export function Relationships() {
       setSearchParams((prev) => {
         const next = new URLSearchParams(prev);
         next.set('entity', attackId);
+        // Reset tab to graph when switching entities
+        next.set('tab', 'graph');
+        return next;
+      });
+      setActiveTab('graph');
+    },
+    [setSearchParams]
+  );
+
+  const selectTab = useCallback(
+    (tabId: TabId) => {
+      setActiveTab(tabId);
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        next.set('tab', tabId);
         return next;
       });
     },
@@ -88,7 +167,7 @@ export function Relationships() {
     <div className="space-y-4">
       <PageHeader
         title="Relationship Explorer"
-        subtitle="D3 force graph — click a node to expand its connections"
+        subtitle="Graph, Actor Profile, and Technique Map views — select an entity to start"
       />
 
       {/* Entity search — combobox with autocomplete dropdown */}
@@ -168,7 +247,7 @@ export function Relationships() {
 
         {showSuggestions && searchInput.length >= 3 && suggestions.length === 0 && (
           <div className="absolute top-full w-full z-50 bg-[#16213e] border border-t-0 border-[#64ffda] rounded-b-lg shadow-2xl p-4 text-center text-sm text-[#8892b0]">
-            No results for "{searchInput}"
+            No results for &ldquo;{searchInput}&rdquo;
           </div>
         )}
       </div>
@@ -177,7 +256,6 @@ export function Relationships() {
       {!selectedId && (
         <div className="flex items-center justify-center h-[500px] text-center">
           <div>
-            {/* Search icon for visual anchoring */}
             <svg
               className="w-12 h-12 text-[#4a4a6a] mx-auto mb-4"
               fill="none"
@@ -192,8 +270,8 @@ export function Relationships() {
               Select an entity
             </div>
             <p className="text-sm text-[#8892b0] max-w-sm">
-              Search for any technique, group, software, or campaign to visualize
-              its relationships as a force-directed graph.
+              Search for any technique, group, software, or campaign to explore
+              its relationships across graph, actor profile, and technique map views.
             </p>
           </div>
         </div>
@@ -201,60 +279,100 @@ export function Relationships() {
 
       {/* Loading */}
       {selectedId && isLoading && (
-        <div className="flex items-center justify-center h-[500px] text-[#8892b0]">
+        <div className="flex items-center justify-center h-20 text-[#8892b0]">
           <span className="inline-block w-5 h-5 border-2 border-[#64ffda33] border-t-[#64ffda] rounded-full animate-spin mr-2" />
-          Loading graph...
+          Loading...
         </div>
       )}
 
       {/* Error */}
       {selectedId && error && (
-        <div className="flex items-center justify-center h-[500px] text-[#f97316]">
+        <div className="flex items-center justify-center h-20 text-[#f97316]">
           Failed to load relationships.
         </div>
       )}
 
-      {/* Graph */}
+      {/* Tab bar — shown once entity is selected and graph has loaded */}
       {selectedId && !isLoading && !error && graphData && (
-        <div className="space-y-3">
-          {/* Stats bar */}
-          <div className="flex items-center gap-4 text-xs text-[#8892b0]">
-            <span>
-              <span className="text-[#ccd6f6] font-medium">{graphData.nodes.length}</span> nodes
-            </span>
-            <span>
-              <span className="text-[#ccd6f6] font-medium">{graphData.edges.length}</span> edges
-            </span>
-            {graphData.truncated && (
-              <Badge label="Truncated — too many connections" variant="yellow" />
-            )}
-            <button
-              type="button"
-              onClick={() => graphRef.current?.reset()}
-              className="ml-auto px-3 py-1 text-xs rounded-md border border-[#64ffda33] text-[#64ffda] bg-[#64ffda0a] hover:bg-[#64ffda18] transition-colors"
-            >
-              Re-layout
-            </button>
-          </div>
-
-          <ForceGraph
-            ref={graphRef}
-            data={graphData}
-            onNodeClick={handleNodeClick}
-            height={800}
-          />
-
-          {/* Legend */}
-          <div className="flex flex-wrap items-center gap-2 pt-2">
-            <span className="text-xs text-[#8892b0] font-semibold mr-1">Node types:</span>
-            {Object.entries(TYPE_VARIANT).map(([type, variant]) => (
-              <Badge
-                key={type}
-                label={type.replace('_', ' ')}
-                variant={variant}
-              />
+        <div className="border-b border-[#2a2a4a]">
+          <div className="flex gap-1">
+            {visibleTabs.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => selectTab(tab.id)}
+                className={`
+                  px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors duration-150
+                  border-b-2 -mb-px
+                  ${activeTab === tab.id
+                    ? 'text-[#64ffda] border-[#64ffda]'
+                    : 'text-[#8892b0] border-transparent hover:text-[#ccd6f6]'
+                  }
+                `}
+              >
+                {tab.label}
+              </button>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Tab content */}
+      {selectedId && !isLoading && !error && graphData && (
+        <div>
+          {/* Graph tab */}
+          {activeTab === 'graph' && (
+            <div className="space-y-3">
+              {/* Stats bar */}
+              <div className="flex items-center gap-4 text-xs text-[#8892b0]">
+                <span>
+                  <span className="text-[#ccd6f6] font-medium">{graphData.nodes.length}</span> nodes
+                </span>
+                <span>
+                  <span className="text-[#ccd6f6] font-medium">{graphData.edges.length}</span> edges
+                </span>
+                {graphData.truncated && (
+                  <Badge label="Truncated — too many connections" variant="yellow" />
+                )}
+                <button
+                  type="button"
+                  onClick={() => graphRef.current?.reset()}
+                  className="ml-auto px-3 py-1 text-xs rounded-md border border-[#64ffda33] text-[#64ffda] bg-[#64ffda0a] hover:bg-[#64ffda18] transition-colors"
+                >
+                  Re-layout
+                </button>
+              </div>
+
+              <ForceGraph
+                ref={graphRef}
+                data={graphData}
+                onNodeClick={handleNodeClick}
+                height={800}
+              />
+
+              {/* Legend */}
+              <div className="flex flex-wrap items-center gap-2 pt-2">
+                <span className="text-xs text-[#8892b0] font-semibold mr-1">Node types:</span>
+                {Object.entries(TYPE_VARIANT).map(([type, variant]) => (
+                  <Badge
+                    key={type}
+                    label={type.replace('_', ' ')}
+                    variant={variant}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Actor Profile tab */}
+          {activeTab === 'actor' && entityType && (entityType === 'group' || entityType === 'campaign') && (
+            <ActorProfileView attackId={selectedId} entityType={entityType} />
+          )}
+
+          {/* Technique Map tab */}
+          {activeTab === 'technique-map' && entityType === 'technique' && (
+            <TechniqueMapView attackId={selectedId} />
+          )}
         </div>
       )}
     </div>

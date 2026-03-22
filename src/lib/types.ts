@@ -63,8 +63,64 @@ export interface Technique extends BaseEntity {
   campaigns?: TechniqueRelatedCampaign[];
 }
 
+// ── Group detail relationship sub-types ───────────────────────────────────────
+
+export interface GroupTechnique {
+  attackId: string;
+  name: string;
+  procedure: string | null;
+  platforms: string[] | null;
+}
+
+export interface GroupSoftware {
+  attackId: string;
+  name: string;
+  type: string;
+  description: string | null;
+}
+
+export interface GroupCampaign {
+  attackId: string;
+  name: string;
+  description: string | null;
+  firstSeen: string | null;
+  lastSeen: string | null;
+}
+
+export interface GroupSector {
+  name: string;
+  slug: string | null;
+}
+
 export interface Group extends BaseEntity {
   aliases: string[] | null;
+  /** Present on detail endpoint */
+  techniques?: GroupTechnique[];
+  software?: GroupSoftware[];
+  campaigns?: GroupCampaign[];
+  sectors?: GroupSector[];
+}
+
+// ── Campaign detail relationship sub-types ────────────────────────────────────
+
+export interface CampaignTechnique {
+  attackId: string;
+  name: string;
+  description: string | null;
+  platforms: string[] | null;
+}
+
+export interface CampaignGroup {
+  attackId: string;
+  name: string;
+  description: string | null;
+}
+
+export interface CampaignSoftware {
+  attackId: string;
+  name: string;
+  type: string;
+  description: string | null;
 }
 
 export interface Software extends BaseEntity {
@@ -77,6 +133,10 @@ export interface Campaign extends BaseEntity {
   aliases: string[] | null;
   firstSeen: string | null;
   lastSeen: string | null;
+  /** Present on detail endpoint */
+  techniques?: CampaignTechnique[];
+  software?: CampaignSoftware[];
+  groups?: CampaignGroup[];
 }
 
 export interface DataComponent {
