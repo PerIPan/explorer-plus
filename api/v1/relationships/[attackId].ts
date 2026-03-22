@@ -9,13 +9,15 @@ const querySchema = z.object({
   limit: z.coerce.number().int().positive().max(500).default(200),
 });
 
-type EntityType = 'technique' | 'group' | 'software' | 'mitigation' | 'campaign' | 'data_source' | 'tactic';
+type EntityType = 'technique' | 'group' | 'software' | 'mitigation' | 'campaign' | 'data_source' | 'tactic' | 'external_actor';
 
 interface EntityRow {
   id: string;
   attackId: string;
   name: string;
   type: EntityType;
+  /** Only for external_actor — optional link to a MITRE threat group */
+  mitreGroupId?: string | null;
 }
 
 /** Find entity in any table by attack_id — single UNION ALL query */
@@ -34,18 +36,36 @@ async function findEntity(attackId: string): Promise<EntityRow | null> {
   return result.rows[0] ?? null;
 }
 
+/** Find external actor by name (ThaiCERT / ETDA entities without MITRE IDs) */
+async function findExternalActor(name: string): Promise<EntityRow | null> {
+  const result = await query<{ id: string; name: string; mitreGroupId: string | null }>(
+    `SELECT id, name, mitre_group_id AS "mitreGroupId" FROM external_actors WHERE name = $1 LIMIT 1`,
+    [name],
+  );
+  if (result.rows.length === 0) return null;
+  const row = result.rows[0];
+  return { id: row.id, attackId: row.name, name: row.name, type: 'external_actor', mitreGroupId: row.mitreGroupId };
+}
+
 async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
-  const idParsed = attackIdSchema.safeParse(req.query.attackId);
-  if (!idParsed.success) {
-    res.status(400).json({ error: 'Invalid attack_id format', code: 'VALIDATION_ERROR' });
+  const rawId = typeof req.query.attackId === 'string' ? decodeURIComponent(req.query.attackId) : '';
+  if (!rawId) {
+    res.status(400).json({ error: 'Missing identifier', code: 'VALIDATION_ERROR' });
     return;
   }
 
   const limitParsed = querySchema.safeParse(req.query);
   const nodeLimit = limitParsed.success ? limitParsed.data.limit : 200;
 
-  const attackId = idParsed.data;
-  const entity = await findEntity(attackId);
+  // Try MITRE attack_id first, then fall back to external actor name lookup
+  const idParsed = attackIdSchema.safeParse(rawId);
+  let entity: EntityRow | null = null;
+  if (idParsed.success) {
+    entity = await findEntity(idParsed.data);
+  }
+  if (!entity) {
+    entity = await findExternalActor(rawId);
+  }
 
   if (!entity) {
     res.status(404).json({ error: 'Entity not found', code: 'NOT_FOUND' });
@@ -226,6 +246,46 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
       [entity.id, nodeLimit],
     );
     for (const r of techRes.rows) { if (addNode({ id: r.id, label: r.name, type: 'technique', attackId: r.attackId })) edges.push({ source: r.id, target: entity.id, relationship: 'belongs_to' }); }
+  }
+
+  else if (entity.type === 'external_actor') {
+    // If the external actor maps to a MITRE group, pull that group's relationships
+    if (entity.mitreGroupId) {
+      const groupRes = await query<{ id: string; attackId: string; name: string }>(
+        `SELECT id, attack_id AS "attackId", name FROM threat_groups WHERE attack_id = $1 LIMIT 1`,
+        [entity.mitreGroupId],
+      );
+      if (groupRes.rows.length > 0) {
+        const g = groupRes.rows[0];
+        if (addNode({ id: g.id, label: g.name, type: 'group', attackId: g.attackId })) {
+          edges.push({ source: entity.id, target: g.id, relationship: 'mapped_to' });
+        }
+        // Pull the linked group's techniques, software, campaigns
+        const [techRes, softRes, campRes] = await Promise.all([
+          query<{ id: string; attackId: string; name: string }>(
+            `SELECT t.id, t.attack_id AS "attackId", t.name
+             FROM group_techniques gt JOIN techniques t ON t.id = gt.technique_id
+             WHERE gt.group_id = $1`,
+            [g.id],
+          ),
+          query<{ id: string; attackId: string; name: string }>(
+            `SELECT sw.id, sw.attack_id AS "attackId", sw.name
+             FROM group_software gs JOIN attack_software sw ON sw.id = gs.software_id
+             WHERE gs.group_id = $1`,
+            [g.id],
+          ),
+          query<{ id: string; attackId: string; name: string }>(
+            `SELECT c.id, c.attack_id AS "attackId", c.name
+             FROM group_campaigns gc JOIN campaigns c ON c.id = gc.campaign_id
+             WHERE gc.group_id = $1`,
+            [g.id],
+          ),
+        ]);
+        for (const r of techRes.rows) { if (addNode({ id: r.id, label: r.name, type: 'technique', attackId: r.attackId })) edges.push({ source: g.id, target: r.id, relationship: 'uses' }); }
+        for (const r of softRes.rows) { if (addNode({ id: r.id, label: r.name, type: 'software',  attackId: r.attackId })) edges.push({ source: g.id, target: r.id, relationship: 'uses' }); }
+        for (const r of campRes.rows) { if (addNode({ id: r.id, label: r.name, type: 'campaign',  attackId: r.attackId })) edges.push({ source: r.id, target: g.id, relationship: 'attributed_to' }); }
+      }
+    }
   }
 
   const truncated = nodes.length >= nodeLimit;

@@ -27,6 +27,7 @@ const TYPE_VARIANT: Record<string, 'teal' | 'orange' | 'purple' | 'blue' | 'gree
   mitigation: 'green',
   data_source: 'pink',
   tactic: 'yellow',
+  external_actor: 'neutral',
 };
 
 // ── Tab definitions ────────────────────────────────────────────────────────────
@@ -41,7 +42,7 @@ interface TabDef {
 }
 
 const TABS: TabDef[] = [
-  { id: 'actor', label: 'Threat Actor Profile', forTypes: ['group', 'campaign'] },
+  { id: 'actor', label: 'Threat Actor Profile', forTypes: ['group', 'campaign', 'external_actor'] },
   { id: 'technique-map', label: 'Technique Map', forTypes: ['technique'] },
   { id: 'graph', label: 'Graph' },
 ];
@@ -145,7 +146,7 @@ export function Relationships() {
       setShowSuggestions(false);
 
       // Immediately pick the best tab based on known type
-      const bestTab: TabId = knownType === 'group' || knownType === 'campaign'
+      const bestTab: TabId = knownType === 'group' || knownType === 'campaign' || knownType === 'external_actor'
         ? 'actor'
         : knownType === 'technique'
           ? 'technique-map'
@@ -393,8 +394,8 @@ export function Relationships() {
           )}
 
           {/* Actor Profile tab */}
-          {activeTab === 'actor' && entityType && (entityType === 'group' || entityType === 'campaign') && (
-            <ActorProfileView attackId={selectedId} entityType={entityType} />
+          {activeTab === 'actor' && entityType && (entityType === 'group' || entityType === 'campaign' || entityType === 'external_actor') && (
+            <ActorProfileView attackId={selectedId} entityType={entityType as 'group' | 'campaign' | 'external_actor'} />
           )}
 
           {/* Technique Map tab */}

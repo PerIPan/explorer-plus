@@ -273,3 +273,11 @@ export function useExternalActorByGroup(mitreGroupId: string) {
     enabled: Boolean(mitreGroupId),
   });
 }
+
+export function useExternalActorByName(name: string) {
+  return useQuery({
+    queryKey: ['external-actor-by-name', name],
+    queryFn: () => apiFetch<ExternalActor>(`/external-actors/${encodeURIComponent(name)}`),
+    enabled: Boolean(name),
+  });
+}

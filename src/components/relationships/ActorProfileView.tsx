@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useGroup, useCampaign, useExternalActorByGroup } from '../../hooks/useApi';
+import { useGroup, useCampaign, useExternalActorByGroup, useExternalActorByName } from '../../hooks/useApi';
 import { EntityLink } from '../shared/EntityLink';
 import { Badge } from '../shared/Badge';
 import type { GroupTechnique, GroupSoftware, GroupCampaign, GroupSector, ExternalActor } from '../../lib/types';
@@ -280,9 +280,9 @@ function TargetedSectors({ sectors }: { sectors: GroupSector[] }) {
 // ── Main component ─────────────────────────────────────────────────────────────
 
 interface ActorProfileViewProps {
-  /** attackId for a group (Gxxxx) or campaign (Cxxxx) */
+  /** attackId for a group (Gxxxx), campaign (Cxxxx), or external actor name */
   attackId: string;
-  entityType: 'group' | 'campaign';
+  entityType: 'group' | 'campaign' | 'external_actor';
 }
 
 /**
@@ -293,6 +293,126 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
   const groupResult = useGroup(entityType === 'group' ? attackId : '');
   const campaignResult = useCampaign(entityType === 'campaign' ? attackId : '');
   const thaiCertResult = useExternalActorByGroup(entityType === 'group' ? attackId : '');
+  const externalActorResult = useExternalActorByName(entityType === 'external_actor' ? attackId : '');
+
+  // ── External actor profile (ThaiCERT / ETDA) ───────────────────────────
+  if (entityType === 'external_actor') {
+    if (externalActorResult.isLoading) {
+      return (
+        <div className="flex items-center gap-2 text-[#8892b0] text-sm py-8 justify-center">
+          <span className="inline-block w-5 h-5 border-2 border-[#64ffda33] border-t-[#64ffda] rounded-full animate-spin" />
+          Loading actor profile...
+        </div>
+      );
+    }
+    if (externalActorResult.error || !externalActorResult.data) {
+      return (
+        <div className="text-[#f97316] text-sm py-8 text-center">
+          Failed to load actor profile.
+        </div>
+      );
+    }
+    const actor = externalActorResult.data;
+    return (
+      <div className="space-y-3">
+        <div className="flex items-start gap-3 pb-1">
+          <div>
+            <h2 className="text-lg font-semibold text-[#ccd6f6]">{actor.name}</h2>
+            <div className="flex items-center gap-2 mt-1">
+              <Badge label="external actor" variant="neutral" />
+              <Badge label="ThaiCERT / ETDA" variant="neutral" />
+              {actor.country && <Badge label={actor.country} variant="blue" />}
+              {actor.category && <Badge label={actor.category} variant="purple" />}
+            </div>
+          </div>
+        </div>
+
+        <CollapsibleSection title="ThaiCERT Intelligence" defaultOpen>
+          <div className="bg-[#0a0a1a] border border-[#2a2a4a] rounded-lg p-4 space-y-2">
+            {actor.description && (
+              <p className="text-sm text-[#8892b0] leading-relaxed">{actor.description}</p>
+            )}
+            {actor.synonyms && actor.synonyms.length > 0 && (
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs text-[#8892b0]">Also known as:</span>
+                {actor.synonyms.map((s) => (
+                  <Badge key={s} label={s} variant="neutral" />
+                ))}
+              </div>
+            )}
+            {actor.motivation && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-[#8892b0]">Motivation:</span>
+                <span className="text-xs text-[#ccd6f6]">{actor.motivation}</span>
+              </div>
+            )}
+            {actor.suspectedStateSponsor && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-[#8892b0]">State sponsor:</span>
+                <Badge label={actor.suspectedStateSponsor} variant="orange" />
+              </div>
+            )}
+            {actor.attributionConfidence && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-[#8892b0]">Confidence:</span>
+                <span className="text-xs text-[#ccd6f6]">{actor.attributionConfidence}</span>
+              </div>
+            )}
+            {actor.suspectedVictims && actor.suspectedVictims.length > 0 && (
+              <div>
+                <span className="text-xs text-[#8892b0]">Suspected victims:</span>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {actor.suspectedVictims.map((v) => (
+                    <Badge key={v} label={v} variant="purple" />
+                  ))}
+                </div>
+              </div>
+            )}
+            {actor.targetCategories && actor.targetCategories.length > 0 && (
+              <div>
+                <span className="text-xs text-[#8892b0]">Target categories:</span>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {actor.targetCategories.map((c) => (
+                    <Badge key={c} label={c} variant="green" />
+                  ))}
+                </div>
+              </div>
+            )}
+            {actor.refs && actor.refs.length > 0 && (
+              <div>
+                <span className="text-xs text-[#8892b0]">References:</span>
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {actor.refs.map((ref, i) => (
+                    <a
+                      key={i}
+                      href={ref}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-[#64ffda] hover:underline break-all"
+                    >
+                      {ref}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+            {actor.mitreGroupId && (
+              <div className="flex items-center gap-2 pt-1">
+                <span className="text-xs text-[#8892b0]">MITRE mapping:</span>
+                <span className="font-mono text-xs text-[#f97316]">{actor.mitreGroupId}</span>
+                {actor.mitreGroupName && (
+                  <span className="text-xs text-[#ccd6f6]">({actor.mitreGroupName})</span>
+                )}
+              </div>
+            )}
+          </div>
+          <p className="text-[10px] text-[#4a4a6a] pt-1">
+            Source: ThaiCERT / ETDA Threat Actor Encyclopedia — not affiliated with MITRE
+          </p>
+        </CollapsibleSection>
+      </div>
+    );
+  }
 
   const isLoading = entityType === 'group' ? groupResult.isLoading : campaignResult.isLoading;
   const error = entityType === 'group' ? groupResult.error : campaignResult.error;

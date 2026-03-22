@@ -64,7 +64,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
         [techId],
       ),
 
-      // Atomic tests
+      // Atomic tests — include sub-technique tests when viewing parent
       query<{
         id: string;
         test_number: number;
@@ -73,10 +73,11 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
         platforms: string[] | null;
         executor_type: string | null;
       }>(
-        `SELECT id, test_number, name, description, platforms, executor_type
-         FROM atomic_tests
-         WHERE technique_id = $1
-         ORDER BY test_number ASC`,
+        `SELECT a.id, a.test_number, a.name, a.description, a.platforms, a.executor_type
+         FROM atomic_tests a
+         WHERE a.technique_id = $1
+            OR a.technique_id IN (SELECT id FROM techniques WHERE parent_technique_id = $1)
+         ORDER BY a.test_number ASC`,
         [techId],
       ),
 

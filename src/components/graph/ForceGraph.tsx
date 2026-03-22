@@ -30,6 +30,7 @@ const NODE_COLORS: Record<string, string> = {
   mitigation: '#34d399',
   data_source: '#f472b6',
   tactic: '#fbbf24',
+  external_actor: '#94a3b8',
 };
 
 function nodeColor(type: string): string {
