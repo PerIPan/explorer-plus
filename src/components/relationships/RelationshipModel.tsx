@@ -172,22 +172,26 @@ export function RelationshipModel({ open, onClose }: Props) {
                     markerEnd={isActive ? 'url(#arrow-active)' : 'url(#arrow)'}
                     className="transition-all duration-200"
                   />
-                  <rect
-                    x={midX - 30} y={midY - 8}
-                    width={60} height={16}
-                    rx={3}
-                    fill={isActive ? '#16213e' : '#0a0a1a'}
-                    stroke={isActive ? '#64ffda33' : 'none'}
-                  />
-                  <text
-                    x={midX} y={midY + 4}
-                    textAnchor="middle"
-                    fontSize={9}
-                    fill={isActive ? '#64ffda' : '#4a4a6a'}
-                    className="transition-colors duration-200 select-none"
-                  >
-                    {edge.label}
-                  </text>
+                  {isActive && (
+                    <>
+                      <rect
+                        x={midX - 30} y={midY - 8}
+                        width={60} height={16}
+                        rx={3}
+                        fill="#16213e"
+                        stroke="#64ffda33"
+                      />
+                      <text
+                        x={midX} y={midY + 4}
+                        textAnchor="middle"
+                        fontSize={9}
+                        fill="#64ffda"
+                        className="select-none"
+                      >
+                        {edge.label}
+                      </text>
+                    </>
+                  )}
                 </g>
               );
             })}

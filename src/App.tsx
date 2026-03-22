@@ -90,9 +90,9 @@ function Layout() {
             type="button"
             onClick={() => setModelOpen(true)}
             className="flex-shrink-0 px-3 py-1.5 text-xs rounded-md border border-[#2a2a4a] text-[#8892b0] hover:text-[#64ffda] hover:border-[#64ffda33] transition-colors"
-            title="ATT&CK relationship model"
+            title="ATT&CK data model — entity relationships"
           >
-            Model
+            Data Model
           </button>
         </header>
 
