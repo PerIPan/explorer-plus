@@ -14,6 +14,7 @@
     "seed:prod": "DATABASE_URL=$POSTGRES_URL ./venv/bin/python seed/seed.py --confirm-destructive",
     "seed:update": "./venv/bin/python seed/seed.py --update",
     "seed:verify": "./venv/bin/python seed/verify.py",
+    "dev:api": "DATABASE_URL=postgresql://postgres@localhost:5432/mitre_attack tsx watch server/dev-server.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -23,7 +24,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "bugs": {
     "url": "https://github.com/PerIPan/mitre-attack-explorer/issues"
   },
