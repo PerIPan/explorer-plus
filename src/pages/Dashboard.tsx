@@ -11,9 +11,55 @@ export function Dashboard() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64 text-[#8892b0]">
-        <span className="inline-block w-5 h-5 border-2 border-[#64ffda33] border-t-[#64ffda] rounded-full animate-spin mr-2" />
-        Loading dashboard...
+      <div className="space-y-6">
+        {/* Skeleton page header */}
+        <div className="h-7 w-40 rounded bg-[#16213e] animate-pulse" />
+
+        {/* Skeleton stat cards — 6 boxes matching the real grid */}
+        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div
+              key={i}
+              className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-4 space-y-2 animate-pulse"
+            >
+              <div className="h-3 w-16 rounded bg-[#2a2a4a]" />
+              <div className="h-7 w-12 rounded bg-[#2a2a4a]" />
+            </div>
+          ))}
+        </div>
+
+        {/* Skeleton chart areas */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          {Array.from({ length: 2 }).map((_, i) => (
+            <div
+              key={i}
+              className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5 animate-pulse"
+            >
+              <div className="h-4 w-36 rounded bg-[#2a2a4a] mb-4" />
+              <div className="h-48 rounded bg-[#2a2a4a]" />
+            </div>
+          ))}
+        </div>
+
+        {/* Skeleton top groups */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          {Array.from({ length: 2 }).map((_, i) => (
+            <div
+              key={i}
+              className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5 animate-pulse"
+            >
+              <div className="h-4 w-44 rounded bg-[#2a2a4a] mb-4" />
+              <div className="space-y-2">
+                {Array.from({ length: 6 }).map((_, j) => (
+                  <div key={j} className="flex items-center justify-between py-1.5">
+                    <div className="h-3 w-32 rounded bg-[#2a2a4a]" />
+                    <div className="h-3 w-8 rounded bg-[#2a2a4a]" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -41,36 +87,48 @@ export function Dashboard() {
           label="Techniques"
           value={stats.techniqueCount}
           accent="text-[#64ffda]"
+          href="/techniques"
+          hoverBorder="hover:border-[#64ffda]"
         />
         <StatCard
           label="Groups"
           value={stats.groupCount}
           accent="text-[#f97316]"
+          href="/groups"
+          hoverBorder="hover:border-[#f97316]"
         />
         <StatCard
           label="Software"
           value={stats.softwareCount}
           accent="text-[#a78bfa]"
+          href="/software"
+          hoverBorder="hover:border-[#a78bfa]"
         />
         <StatCard
           label="Campaigns"
           value={stats.campaignCount}
           accent="text-[#60a5fa]"
+          href="/campaigns"
+          hoverBorder="hover:border-[#60a5fa]"
         />
         <StatCard
           label="Mitigations"
           value={stats.mitigationCount}
           accent="text-[#34d399]"
+          href="/mitigations"
+          hoverBorder="hover:border-[#34d399]"
         />
         <StatCard
           label="Data Sources"
           value={stats.dataSourceCount}
           accent="text-[#f472b6]"
+          href="/data-sources"
+          hoverBorder="hover:border-[#f472b6]"
         />
       </div>
 
       {/* Charts row */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Tactic distribution */}
         <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5">
           <h2 className="text-sm font-semibold text-[#ccd6f6] mb-4">
@@ -97,7 +155,7 @@ export function Dashboard() {
       </div>
 
       {/* Top groups */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5">
           <h2 className="text-sm font-semibold text-[#ccd6f6] mb-4">
             Top Groups by Technique Coverage
@@ -121,7 +179,7 @@ export function Dashboard() {
                 className="flex items-center justify-between py-1.5 border-b border-[#2a2a4a] last:border-0"
               >
                 <div className="flex items-center gap-3">
-                  <span className="text-xs text-[#2a2a4a] font-mono w-5 text-right">
+                  <span className="text-xs text-[#64ffda] font-semibold font-mono w-5 text-right">
                     {i + 1}
                   </span>
                   <EntityLink

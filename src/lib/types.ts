@@ -18,11 +18,49 @@ export interface SubTechnique extends BaseEntity {
   detection: string | null;
 }
 
+export interface TechniqueRelatedGroup {
+  attackId: string;
+  name: string;
+  procedure: string | null;
+}
+
+export interface TechniqueRelatedSoftware {
+  attackId: string;
+  name: string;
+  type: string;
+  description: string | null;
+}
+
+export interface TechniqueRelatedMitigation {
+  attackId: string;
+  name: string;
+  description: string | null;
+}
+
+export interface TechniqueDataComponent {
+  componentName: string;
+  description: string | null;
+  dataSourceName: string;
+  dataSourceAttackId: string;
+}
+
+export interface TechniqueRelatedCampaign {
+  attackId: string;
+  name: string;
+  description: string | null;
+}
+
 export interface Technique extends BaseEntity {
   tactics: string[];
   platforms: string[] | null;
   detection: string | null;
   sub_techniques: SubTechnique[];
+  /** Relationship data returned by the detail endpoint */
+  groups?: TechniqueRelatedGroup[];
+  software?: TechniqueRelatedSoftware[];
+  mitigations?: TechniqueRelatedMitigation[];
+  dataComponents?: TechniqueDataComponent[];
+  campaigns?: TechniqueRelatedCampaign[];
 }
 
 export interface Group extends BaseEntity {

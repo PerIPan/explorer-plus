@@ -32,7 +32,7 @@ interface DataTableProps<T> {
 
 function SortIcon({ active, dir }: { active: boolean; dir: 'asc' | 'desc' }) {
   return (
-    <span aria-hidden="true" className={`ml-1 inline-block text-xs ${active ? 'text-[#64ffda]' : 'text-[#2a2a4a]'}`}>
+    <span aria-hidden="true" className={`ml-1 inline-block text-xs ${active ? 'text-[#64ffda]' : 'text-[#4a4a6a]'}`}>
       {active && dir === 'asc' ? '\u25B4' : '\u25BE'}
     </span>
   );
@@ -101,19 +101,41 @@ export function DataTable<T extends Record<string, unknown>>({
           </thead>
 
           <tbody>
-            {loading && (
-              <tr>
-                <td colSpan={columns.length} className="px-4 py-10 text-center text-[#8892b0]">
-                  <span className="inline-block w-5 h-5 border-2 border-[#64ffda33] border-t-[#64ffda] rounded-full animate-spin mr-2 align-middle" />
-                  Loading...
-                </td>
-              </tr>
-            )}
+            {loading &&
+              Array.from({ length: 8 }).map((_, rowIndex) => (
+                <tr
+                  key={rowIndex}
+                  className={`border-b border-[#2a2a4a] last:border-0 ${rowIndex % 2 === 0 ? 'bg-[#16213e]' : 'bg-[#1a1a2e]'}`}
+                >
+                  {columns.map((col, colIndex) => {
+                    const widths = ['w-3/4', 'w-1/2', 'w-1/3'];
+                    const w = widths[(colIndex + rowIndex) % widths.length];
+                    return (
+                      <td key={col.key} className="px-4 py-3">
+                        <div className={`h-4 rounded bg-[#2a2a4a] animate-pulse ${w}`} />
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))
+            }
 
             {!loading && data.length === 0 && (
               <tr>
-                <td colSpan={columns.length} className="px-4 py-10 text-center text-[#8892b0]">
-                  {emptyMessage}
+                <td colSpan={columns.length} className="px-4 py-16 text-center text-[#8892b0]">
+                  <div className="flex flex-col items-center gap-3">
+                    <svg
+                      className="w-10 h-10 text-[#2a2a4a]"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={1.5}
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 5.625c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" />
+                    </svg>
+                    <span className="text-sm">{emptyMessage}</span>
+                  </div>
                 </td>
               </tr>
             )}
@@ -126,10 +148,12 @@ export function DataTable<T extends Record<string, unknown>>({
                   <tr
                     key={key}
                     onClick={onRowClick ? () => onRowClick(row) : undefined}
+                    tabIndex={onRowClick ? 0 : undefined}
+                    onKeyDown={onRowClick ? (e) => { if (e.key === 'Enter') onRowClick(row); } : undefined}
                     className={`
                       border-b border-[#2a2a4a] last:border-0
                       ${isEven ? 'bg-[#16213e]' : 'bg-[#1a1a2e]'}
-                      ${onRowClick ? 'cursor-pointer hover:bg-[#64ffda0a]' : ''}
+                      ${onRowClick ? 'cursor-pointer hover:bg-[#64ffda14] focus:outline-none focus:bg-[#64ffda14]' : ''}
                       transition-colors duration-100
                     `}
                   >

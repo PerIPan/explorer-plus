@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Routes, Route, Outlet } from 'react-router-dom';
 import { Sidebar } from './components/layout/Sidebar';
 import { SearchBar } from './components/layout/SearchBar';
@@ -31,14 +32,43 @@ import { FeedStatus } from './pages/FeedStatus';
 
 /** Root layout — sidebar + top bar + page content */
 function Layout() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   return (
     <div className="flex min-h-screen bg-[#0a0a1a]">
-      <Sidebar />
+      {/* Mobile overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/60 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+          aria-hidden="true"
+        />
+      )}
 
-      {/* Main area pushed right of the fixed sidebar */}
-      <div className="flex-1 flex flex-col ml-60 min-h-screen">
+      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+
+      {/* Main area pushed right of the fixed sidebar on lg+ */}
+      <div className="flex-1 flex flex-col lg:ml-60 min-h-screen">
         {/* Top header bar */}
-        <header className="sticky top-0 z-30 flex items-center gap-4 px-6 py-3 bg-[#0a0a1a] border-b border-[#2a2a4a]">
+        <header className="sticky top-0 z-30 flex items-center gap-4 px-6 py-3 bg-[#16213e] shadow-sm border-b border-[#2a2a4a]">
+          {/* Hamburger — visible only below lg */}
+          <button
+            type="button"
+            aria-label="Open navigation menu"
+            onClick={() => setSidebarOpen(true)}
+            className="lg:hidden flex-shrink-0 p-1 rounded-md text-[#8892b0] hover:text-[#ccd6f6] hover:bg-[#ffffff08] transition-colors"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
           <SearchBar />
         </header>
 

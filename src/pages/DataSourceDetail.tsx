@@ -45,7 +45,7 @@ export function DataSourceDetail() {
 
       {description && (
         <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5">
-          <h3 className="text-sm font-semibold text-[#8892b0] uppercase tracking-wider mb-3">
+          <h3 className="text-sm font-semibold text-[#a8b2d8] uppercase tracking-wider mb-3">
             Description
           </h3>
           <p className="text-[#ccd6f6] text-sm leading-relaxed whitespace-pre-wrap">
@@ -57,7 +57,7 @@ export function DataSourceDetail() {
       {/* Data components */}
       {data.components?.length ? (
         <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5">
-          <h3 className="text-sm font-semibold text-[#8892b0] uppercase tracking-wider mb-4">
+          <h3 className="text-sm font-semibold text-[#a8b2d8] uppercase tracking-wider mb-4">
             Data Components ({data.components.length})
           </h3>
           <div className="space-y-3">

@@ -61,7 +61,7 @@ export function CampaignDetail() {
 
       {/* Timeline card */}
       <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5">
-        <h3 className="text-sm font-semibold text-[#8892b0] uppercase tracking-wider mb-3">
+        <h3 className="text-sm font-semibold text-[#a8b2d8] uppercase tracking-wider mb-3">
           Timeline
         </h3>
         <div className="flex gap-8 text-sm mb-3">
@@ -84,7 +84,7 @@ export function CampaignDetail() {
       {/* Aliases */}
       {data.aliases?.length ? (
         <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5">
-          <h3 className="text-sm font-semibold text-[#8892b0] uppercase tracking-wider mb-3">
+          <h3 className="text-sm font-semibold text-[#a8b2d8] uppercase tracking-wider mb-3">
             Aliases
           </h3>
           <div className="flex flex-wrap gap-1.5">
@@ -98,7 +98,7 @@ export function CampaignDetail() {
       {/* Description */}
       {description && (
         <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5">
-          <h3 className="text-sm font-semibold text-[#8892b0] uppercase tracking-wider mb-3">
+          <h3 className="text-sm font-semibold text-[#a8b2d8] uppercase tracking-wider mb-3">
             Description
           </h3>
           <p className="text-[#ccd6f6] text-sm leading-relaxed whitespace-pre-wrap">
@@ -109,7 +109,7 @@ export function CampaignDetail() {
 
       {/* Relationships hint */}
       <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5">
-        <h3 className="text-sm font-semibold text-[#8892b0] uppercase tracking-wider mb-2">
+        <h3 className="text-sm font-semibold text-[#a8b2d8] uppercase tracking-wider mb-2">
           Relationships
         </h3>
         <p className="text-sm text-[#8892b0]">

@@ -101,7 +101,7 @@ function IntelligenceTab({ attackId }: IntelligenceTabProps) {
       {/* Recent Reports */}
       {data.reports.length > 0 && (
         <section>
-          <h3 className="text-sm font-semibold text-[#8892b0] uppercase tracking-wider mb-3">
+          <h3 className="text-sm font-semibold text-[#a8b2d8] uppercase tracking-wider mb-3">
             Recent Reports ({data.reports.length})
           </h3>
           <div className="space-y-2">
@@ -131,7 +131,7 @@ function IntelligenceTab({ attackId }: IntelligenceTabProps) {
       {/* Sigma Rules */}
       {data.sigmaRules.length > 0 && (
         <section>
-          <h3 className="text-sm font-semibold text-[#8892b0] uppercase tracking-wider mb-3">
+          <h3 className="text-sm font-semibold text-[#a8b2d8] uppercase tracking-wider mb-3">
             Sigma Detection Rules ({data.sigmaRules.length})
           </h3>
           <div className="space-y-2">
@@ -159,7 +159,7 @@ function IntelligenceTab({ attackId }: IntelligenceTabProps) {
       {/* Atomic Tests */}
       {data.atomicTests.length > 0 && (
         <section>
-          <h3 className="text-sm font-semibold text-[#8892b0] uppercase tracking-wider mb-3">
+          <h3 className="text-sm font-semibold text-[#a8b2d8] uppercase tracking-wider mb-3">
             Atomic Red Team Tests ({data.atomicTests.length})
           </h3>
           <div className="space-y-2">
@@ -191,7 +191,7 @@ function IntelligenceTab({ attackId }: IntelligenceTabProps) {
       {/* D3FEND Defensive Mappings */}
       {data.defensiveMappings.length > 0 && (
         <section>
-          <h3 className="text-sm font-semibold text-[#8892b0] uppercase tracking-wider mb-3">
+          <h3 className="text-sm font-semibold text-[#a8b2d8] uppercase tracking-wider mb-3">
             D3FEND Defensive Mappings ({data.defensiveMappings.length})
           </h3>
           <div className="space-y-2">
@@ -216,7 +216,7 @@ function IntelligenceTab({ attackId }: IntelligenceTabProps) {
       {/* Related IOCs */}
       {data.iocs.length > 0 && (
         <section>
-          <h3 className="text-sm font-semibold text-[#8892b0] uppercase tracking-wider mb-3">
+          <h3 className="text-sm font-semibold text-[#a8b2d8] uppercase tracking-wider mb-3">
             Related IOCs ({data.iocs.length})
           </h3>
           <div className="overflow-x-auto rounded-lg border border-[#2a2a4a]">
@@ -226,7 +226,7 @@ function IntelligenceTab({ attackId }: IntelligenceTabProps) {
                   {['Type', 'Value', 'Source', 'Malware', 'First Seen', 'Confidence'].map((h) => (
                     <th
                       key={h}
-                      className="px-3 py-2 text-left text-xs font-semibold text-[#8892b0] uppercase tracking-wider"
+                      className="px-3 py-2 text-left text-xs font-semibold text-[#a8b2d8] uppercase tracking-wider"
                     >
                       {h}
                     </th>
@@ -311,7 +311,7 @@ export function TechniqueDetail() {
       />
 
       {/* Metadata strip */}
-      <div className="flex flex-wrap gap-4 text-sm">
+      <div className="flex flex-wrap gap-4 text-sm bg-[#16213e] border border-[#2a2a4a] rounded-lg px-4 py-3">
         {data.tacticPhase && (
           <div className="flex items-center gap-2">
             <span className="text-[#8892b0]">Tactic:</span>
@@ -340,24 +340,33 @@ export function TechniqueDetail() {
 
       {/* Tabs */}
       <div className="border-b border-[#2a2a4a]">
-        <div className="flex gap-1 overflow-x-auto">
-          {TABS.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveTab(tab.id)}
-              className={`
-                px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors duration-150
-                border-b-2 -mb-px
-                ${activeTab === tab.id
-                  ? 'text-[#64ffda] border-[#64ffda]'
-                  : 'text-[#8892b0] border-transparent hover:text-[#ccd6f6]'
-                }
-              `}
-            >
-              {tab.label}
-            </button>
-          ))}
+        <div className="relative">
+          <div
+            className="flex gap-1 overflow-x-auto
+              [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+          >
+            {TABS.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                className={`
+                  px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors duration-150
+                  border-b-2 -mb-px
+                  ${activeTab === tab.id
+                    ? 'text-[#64ffda] border-[#64ffda]'
+                    : 'text-[#8892b0] border-transparent hover:text-[#ccd6f6]'
+                  }
+                `}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+          <div
+            className="pointer-events-none absolute right-0 top-0 h-full w-10 bg-gradient-to-l from-[#0a0a1a] to-transparent z-10"
+            aria-hidden="true"
+          />
         </div>
       </div>
 
@@ -367,7 +376,7 @@ export function TechniqueDetail() {
           <div className="space-y-6">
             {description && (
               <div>
-                <h3 className="text-sm font-semibold text-[#8892b0] uppercase tracking-wider mb-2">
+                <h3 className="text-sm font-semibold text-[#a8b2d8] uppercase tracking-wider mb-2">
                   Description
                 </h3>
                 <p className="text-[#ccd6f6] text-sm leading-relaxed whitespace-pre-wrap">
@@ -377,7 +386,7 @@ export function TechniqueDetail() {
             )}
             {detection && (
               <div>
-                <h3 className="text-sm font-semibold text-[#8892b0] uppercase tracking-wider mb-2">
+                <h3 className="text-sm font-semibold text-[#a8b2d8] uppercase tracking-wider mb-2">
                   Detection
                 </h3>
                 <p className="text-[#ccd6f6] text-sm leading-relaxed whitespace-pre-wrap">
@@ -412,19 +421,138 @@ export function TechniqueDetail() {
           </div>
         )}
 
-        {(activeTab === 'groups' ||
-          activeTab === 'software' ||
-          activeTab === 'mitigations' ||
-          activeTab === 'datasources' ||
-          activeTab === 'campaigns') && (
-          <div className="text-[#8892b0] text-sm py-4">
-            Relationship data for this section is available via the{' '}
-            <Link to="/relationships" className="text-[#64ffda] hover:underline">
-              Relationships Explorer
-            </Link>
-            . Search for{' '}
-            <span className="font-mono text-[#64ffda]">{data.attackId}</span> to
-            explore connections.
+        {activeTab === 'groups' && (
+          <div className="space-y-3">
+            {(data.groups ?? []).length === 0 ? (
+              <p className="text-[#8892b0] text-sm py-4">No groups linked to this technique.</p>
+            ) : (
+              (data.groups ?? []).map((g) => (
+                <div key={g.attackId} className="py-2 border-b border-[#2a2a4a] last:border-0 space-y-1">
+                  <EntityLink type="group" attackId={g.attackId} name={g.name} />
+                  {g.procedure && (
+                    <p className="text-[#8892b0] text-xs leading-relaxed pl-1">{g.procedure}</p>
+                  )}
+                </div>
+              ))
+            )}
+            <div className="pt-2">
+              <Link
+                to={`/relationships?entity=${data.attackId}`}
+                className="text-xs text-[#64ffda] hover:underline"
+              >
+                View full graph
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'software' && (
+          <div className="space-y-3">
+            {(data.software ?? []).length === 0 ? (
+              <p className="text-[#8892b0] text-sm py-4">No software linked to this technique.</p>
+            ) : (
+              (data.software ?? []).map((s) => (
+                <div key={s.attackId} className="py-2 border-b border-[#2a2a4a] last:border-0 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <EntityLink type="software" attackId={s.attackId} name={s.name} />
+                    <Badge label={s.type} variant={s.type === 'malware' ? 'pink' : 'purple'} />
+                  </div>
+                  {s.description && (
+                    <p className="text-[#8892b0] text-xs leading-relaxed pl-1">{s.description}</p>
+                  )}
+                </div>
+              ))
+            )}
+            <div className="pt-2">
+              <Link
+                to={`/relationships?entity=${data.attackId}`}
+                className="text-xs text-[#64ffda] hover:underline"
+              >
+                View full graph
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'mitigations' && (
+          <div className="space-y-3">
+            {(data.mitigations ?? []).length === 0 ? (
+              <p className="text-[#8892b0] text-sm py-4">No mitigations linked to this technique.</p>
+            ) : (
+              (data.mitigations ?? []).map((m) => (
+                <div key={m.attackId} className="py-2 border-b border-[#2a2a4a] last:border-0 space-y-1">
+                  <EntityLink type="mitigation" attackId={m.attackId} name={m.name} />
+                  {m.description && (
+                    <p className="text-[#8892b0] text-xs leading-relaxed pl-1">{m.description}</p>
+                  )}
+                </div>
+              ))
+            )}
+            <div className="pt-2">
+              <Link
+                to={`/relationships?entity=${data.attackId}`}
+                className="text-xs text-[#64ffda] hover:underline"
+              >
+                View full graph
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'datasources' && (
+          <div className="space-y-3">
+            {(data.dataComponents ?? []).length === 0 ? (
+              <p className="text-[#8892b0] text-sm py-4">No data sources linked to this technique.</p>
+            ) : (
+              (data.dataComponents ?? []).map((dc, i) => (
+                <div key={i} className="py-2 border-b border-[#2a2a4a] last:border-0 space-y-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <EntityLink
+                      type="data_source"
+                      attackId={dc.dataSourceAttackId}
+                      name={dc.dataSourceName}
+                    />
+                    <Badge label={dc.componentName} variant="pink" />
+                  </div>
+                  {dc.description && (
+                    <p className="text-[#8892b0] text-xs leading-relaxed pl-1">{dc.description}</p>
+                  )}
+                </div>
+              ))
+            )}
+            <div className="pt-2">
+              <Link
+                to={`/relationships?entity=${data.attackId}`}
+                className="text-xs text-[#64ffda] hover:underline"
+              >
+                View full graph
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'campaigns' && (
+          <div className="space-y-3">
+            {(data.campaigns ?? []).length === 0 ? (
+              <p className="text-[#8892b0] text-sm py-4">No campaigns linked to this technique.</p>
+            ) : (
+              (data.campaigns ?? []).map((c) => (
+                <div key={c.attackId} className="py-2 border-b border-[#2a2a4a] last:border-0 space-y-1">
+                  <EntityLink type="campaign" attackId={c.attackId} name={c.name} />
+                  {c.description && (
+                    <p className="text-[#8892b0] text-xs leading-relaxed pl-1">{c.description}</p>
+                  )}
+                </div>
+              ))
+            )}
+            <div className="pt-2">
+              <Link
+                to={`/relationships?entity=${data.attackId}`}
+                className="text-xs text-[#64ffda] hover:underline"
+              >
+                View full graph
+              </Link>
+            </div>
           </div>
         )}
 

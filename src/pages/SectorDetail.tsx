@@ -41,7 +41,7 @@ export function SectorDetail() {
       />
 
       <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5">
-        <h3 className="text-sm font-semibold text-[#8892b0] uppercase tracking-wider mb-4">
+        <h3 className="text-sm font-semibold text-[#a8b2d8] uppercase tracking-wider mb-4">
           Groups targeting this sector
           <span className="ml-2 text-[#f97316] font-semibold normal-case text-sm">
             ({groups.length})

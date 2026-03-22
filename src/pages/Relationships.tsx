@@ -177,7 +177,18 @@ export function Relationships() {
       {!selectedId && (
         <div className="flex items-center justify-center h-[500px] text-center">
           <div>
-            <div className="text-4xl font-light text-[#2a2a4a] mb-3">
+            {/* Search icon for visual anchoring */}
+            <svg
+              className="w-12 h-12 text-[#4a4a6a] mx-auto mb-4"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={1.5}
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <div className="text-4xl font-light text-[#4a4a6a] mb-3">
               Select an entity
             </div>
             <p className="text-sm text-[#8892b0] max-w-sm">

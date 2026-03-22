@@ -54,7 +54,7 @@ export function GroupDetail() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {data.aliases?.length ? (
           <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-4">
-            <h3 className="text-xs font-semibold text-[#8892b0] uppercase tracking-wider mb-2">
+            <h3 className="text-xs font-semibold text-[#a8b2d8] uppercase tracking-wider mb-2">
               Aliases
             </h3>
             <div className="flex flex-wrap gap-1.5">
@@ -67,7 +67,7 @@ export function GroupDetail() {
 
         {data.country && (
           <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-4">
-            <h3 className="text-xs font-semibold text-[#8892b0] uppercase tracking-wider mb-2">
+            <h3 className="text-xs font-semibold text-[#a8b2d8] uppercase tracking-wider mb-2">
               Country / Attribution
             </h3>
             <Badge label={data.country} variant="orange" />
@@ -78,7 +78,7 @@ export function GroupDetail() {
       {/* Description */}
       {description && (
         <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5">
-          <h3 className="text-sm font-semibold text-[#8892b0] uppercase tracking-wider mb-3">
+          <h3 className="text-sm font-semibold text-[#a8b2d8] uppercase tracking-wider mb-3">
             Description
           </h3>
           <p className="text-[#ccd6f6] text-sm leading-relaxed whitespace-pre-wrap">
@@ -101,7 +101,7 @@ export function GroupDetail() {
 
       {/* Relationships hint */}
       <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5">
-        <h3 className="text-sm font-semibold text-[#8892b0] uppercase tracking-wider mb-2">
+        <h3 className="text-sm font-semibold text-[#a8b2d8] uppercase tracking-wider mb-2">
           Relationships
         </h3>
         <p className="text-sm text-[#8892b0]">
