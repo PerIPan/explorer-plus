@@ -12,7 +12,9 @@
     "resolveJsonModule": true,
     "declaration": false,
     "sourceMap": false,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "jsx": "react-jsx",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"]
   },
   "include": ["api/**/*.ts", "server/**/*.ts", "src/**/*.ts", "cron/**/*.ts"],
   "exclude": ["node_modules", "dist", "venv"]
