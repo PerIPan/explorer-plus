@@ -1,12 +1,21 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useRelationships, useSearch } from '../hooks/useApi';
+import { useQuery } from '@tanstack/react-query';
+import Fuse from 'fuse.js';
+import { useRelationships } from '../hooks/useApi';
+import { apiFetch } from '../lib/api';
 import { PageHeader } from '../components/layout/PageHeader';
 import { ForceGraph, type ForceGraphHandle } from '../components/graph/ForceGraph';
 import { Badge } from '../components/shared/Badge';
 import { ActorProfileView } from '../components/relationships/ActorProfileView';
 import { TechniqueMapView } from '../components/relationships/TechniqueMapView';
 import type { GraphNode } from '../lib/types';
+
+interface EntityEntry {
+  attackId: string;
+  name: string;
+  type: string;
+}
 
 // ── Entity type → badge variant ───────────────────────────────────────────────
 
@@ -32,9 +41,9 @@ interface TabDef {
 }
 
 const TABS: TabDef[] = [
-  { id: 'graph', label: 'Graph' },
   { id: 'actor', label: 'Actor Profile', forTypes: ['group', 'campaign'] },
   { id: 'technique-map', label: 'Technique Map', forTypes: ['technique'] },
+  { id: 'graph', label: 'Graph' },
 ];
 
 /** Derive the entity type from the graph center node or from search suggestions */
@@ -81,33 +90,30 @@ export function Relationships() {
 
   const { data: graphData, isLoading, error } = useRelationships(selectedId);
 
-  /** Search suggestions */
-  const { data: searchData } = useSearch(
-    showSuggestions && searchInput.trim().length >= 3 ? searchInput : ''
-  );
+  /** Load all entity names once for Fuse.js fuzzy search */
+  const { data: allEntities } = useQuery({
+    queryKey: ['entities-all'],
+    queryFn: () => apiFetch<{ data: EntityEntry[] }>('/entities').then(r => r.data),
+    staleTime: 60 * 60 * 1000, // 1 hour
+    gcTime: 60 * 60 * 1000,
+  });
 
-  const suggestions = [
-    ...(searchData?.techniques ?? []).slice(0, 5).map((t) => ({
-      attackId: t.attackId,
-      name: t.name,
-      type: 'technique',
-    })),
-    ...(searchData?.groups ?? []).slice(0, 5).map((g) => ({
-      attackId: g.attackId,
-      name: g.name,
-      type: 'group',
-    })),
-    ...(searchData?.software ?? []).slice(0, 3).map((s) => ({
-      attackId: s.attackId,
-      name: s.name,
-      type: 'software',
-    })),
-    ...(searchData?.campaigns ?? []).slice(0, 3).map((c) => ({
-      attackId: c.attackId,
-      name: c.name,
-      type: 'campaign',
-    })),
-  ].slice(0, 12);
+  /** Build Fuse index (memoized — only rebuilds when entities load) */
+  const fuse = useMemo(() => {
+    if (!allEntities?.length) return null;
+    return new Fuse(allEntities, {
+      keys: ['name', 'attackId'],
+      threshold: 0.3,
+      distance: 100,
+      minMatchCharLength: 2,
+    });
+  }, [allEntities]);
+
+  /** Fuzzy search — instant, client-side */
+  const suggestions = useMemo(() => {
+    if (!fuse || !searchInput.trim() || searchInput.trim().length < 2) return [];
+    return fuse.search(searchInput.trim(), { limit: 12 }).map(r => r.item);
+  }, [fuse, searchInput]);
 
   const entityType = inferEntityType(graphData?.center, suggestions, selectedId);
 
@@ -116,14 +122,16 @@ export function Relationships() {
     (tab) => !tab.forTypes || (entityType && tab.forTypes.includes(entityType))
   );
 
-  /** When entity changes, fall back to 'graph' if active tab is no longer visible */
+  /** When entity type changes, auto-select the best tab */
   useEffect(() => {
     const isVisible = visibleTabs.some((t) => t.id === activeTab);
     if (!isVisible && visibleTabs.length > 0) {
-      setActiveTab('graph');
+      // Pick the first type-specific tab, or fall back to graph
+      const bestTab = visibleTabs[0]?.id ?? 'graph';
+      setActiveTab(bestTab);
       setSearchParams((prev) => {
         const next = new URLSearchParams(prev);
-        next.set('tab', 'graph');
+        next.set('tab', bestTab);
         return next;
       });
     }
@@ -245,7 +253,7 @@ export function Relationships() {
           </div>
         )}
 
-        {showSuggestions && searchInput.length >= 3 && suggestions.length === 0 && (
+        {showSuggestions && searchInput.length >= 2 && suggestions.length === 0 && (
           <div className="absolute top-full w-full z-50 bg-[#16213e] border border-t-0 border-[#64ffda] rounded-b-lg shadow-2xl p-4 text-center text-sm text-[#8892b0]">
             No results for &ldquo;{searchInput}&rdquo;
           </div>
