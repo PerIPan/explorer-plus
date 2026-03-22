@@ -1,11 +1,17 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useMatrix } from '../hooks/useApi';
 import { PageHeader } from '../components/layout/PageHeader';
 import { MatrixGrid } from '../components/matrix/MatrixGrid';
 
 export function Matrix() {
   const { data, isLoading, error } = useMatrix();
+  const [inputValue, setInputValue] = useState('');
   const [filterText, setFilterText] = useState('');
+
+  useEffect(() => {
+    const timer = setTimeout(() => setFilterText(inputValue), 200);
+    return () => clearTimeout(timer);
+  }, [inputValue]);
 
   const totalTechniques = useMemo(
     () => (data ?? []).reduce((sum, col) => sum + col.techniques.length, 0),
@@ -41,15 +47,15 @@ export function Matrix() {
             <input
               type="search"
               placeholder="Filter techniques by name or ID..."
-              value={filterText}
-              onChange={(e) => setFilterText(e.target.value)}
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
               className="w-full pl-8 pr-3 py-1.5 rounded-md text-sm bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6] placeholder-[#8892b0] focus:outline-none focus:border-[#64ffda] transition-colors"
             />
           </div>
-          {filterText && (
+          {inputValue && (
             <button
               type="button"
-              onClick={() => setFilterText('')}
+              onClick={() => { setInputValue(''); setFilterText(''); }}
               className="text-xs text-[#8892b0] hover:text-[#ccd6f6] transition-colors"
             >
               Clear

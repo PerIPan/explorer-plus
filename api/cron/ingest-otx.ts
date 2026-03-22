@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { query } from '../v1/lib/db.js';
 
 const OTX_BASE = 'https://otx.alienvault.com/api/v1';
-const MAX_PAGES = 200;
+const MAX_PAGES = 5;
 
 interface OtxIndicator {
   type: string;

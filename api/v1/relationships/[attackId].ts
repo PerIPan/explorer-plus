@@ -18,28 +18,20 @@ interface EntityRow {
   type: EntityType;
 }
 
-/** Find entity in any table by attack_id */
+/** Find entity in any table by attack_id — single UNION ALL query */
 async function findEntity(attackId: string): Promise<EntityRow | null> {
-  const tables: Array<{ table: string; type: EntityType }> = [
-    { table: 'techniques',    type: 'technique'   },
-    { table: 'threat_groups', type: 'group'        },
-    { table: 'attack_software', type: 'software'  },
-    { table: 'mitigations',   type: 'mitigation'  },
-    { table: 'campaigns',     type: 'campaign'    },
-    { table: 'data_sources',  type: 'data_source' },
-    { table: 'tactics',       type: 'tactic'      },
-  ];
-
-  for (const { table, type } of tables) {
-    const result = await query<{ id: string; attackId: string; name: string }>(
-      `SELECT id, attack_id AS "attackId", name FROM ${table} WHERE attack_id = $1 LIMIT 1`,
-      [attackId],
-    );
-    if (result.rows.length > 0) {
-      return { ...result.rows[0], type };
-    }
-  }
-  return null;
+  const result = await query<{ id: string; attackId: string; name: string; type: EntityType }>(
+    `SELECT id, attack_id AS "attackId", name, 'technique' AS type FROM techniques WHERE attack_id = $1
+     UNION ALL SELECT id, attack_id, name, 'group' FROM threat_groups WHERE attack_id = $1
+     UNION ALL SELECT id, attack_id, name, 'software' FROM attack_software WHERE attack_id = $1
+     UNION ALL SELECT id, attack_id, name, 'campaign' FROM campaigns WHERE attack_id = $1
+     UNION ALL SELECT id, attack_id, name, 'mitigation' FROM mitigations WHERE attack_id = $1
+     UNION ALL SELECT id, attack_id, name, 'tactic' FROM tactics WHERE attack_id = $1
+     UNION ALL SELECT id, attack_id, name, 'data_source' FROM data_sources WHERE attack_id = $1
+     LIMIT 1`,
+    [attackId],
+  );
+  return result.rows[0] ?? null;
 }
 
 async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {

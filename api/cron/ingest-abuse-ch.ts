@@ -75,6 +75,40 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (tfResp.ok) {
         const tfData = (await tfResp.json()) as ThreatFoxResponse;
         if (tfData.query_status === 'ok' && Array.isArray(tfData.data)) {
+          // Collect unique malware family names for batch software lookup
+          const malwareNames = [
+            ...new Set(
+              tfData.data
+                .map((ioc) => ioc.malware)
+                .filter((m): m is string => Boolean(m))
+                .map((m) => m.toLowerCase()),
+            ),
+          ];
+
+          // Single batch query to resolve all malware families to software rows
+          const swMap = new Map<string, { id: string; techniqueIds: string[] }>();
+          if (malwareNames.length > 0) {
+            const swBatch = await query<{ id: string; name: string }>(
+              `SELECT id, name FROM attack_software
+               WHERE LOWER(name) = ANY($1::text[])
+                  OR EXISTS (
+                    SELECT 1 FROM unnest(aliases) a WHERE LOWER(a) = ANY($1::text[])
+                  )`,
+              [malwareNames],
+            );
+
+            for (const sw of swBatch.rows) {
+              const techRes = await query<{ technique_id: string }>(
+                `SELECT technique_id FROM software_techniques WHERE software_id = $1`,
+                [sw.id],
+              );
+              swMap.set(sw.name.toLowerCase(), {
+                id: sw.id,
+                techniqueIds: techRes.rows.map((r) => r.technique_id),
+              });
+            }
+          }
+
           for (const ioc of tfData.data) {
             const iocType = mapThreatFoxType(ioc.ioc_type);
             if (!iocType) continue;
@@ -93,31 +127,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               recordsInserted++;
               const iocId = result.rows[0].id;
 
-              // Cross-reference malware family against attack_software
+              // Cross-reference via pre-resolved software map
               if (ioc.malware) {
-                const swResult = await query<{ id: string }>(
-                  `SELECT id FROM attack_software
-                   WHERE name ILIKE $1
-                      OR (aliases IS NOT NULL AND $2 ILIKE ANY(aliases))
-                   LIMIT 1`,
-                  [ioc.malware, ioc.malware],
-                );
-
-                if (swResult.rows[0]) {
-                  const techResult = await query<{ technique_id: string }>(
-                    `SELECT technique_id FROM software_techniques
-                     WHERE software_id = $1`,
-                    [swResult.rows[0].id],
+                const swEntry = swMap.get(ioc.malware.toLowerCase());
+                if (swEntry && swEntry.techniqueIds.length > 0) {
+                  const iocValues = swEntry.techniqueIds
+                    .map((_, i) => `($${i + 1}, $${swEntry.techniqueIds.length + 1}, 'inferred')`)
+                    .join(', ');
+                  await query(
+                    `INSERT INTO technique_iocs (technique_id, ioc_id, confidence)
+                     VALUES ${iocValues}
+                     ON CONFLICT DO NOTHING`,
+                    [...swEntry.techniqueIds, iocId],
                   );
-
-                  for (const tech of techResult.rows) {
-                    await query(
-                      `INSERT INTO technique_iocs (technique_id, ioc_id, confidence)
-                       VALUES ($1, $2, 'inferred')
-                       ON CONFLICT DO NOTHING`,
-                      [tech.technique_id, iocId],
-                    );
-                  }
                 }
               }
             } else {

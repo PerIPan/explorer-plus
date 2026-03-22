@@ -133,19 +133,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             recordsInserted++;
             feedSummary[feed.source].inserted++;
 
-            for (const id of validIds) {
-              const techResult = await query<{ id: string }>(
-                `SELECT id FROM techniques WHERE attack_id = $1 LIMIT 1`,
-                [id],
+            if (validIds.length > 0) {
+              const techMapResult = await query<{ id: string; attack_id: string }>(
+                `SELECT id, attack_id FROM techniques WHERE attack_id = ANY($1::text[])`,
+                [validIds],
               );
-              if (!techResult.rows[0]) continue;
 
-              await query(
-                `INSERT INTO report_techniques (report_id, technique_id)
-                 VALUES ($1, $2)
-                 ON CONFLICT DO NOTHING`,
-                [reportId, techResult.rows[0].id],
-              );
+              if (techMapResult.rows.length > 0) {
+                const values = techMapResult.rows
+                  .map((_, i) => `($1, $${i + 2})`)
+                  .join(', ');
+                await query(
+                  `INSERT INTO report_techniques (report_id, technique_id)
+                   VALUES ${values}
+                   ON CONFLICT DO NOTHING`,
+                  [reportId, ...techMapResult.rows.map((r) => r.id)],
+                );
+              }
             }
           } catch (upsertErr) {
             const msg = upsertErr instanceof Error ? upsertErr.message : String(upsertErr);
