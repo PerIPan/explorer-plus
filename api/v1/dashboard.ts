@@ -37,15 +37,16 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
        LIMIT 10`,
     ),
     // Tactic distribution
-    query<{ tacticName: string; count: string }>(
+    query<{ tacticName: string; tacticId: string; count: string }>(
       `SELECT
-         ta.name AS "tacticName",
+         ta.name       AS "tacticName",
+         ta.attack_id  AS "tacticId",
          COUNT(DISTINCT tt.technique_id) AS count
        FROM tactics ta
        JOIN technique_tactics tt ON tt.tactic_id = ta.id
        JOIN techniques t ON t.id = tt.technique_id
          AND t.is_revoked = false AND t.is_deprecated = false
-       GROUP BY ta.id, ta.name, ta.sort_order
+       GROUP BY ta.id, ta.name, ta.attack_id, ta.sort_order
        ORDER BY ta.sort_order ASC NULLS LAST`,
     ),
     // Sector breakdown
@@ -84,6 +85,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     })),
     tacticDistribution: tacticDistResult.rows.map((r) => ({
       tacticName: r.tacticName,
+      tacticId: r.tacticId,
       count: parseInt(r.count, 10),
     })),
     sectorBreakdown: sectorResult.rows.map((r) => ({

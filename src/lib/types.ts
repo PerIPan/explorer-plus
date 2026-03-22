@@ -229,6 +229,8 @@ export type MatrixData = MatrixColumn[];
 
 export interface TacticDistribution {
   tacticName: string;
+  /** ATT&CK ID of the tactic (e.g. "TA0001") — used for click navigation. */
+  tacticId: string;
   count: number;
 }
 
@@ -252,11 +254,19 @@ export interface DashboardStats {
   dataSourceCount: number;
 }
 
+export interface AttackVersionMeta {
+  attackVersion: string;
+  domain: string;
+  seededAt: string;
+}
+
 export interface DashboardData {
   stats: DashboardStats;
   topGroups: TopGroup[];
   tacticDistribution: TacticDistribution[];
   sectorBreakdown: SectorBreakdown[];
+  /** ATT&CK version metadata from seed_metadata. Null if not yet seeded. */
+  attackVersion: AttackVersionMeta | null;
 }
 
 /** Entity types used for routing and entity links. */
