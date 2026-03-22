@@ -51,6 +51,7 @@ function LoadingSpinner() {
 function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [modelOpen, setModelOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
 
   return (
     <div className="flex min-h-screen bg-[#0a0a1a]">
@@ -96,6 +97,15 @@ function Layout() {
           >
             Data Model
           </button>
+          <button
+            type="button"
+            onClick={() => setHelpOpen(true)}
+            data-print-hide
+            className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full border border-[#2a2a4a] text-[#8892b0] hover:text-[#64ffda] hover:border-[#64ffda33] transition-colors"
+            title="About this application"
+          >
+            ?
+          </button>
         </header>
 
         {/* Page content */}
@@ -105,6 +115,64 @@ function Layout() {
       </div>
 
       <RelationshipModel open={modelOpen} onClose={() => setModelOpen(false)} />
+
+      {/* Help modal */}
+      {helpOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setHelpOpen(false)}>
+          <div
+            className="bg-[#0a0a1a] border border-[#2a2a4a] rounded-xl shadow-2xl w-[95vw] max-w-[640px] max-h-[85vh] overflow-y-auto"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[#2a2a4a]">
+              <h2 className="text-lg font-semibold text-[#ccd6f6]">About ATT&CK Explorer Plus</h2>
+              <button onClick={() => setHelpOpen(false)} className="p-2 rounded-md text-[#8892b0] hover:text-[#ccd6f6] hover:bg-[#ffffff08]">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="px-6 py-5 space-y-4 text-sm text-[#ccd6f6] leading-relaxed">
+              <p>
+                <strong>ATT&CK Explorer Plus</strong> is a threat intelligence platform built on top of the
+                <em> MITRE ATT&CK</em> framework. It provides security teams with a single interface to
+                explore adversary behavior, detection strategies, and compliance mappings.
+              </p>
+              <p>
+                The platform brings together <strong>14 data sources</strong> into one unified view:
+                ATT&CK techniques, threat groups, campaigns, software, mitigations, data sources,
+                tactics, and sectors from MITRE — enriched with <em>live threat intelligence</em> from
+                AlienVault OTX, RSS feeds, CISA KEV, Sigma detection rules, and Atomic Red Team tests.
+              </p>
+              <p>
+                <strong>Compliance and response frameworks</strong> are integrated directly into each
+                technique: <em>NIST 800-53</em> security controls, <em>MITRE Engage</em> adversary
+                deception activities, and <em>RE&CT</em> incident response playbooks. This means you
+                can go from "what attack is this?" to "how do I detect, prevent, and respond?" in one click.
+              </p>
+              <p>
+                The <strong>Relationships Explorer</strong> is the core of the platform. Search for any
+                entity and instantly see its connections through three views: a <em>Threat Actor Profile</em>
+                showing campaigns, techniques, and targeted sectors; a <em>Technique Map</em> showing who
+                uses it, how to detect it, and which compliance controls apply; and a <em>D3 force graph</em>
+                for visual network exploration.
+              </p>
+              <p>
+                <strong>Extended intelligence</strong> from the <em>ThaiCERT/ETDA encyclopedia</em> adds
+                500+ additional threat actors beyond what MITRE tracks, including motivation, state sponsor
+                attribution, and suspected victim data — automatically linked to ATT&CK groups where possible.
+              </p>
+              <p>
+                All data updates automatically via scheduled feeds. The ATT&CK knowledge base is re-seeded
+                when MITRE releases new versions (approximately twice per year).
+              </p>
+              <p className="text-[#8892b0] text-xs pt-2 border-t border-[#2a2a4a]">
+                Built with React, TypeScript, PostgreSQL, and Vercel. ATT&CK data version shown in the Overview page.
+                Not affiliated with or endorsed by MITRE Corporation.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
