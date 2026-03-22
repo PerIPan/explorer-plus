@@ -215,7 +215,7 @@ export function Relationships() {
                 selectEntity(suggestions[0].attackId);
               }
             }}
-            placeholder={selectedId ? 'Search for another entity...' : 'Type to search: APT29, PowerShell, T1059...'}
+            placeholder={selectedId ? 'Search for another entity...' : 'phishing, APT29, PowerShell, T1059...'}
             className="flex-1 bg-transparent text-sm text-[#ccd6f6] placeholder-[#8892b0] focus:outline-none"
           />
           {searchInput && (

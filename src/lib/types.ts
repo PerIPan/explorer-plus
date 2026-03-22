@@ -1,6 +1,6 @@
 /** Base fields shared by every MITRE ATT&CK entity. */
 export interface BaseEntity {
-  id: number;
+  id: string;
   attackId: string;
   stixId: string;
   name: string;
@@ -140,7 +140,7 @@ export interface Campaign extends BaseEntity {
 }
 
 export interface DataComponent {
-  id: number;
+  id: string;
   name: string;
   description: string | null;
   dataSourceId: number;
@@ -161,7 +161,7 @@ export interface Tactic extends BaseEntity {
 }
 
 export interface Sector {
-  id: number;
+  id: string;
   name: string;
   slug: string | null;
   groupCount: number;
@@ -214,7 +214,7 @@ export interface GraphData {
 }
 
 export interface MatrixTechniqueCell {
-  id: number;
+  id: string;
   attackId: string;
   name: string;
   subTechniques: Array<{ attackId: string; name: string }>;
@@ -321,7 +321,7 @@ export interface FrameworkData {
 // ── CTI Feed Types ─────────────────────────────────────────────────────────────
 
 export interface ThreatReport {
-  id: number;
+  id: string;
   title: string;
   url: string;
   source: string;
@@ -331,7 +331,7 @@ export interface ThreatReport {
 }
 
 export interface IocEntry {
-  id: number;
+  id: string;
   type: string;
   value: string;
   source: string;
@@ -341,7 +341,7 @@ export interface IocEntry {
 }
 
 export interface SigmaRule {
-  id: number;
+  id: string;
   sigma_id: string;
   title: string;
   level: string | null;
@@ -354,7 +354,7 @@ export interface SigmaRule {
 }
 
 export interface AtomicTest {
-  id: number;
+  id: string;
   test_number: number;
   name: string;
   description: string | null;
@@ -379,14 +379,14 @@ export interface FeedSyncStatus {
 export interface TechniqueIntelligence {
   attackId: string;
   reports: Array<{
-    id: number;
+    id: string;
     title: string;
     url: string;
     source: string;
     published_at: string | null;
   }>;
   sigmaRules: Array<{
-    id: number;
+    id: string;
     sigma_id: string;
     title: string;
     level: string | null;
@@ -395,7 +395,7 @@ export interface TechniqueIntelligence {
     logsource_product: string | null;
   }>;
   atomicTests: Array<{
-    id: number;
+    id: string;
     test_number: number;
     name: string;
     description: string | null;
@@ -403,13 +403,12 @@ export interface TechniqueIntelligence {
     executor_type: string | null;
   }>;
   defensiveMappings: Array<{
-    id: number;
+    id: string;
     d3fend_id: string;
     d3fend_label: string;
-    d3fend_description: string | null;
   }>;
   iocs: Array<{
-    id: number;
+    id: string;
     type: string;
     value: string;
     source: string;

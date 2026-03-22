@@ -23,7 +23,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   if (search) {
     params.push(search);
     const { clause } = buildSearchCondition(search);
-    conditions.push(clause.replace('$PARAM', `$${params.length}`));
+    conditions.push(clause.replace('name', 'ds.name').replace('description', 'ds.description').replace('$PARAM', `$${params.length}`));
   }
 
   const whereClause = `WHERE ${conditions.join(' AND ')}`;

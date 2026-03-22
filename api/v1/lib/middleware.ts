@@ -19,7 +19,8 @@ export function withHandler(handler: Handler, options?: HandlerOptions) {
         ? `https://${process.env.VERCEL_URL}`
         : 'http://localhost:5173';
     res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Cron-Secret');
 
     if (method === 'OPTIONS') {
       res.status(200).end();

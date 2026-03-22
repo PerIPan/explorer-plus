@@ -206,8 +206,8 @@ function IntelligenceTab({ attackId }: IntelligenceTabProps) {
                   <span className="font-mono text-xs text-[#64ffda]">{dm.d3fend_id}</span>
                   <span className="text-[#ccd6f6] text-sm">{dm.d3fend_label}</span>
                 </div>
-                {dm.d3fend_description && (
-                  <p className="text-[#8892b0] text-xs mt-1 line-clamp-2">{dm.d3fend_description}</p>
+                {dm.d3fend_label && (
+                  <p className="text-[#8892b0] text-xs mt-1 line-clamp-2">{dm.d3fend_label}</p>
                 )}
               </div>
             ))}
