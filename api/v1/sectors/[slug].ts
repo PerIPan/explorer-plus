@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { query } from '../_lib/db';
-import { withHandler } from '../_lib/middleware';
-import { slugSchema } from '../_lib/validate';
+import { query } from '../_lib/db.js';
+import { withHandler } from '../_lib/middleware.js';
+import { slugSchema } from '../_lib/validate.js';
 
 async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   const parsed = slugSchema.safeParse(req.query.slug);

@@ -49,7 +49,7 @@ export function TechniquesList() {
   const [expandedParents, setExpandedParents] = useState<Set<string>>(new Set());
 
   const params: Record<string, string> = { page: String(page), limit: '50' };
-  if (search) params.q = search;
+  if (search) params.search = search;
   if (tactic) params.tactic = tactic;
   if (platform) params.platform = platform;
   if (sortBy) params.sort = sortBy;

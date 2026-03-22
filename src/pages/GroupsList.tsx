@@ -18,7 +18,7 @@ export function GroupsList() {
   const sortDir = (searchParams.get('order') ?? 'asc') as 'asc' | 'desc';
 
   const params: Record<string, string> = { page: String(page), limit: '50' };
-  if (search) params.q = search;
+  if (search) params.search = search;
   if (sector) params.sector = sector;
   if (sortBy) params.sort = sortBy;
   if (sortDir) params.order = sortDir;

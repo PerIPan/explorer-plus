@@ -1,6 +1,6 @@
 /** Base fields shared by every MITRE ATT&CK entity. */
 export interface BaseEntity {
-  id: number;
+  id: string;
   attackId: string;
   stixId: string;
   name: string;
@@ -43,7 +43,7 @@ export interface Campaign extends BaseEntity {
 }
 
 export interface DataComponent {
-  id: number;
+  id: string;
   name: string;
   description: string | null;
   dataSourceId: number;
@@ -64,7 +64,7 @@ export interface Tactic extends BaseEntity {
 }
 
 export interface Sector {
-  id: number;
+  id: string;
   name: string;
   description: string | null;
   createdAt: string;
@@ -118,7 +118,7 @@ export interface GraphData {
 }
 
 export interface MatrixTechniqueCell {
-  id: number;
+  id: string;
   attackId: string;
   name: string;
   subTechniques: Array<{ attackId: string; name: string }>;

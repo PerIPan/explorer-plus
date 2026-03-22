@@ -106,7 +106,7 @@ export function IocsList() {
   const params: Record<string, string> = { page: String(page), limit: '100' };
   if (type) params.type = type;
   if (source) params.source = source;
-  if (q) params.q = q;
+  if (q) params.search = q;
 
   const { data, isLoading } = useIocs(params);
 

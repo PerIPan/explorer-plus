@@ -126,7 +126,7 @@ export function SigmaList() {
   const params: Record<string, string> = { page: String(page), limit: '50' };
   if (level) params.level = level;
   if (technique) params.technique = technique;
-  if (q) params.q = q;
+  if (q) params.search = q;
 
   const { data, isLoading } = useSigmaRules(params);
 

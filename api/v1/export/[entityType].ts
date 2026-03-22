@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { query } from '../_lib/db';
-import { withHandler } from '../_lib/middleware';
-import { exportSchema } from '../_lib/validate';
+import { query } from '../_lib/db.js';
+import { withHandler } from '../_lib/middleware.js';
+import { exportSchema } from '../_lib/validate.js';
 
 /** Convert an array of objects to CSV text */
 function toCsv(rows: Record<string, unknown>[]): string {

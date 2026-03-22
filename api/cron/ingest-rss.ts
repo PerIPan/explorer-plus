@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { query } from '../v1/_lib/db';
+import { query } from '../v1/_lib/db.js';
 
 const RSS_FEEDS = [
   { url: 'https://thedfirreport.com/feed/', source: 'dfir_report' },

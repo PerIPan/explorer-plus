@@ -110,7 +110,7 @@ export function ReportsList() {
 
   const params: Record<string, string> = { page: String(page), limit: '50' };
   if (source) params.source = source;
-  if (q) params.q = q;
+  if (q) params.search = q;
   if (since) params.since = since;
 
   const { data, isLoading } = useReports(params);

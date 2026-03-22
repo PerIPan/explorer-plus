@@ -1,9 +1,9 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { query } from '../_lib/db';
-import { withHandler } from '../_lib/middleware';
-import { attackIdSchema } from '../_lib/validate';
+import { query } from '../_lib/db.js';
+import { withHandler } from '../_lib/middleware.js';
+import { attackIdSchema } from '../_lib/validate.js';
 import { z } from 'zod';
-import type { GraphNode, GraphEdge } from '../_lib/types';
+import type { GraphNode, GraphEdge } from '../_lib/types.js';
 
 const querySchema = z.object({
   limit: z.coerce.number().int().positive().max(500).default(200),

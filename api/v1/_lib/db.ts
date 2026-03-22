@@ -4,9 +4,13 @@ let pool: Pool | null = null;
 
 function getPool(): Pool {
   if (!pool) {
+    const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+    const isProduction = connectionString?.includes('neon') || connectionString?.includes('vercel');
     pool = new Pool({
-      connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL,
+      connectionString,
       statement_timeout: 5000,
+      max: isProduction ? 1 : 10,
+      ssl: isProduction ? { rejectUnauthorized: false } : undefined,
     });
   }
   return pool;

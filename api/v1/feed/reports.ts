@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { query } from '../_lib/db';
-import { withHandler } from '../_lib/middleware';
-import { paginationSchema } from '../_lib/validate';
+import { query } from '../_lib/db.js';
+import { withHandler } from '../_lib/middleware.js';
+import { paginationSchema } from '../_lib/validate.js';
 import { z } from 'zod';
 
 const querySchema = paginationSchema.extend({

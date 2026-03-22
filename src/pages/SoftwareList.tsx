@@ -19,7 +19,7 @@ export function SoftwareList() {
   const sortDir = (searchParams.get('sortDir') ?? 'asc') as 'asc' | 'desc';
 
   const params: Record<string, string> = { page: String(page), limit: '50' };
-  if (search) params.q = search;
+  if (search) params.search = search;
   if (type) params.type = type;
   if (sortBy) params.sortBy = sortBy;
   if (sortDir) params.sortDir = sortDir;
