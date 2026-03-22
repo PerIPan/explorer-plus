@@ -29,6 +29,10 @@ import { ReportsList } from './pages/ReportsList';
 import { IocsList } from './pages/IocsList';
 import { SigmaList } from './pages/SigmaList';
 import { FeedStatus } from './pages/FeedStatus';
+// Framework pages
+import { NistControls } from './pages/NistControls';
+import { EngageActivities } from './pages/EngageActivities';
+import { ReactActions } from './pages/ReactActions';
 
 /** Root layout — sidebar + top bar + page content */
 function Layout() {
@@ -147,6 +151,11 @@ export default function App() {
         <Route path="cti/iocs" element={<IocsList />} />
         <Route path="cti/sigma" element={<SigmaList />} />
         <Route path="cti/feed-status" element={<FeedStatus />} />
+
+        {/* Framework pages */}
+        <Route path="frameworks/nist" element={<NistControls />} />
+        <Route path="frameworks/engage" element={<EngageActivities />} />
+        <Route path="frameworks/react" element={<ReactActions />} />
 
         {/* 404 */}
         <Route path="*" element={<PlaceholderPage title="404 - Not Found" />} />

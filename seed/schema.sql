@@ -501,4 +501,65 @@ CREATE INDEX IF NOT EXISTS idx_campaigns_last_seen  ON campaigns(last_seen);
 CREATE INDEX IF NOT EXISTS idx_group_sectors_matched_keywords
   ON group_sectors USING GIN (matched_keywords);
 
+-- ---------------------------------------------------------------------------
+-- Framework integration tables (NIST 800-53, CIS Controls, Engage, RE&CT)
+-- ---------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS nist_controls (
+  id                  UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+  control_id          VARCHAR(20)  NOT NULL,
+  control_name        VARCHAR(255),
+  control_family      VARCHAR(100),
+  technique_id        UUID         REFERENCES techniques(id) ON DELETE CASCADE,
+  attack_technique_id VARCHAR(20)  NOT NULL,
+  mapping_type        VARCHAR(50),
+  status              VARCHAR(50),
+  created_at          TIMESTAMPTZ  NOT NULL DEFAULT now(),
+  UNIQUE(control_id, attack_technique_id)
+);
+
+CREATE TABLE IF NOT EXISTS cis_controls (
+  id                  UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+  control_id          VARCHAR(20)  NOT NULL,
+  control_name        VARCHAR(255),
+  control_group       VARCHAR(100),
+  technique_id        UUID         REFERENCES techniques(id) ON DELETE CASCADE,
+  attack_technique_id VARCHAR(20)  NOT NULL,
+  mapping_type        VARCHAR(50),
+  created_at          TIMESTAMPTZ  NOT NULL DEFAULT now(),
+  UNIQUE(control_id, attack_technique_id)
+);
+
+CREATE TABLE IF NOT EXISTS engage_mappings (
+  id                  UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+  engage_id           VARCHAR(20)  NOT NULL,
+  engage_name         VARCHAR(255) NOT NULL,
+  engage_description  TEXT,
+  goal                VARCHAR(100),
+  approach            VARCHAR(100),
+  technique_id        UUID         REFERENCES techniques(id) ON DELETE CASCADE,
+  attack_technique_id VARCHAR(20)  NOT NULL,
+  created_at          TIMESTAMPTZ  NOT NULL DEFAULT now(),
+  UNIQUE(engage_id, attack_technique_id)
+);
+
+CREATE TABLE IF NOT EXISTS react_actions (
+  id          UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+  action_id   VARCHAR(20)  NOT NULL UNIQUE,
+  title       VARCHAR(255) NOT NULL,
+  description TEXT,
+  stage       VARCHAR(50),
+  workflow    TEXT,
+  created_at  TIMESTAMPTZ  NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_nist_technique    ON nist_controls(technique_id);
+CREATE INDEX IF NOT EXISTS idx_nist_control      ON nist_controls(control_id);
+CREATE INDEX IF NOT EXISTS idx_nist_attack_id    ON nist_controls(attack_technique_id);
+CREATE INDEX IF NOT EXISTS idx_cis_technique     ON cis_controls(technique_id);
+CREATE INDEX IF NOT EXISTS idx_cis_attack_id     ON cis_controls(attack_technique_id);
+CREATE INDEX IF NOT EXISTS idx_engage_technique  ON engage_mappings(technique_id);
+CREATE INDEX IF NOT EXISTS idx_engage_attack_id  ON engage_mappings(attack_technique_id);
+CREATE INDEX IF NOT EXISTS idx_react_stage       ON react_actions(stage);
+
 COMMIT;

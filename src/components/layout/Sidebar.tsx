@@ -60,6 +60,12 @@ const ctiNav: NavItem[] = [
   { path: '/cti/feed-status', label: 'Feed Status' },
 ];
 
+const frameworksNav: NavItem[] = [
+  { path: '/frameworks/nist', label: 'NIST 800-53', tooltip: 'compliance controls mapped to techniques' },
+  { path: '/frameworks/engage', label: 'Engage', tooltip: 'adversary deception and engagement activities' },
+  { path: '/frameworks/react', label: 'RE&CT', tooltip: 'incident response actions and playbooks' },
+];
+
 function NavItemLink({ path, label, tooltip, end }: NavItem & { end?: boolean }) {
   return (
     <NavLink
@@ -149,6 +155,21 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         </div>
         <div className="space-y-0.5">
           {ctiNav.map((item) => (
+            <NavItemLink key={item.path} path={item.path} label={item.label} tooltip={item.tooltip} />
+          ))}
+        </div>
+      </div>
+
+      {/* Separator */}
+      <div className="mx-4 border-t border-[#2a2a4a]" />
+
+      {/* Frameworks Section */}
+      <div className="px-2 py-4">
+        <div className="px-3 mb-2 text-[10px] font-semibold text-[#8892b0] uppercase tracking-widest">
+          Frameworks
+        </div>
+        <div className="space-y-0.5">
+          {frameworksNav.map((item) => (
             <NavItemLink key={item.path} path={item.path} label={item.label} tooltip={item.tooltip} />
           ))}
         </div>

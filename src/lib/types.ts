@@ -209,6 +209,55 @@ export type EntityType =
   | 'data_source'
   | 'tactic';
 
+// ── Framework Types ────────────────────────────────────────────────────────────
+
+export interface NistControl {
+  controlId: string;
+  controlName: string | null;
+  controlFamily: string | null;
+  attackTechniqueId: string;
+  mappingType: string | null;
+}
+
+export interface NistControlSummary {
+  controlId: string;
+  controlName: string | null;
+  controlFamily: string | null;
+  techniqueCount: number;
+}
+
+export interface EngageMapping {
+  engageId: string;
+  engageName: string;
+  engageDescription: string | null;
+  goal: string | null;
+  approach: string | null;
+  attackTechniqueId: string;
+}
+
+export interface EngageSummary {
+  engageId: string;
+  engageName: string;
+  engageDescription: string | null;
+  goal: string | null;
+  approach: string | null;
+  techniqueCount: number;
+}
+
+export interface ReactAction {
+  actionId: string;
+  title: string;
+  description: string | null;
+  stage: string | null;
+  workflow: string | null;
+}
+
+export interface FrameworkData {
+  attackId: string;
+  nist: NistControl[];
+  engage: EngageMapping[];
+}
+
 // ── CTI Feed Types ─────────────────────────────────────────────────────────────
 
 export interface ThreatReport {

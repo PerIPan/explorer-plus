@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useTechnique, useIntelligence } from '../hooks/useApi';
+import { useTechnique, useIntelligence, useFrameworks } from '../hooks/useApi';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Badge } from '../components/shared/Badge';
 import { DeprecatedBadge } from '../components/shared/DeprecatedBadge';
@@ -15,7 +15,8 @@ type TabId =
   | 'datasources'
   | 'campaigns'
   | 'subtechniques'
-  | 'intelligence';
+  | 'intelligence'
+  | 'frameworks';
 
 const TABS: { id: TabId; label: string }[] = [
   { id: 'overview', label: 'Overview' },
@@ -26,6 +27,7 @@ const TABS: { id: TabId; label: string }[] = [
   { id: 'campaigns', label: 'Campaigns' },
   { id: 'subtechniques', label: 'Sub-Techniques' },
   { id: 'intelligence', label: 'Intelligence' },
+  { id: 'frameworks', label: 'Frameworks' },
 ];
 
 const LEVEL_COLORS: Record<string, string> = {
@@ -256,6 +258,162 @@ function IntelligenceTab({ attackId }: IntelligenceTabProps) {
           </div>
         </section>
       )}
+    </div>
+  );
+}
+
+const NIST_FAMILY_COLORS: Record<string, string> = {
+  'Access Control': 'blue',
+  'Audit and Accountability': 'purple',
+  'Incident Response': 'orange',
+  'System and Information Integrity': 'pink',
+  'Configuration Management': 'teal',
+};
+
+function FrameworksTab({ attackId }: { attackId: string }) {
+  const { data, isLoading, error } = useFrameworks(attackId);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center gap-2 text-[#8892b0] text-sm py-6">
+        <span className="inline-block w-4 h-4 border-2 border-[#64ffda33] border-t-[#64ffda] rounded-full animate-spin" />
+        Loading framework mappings...
+      </div>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <p className="text-[#8892b0] text-sm py-6">
+        Framework data unavailable.
+      </p>
+    );
+  }
+
+  const isEmpty = data.nist.length === 0 && data.engage.length === 0;
+
+  if (isEmpty) {
+    return (
+      <p className="text-[#8892b0] text-sm py-6">
+        No framework mappings found for this technique. Run{' '}
+        <code className="text-[#64ffda] text-xs font-mono">
+          node scripts/sync-frameworks.mjs
+        </code>{' '}
+        to populate data.
+      </p>
+    );
+  }
+
+  return (
+    <div className="space-y-8">
+      {/* NIST 800-53 */}
+      {data.nist.length > 0 && (
+        <section>
+          <h3 className="text-sm font-semibold text-[#a8b2d8] uppercase tracking-wider mb-3">
+            NIST 800-53 Controls ({data.nist.length})
+          </h3>
+          <div className="space-y-2">
+            {data.nist.map((ctrl) => (
+              <div
+                key={ctrl.controlId}
+                className="flex items-start gap-3 py-2 px-3 rounded-md bg-[#16213e] border border-[#2a2a4a]"
+              >
+                <span className="font-mono text-xs text-[#64ffda] mt-0.5 shrink-0 w-14">
+                  {ctrl.controlId}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <span className="text-[#ccd6f6] text-sm">
+                    {ctrl.controlName ?? ctrl.controlId}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  {ctrl.controlFamily && (
+                    <Badge
+                      label={ctrl.controlFamily}
+                      variant={
+                        (NIST_FAMILY_COLORS[ctrl.controlFamily] as 'blue' | 'purple' | 'orange' | 'pink' | 'teal') ?? 'neutral'
+                      }
+                    />
+                  )}
+                  {ctrl.mappingType && (
+                    <span className="text-[#8892b0] text-xs">{ctrl.mappingType}</span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="pt-2">
+            <Link
+              to="/frameworks/nist"
+              className="text-xs text-[#64ffda] hover:underline"
+            >
+              Browse all NIST 800-53 controls
+            </Link>
+          </div>
+        </section>
+      )}
+
+      {/* MITRE Engage */}
+      {data.engage.length > 0 && (
+        <section>
+          <h3 className="text-sm font-semibold text-[#a8b2d8] uppercase tracking-wider mb-3">
+            MITRE Engage Activities ({data.engage.length})
+          </h3>
+          <div className="space-y-2">
+            {data.engage.map((act) => (
+              <div
+                key={act.engageId}
+                className="py-2 px-3 rounded-md bg-[#16213e] border border-[#2a2a4a]"
+              >
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-mono text-xs text-[#64ffda] shrink-0">
+                    {act.engageId}
+                  </span>
+                  <span className="text-[#ccd6f6] text-sm">{act.engageName}</span>
+                  {act.goal && (
+                    <Badge label={act.goal} variant="orange" />
+                  )}
+                  {act.approach && (
+                    <Badge label={act.approach} variant="purple" />
+                  )}
+                </div>
+                {act.engageDescription && (
+                  <p className="text-[#8892b0] text-xs mt-1 line-clamp-2">
+                    {act.engageDescription}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+          <div className="pt-2">
+            <Link
+              to="/frameworks/engage"
+              className="text-xs text-[#64ffda] hover:underline"
+            >
+              Browse all Engage activities
+            </Link>
+          </div>
+        </section>
+      )}
+
+      {/* RE&CT — general link (actions are not per-technique) */}
+      <section>
+        <h3 className="text-sm font-semibold text-[#a8b2d8] uppercase tracking-wider mb-3">
+          RE&CT Incident Response
+        </h3>
+        <p className="text-[#8892b0] text-sm">
+          RE&CT response actions are not mapped per-technique — they cover the full IR lifecycle.
+          View the full action catalogue to find relevant response steps for this technique type.
+        </p>
+        <div className="pt-2">
+          <Link
+            to="/frameworks/react"
+            className="text-xs text-[#64ffda] hover:underline"
+          >
+            Browse RE&CT response actions
+          </Link>
+        </div>
+      </section>
     </div>
   );
 }
@@ -560,6 +718,10 @@ export function TechniqueDetail() {
 
         {activeTab === 'intelligence' && (
           <IntelligenceTab attackId={data.attackId} />
+        )}
+
+        {activeTab === 'frameworks' && (
+          <FrameworksTab attackId={data.attackId} />
         )}
       </div>
     </div>

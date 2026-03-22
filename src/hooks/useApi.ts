@@ -20,6 +20,10 @@ import type {
   AtomicTest,
   FeedSyncStatus,
   TechniqueIntelligence,
+  FrameworkData,
+  NistControlSummary,
+  EngageSummary,
+  ReactAction,
 } from '../lib/types';
 
 // ── List / paginated hooks ────────────────────────────────────────────────────
@@ -218,5 +222,36 @@ export function useIntelligence(attackId: string) {
     queryKey: ['intelligence', attackId],
     queryFn: () => apiFetch<TechniqueIntelligence>(`/feed/intelligence/${attackId}`),
     enabled: Boolean(attackId),
+  });
+}
+
+// ── Framework hooks ─────────────────────────────────────────────────────────────
+
+export function useFrameworks(attackId: string) {
+  return useQuery({
+    queryKey: ['frameworks', attackId],
+    queryFn: () => apiFetch<FrameworkData>(`/techniques/${attackId}/frameworks`),
+    enabled: Boolean(attackId),
+  });
+}
+
+export function useNistControls(params: Record<string, string> = {}) {
+  return useQuery({
+    queryKey: ['nist-controls', params],
+    queryFn: () => apiFetch<PaginatedResponse<NistControlSummary>>('/frameworks/nist', params),
+  });
+}
+
+export function useEngageActivities(params: Record<string, string> = {}) {
+  return useQuery({
+    queryKey: ['engage-activities', params],
+    queryFn: () => apiFetch<PaginatedResponse<EngageSummary>>('/frameworks/engage', params),
+  });
+}
+
+export function useReactActions(params: Record<string, string> = {}) {
+  return useQuery({
+    queryKey: ['react-actions', params],
+    queryFn: () => apiFetch<PaginatedResponse<ReactAction>>('/frameworks/react', params),
   });
 }
