@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS seed_metadata (
 
 CREATE TABLE IF NOT EXISTS tactics (
   id             UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
-  stix_id        VARCHAR(100) UNIQUE NOT NULL,
+  stix_id        VARCHAR(255) UNIQUE,
   attack_id      VARCHAR(20)  UNIQUE NOT NULL,
   name           VARCHAR(255) NOT NULL,
   description    TEXT,
@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS tactics (
 
 CREATE TABLE IF NOT EXISTS techniques (
   id                    UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
-  stix_id               VARCHAR(100) UNIQUE NOT NULL,
+  stix_id               VARCHAR(255) UNIQUE,
   attack_id             VARCHAR(20)  UNIQUE NOT NULL,
   name                  VARCHAR(255) NOT NULL,
   description           TEXT,
@@ -87,7 +87,7 @@ CREATE TABLE IF NOT EXISTS techniques (
 
 CREATE TABLE IF NOT EXISTS threat_groups (
   id             UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
-  stix_id        VARCHAR(100) UNIQUE NOT NULL,
+  stix_id        VARCHAR(255) UNIQUE,
   attack_id      VARCHAR(20)  UNIQUE NOT NULL,
   name           VARCHAR(255) NOT NULL,
   description    TEXT,
@@ -104,7 +104,7 @@ CREATE TABLE IF NOT EXISTS threat_groups (
 
 CREATE TABLE IF NOT EXISTS attack_software (
   id             UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
-  stix_id        VARCHAR(100) UNIQUE NOT NULL,
+  stix_id        VARCHAR(255) UNIQUE,
   attack_id      VARCHAR(20)  UNIQUE NOT NULL,
   name           VARCHAR(255) NOT NULL,
   description    TEXT,
@@ -123,7 +123,7 @@ CREATE TABLE IF NOT EXISTS attack_software (
 
 CREATE TABLE IF NOT EXISTS mitigations (
   id             UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
-  stix_id        VARCHAR(100) UNIQUE NOT NULL,
+  stix_id        VARCHAR(255) UNIQUE,
   attack_id      VARCHAR(20)  UNIQUE NOT NULL,
   name           VARCHAR(255) NOT NULL,
   description    TEXT,
@@ -139,7 +139,7 @@ CREATE TABLE IF NOT EXISTS mitigations (
 
 CREATE TABLE IF NOT EXISTS campaigns (
   id             UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
-  stix_id        VARCHAR(100) UNIQUE NOT NULL,
+  stix_id        VARCHAR(255) UNIQUE,
   attack_id      VARCHAR(20)  UNIQUE NOT NULL,
   name           VARCHAR(255) NOT NULL,
   description    TEXT,
@@ -158,7 +158,7 @@ CREATE TABLE IF NOT EXISTS campaigns (
 
 CREATE TABLE IF NOT EXISTS data_sources (
   id             UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
-  stix_id        VARCHAR(100) UNIQUE NOT NULL,
+  stix_id        VARCHAR(255) UNIQUE,
   attack_id      VARCHAR(20)  UNIQUE NOT NULL,
   name           VARCHAR(255) NOT NULL,
   description    TEXT,
@@ -174,7 +174,7 @@ CREATE TABLE IF NOT EXISTS data_sources (
 
 CREATE TABLE IF NOT EXISTS data_components (
   id              UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
-  stix_id         VARCHAR(100) UNIQUE NOT NULL,
+  stix_id         VARCHAR(255) UNIQUE,
   name            VARCHAR(255) NOT NULL,
   description     TEXT,
   data_source_id  UUID         REFERENCES data_sources(id) ON DELETE CASCADE,
@@ -190,7 +190,7 @@ CREATE TABLE IF NOT EXISTS data_components (
 CREATE TABLE IF NOT EXISTS sectors (
   id          UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
   name        VARCHAR(255) NOT NULL,
-  slug        VARCHAR(100) UNIQUE NOT NULL,
+  slug        VARCHAR(255) UNIQUE,
   created_at  TIMESTAMPTZ  NOT NULL DEFAULT now(),
   updated_at  TIMESTAMPTZ  NOT NULL DEFAULT now()
 );
@@ -303,7 +303,7 @@ CREATE TABLE IF NOT EXISTS ioc_entries (
 
 CREATE TABLE IF NOT EXISTS sigma_rules (
   id                    UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
-  sigma_id              VARCHAR(100) UNIQUE NOT NULL,
+  sigma_id              VARCHAR(255) UNIQUE,
   title                 TEXT         NOT NULL,
   technique_id          UUID         REFERENCES techniques(id) ON DELETE SET NULL,
   attack_technique_id   VARCHAR(20),
@@ -426,6 +426,9 @@ CREATE INDEX IF NOT EXISTS idx_data_sources_attack_id     ON data_sources(attack
 CREATE INDEX IF NOT EXISTS idx_techniques_platforms      ON techniques USING GIN (platforms);
 CREATE INDEX IF NOT EXISTS idx_attack_software_platforms ON attack_software USING GIN (platforms);
 CREATE INDEX IF NOT EXISTS idx_atomic_tests_platforms    ON atomic_tests USING GIN (platforms);
+
+-- Parent technique FK index
+CREATE INDEX IF NOT EXISTS idx_techniques_parent ON techniques(parent_technique_id);
 
 -- Partial index: parent techniques only
 CREATE INDEX IF NOT EXISTS idx_techniques_parent_only
