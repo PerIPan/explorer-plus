@@ -2,6 +2,11 @@
   "framework": "vite",
   "buildCommand": "npx vite build",
   "outputDirectory": "dist",
+  "functions": {
+    "api/**/*.ts": {
+      "includeFiles": "api/v1/lib/**"
+    }
+  },
   "crons": [
     { "path": "/api/cron/ingest-otx", "schedule": "*/30 * * * *" },
     { "path": "/api/cron/ingest-abuse-ch", "schedule": "0 2 * * *" },
