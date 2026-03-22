@@ -36,7 +36,7 @@ const NODES: ModelNode[] = [
 
   // Compliance (far right)
   { id: 'nist', label: 'NIST 800-53', x: 980, y: 120, color: '#38bdf8', bg: '#38bdf818', path: '/frameworks/nist', description: 'Federal security controls', category: 'compliance' },
-  { id: 'engage', label: 'MITRE Engage', x: 980, y: 300, color: '#fb923c', bg: '#fb923c18', path: '/frameworks/engage', description: 'Adversary deception & engagement', category: 'compliance' },
+  { id: 'engage', label: 'MITRE Engage', x: 980, y: 380, color: '#fb923c', bg: '#fb923c18', path: '/frameworks/engage', description: 'Adversary deception & engagement', category: 'compliance' },
   { id: 'react', label: 'RE&CT', x: 980, y: 480, color: '#4ade80', bg: '#4ade8018', path: '/frameworks/react', description: 'Incident response playbooks', category: 'compliance' },
 
   // Intelligence (below technique)
