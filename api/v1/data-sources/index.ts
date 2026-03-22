@@ -17,7 +17,8 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
 
   const { search } = parsed.data;
   const params: unknown[] = [];
-  const conditions: string[] = ['ds.is_revoked = false', 'ds.is_deprecated = false'];
+  // Data sources are all marked deprecated in ATT&CK v18+ (restructured) — show them anyway
+  const conditions: string[] = ['ds.is_revoked = false'];
 
   if (search) {
     params.push(search);

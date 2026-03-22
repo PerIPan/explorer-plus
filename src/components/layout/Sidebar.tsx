@@ -8,6 +8,7 @@ interface SidebarProps {
 interface NavItem {
   path: string;
   label: string;
+  tooltip?: string;
 }
 
 interface NavSection {
@@ -18,36 +19,36 @@ interface NavSection {
 const mainSections: NavSection[] = [
   {
     items: [
-      { path: '/dashboard', label: 'Dashboard' },
-      { path: '/', label: 'Matrix' },
+      { path: '/', label: 'Matrix', tooltip: 'att&ck technique matrix heatmap — tactics vs techniques' },
     ],
   },
   {
     label: 'Threat Actors',
     items: [
-      { path: '/groups', label: 'Groups' },
-      { path: '/campaigns', label: 'Campaigns' },
-      { path: '/sectors', label: 'Sectors' },
+      { path: '/groups', label: 'Groups', tooltip: 'tracked threat actor groups (APT29, Lazarus, etc.)' },
+      { path: '/campaigns', label: 'Campaigns', tooltip: 'named intrusion campaigns with timelines' },
+      { path: '/sectors', label: 'Sectors', tooltip: 'industry sectors targeted by threat groups' },
     ],
   },
   {
     label: 'Offensive',
     items: [
-      { path: '/techniques', label: 'Techniques' },
-      { path: '/tactics', label: 'Tactics' },
-      { path: '/software', label: 'Software' },
+      { path: '/techniques', label: 'Techniques', tooltip: 'attack techniques and sub-techniques used by adversaries' },
+      { path: '/tactics', label: 'Tactics', tooltip: 'kill chain phases: recon → impact' },
+      { path: '/software', label: 'Software', tooltip: 'malware and tools used by threat actors' },
     ],
   },
   {
     label: 'Defensive',
     items: [
-      { path: '/mitigations', label: 'Mitigations' },
-      { path: '/data-sources', label: 'Data Sources' },
+      { path: '/mitigations', label: 'Mitigations', tooltip: 'countermeasures to prevent or limit techniques' },
+      { path: '/data-sources', label: 'Data Sources', tooltip: 'telemetry sources for detecting techniques' },
     ],
   },
   {
     items: [
-      { path: '/relationships', label: 'Relationships' },
+      { path: '/relationships', label: 'Relationships', tooltip: 'd3 force graph — explore entity connections visually' },
+      { path: '/dashboard', label: 'Overview', tooltip: 'summary stats, charts, and top threat groups' },
     ],
   },
 ];
@@ -59,11 +60,12 @@ const ctiNav: NavItem[] = [
   { path: '/cti/feed-status', label: 'Feed Status' },
 ];
 
-function NavItem({ path, label, end }: NavItem & { end?: boolean }) {
+function NavItemLink({ path, label, tooltip, end }: NavItem & { end?: boolean }) {
   return (
     <NavLink
       to={path}
       end={end}
+      title={tooltip}
       className={({ isActive }) =>
         [
           'block px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150',
@@ -131,7 +133,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
               </div>
             )}
             {section.items.map((item) => (
-              <NavItem key={item.path} path={item.path} label={item.label} end={item.path === '/'} />
+              <NavItemLink key={item.path} path={item.path} label={item.label} tooltip={item.tooltip} end={item.path === '/'} />
             ))}
           </div>
         ))}
@@ -147,7 +149,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         </div>
         <div className="space-y-0.5">
           {ctiNav.map((item) => (
-            <NavItem key={item.path} path={item.path} label={item.label} />
+            <NavItemLink key={item.path} path={item.path} label={item.label} tooltip={item.tooltip} />
           ))}
         </div>
       </div>
