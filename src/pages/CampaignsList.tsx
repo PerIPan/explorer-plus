@@ -21,13 +21,13 @@ export function CampaignsList() {
 
   const page = parseInt(searchParams.get('page') ?? '1', 10);
   const search = searchParams.get('q') ?? '';
-  const sortBy = searchParams.get('sortBy') ?? 'attackId';
-  const sortDir = (searchParams.get('sortDir') ?? 'asc') as 'asc' | 'desc';
+  const sort = searchParams.get('sort') ?? 'attack_id';
+  const order = (searchParams.get('order') ?? 'asc') as 'asc' | 'desc';
 
   const params: Record<string, string> = { page: String(page), limit: '50' };
   if (search) params.search = search;
-  if (sortBy) params.sortBy = sortBy;
-  if (sortDir) params.sortDir = sortDir;
+  if (sort) params.sort = sort;
+  if (order) params.order = order;
 
   const { data, isLoading } = useCampaigns(params);
 
@@ -46,10 +46,10 @@ export function CampaignsList() {
   function handleSort(key: string) {
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
-      const curKey = prev.get('sortBy') ?? 'attackId';
-      const curDir = prev.get('sortDir') ?? 'asc';
-      next.set('sortBy', key);
-      next.set('sortDir', curKey === key && curDir === 'asc' ? 'desc' : 'asc');
+      const curKey = prev.get('sort') ?? 'attack_id';
+      const curDir = prev.get('order') ?? 'asc';
+      next.set('sort', key);
+      next.set('order', curKey === key && curDir === 'asc' ? 'desc' : 'asc');
       next.set('page', '1');
       return next;
     });
@@ -59,7 +59,7 @@ export function CampaignsList() {
     {
       key: 'attackId',
       header: 'ATT&CK ID',
-      sortKey: 'attackId',
+      sortKey: 'attack_id',
       width: '120px',
       render: (row) => (
         <span className="font-mono text-xs text-[#60a5fa]">{row.attackId}</span>
@@ -81,19 +81,19 @@ export function CampaignsList() {
     {
       key: 'first_seen',
       header: 'First Seen',
-      sortKey: 'firstSeen',
+      sortKey: 'first_seen',
       width: '120px',
       render: (row) => (
-        <span className="text-sm text-[#8892b0]">{fmtDate(row.first_seen)}</span>
+        <span className="text-sm text-[#8892b0]">{fmtDate(row.firstSeen)}</span>
       ),
     },
     {
       key: 'last_seen',
       header: 'Last Seen',
-      sortKey: 'lastSeen',
+      sortKey: 'last_seen',
       width: '120px',
       render: (row) => (
-        <span className="text-sm text-[#8892b0]">{fmtDate(row.last_seen)}</span>
+        <span className="text-sm text-[#8892b0]">{fmtDate(row.lastSeen)}</span>
       ),
     },
     {
@@ -101,15 +101,15 @@ export function CampaignsList() {
       header: 'Timeline',
       width: '180px',
       render: (row) => {
-        if (!row.first_seen && !row.last_seen) {
+        if (!row.firstSeen && !row.lastSeen) {
           return <span className="text-[#8892b0] text-xs">—</span>;
         }
         const now = new Date();
         const windowStart = new Date('2010-01-01').getTime();
         const windowEnd = now.getTime();
         const range = windowEnd - windowStart;
-        const start = row.first_seen ? new Date(row.first_seen).getTime() : windowStart;
-        const end = row.last_seen ? new Date(row.last_seen).getTime() : windowEnd;
+        const start = row.firstSeen ? new Date(row.firstSeen).getTime() : windowStart;
+        const end = row.lastSeen ? new Date(row.lastSeen).getTime() : windowEnd;
         const left = Math.max(0, ((start - windowStart) / range) * 100);
         const width = Math.max(1, Math.min(100 - left, ((end - start) / range) * 100));
         return (
@@ -144,8 +144,8 @@ export function CampaignsList() {
         loading={isLoading}
         pagination={data?.pagination}
         onPageChange={(p) => setParam('page', String(p))}
-        sortBy={sortBy}
-        sortDir={sortDir}
+        sort={sort}
+        order={order}
         onSort={handleSort}
         onRowClick={(row) => navigate(`/campaigns/${row.attackId}`)}
         rowKey={(row) => row.attackId}

@@ -12,13 +12,13 @@ export function DataSourcesList() {
 
   const page = parseInt(searchParams.get('page') ?? '1', 10);
   const search = searchParams.get('q') ?? '';
-  const sortBy = searchParams.get('sortBy') ?? 'attackId';
-  const sortDir = (searchParams.get('sortDir') ?? 'asc') as 'asc' | 'desc';
+  const sort = searchParams.get('sort') ?? 'attack_id';
+  const order = (searchParams.get('order') ?? 'asc') as 'asc' | 'desc';
 
   const params: Record<string, string> = { page: String(page), limit: '50' };
   if (search) params.search = search;
-  if (sortBy) params.sortBy = sortBy;
-  if (sortDir) params.sortDir = sortDir;
+  if (sort) params.sort = sort;
+  if (order) params.order = order;
 
   const { data, isLoading } = useDataSources(params);
 
@@ -37,10 +37,10 @@ export function DataSourcesList() {
   function handleSort(key: string) {
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
-      const curKey = prev.get('sortBy') ?? 'attackId';
-      const curDir = prev.get('sortDir') ?? 'asc';
-      next.set('sortBy', key);
-      next.set('sortDir', curKey === key && curDir === 'asc' ? 'desc' : 'asc');
+      const curKey = prev.get('sort') ?? 'attack_id';
+      const curDir = prev.get('order') ?? 'asc';
+      next.set('sort', key);
+      next.set('order', curKey === key && curDir === 'asc' ? 'desc' : 'asc');
       next.set('page', '1');
       return next;
     });
@@ -50,7 +50,7 @@ export function DataSourcesList() {
     {
       key: 'attackId',
       header: 'ATT&CK ID',
-      sortKey: 'attackId',
+      sortKey: 'attack_id',
       width: '120px',
       render: (row) => (
         <span className="font-mono text-xs text-[#f472b6]">{row.attackId}</span>
@@ -71,7 +71,7 @@ export function DataSourcesList() {
       width: '160px',
       render: (row) => (
         <span className="text-sm font-semibold text-[#f472b6] tabular-nums">
-          {row.components?.length ?? 0}
+          {row.componentCount ?? 0}
         </span>
       ),
     },
@@ -97,8 +97,8 @@ export function DataSourcesList() {
         loading={isLoading}
         pagination={data?.pagination}
         onPageChange={(p) => setParam('page', String(p))}
-        sortBy={sortBy}
-        sortDir={sortDir}
+        sort={sort}
+        order={order}
         onSort={handleSort}
         onRowClick={(row) => navigate(`/data-sources/${row.attackId}`)}
         rowKey={(row) => row.attackId}

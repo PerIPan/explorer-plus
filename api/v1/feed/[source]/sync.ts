@@ -17,7 +17,9 @@ const HANDLERS: Record<string, (req: VercelRequest, res: VercelResponse) => Prom
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS
-  const origin = process.env.VERCEL_URL
+  const origin = process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : process.env.VERCEL_URL
     ? `https://${process.env.VERCEL_URL}`
     : 'http://localhost:5173';
   res.setHeader('Access-Control-Allow-Origin', origin);

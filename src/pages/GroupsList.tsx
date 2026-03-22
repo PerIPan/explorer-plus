@@ -14,7 +14,7 @@ export function GroupsList() {
   const page = parseInt(searchParams.get('page') ?? '1', 10);
   const search = searchParams.get('q') ?? '';
   const sector = searchParams.get('sector') ?? '';
-  const sortBy = searchParams.get('sort') ?? 'attackId';
+  const sortBy = searchParams.get('sort') ?? 'attack_id';
   const sortDir = (searchParams.get('order') ?? 'asc') as 'asc' | 'desc';
 
   const params: Record<string, string> = { page: String(page), limit: '50' };
@@ -41,7 +41,7 @@ export function GroupsList() {
   function handleSort(key: string) {
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
-      const curKey = prev.get('sort') ?? 'attackId';
+      const curKey = prev.get('sort') ?? 'attack_id';
       const curDir = prev.get('order') ?? 'asc';
       next.set('sort', key);
       next.set('order', curKey === key && curDir === 'asc' ? 'desc' : 'asc');
@@ -54,7 +54,7 @@ export function GroupsList() {
     {
       key: 'attackId',
       header: 'ATT&CK ID',
-      sortKey: 'attackId',
+      sortKey: 'attack_id',
       width: '120px',
       render: (row) => (
         <span className="font-mono text-xs text-[#f97316]">{row.attackId}</span>

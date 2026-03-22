@@ -43,7 +43,7 @@ export function TechniquesList() {
   const search = searchParams.get('q') ?? '';
   const tactic = searchParams.get('tactic') ?? '';
   const platform = searchParams.get('platform') ?? '';
-  const sortBy = searchParams.get('sort') ?? 'attackId';
+  const sortBy = searchParams.get('sort') ?? 'attack_id';
   const sortDir = (searchParams.get('order') ?? 'asc') as 'asc' | 'desc';
 
   const [expandedParents, setExpandedParents] = useState<Set<string>>(new Set());
@@ -78,7 +78,7 @@ export function TechniquesList() {
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
       const currentDir = prev.get('order') ?? 'asc';
-      const currentKey = prev.get('sort') ?? 'attackId';
+      const currentKey = prev.get('sort') ?? 'attack_id';
       next.set('sort', key);
       next.set('order', currentKey === key && currentDir === 'asc' ? 'desc' : 'asc');
       next.set('page', '1');
@@ -118,7 +118,7 @@ export function TechniquesList() {
     {
       key: 'attackId',
       header: 'ATT&CK ID',
-      sortKey: 'attackId',
+      sortKey: 'attack_id',
       width: '130px',
       render: (row) => (
         <div className="flex items-center gap-1">

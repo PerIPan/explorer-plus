@@ -37,8 +37,8 @@ export interface Software extends BaseEntity {
 
 export interface Campaign extends BaseEntity {
   aliases: string[] | null;
-  first_seen: string | null;
-  last_seen: string | null;
+  firstSeen: string | null;
+  lastSeen: string | null;
 }
 
 export interface DataComponent {
