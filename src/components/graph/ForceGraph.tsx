@@ -71,9 +71,11 @@ export const ForceGraph = forwardRef<ForceGraphHandle, ForceGraphProps>(
       const svg = d3.select(svgRef.current!);
       svg.selectAll('*').remove();
 
-      if (!data.nodes.length) return;
+      if (!data.nodes.length && !data.center) return;
 
-      const nodes: SimNode[] = data.nodes.map((n) => ({ ...n }));
+      // Include center node in the simulation
+      const allNodeData = [data.center, ...data.nodes];
+      const nodes: SimNode[] = allNodeData.map((n) => ({ ...n }));
       const nodeById = new Map(nodes.map((n) => [n.id, n]));
 
       const edges: SimEdge[] = data.edges
