@@ -2,6 +2,28 @@ import { Routes, Route, Outlet } from 'react-router-dom';
 import { Sidebar } from './components/layout/Sidebar';
 import { SearchBar } from './components/layout/SearchBar';
 
+// Pages
+import { Dashboard } from './pages/Dashboard';
+import { Matrix } from './pages/Matrix';
+import { TechniquesList } from './pages/TechniquesList';
+import { TechniqueDetail } from './pages/TechniqueDetail';
+import { GroupsList } from './pages/GroupsList';
+import { GroupDetail } from './pages/GroupDetail';
+import { CampaignsList } from './pages/CampaignsList';
+import { CampaignDetail } from './pages/CampaignDetail';
+import { SoftwareList } from './pages/SoftwareList';
+import { SoftwareDetail } from './pages/SoftwareDetail';
+import { DataSourcesList } from './pages/DataSourcesList';
+import { DataSourceDetail } from './pages/DataSourceDetail';
+import { MitigationsList } from './pages/MitigationsList';
+import { MitigationDetail } from './pages/MitigationDetail';
+import { TacticsList } from './pages/TacticsList';
+import { TacticDetail } from './pages/TacticDetail';
+import { SectorsList } from './pages/SectorsList';
+import { SectorDetail } from './pages/SectorDetail';
+import { Relationships } from './pages/Relationships';
+import { Search } from './pages/Search';
+
 /** Root layout — sidebar + top bar + page content */
 function Layout() {
   return (
@@ -24,14 +46,12 @@ function Layout() {
   );
 }
 
-/** Placeholder page used until real pages are built */
+/** Placeholder for CTI pages not yet implemented */
 function PlaceholderPage({ title }: { title: string }) {
   return (
     <div className="flex items-center justify-center h-64">
       <div className="text-center">
-        <div className="text-[#64ffda] text-4xl font-light mb-2">
-          {title}
-        </div>
+        <div className="text-[#64ffda] text-4xl font-light mb-2">{title}</div>
         <div className="text-[#8892b0] text-sm">Coming soon</div>
       </div>
     </div>
@@ -42,29 +62,57 @@ export default function App() {
   return (
     <Routes>
       <Route element={<Layout />}>
-        <Route index element={<PlaceholderPage title="Dashboard" />} />
-        <Route path="matrix" element={<PlaceholderPage title="Matrix" />} />
-        <Route path="techniques" element={<PlaceholderPage title="Techniques" />} />
-        <Route path="techniques/:attackId" element={<PlaceholderPage title="Technique Detail" />} />
-        <Route path="groups" element={<PlaceholderPage title="Groups" />} />
-        <Route path="groups/:attackId" element={<PlaceholderPage title="Group Detail" />} />
-        <Route path="campaigns" element={<PlaceholderPage title="Campaigns" />} />
-        <Route path="campaigns/:attackId" element={<PlaceholderPage title="Campaign Detail" />} />
-        <Route path="software" element={<PlaceholderPage title="Software" />} />
-        <Route path="software/:attackId" element={<PlaceholderPage title="Software Detail" />} />
-        <Route path="data-sources" element={<PlaceholderPage title="Data Sources" />} />
-        <Route path="data-sources/:attackId" element={<PlaceholderPage title="Data Source Detail" />} />
-        <Route path="mitigations" element={<PlaceholderPage title="Mitigations" />} />
-        <Route path="mitigations/:attackId" element={<PlaceholderPage title="Mitigation Detail" />} />
-        <Route path="tactics" element={<PlaceholderPage title="Tactics" />} />
-        <Route path="tactics/:attackId" element={<PlaceholderPage title="Tactic Detail" />} />
-        <Route path="sectors" element={<PlaceholderPage title="Sectors" />} />
-        <Route path="relationships" element={<PlaceholderPage title="Relationships" />} />
-        <Route path="search" element={<PlaceholderPage title="Search Results" />} />
+        {/* Dashboard */}
+        <Route index element={<Dashboard />} />
+
+        {/* Matrix */}
+        <Route path="matrix" element={<Matrix />} />
+
+        {/* Techniques */}
+        <Route path="techniques" element={<TechniquesList />} />
+        <Route path="techniques/:attackId" element={<TechniqueDetail />} />
+
+        {/* Groups */}
+        <Route path="groups" element={<GroupsList />} />
+        <Route path="groups/:attackId" element={<GroupDetail />} />
+
+        {/* Campaigns */}
+        <Route path="campaigns" element={<CampaignsList />} />
+        <Route path="campaigns/:attackId" element={<CampaignDetail />} />
+
+        {/* Software */}
+        <Route path="software" element={<SoftwareList />} />
+        <Route path="software/:attackId" element={<SoftwareDetail />} />
+
+        {/* Data Sources */}
+        <Route path="data-sources" element={<DataSourcesList />} />
+        <Route path="data-sources/:attackId" element={<DataSourceDetail />} />
+
+        {/* Mitigations */}
+        <Route path="mitigations" element={<MitigationsList />} />
+        <Route path="mitigations/:attackId" element={<MitigationDetail />} />
+
+        {/* Tactics */}
+        <Route path="tactics" element={<TacticsList />} />
+        <Route path="tactics/:attackId" element={<TacticDetail />} />
+
+        {/* Sectors */}
+        <Route path="sectors" element={<SectorsList />} />
+        <Route path="sectors/:sectorName" element={<SectorDetail />} />
+
+        {/* Relationships */}
+        <Route path="relationships" element={<Relationships />} />
+
+        {/* Search */}
+        <Route path="search" element={<Search />} />
+
+        {/* CTI (placeholder — future feature) */}
         <Route path="cti/reports" element={<PlaceholderPage title="Reports" />} />
         <Route path="cti/iocs" element={<PlaceholderPage title="IOCs" />} />
         <Route path="cti/sigma" element={<PlaceholderPage title="Sigma" />} />
         <Route path="cti/feed-status" element={<PlaceholderPage title="Feed Status" />} />
+
+        {/* 404 */}
         <Route path="*" element={<PlaceholderPage title="404 - Not Found" />} />
       </Route>
     </Routes>
