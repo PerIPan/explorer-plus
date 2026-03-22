@@ -5,7 +5,12 @@ import { buildSearchCondition, buildPaginationClause, buildSortClause } from '..
 import { paginationSchema } from '../lib/validate.js';
 import { z } from 'zod';
 
-const ALLOWED_SORT = ['name', 'attack_id', 'stix_modified'];
+// Map frontend sort keys to qualified SQL columns (avoids ambiguity with JOINs)
+const SORT_MAP: Record<string, string> = {
+  name: 't.name',
+  attack_id: 't.attack_id',
+  stix_modified: 't.stix_modified',
+};
 
 const querySchema = paginationSchema.extend({
   search: z.string().min(3).max(200).optional(),
@@ -22,8 +27,9 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   }
 
   const { page, limit, sort, order, search, tactic, platform, include_deprecated } = parsed.data;
-  const sortCol = sort ?? 'name';
-  const sortClause = buildSortClause(sortCol, order, ALLOWED_SORT);
+  const sortCol = SORT_MAP[sort ?? 'name'] ?? 't.name';
+  const sortDir = order === 'desc' ? 'DESC' : 'ASC';
+  const sortClause = `ORDER BY ${sortCol} ${sortDir}`;
   const { offset } = buildPaginationClause(page, limit);
 
   const params: unknown[] = [];
