@@ -96,6 +96,7 @@ export interface Mitigation extends BaseEntity {
 
 export interface Tactic extends BaseEntity {
   sortOrder: number | null;
+  techniques?: Array<{ attackId: string; name: string; description?: string | null }>;
 }
 
 export interface Sector {

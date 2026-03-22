@@ -90,7 +90,8 @@ export function ReportsList() {
   const page = parseInt(searchParams.get('page') ?? '1', 10);
   const source = searchParams.get('source') ?? '';
   const q = searchParams.get('q') ?? '';
-  const since = searchParams.get('since') ?? '';
+  const defaultSince = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
+  const since = searchParams.get('since') ?? defaultSince;
 
   const setParam = useCallback(
     (key: string, value: string) => {

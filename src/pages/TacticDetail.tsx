@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
-import { useTactic, useTechniques } from '../hooks/useApi';
+import { useTactic } from '../hooks/useApi';
 import { PageHeader } from '../components/layout/PageHeader';
 import { EntityLink } from '../components/shared/EntityLink';
 import { sanitize, sanitizeMarkdown } from '../lib/sanitize';
@@ -9,11 +9,6 @@ export function TacticDetail() {
   const { attackId } = useParams<{ attackId: string }>();
   const { data, isLoading, error } = useTactic(attackId ?? '');
   const [techFilter, setTechFilter] = useState('');
-
-  /** Fetch techniques for this tactic using attackId */
-  const { data: techData, isLoading: techLoading } = useTechniques(
-    data?.attackId ? { tactic: data.attackId, limit: '500' } : {}
-  );
 
   if (isLoading) {
     return (
@@ -36,7 +31,7 @@ export function TacticDetail() {
     ? sanitize(sanitizeMarkdown(data.description))
     : null;
 
-  const allTechniques = techData?.data ?? [];
+  const allTechniques = data?.techniques ?? [];
 
   /** Filter + sort alphabetically (FIX 41) */
   const techniques = useMemo(() => {
@@ -82,13 +77,13 @@ export function TacticDetail() {
         <div className="flex items-center justify-between gap-4 mb-4 flex-wrap">
           <h3 className="text-sm font-semibold text-[#8892b0] uppercase tracking-wider">
             Techniques
-            {!techLoading && (
+            {!isLoading && (
               <span className="ml-2 text-[#64ffda] font-semibold normal-case text-sm">
                 ({techniques.length}{techFilter ? ` of ${allTechniques.length}` : ''})
               </span>
             )}
           </h3>
-          {!techLoading && allTechniques.length > 0 && (
+          {!isLoading && allTechniques.length > 0 && (
             <input
               type="search"
               placeholder="Filter techniques..."
@@ -99,7 +94,7 @@ export function TacticDetail() {
           )}
         </div>
 
-        {techLoading ? (
+        {isLoading ? (
           <div className="flex items-center text-[#8892b0] text-sm">
             <span className="inline-block w-4 h-4 border-2 border-[#64ffda33] border-t-[#64ffda] rounded-full animate-spin mr-2" />
             Loading techniques...
