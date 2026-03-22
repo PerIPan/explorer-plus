@@ -146,11 +146,10 @@ export function Relationships() {
       setSearchParams((prev) => {
         const next = new URLSearchParams(prev);
         next.set('entity', attackId);
-        // Reset tab to graph when switching entities
-        next.set('tab', 'graph');
+        // Tab will auto-select via the entityType effect
+        next.delete('tab');
         return next;
       });
-      setActiveTab('graph');
     },
     [setSearchParams]
   );
