@@ -319,7 +319,7 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
           <div>
             <h2 className="text-lg font-semibold text-[#ccd6f6]">{actor.name}</h2>
             <div className="flex items-center gap-2 mt-1">
-              <Badge label="external actor" variant="neutral" />
+              <Badge label="Non-MITRE" variant="neutral" />
               <Badge label="ThaiCERT / ETDA" variant="neutral" />
               {actor.country && <Badge label={actor.country} variant="blue" />}
               {actor.category && <Badge label={actor.category} variant="purple" />}
@@ -338,6 +338,12 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
                 {actor.synonyms.map((s) => (
                   <Badge key={s} label={s} variant="neutral" />
                 ))}
+              </div>
+            )}
+            {actor.firstSeen && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-[#8892b0]">First seen:</span>
+                <span className="text-xs text-[#ccd6f6]">{actor.firstSeen}</span>
               </div>
             )}
             {actor.motivation && (

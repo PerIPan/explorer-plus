@@ -22,6 +22,12 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     refs: string[] | null;
     mitreGroupId: string | null;
     mitreGroupName: string | null;
+    motivation: string | null;
+    firstSeen: string | null;
+    suspectedVictims: string[] | null;
+    targetCategories: string[] | null;
+    suspectedStateSponsor: string | null;
+    attributionConfidence: string | null;
   }>(
     `SELECT
        ea.id,
@@ -33,7 +39,13 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
        ea.synonyms,
        ea.refs,
        ea.mitre_group_id AS "mitreGroupId",
-       tg.name           AS "mitreGroupName"
+       tg.name           AS "mitreGroupName",
+       ea.motivation,
+       ea.first_seen AS "firstSeen",
+       ea.suspected_victims AS "suspectedVictims",
+       ea.target_categories AS "targetCategories",
+       ea.suspected_state_sponsor AS "suspectedStateSponsor",
+       ea.attribution_confidence AS "attributionConfidence"
      FROM external_actors ea
      LEFT JOIN threat_groups tg ON tg.attack_id = ea.mitre_group_id
      WHERE ea.name = $1

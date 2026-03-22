@@ -398,6 +398,7 @@ export interface ExternalActor {
   mitreGroupId: string | null;
   mitreGroupName: string | null;
   motivation: string | null;
+  firstSeen: string | null;
   suspectedVictims: string[] | null;
   targetCategories: string[] | null;
   suspectedStateSponsor: string | null;

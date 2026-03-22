@@ -30,6 +30,16 @@ const TYPE_VARIANT: Record<string, 'teal' | 'orange' | 'purple' | 'blue' | 'gree
   external_actor: 'neutral',
 };
 
+/** Human-readable label for entity types */
+const TYPE_LABEL: Record<string, string> = {
+  external_actor: 'Non-MITRE',
+  data_source: 'data source',
+};
+
+function typeLabel(type: string): string {
+  return TYPE_LABEL[type] ?? type.replaceAll('_', ' ');
+}
+
 // ── Tab definitions ────────────────────────────────────────────────────────────
 
 type TabId = 'graph' | 'actor' | 'technique-map';
@@ -207,7 +217,7 @@ export function Relationships() {
           </svg>
           {selectedId && !showSuggestions && graphData?.center && (
             <Badge
-              label={graphData.center.type.replace('_', ' ')}
+              label={typeLabel(graphData.center.type)}
               variant={TYPE_VARIANT[graphData.center.type] ?? 'neutral'}
             />
           )}
@@ -264,7 +274,7 @@ export function Relationships() {
                 className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-[#64ffda10] transition-colors text-left ${i === 0 ? 'bg-[#ffffff05]' : ''}`}
               >
                 <Badge
-                  label={s.type.replace('_', ' ')}
+                  label={typeLabel(s.type)}
                   variant={TYPE_VARIANT[s.type] ?? 'neutral'}
                 />
                 <span className="font-mono text-xs text-[#64ffda] w-20 flex-shrink-0">{s.attackId}</span>
@@ -385,7 +395,7 @@ export function Relationships() {
                 {Object.entries(TYPE_VARIANT).map(([type, variant]) => (
                   <Badge
                     key={type}
-                    label={type.replace('_', ' ')}
+                    label={typeLabel(type)}
                     variant={variant}
                   />
                 ))}

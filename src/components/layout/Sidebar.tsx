@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
 
 interface SidebarProps {
   open: boolean;
@@ -64,7 +64,7 @@ const frameworksNav: NavItem[] = [
 ];
 
 const extendedIntelNav: NavItem[] = [
-  { path: '/external-actors', label: 'Threat Actors (ETDA)', tooltip: '500+ threat actors from ThaiCERT encyclopedia' },
+  { path: '/external-actors', label: 'Non-MITRE Actors', tooltip: '500+ threat actors from ThaiCERT encyclopedia' },
 ];
 
 function NavItemLink({ path, label, tooltip, end }: NavItem & { end?: boolean }) {
@@ -99,12 +99,12 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     >
       {/* Logo / Title */}
       <div className="px-4 py-5 border-b border-[#2a2a4a] flex items-center justify-between">
-        <div>
-          <div className="text-[#64ffda] font-bold text-sm tracking-widest uppercase">
+        <Link to="/" className="group">
+          <div className="text-[#64ffda] font-bold text-sm tracking-widest uppercase group-hover:text-[#9efce5] transition-colors">
             MITRE ATT&amp;CK
           </div>
-          <div className="text-[#8892b0] text-xs mt-0.5">Explorer Plus</div>
-        </div>
+          <div className="text-[#8892b0] text-xs mt-0.5 group-hover:text-[#ccd6f6] transition-colors">Explorer Plus</div>
+        </Link>
         {/* Close button — visible only below lg */}
         <button
           type="button"
