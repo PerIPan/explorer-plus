@@ -17,7 +17,10 @@ export function GraphTooltip({ x, y, content }: GraphTooltipProps) {
         px-3 py-2 text-xs text-[#ccd6f6]
         shadow-xl max-w-[220px]
       "
-      style={{ left: Math.min(x + 12, window.innerWidth - 260), top: y - 8 }}
+      style={{
+        left: Math.min(x + 12, window.innerWidth - 260),
+        top: Math.max(8, Math.min(y - 8, window.innerHeight - 80)),
+      }}
     >
       {content}
     </div>

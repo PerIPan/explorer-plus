@@ -21,27 +21,27 @@ interface ModelEdge {
 }
 
 const NODES: ModelNode[] = [
-  // Core ATT&CK (center cluster)
-  { id: 'technique', label: 'Technique', x: 450, y: 280, color: '#64ffda', bg: '#64ffda18', path: '/techniques', description: 'Attack methods and sub-techniques used by adversaries', category: 'core' },
-  { id: 'group', label: 'Threat Group', x: 150, y: 140, color: '#f97316', bg: '#f9731618', path: '/groups', description: 'Tracked adversary groups (APT29, Lazarus, etc.)', category: 'core' },
-  { id: 'campaign', label: 'Campaign', x: 150, y: 420, color: '#60a5fa', bg: '#60a5fa18', path: '/campaigns', description: 'Named intrusion operations with timelines', category: 'core' },
-  { id: 'software', label: 'Software', x: 150, y: 280, color: '#a78bfa', bg: '#a78bfa18', path: '/software', description: 'Malware and tools used in attacks', category: 'core' },
-  { id: 'tactic', label: 'Tactic', x: 450, y: 480, color: '#fbbf24', bg: '#fbbf2418', path: '/tactics', description: 'Kill chain phases: Reconnaissance to Impact', category: 'core' },
-  { id: 'sector', label: 'Sector', x: 150, y: 30, color: '#f472b6', bg: '#f472b618', path: '/sectors', description: 'Industries targeted by threat groups', category: 'core' },
+  // Core ATT&CK — spread out to avoid line overlaps
+  { id: 'sector', label: 'Sector', x: 80, y: 60, color: '#f472b6', bg: '#f472b618', path: '/sectors', description: 'Industries targeted by threat groups', category: 'core' },
+  { id: 'group', label: 'Threat Group', x: 80, y: 200, color: '#f97316', bg: '#f9731618', path: '/groups', description: 'Tracked adversary groups (APT29, Lazarus, etc.)', category: 'core' },
+  { id: 'campaign', label: 'Campaign', x: 280, y: 100, color: '#60a5fa', bg: '#60a5fa18', path: '/campaigns', description: 'Named intrusion operations with timelines', category: 'core' },
+  { id: 'software', label: 'Software', x: 80, y: 380, color: '#a78bfa', bg: '#a78bfa18', path: '/software', description: 'Malware and tools used in attacks', category: 'core' },
+  { id: 'technique', label: 'Technique', x: 480, y: 300, color: '#64ffda', bg: '#64ffda18', path: '/techniques', description: 'Attack methods and sub-techniques used by adversaries', category: 'core' },
+  { id: 'tactic', label: 'Tactic', x: 300, y: 480, color: '#fbbf24', bg: '#fbbf2418', path: '/tactics', description: 'Kill chain phases: Reconnaissance to Impact', category: 'core' },
 
-  // Defensive (right side)
-  { id: 'mitigation', label: 'Mitigation', x: 750, y: 140, color: '#34d399', bg: '#34d39918', path: '/mitigations', description: 'Countermeasures to prevent techniques', category: 'defensive' },
-  { id: 'datasource', label: 'Data Source', x: 750, y: 280, color: '#f472b6', bg: '#f472b618', path: '/data-sources', description: 'Telemetry for detecting techniques', category: 'defensive' },
-  { id: 'sigma', label: 'Sigma Rules', x: 750, y: 420, color: '#c084fc', bg: '#c084fc18', path: '/cti/sigma', description: 'Detection signatures mapped to techniques', category: 'defensive' },
+  // Defensive (right of technique)
+  { id: 'mitigation', label: 'Mitigation', x: 750, y: 120, color: '#34d399', bg: '#34d39918', path: '/mitigations', description: 'Countermeasures to prevent techniques', category: 'defensive' },
+  { id: 'datasource', label: 'Data Source', x: 750, y: 300, color: '#f472b6', bg: '#f472b618', path: '/data-sources', description: 'Telemetry for detecting techniques', category: 'defensive' },
+  { id: 'sigma', label: 'Sigma Rules', x: 750, y: 480, color: '#c084fc', bg: '#c084fc18', path: '/cti/sigma', description: 'Detection signatures mapped to techniques', category: 'defensive' },
 
   // Compliance (far right)
-  { id: 'nist', label: 'NIST 800-53', x: 950, y: 140, color: '#38bdf8', bg: '#38bdf818', path: '/frameworks/nist', description: 'Federal security controls', category: 'compliance' },
-  { id: 'engage', label: 'MITRE Engage', x: 950, y: 280, color: '#fb923c', bg: '#fb923c18', path: '/frameworks/engage', description: 'Adversary deception & engagement', category: 'compliance' },
-  { id: 'react', label: 'RE&CT', x: 950, y: 420, color: '#4ade80', bg: '#4ade8018', path: '/frameworks/react', description: 'Incident response playbooks', category: 'compliance' },
+  { id: 'nist', label: 'NIST 800-53', x: 980, y: 120, color: '#38bdf8', bg: '#38bdf818', path: '/frameworks/nist', description: 'Federal security controls', category: 'compliance' },
+  { id: 'engage', label: 'MITRE Engage', x: 980, y: 300, color: '#fb923c', bg: '#fb923c18', path: '/frameworks/engage', description: 'Adversary deception & engagement', category: 'compliance' },
+  { id: 'react', label: 'RE&CT', x: 980, y: 480, color: '#4ade80', bg: '#4ade8018', path: '/frameworks/react', description: 'Incident response playbooks', category: 'compliance' },
 
-  // Intelligence (bottom)
-  { id: 'report', label: 'Threat Reports', x: 450, y: 600, color: '#f97316', bg: '#f9731618', path: '/cti/reports', description: 'Live threat intelligence from OTX, RSS feeds', category: 'intelligence' },
-  { id: 'atomic', label: 'Atomic Tests', x: 750, y: 540, color: '#ef4444', bg: '#ef444418', path: '/cti/sigma', description: 'Red team test procedures per technique', category: 'intelligence' },
+  // Intelligence (below technique)
+  { id: 'report', label: 'Threat Reports', x: 480, y: 520, color: '#f97316', bg: '#f9731618', path: '/cti/reports', description: 'Live threat intelligence from OTX, RSS feeds', category: 'intelligence' },
+  { id: 'atomic', label: 'Atomic Tests', x: 600, y: 600, color: '#ef4444', bg: '#ef444418', path: '/techniques', description: 'red team test procedures per technique', category: 'intelligence' },
 ];
 
 const EDGES: ModelEdge[] = [

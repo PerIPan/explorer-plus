@@ -242,7 +242,10 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
             <div className="flex flex-wrap gap-1.5">
               <Badge label={`${sigmaRules.length} rules`} variant="teal" />
               {Object.entries(sigmaByLevel).map(([lvl, count]) => (
-                <LevelBadge key={lvl} level={`${count} ${lvl}`} />
+                <span key={lvl} className="flex items-center gap-1">
+                  <span className="text-xs text-[#ccd6f6] font-mono">{count}</span>
+                  <LevelBadge level={lvl} />
+                </span>
               ))}
             </div>
           </MapRow>

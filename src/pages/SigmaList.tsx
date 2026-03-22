@@ -7,13 +7,6 @@ import { Badge } from '../components/shared/Badge';
 import { EntityLink } from '../components/shared/EntityLink';
 import type { SigmaRule } from '../lib/types';
 
-const LEVEL_VARIANTS: Record<string, 'teal' | 'orange' | 'purple' | 'blue' | 'green' | 'pink'> = {
-  critical: 'pink',
-  high: 'orange',
-  medium: 'yellow' as unknown as 'orange', // Badge doesn't have yellow in original, using orange
-  low: 'blue',
-  informational: 'green',
-};
 
 // Override yellow specifically using className
 function LevelBadge({ level }: { level: string | null }) {

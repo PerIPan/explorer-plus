@@ -7,6 +7,13 @@ export function SearchBar() {
   const navigate = useNavigate();
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  /** Cleanup debounce on unmount */
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
+
   /** Focus on `/` keypress anywhere outside an input/textarea */
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
