@@ -7,7 +7,7 @@ import { withHandler } from './lib/middleware.js';
  * Cached aggressively — data only changes on re-seed.
  */
 async function handler(_req: VercelRequest, res: VercelResponse): Promise<void> {
-  const [techniques, groups, software, campaigns, mitigations, tactics] = await Promise.all([
+  const [techniques, groups, software, campaigns, mitigations, tactics, externalActors] = await Promise.all([
     query<{ attackId: string; name: string }>(`
       SELECT attack_id AS "attackId", name FROM techniques
       WHERE is_revoked = false AND is_deprecated = false AND is_subtechnique = false
@@ -37,6 +37,9 @@ async function handler(_req: VercelRequest, res: VercelResponse): Promise<void> 
       SELECT attack_id AS "attackId", name FROM tactics
       ORDER BY sort_order
     `),
+    query<{ attackId: string; name: string }>(`
+      SELECT name AS "attackId", name FROM external_actors ORDER BY name
+    `),
   ]);
 
   const entities = [
@@ -46,6 +49,7 @@ async function handler(_req: VercelRequest, res: VercelResponse): Promise<void> 
     ...campaigns.rows.map(r => ({ ...r, type: 'campaign' })),
     ...mitigations.rows.map(r => ({ ...r, type: 'mitigation' })),
     ...tactics.rows.map(r => ({ ...r, type: 'tactic' })),
+    ...externalActors.rows.map(r => ({ ...r, type: 'external_actor' })),
   ];
 
   res.status(200).json({ data: entities, total: entities.length });

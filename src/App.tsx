@@ -34,6 +34,8 @@ const FeedStatus      = lazy(() => import('./pages/FeedStatus').then((m) => ({ d
 const NistControls    = lazy(() => import('./pages/NistControls').then((m) => ({ default: m.NistControls })));
 const EngageActivities = lazy(() => import('./pages/EngageActivities').then((m) => ({ default: m.EngageActivities })));
 const ReactActions    = lazy(() => import('./pages/ReactActions').then((m) => ({ default: m.ReactActions })));
+// Extended Intel pages
+const ExternalActors  = lazy(() => import('./pages/ExternalActors').then((m) => ({ default: m.ExternalActors })));
 
 /** Simple spinner used as Suspense fallback */
 function LoadingSpinner() {
@@ -181,6 +183,9 @@ export default function App() {
           <Route path="frameworks/nist" element={<NistControls />} />
           <Route path="frameworks/engage" element={<EngageActivities />} />
           <Route path="frameworks/react" element={<ReactActions />} />
+
+          {/* Extended Intel */}
+          <Route path="external-actors" element={<ExternalActors />} />
 
           {/* 404 */}
           <Route path="*" element={<PlaceholderPage title="404 - Not Found" />} />

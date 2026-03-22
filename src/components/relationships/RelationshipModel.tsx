@@ -42,6 +42,7 @@ const NODES: ModelNode[] = [
   // Intelligence (below technique)
   { id: 'report', label: 'Threat Reports', x: 480, y: 520, color: '#f97316', bg: '#f9731618', path: '/cti/reports', description: 'Live threat intelligence from OTX, RSS feeds', category: 'intelligence' },
   { id: 'atomic', label: 'Atomic Tests', x: 600, y: 600, color: '#ef4444', bg: '#ef444418', path: '/techniques', description: 'red team test procedures per technique', category: 'intelligence' },
+  { id: 'thaicert', label: 'ETDA Actors', x: 80, y: 520, color: '#94a3b8', bg: '#94a3b818', path: '/external-actors', description: '500+ extended threat actors from ThaiCERT encyclopedia', category: 'intelligence' },
 ];
 
 const EDGES: ModelEdge[] = [
@@ -67,6 +68,7 @@ const EDGES: ModelEdge[] = [
   // Intelligence
   { from: 'report', to: 'technique', label: 'mentions', style: 'dashed' },
   { from: 'atomic', to: 'technique', label: 'validates', style: 'dashed' },
+  { from: 'thaicert', to: 'group', label: 'extends', style: 'dashed' },
 ];
 
 const CATEGORIES = [

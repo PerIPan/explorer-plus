@@ -24,6 +24,7 @@ import type {
   NistControlSummary,
   EngageSummary,
   ReactAction,
+  ExternalActor,
 } from '../lib/types';
 
 // ── List / paginated hooks ────────────────────────────────────────────────────
@@ -253,5 +254,14 @@ export function useReactActions(params: Record<string, string> = {}) {
   return useQuery({
     queryKey: ['react-actions', params],
     queryFn: () => apiFetch<PaginatedResponse<ReactAction>>('/frameworks/react', params),
+  });
+}
+
+// ── Extended Intel hooks ───────────────────────────────────────────────────────
+
+export function useExternalActors(params: Record<string, string> = {}) {
+  return useQuery({
+    queryKey: ['external-actors', params],
+    queryFn: () => apiFetch<PaginatedResponse<ExternalActor>>('/external-actors', params),
   });
 }

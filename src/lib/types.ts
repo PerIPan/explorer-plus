@@ -386,6 +386,18 @@ export interface FeedSyncStatus {
   metadata: Record<string, unknown> | null;
 }
 
+export interface ExternalActor {
+  id: string;
+  name: string;
+  description: string | null;
+  source: string;
+  country: string | null;
+  category: string | null;
+  synonyms: string[] | null;
+  refs: string[] | null;
+  mitreGroupId: string | null;
+}
+
 export interface TechniqueIntelligence {
   attackId: string;
   reports: Array<{
