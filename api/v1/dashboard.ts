@@ -21,7 +21,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
          (SELECT count(*) FROM attack_software WHERE is_revoked = false AND is_deprecated = false) AS "softwareCount",
          (SELECT count(*) FROM mitigations   WHERE is_revoked = false AND is_deprecated = false) AS "mitigationCount",
          (SELECT count(*) FROM campaigns     WHERE is_revoked = false AND is_deprecated = false) AS "campaignCount",
-         (SELECT count(*) FROM data_sources  WHERE is_revoked = false AND is_deprecated = false) AS "dataSourceCount"`,
+         (SELECT count(*) FROM data_sources  WHERE is_revoked = false) AS "dataSourceCount"`,
     ),
     // Top 10 groups by technique count
     query<{ attackId: string; name: string; techniqueCount: string }>(
