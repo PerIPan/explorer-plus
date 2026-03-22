@@ -54,7 +54,7 @@ interface TooltipState {
  * Uses textContent only — never innerHTML — for all SVG text.
  */
 export const ForceGraph = forwardRef<ForceGraphHandle, ForceGraphProps>(
-  function ForceGraph({ data, onNodeClick, width = 900, height = 600 }, ref) {
+  function ForceGraph({ data, onNodeClick, width = 1200, height = 800 }, ref) {
     const svgRef = useRef<SVGSVGElement>(null);
     const simulationRef = useRef<d3.Simulation<SimNode, SimEdge> | null>(null);
     const [tooltip, setTooltip] = useState<TooltipState | null>(null);

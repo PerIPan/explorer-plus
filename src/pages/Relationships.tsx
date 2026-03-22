@@ -241,7 +241,7 @@ export function Relationships() {
             ref={graphRef}
             data={graphData}
             onNodeClick={handleNodeClick}
-            height={580}
+            height={800}
           />
 
           {/* Legend */}
