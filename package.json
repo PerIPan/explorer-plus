@@ -7,6 +7,9 @@
     "doc": "docs"
   },
   "scripts": {
+    "build": "tsc --noEmit",
+    "dev": "tsx watch api/v1/index.ts",
+    "typecheck": "tsc --noEmit",
     "seed": "./venv/bin/python seed/seed.py",
     "seed:prod": "DATABASE_URL=$POSTGRES_URL ./venv/bin/python seed/seed.py --confirm-destructive",
     "seed:update": "./venv/bin/python seed/seed.py --update",
@@ -24,5 +27,19 @@
   "bugs": {
     "url": "https://github.com/PerIPan/mitre-attack-explorer/issues"
   },
-  "homepage": "https://github.com/PerIPan/mitre-attack-explorer#readme"
+  "homepage": "https://github.com/PerIPan/mitre-attack-explorer#readme",
+  "dependencies": {
+    "@vercel/node": "^5.6.18",
+    "@vercel/postgres": "^0.10.0",
+    "pg": "^8.20.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.5.0",
+    "@types/pg": "^8.20.0",
+    "express": "^5.2.1",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
 }
