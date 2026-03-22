@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { query } from '../lib/db';
-import { withHandler } from '../lib/middleware';
+import { query } from '../lib/db.js';
+import { withHandler } from '../lib/middleware.js';
 
 async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   const result = await query<{

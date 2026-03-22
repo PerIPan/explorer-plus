@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { query } from '../lib/db';
-import { withHandler } from '../lib/middleware';
-import { buildSearchCondition, buildPaginationClause, buildSortClause } from '../lib/queries';
-import { paginationSchema, softwareTypeSchema } from '../lib/validate';
+import { query } from '../lib/db.js';
+import { withHandler } from '../lib/middleware.js';
+import { buildSearchCondition, buildPaginationClause, buildSortClause } from '../lib/queries.js';
+import { paginationSchema, softwareTypeSchema } from '../lib/validate.js';
 import { z } from 'zod';
 
 const ALLOWED_SORT = ['name', 'attack_id', 'type', 'stix_modified'];

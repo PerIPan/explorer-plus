@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { query } from '../v1/lib/db';
+import { query } from '../v1/lib/db.js';
 
 const THREATFOX_API = 'https://threatfox-api.abuse.ch/api/v1/';
 const MALWAREBAZAAR_API = 'https://mb-api.abuse.ch/api/v1/';
