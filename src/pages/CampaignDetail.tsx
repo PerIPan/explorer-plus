@@ -59,27 +59,33 @@ export function CampaignDetail() {
         }
       />
 
-      {/* Timeline card */}
-      <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5">
-        <h3 className="text-sm font-semibold text-[#a8b2d8] uppercase tracking-wider mb-3">
-          Timeline
-        </h3>
-        <div className="flex gap-8 text-sm mb-3">
-          <div>
-            <span className="text-[#8892b0]">First Seen: </span>
-            <span className="text-[#ccd6f6]">{fmtDate(data.first_seen)}</span>
+      {/* Timeline card — only render when at least one date exists (FIX 25) */}
+      {(data.first_seen || data.last_seen) && (
+        <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5">
+          <h3 className="text-sm font-semibold text-[#8892b0] uppercase tracking-wider mb-3">
+            Timeline
+          </h3>
+          <div className="flex gap-8 text-sm mb-3">
+            {data.first_seen && (
+              <div>
+                <span className="text-[#8892b0]">First Seen: </span>
+                <span className="text-[#ccd6f6]">{fmtDate(data.first_seen)}</span>
+              </div>
+            )}
+            {data.last_seen && (
+              <div>
+                <span className="text-[#8892b0]">Last Seen: </span>
+                <span className="text-[#ccd6f6]">{fmtDate(data.last_seen)}</span>
+              </div>
+            )}
           </div>
-          <div>
-            <span className="text-[#8892b0]">Last Seen: </span>
-            <span className="text-[#ccd6f6]">{fmtDate(data.last_seen)}</span>
-          </div>
+          <CampaignTimeline
+            firstSeen={data.first_seen}
+            lastSeen={data.last_seen}
+            name={data.name}
+          />
         </div>
-        <CampaignTimeline
-          firstSeen={data.first_seen}
-          lastSeen={data.last_seen}
-          name={data.name}
-        />
-      </div>
+      )}
 
       {/* Aliases */}
       {data.aliases?.length ? (
@@ -107,20 +113,23 @@ export function CampaignDetail() {
         </div>
       )}
 
-      {/* Relationships hint */}
+      {/* Relationships — FIX 23 */}
       <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5">
-        <h3 className="text-sm font-semibold text-[#a8b2d8] uppercase tracking-wider mb-2">
-          Relationships
-        </h3>
-        <p className="text-sm text-[#8892b0]">
-          Explore techniques, groups, and software for this campaign in the{' '}
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-semibold text-[#8892b0] uppercase tracking-wider">
+            Relationships
+          </h3>
           <Link
             to={`/relationships?entity=${data.attackId}`}
-            className="text-[#64ffda] hover:underline"
+            className="text-xs text-[#64ffda] hover:underline"
           >
-            Relationships Explorer
+            View full graph &rarr;
           </Link>
-          .
+        </div>
+        <p className="text-sm text-[#8892b0]">
+          Explore techniques, groups, and software for{' '}
+          <span className="text-[#ccd6f6] font-medium">{data.name}</span>{' '}
+          in the Relationships Explorer.
         </p>
       </div>
     </div>

@@ -49,14 +49,18 @@ export function SectorDetail() {
         </h3>
 
         {groups.length > 0 ? (
-          <div className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {groups.map((g) => (
-              <EntityLink
+              <div
                 key={g.attackId}
-                type="group"
-                attackId={g.attackId}
-                name={g.name}
-              />
+                className="bg-[#1a1a2e] border border-[#2a2a4a] rounded-lg p-3 hover:border-[#f9731644] transition-colors"
+              >
+                <EntityLink
+                  type="group"
+                  attackId={g.attackId}
+                  name={g.name}
+                />
+              </div>
             ))}
           </div>
         ) : (

@@ -50,13 +50,21 @@ export function GroupDetail() {
         }
       />
 
-      {/* Metadata */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* Single metadata card with labeled rows (FIX 24) */}
+      <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5 space-y-3">
+        {data.country && (
+          <div className="flex items-start gap-4">
+            <span className="text-xs font-semibold text-[#8892b0] uppercase tracking-wider w-36 shrink-0 pt-0.5">
+              Country / Attribution
+            </span>
+            <Badge label={data.country} variant="orange" />
+          </div>
+        )}
         {data.aliases?.length ? (
-          <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-4">
-            <h3 className="text-xs font-semibold text-[#a8b2d8] uppercase tracking-wider mb-2">
+          <div className="flex items-start gap-4">
+            <span className="text-xs font-semibold text-[#8892b0] uppercase tracking-wider w-36 shrink-0 pt-0.5">
               Aliases
-            </h3>
+            </span>
             <div className="flex flex-wrap gap-1.5">
               {data.aliases.map((a) => (
                 <Badge key={a} label={a} variant="orange" />
@@ -64,13 +72,19 @@ export function GroupDetail() {
             </div>
           </div>
         ) : null}
-
-        {data.country && (
-          <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-4">
-            <h3 className="text-xs font-semibold text-[#a8b2d8] uppercase tracking-wider mb-2">
-              Country / Attribution
-            </h3>
-            <Badge label={data.country} variant="orange" />
+        {data.url && (
+          <div className="flex items-start gap-4">
+            <span className="text-xs font-semibold text-[#8892b0] uppercase tracking-wider w-36 shrink-0 pt-0.5">
+              Reference
+            </span>
+            <a
+              href={data.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-[#64ffda] hover:underline"
+            >
+              View on MITRE ATT&amp;CK
+            </a>
           </div>
         )}
       </div>
@@ -78,7 +92,7 @@ export function GroupDetail() {
       {/* Description */}
       {description && (
         <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5">
-          <h3 className="text-sm font-semibold text-[#a8b2d8] uppercase tracking-wider mb-3">
+          <h3 className="text-sm font-semibold text-[#8892b0] uppercase tracking-wider mb-3">
             Description
           </h3>
           <p className="text-[#ccd6f6] text-sm leading-relaxed whitespace-pre-wrap">
@@ -87,32 +101,22 @@ export function GroupDetail() {
         </div>
       )}
 
-      {/* External link */}
-      {data.url && (
-        <a
-          href={data.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-xs text-[#64ffda] hover:underline"
-        >
-          View on MITRE ATT&CK
-        </a>
-      )}
-
-      {/* Relationships hint */}
+      {/* Relationships — inline preview + full graph link (FIX 23) */}
       <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5">
-        <h3 className="text-sm font-semibold text-[#a8b2d8] uppercase tracking-wider mb-2">
-          Relationships
-        </h3>
-        <p className="text-sm text-[#8892b0]">
-          Explore techniques, software, and campaigns used by this group in the{' '}
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-semibold text-[#8892b0] uppercase tracking-wider">
+            Relationships
+          </h3>
           <Link
             to={`/relationships?entity=${data.attackId}`}
-            className="text-[#64ffda] hover:underline"
+            className="text-xs text-[#64ffda] hover:underline"
           >
-            Relationships Explorer
+            View full graph &rarr;
           </Link>
-          .
+        </div>
+        <p className="text-sm text-[#8892b0]">
+          Use the Relationships Explorer to visualize techniques, software, and campaigns used by{' '}
+          <span className="text-[#ccd6f6] font-medium">{data.name}</span>.
         </p>
       </div>
     </div>

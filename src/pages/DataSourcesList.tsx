@@ -69,11 +69,15 @@ export function DataSourcesList() {
       header: 'Component Count',
       align: 'center',
       width: '160px',
-      render: (row) => (
-        <span className="text-sm font-semibold text-[#f472b6] tabular-nums">
-          {row.componentCount ?? 0}
-        </span>
-      ),
+      render: (row) => {
+        const count = row.componentCount ?? 0;
+        const colorClass = count > 3 ? 'text-[#f472b6]' : 'text-[#8892b0]';
+        return (
+          <span className={`text-sm font-semibold tabular-nums ${colorClass}`}>
+            {count}
+          </span>
+        );
+      },
     },
   ];
 
@@ -87,7 +91,7 @@ export function DataSourcesList() {
           placeholder="Search data sources..."
           value={search}
           onChange={(e) => setParam('q', e.target.value)}
-          className="px-3 py-1.5 rounded-md text-sm bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6] placeholder-[#8892b0] focus:outline-none focus:border-[#64ffda]"
+          className="min-w-[200px] px-3 py-1.5 rounded-md text-sm bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6] placeholder-[#8892b0] focus:outline-none focus:border-[#64ffda]"
         />
       </div>
 

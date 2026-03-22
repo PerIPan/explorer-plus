@@ -231,7 +231,7 @@ export function Relationships() {
             <button
               type="button"
               onClick={() => graphRef.current?.reset()}
-              className="ml-auto text-xs text-[#64ffda] hover:underline"
+              className="ml-auto px-3 py-1 text-xs rounded-md border border-[#64ffda33] text-[#64ffda] bg-[#64ffda0a] hover:bg-[#64ffda18] transition-colors"
             >
               Re-layout
             </button>
@@ -245,7 +245,8 @@ export function Relationships() {
           />
 
           {/* Legend */}
-          <div className="flex flex-wrap gap-2 pt-2">
+          <div className="flex flex-wrap items-center gap-2 pt-2">
+            <span className="text-xs text-[#8892b0] font-semibold mr-1">Node types:</span>
             {Object.entries(TYPE_VARIANT).map(([type, variant]) => (
               <Badge
                 key={type}

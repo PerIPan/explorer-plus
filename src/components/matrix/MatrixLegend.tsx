@@ -6,7 +6,9 @@ export function MatrixLegend() {
 
   return (
     <div className="flex items-center gap-3 text-xs text-[#8892b0]">
-      <span>Usage:</span>
+      <span title="Color intensity = number of sub-techniques (proxy for group usage frequency)">
+        Sub-technique count:
+      </span>
       <span>None</span>
       <div className="flex rounded overflow-hidden border border-[#2a2a4a]">
         {steps.map((opacity, i) => (

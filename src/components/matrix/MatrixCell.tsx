@@ -31,7 +31,7 @@ export function MatrixCell({ technique, groupUsageCount, maxUsage }: MatrixCellP
       title={`${technique.attackId} — ${technique.name}${groupUsageCount > 0 ? ` (${groupUsageCount} groups)` : ''}`}
       onClick={() => navigate(`/techniques/${technique.attackId}`)}
       className="
-        w-full text-left px-1.5 py-1 rounded text-[10px] leading-tight
+        w-full text-left px-1.5 py-1 rounded text-[11px] leading-tight
         border border-[#2a2a4a] transition-all duration-150
         hover:border-[#64ffda55] hover:brightness-125 focus:outline-none
         focus:ring-1 focus:ring-[#64ffda55]
@@ -39,7 +39,7 @@ export function MatrixCell({ technique, groupUsageCount, maxUsage }: MatrixCellP
       "
       style={bgStyle}
     >
-      <div className="font-mono text-[9px] text-[#8892b0] mb-0.5">
+      <div className="font-mono text-[10px] text-[#8892b0] mb-0.5">
         {technique.attackId}
       </div>
       <div

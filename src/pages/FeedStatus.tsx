@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useFeedStatus } from '../hooks/useApi';
 import { PageHeader } from '../components/layout/PageHeader';
 import type { FeedSyncStatus } from '../lib/types';
@@ -135,6 +135,14 @@ export function FeedStatus() {
     (data?.data ?? []).map((f) => [f.source, f]),
   );
 
+  /** Poll every 5s while any source is in running state (FIX 35) */
+  const hasRunning = (data?.data ?? []).some((f) => f.status === 'running');
+  useEffect(() => {
+    if (!hasRunning) return;
+    const interval = setInterval(() => { void refetch(); }, 5000);
+    return () => clearInterval(interval);
+  }, [hasRunning, refetch]);
+
   async function handleSync(source: string) {
     setSyncingSet((prev) => new Set([...prev, source]));
     setSyncErrors((prev) => {
@@ -182,7 +190,7 @@ export function FeedStatus() {
         subtitle="CTI ingestion pipeline health and manual sync controls"
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {ALL_SOURCES.map((source) => {
           const feed = feedMap.get(source);
           const syncing = syncingSet.has(source);

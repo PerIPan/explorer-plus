@@ -98,12 +98,12 @@ export function GroupsList() {
           placeholder="Search groups..."
           value={search}
           onChange={(e) => setParam('q', e.target.value)}
-          className="px-3 py-1.5 rounded-md text-sm bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6] placeholder-[#8892b0] focus:outline-none focus:border-[#64ffda]"
+          className="min-w-[200px] px-3 py-1.5 rounded-md text-sm bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6] placeholder-[#8892b0] focus:outline-none focus:border-[#64ffda]"
         />
         <select
           value={sector}
           onChange={(e) => setParam('sector', e.target.value)}
-          className="px-3 py-1.5 rounded-md text-sm bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6] focus:outline-none focus:border-[#64ffda]"
+          className="min-w-[140px] px-3 py-1.5 rounded-md text-sm bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6] focus:outline-none focus:border-[#64ffda]"
         >
           <option value="">All Sectors</option>
           {(sectorsData?.data ?? []).map((s) => (

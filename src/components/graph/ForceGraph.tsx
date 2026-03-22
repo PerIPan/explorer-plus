@@ -184,6 +184,16 @@ export const ForceGraph = forwardRef<ForceGraphHandle, ForceGraphProps>(
             })
         );
 
+      /* Outer ring on center node (FIX 32) */
+      nodeSel
+        .filter((d) => d.id === data.center.id)
+        .append('circle')
+        .attr('r', 20)
+        .attr('fill', 'none')
+        .attr('stroke', (d) => nodeColor(d.type))
+        .attr('stroke-width', 1.5)
+        .attr('opacity', 0.25);
+
       /* Circle */
       nodeSel
         .append('circle')
@@ -196,10 +206,13 @@ export const ForceGraph = forwardRef<ForceGraphHandle, ForceGraphProps>(
       /* Label (textContent only) */
       nodeSel
         .append('text')
-        .attr('y', 22)
+        .attr('y', 24)
         .attr('text-anchor', 'middle')
-        .attr('font-size', 9)
+        .attr('font-size', 11)
         .attr('fill', '#8892b0')
+        .attr('paint-order', 'stroke')
+        .attr('stroke', '#0a0a1a')
+        .attr('stroke-width', 3)
         .each(function (d) {
           // Use textContent — never innerHTML
           this.textContent = d.label.length > 18

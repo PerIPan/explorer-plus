@@ -66,9 +66,9 @@ export function EntityLink({ type, attackId, name, className = '' }: EntityLinkP
       to={`/${path}/${attackId}`}
       title={`${attackId} — ${name}`}
       className={`
-        inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium
+        inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium
         border ${color} ${bg} ${border}
-        hover:brightness-125 transition-all duration-150
+        hover:brightness-125 hover:underline transition-all duration-150
         ${className}
       `}
     >

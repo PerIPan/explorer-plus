@@ -123,31 +123,33 @@ export function ReportsList() {
       />
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-3 items-end">
         <input
           type="search"
           placeholder="Search reports..."
           value={q}
           onChange={(e) => setParam('q', e.target.value)}
-          className="px-3 py-1.5 rounded-md text-sm bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6] placeholder-[#8892b0] focus:outline-none focus:border-[#64ffda]"
+          className="min-w-[200px] px-3 py-1.5 rounded-md text-sm bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6] placeholder-[#8892b0] focus:outline-none focus:border-[#64ffda]"
         />
         <select
           value={source}
           onChange={(e) => setParam('source', e.target.value)}
-          className="px-3 py-1.5 rounded-md text-sm bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6] focus:outline-none focus:border-[#64ffda]"
+          className="min-w-[140px] px-3 py-1.5 rounded-md text-sm bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6] focus:outline-none focus:border-[#64ffda]"
         >
           <option value="">All Sources</option>
           {SOURCES.map((s) => (
             <option key={s.value} value={s.value}>{s.label}</option>
           ))}
         </select>
-        <input
-          type="date"
-          value={since}
-          onChange={(e) => setParam('since', e.target.value)}
-          className="px-3 py-1.5 rounded-md text-sm bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6] focus:outline-none focus:border-[#64ffda]"
-          title="Published since"
-        />
+        <label className="flex flex-col gap-1">
+          <span className="text-xs font-medium text-[#8892b0]">Since:</span>
+          <input
+            type="date"
+            value={since}
+            onChange={(e) => setParam('since', e.target.value)}
+            className="px-3 py-1.5 rounded-md text-sm bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6] focus:outline-none focus:border-[#64ffda]"
+          />
+        </label>
       </div>
 
       <DataTable

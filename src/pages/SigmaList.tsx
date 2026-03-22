@@ -144,19 +144,22 @@ export function SigmaList() {
           placeholder="Search rules..."
           value={q}
           onChange={(e) => setParam('q', e.target.value)}
-          className="px-3 py-1.5 rounded-md text-sm bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6] placeholder-[#8892b0] focus:outline-none focus:border-[#64ffda]"
+          className="min-w-[200px] px-3 py-1.5 rounded-md text-sm bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6] placeholder-[#8892b0] focus:outline-none focus:border-[#64ffda]"
         />
-        <input
-          type="text"
-          placeholder="Technique ID (e.g. T1059)"
-          value={technique}
-          onChange={(e) => setParam('technique', e.target.value)}
-          className="px-3 py-1.5 rounded-md text-sm bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6] placeholder-[#8892b0] focus:outline-none focus:border-[#64ffda]"
-        />
+        <div className="flex flex-col gap-1">
+          <input
+            type="text"
+            placeholder="Technique ID (e.g. T1059)"
+            value={technique}
+            onChange={(e) => setParam('technique', e.target.value)}
+            className="min-w-[200px] px-3 py-1.5 rounded-md text-sm bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6] placeholder-[#8892b0] focus:outline-none focus:border-[#64ffda]"
+          />
+          <span className="text-[10px] text-[#8892b0]">Enter exact ID, e.g. T1059.001</span>
+        </div>
         <select
           value={level}
           onChange={(e) => setParam('level', e.target.value)}
-          className="px-3 py-1.5 rounded-md text-sm bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6] focus:outline-none focus:border-[#64ffda]"
+          className="min-w-[140px] px-3 py-1.5 rounded-md text-sm bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6] focus:outline-none focus:border-[#64ffda]"
         >
           <option value="">All Levels</option>
           {LEVELS.map((l) => (

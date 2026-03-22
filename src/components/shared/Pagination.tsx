@@ -52,13 +52,17 @@ export function Pagination({
             disabled={page <= 1}
             aria-label="Previous page"
             className="
-              px-2 py-1 rounded text-sm text-[#8892b0]
+              min-h-[32px] min-w-[60px] px-2 py-1 rounded text-sm text-[#8892b0]
+              inline-flex items-center gap-1
               hover:text-[#ccd6f6] hover:bg-[#ffffff08]
               disabled:opacity-30 disabled:cursor-not-allowed
               transition-colors duration-150
             "
           >
-            &lsaquo;
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+            </svg>
+            Prev
           </button>
 
           {/* Page numbers */}
@@ -97,13 +101,17 @@ export function Pagination({
             disabled={page >= totalPages}
             aria-label="Next page"
             className="
-              px-2 py-1 rounded text-sm text-[#8892b0]
+              min-h-[32px] min-w-[60px] px-2 py-1 rounded text-sm text-[#8892b0]
+              inline-flex items-center gap-1
               hover:text-[#ccd6f6] hover:bg-[#ffffff08]
               disabled:opacity-30 disabled:cursor-not-allowed
               transition-colors duration-150
             "
           >
-            &rsaquo;
+            Next
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+            </svg>
           </button>
         </div>
       )}
