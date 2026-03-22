@@ -117,7 +117,7 @@ export function Relationships() {
             onBlur={() => setTimeout(() => {
               setShowSuggestions(false);
               if (!searchInput && selectedId && graphData?.center) {
-                setSearchInput(graphData.center.name);
+                setSearchInput(graphData.center.label);
               }
             }, 200)}
             onKeyDown={(e) => {

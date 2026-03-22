@@ -312,10 +312,12 @@ export function TechniqueDetail() {
 
       {/* Metadata strip */}
       <div className="flex flex-wrap gap-4 text-sm bg-[#16213e] border border-[#2a2a4a] rounded-lg px-4 py-3">
-        {data.tacticPhase && (
+        {data.tactics && data.tactics.length > 0 && (
           <div className="flex items-center gap-2">
             <span className="text-[#8892b0]">Tactic:</span>
-            <Badge label={data.tacticPhase} variant="yellow" />
+            {data.tactics.map((t) => (
+              <Badge key={t} label={t} variant="yellow" />
+            ))}
           </div>
         )}
         {data.platforms?.length ? (
@@ -410,8 +412,8 @@ export function TechniqueDetail() {
                     attackId={sub.attackId}
                     name={sub.name}
                   />
-                  {sub.tacticPhase && (
-                    <Badge label={sub.tacticPhase} variant="yellow" />
+                  {sub.tactics && sub.tactics.length > 0 && (
+                    <Badge label={sub.tactics[0]} variant="yellow" />
                   )}
                 </div>
               ))

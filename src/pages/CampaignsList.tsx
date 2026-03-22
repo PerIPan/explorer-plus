@@ -46,7 +46,7 @@ export function CampaignsList() {
   function handleSort(key: string) {
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
-      const curKey = prev.get('sort') ?? 'attack_id';
+      const curKey = prev.get('sort') ?? 'last_seen';
       const curDir = prev.get('order') ?? 'asc';
       next.set('sort', key);
       next.set('order', curKey === key && curDir === 'asc' ? 'desc' : 'asc');
@@ -144,8 +144,8 @@ export function CampaignsList() {
         loading={isLoading}
         pagination={data?.pagination}
         onPageChange={(p) => setParam('page', String(p))}
-        sort={sort}
-        order={order}
+        sortBy={sort}
+        sortDir={order}
         onSort={handleSort}
         onRowClick={(row) => navigate(`/campaigns/${row.attackId}`)}
         rowKey={(row) => row.attackId}

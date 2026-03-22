@@ -63,7 +63,7 @@ export function SectorPieChart({ data }: SectorPieChartProps) {
             color: '#ccd6f6',
             fontSize: 12,
           }}
-          formatter={(value: number, name: string) => [value, name]}
+          formatter={(value: any, name: any) => [value, name]}
         />
         <Legend
           formatter={(value: string) => (

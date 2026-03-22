@@ -89,6 +89,7 @@ export interface DataComponent {
 export interface DataSource extends BaseEntity {
   platforms: string[] | null;
   components: DataComponent[];
+  componentCount?: number;
 }
 
 export interface Mitigation extends BaseEntity {

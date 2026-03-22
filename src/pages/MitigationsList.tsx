@@ -92,8 +92,8 @@ export function MitigationsList() {
         loading={isLoading}
         pagination={data?.pagination}
         onPageChange={(p) => setParam('page', String(p))}
-        sort={sort}
-        order={order}
+        sortBy={sort}
+        sortDir={order}
         onSort={handleSort}
         onRowClick={(row) => navigate(`/mitigations/${row.attackId}`)}
         rowKey={(row) => row.attackId}

@@ -53,7 +53,7 @@ export function GroupTechniqueChart({ data }: GroupTechniqueChartProps) {
             color: '#ccd6f6',
             fontSize: 12,
           }}
-          formatter={(value: number) => [value, 'Techniques']}
+          formatter={(value: any) => [value, 'Techniques']}
         />
         <Bar dataKey="techniqueCount" radius={[0, 4, 4, 0]}>
           {data.map((entry, i) => (

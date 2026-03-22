@@ -60,28 +60,28 @@ export function CampaignDetail() {
       />
 
       {/* Timeline card — only render when at least one date exists (FIX 25) */}
-      {(data.first_seen || data.last_seen) && (
+      {(data.firstSeen || data.lastSeen) && (
         <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5">
           <h3 className="text-sm font-semibold text-[#8892b0] uppercase tracking-wider mb-3">
             Timeline
           </h3>
           <div className="flex gap-8 text-sm mb-3">
-            {data.first_seen && (
+            {data.firstSeen && (
               <div>
                 <span className="text-[#8892b0]">First Seen: </span>
-                <span className="text-[#ccd6f6]">{fmtDate(data.first_seen)}</span>
+                <span className="text-[#ccd6f6]">{fmtDate(data.firstSeen)}</span>
               </div>
             )}
-            {data.last_seen && (
+            {data.lastSeen && (
               <div>
                 <span className="text-[#8892b0]">Last Seen: </span>
-                <span className="text-[#ccd6f6]">{fmtDate(data.last_seen)}</span>
+                <span className="text-[#ccd6f6]">{fmtDate(data.lastSeen)}</span>
               </div>
             )}
           </div>
           <CampaignTimeline
-            firstSeen={data.first_seen}
-            lastSeen={data.last_seen}
+            firstSeen={data.firstSeen}
+            lastSeen={data.lastSeen}
             name={data.name}
           />
         </div>

@@ -55,7 +55,7 @@ export function TacticBarChart({ data }: TacticBarChartProps) {
             color: '#ccd6f6',
             fontSize: 12,
           }}
-          formatter={(value: number) => [value, 'Techniques']}
+          formatter={(value: any) => [value, 'Techniques']}
         />
         <Bar dataKey="count" radius={[0, 4, 4, 0]}>
           {data.map((entry, i) => (

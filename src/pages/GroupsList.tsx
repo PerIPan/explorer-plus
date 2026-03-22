@@ -107,7 +107,7 @@ export function GroupsList() {
         >
           <option value="">All Sectors</option>
           {(sectorsData?.data ?? []).map((s) => (
-            <option key={s.name} value={s.name}>{s.name}</option>
+            <option key={s.name} value={s.slug ?? s.name.toLowerCase()}>{s.name}</option>
           ))}
         </select>
       </div>

@@ -192,7 +192,7 @@ export function Search() {
                     attackId={t.attackId}
                     name={t.name}
                     type="technique"
-                    context={(t as { tacticPhase?: string }).tacticPhase}
+                    context={(t as { tactics?: string[] }).tactics?.[0]}
                   />
                 ))}
               </div>

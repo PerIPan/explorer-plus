@@ -41,7 +41,7 @@ function SortIcon({ active, dir }: { active: boolean; dir: 'asc' | 'desc' }) {
 /**
  * Generic reusable data table with sticky header, sorting, pagination, and row click.
  */
-export function DataTable<T extends Record<string, unknown>>({
+export function DataTable<T extends Record<string, any>>({
   columns,
   data,
   loading = false,

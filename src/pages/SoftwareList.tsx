@@ -132,8 +132,8 @@ export function SoftwareList() {
         loading={isLoading}
         pagination={data?.pagination}
         onPageChange={(p) => setParam('page', String(p))}
-        sort={sort}
-        order={order}
+        sortBy={sort}
+        sortDir={order}
         onSort={handleSort}
         onRowClick={(row) => navigate(`/software/${row.attackId}`)}
         rowKey={(row) => row.attackId}

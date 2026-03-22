@@ -1,7 +1,8 @@
+import type { ReactNode } from 'react';
 interface GraphTooltipProps {
   x: number;
   y: number;
-  content: React.ReactNode;
+  content: ReactNode;
 }
 
 /**

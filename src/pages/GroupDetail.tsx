@@ -52,14 +52,6 @@ export function GroupDetail() {
 
       {/* Single metadata card with labeled rows (FIX 24) */}
       <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5 space-y-3">
-        {data.country && (
-          <div className="flex items-start gap-4">
-            <span className="text-xs font-semibold text-[#8892b0] uppercase tracking-wider w-36 shrink-0 pt-0.5">
-              Country / Attribution
-            </span>
-            <Badge label={data.country} variant="orange" />
-          </div>
-        )}
         {data.aliases?.length ? (
           <div className="flex items-start gap-4">
             <span className="text-xs font-semibold text-[#8892b0] uppercase tracking-wider w-36 shrink-0 pt-0.5">

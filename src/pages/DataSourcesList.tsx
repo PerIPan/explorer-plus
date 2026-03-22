@@ -101,8 +101,8 @@ export function DataSourcesList() {
         loading={isLoading}
         pagination={data?.pagination}
         onPageChange={(p) => setParam('page', String(p))}
-        sort={sort}
-        order={order}
+        sortBy={sort}
+        sortDir={order}
         onSort={handleSort}
         onRowClick={(row) => navigate(`/data-sources/${row.attackId}`)}
         rowKey={(row) => row.attackId}
