@@ -230,7 +230,7 @@ export function useIntelligence(attackId: string) {
 export function useFrameworks(attackId: string) {
   return useQuery({
     queryKey: ['frameworks', attackId],
-    queryFn: () => apiFetch<FrameworkData>(`/techniques/${attackId}/frameworks`),
+    queryFn: () => apiFetch<FrameworkData>(`/frameworks/technique/${attackId}`),
     enabled: Boolean(attackId),
   });
 }

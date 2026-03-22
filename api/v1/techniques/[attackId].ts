@@ -108,12 +108,12 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
 
   res.status(200).json({
     ...tech,
-    tactics: tacticsResult.rows,
+    tactics: tacticsResult.rows.map((t: any) => t.name),
     groups: groupsResult.rows,
     software: softwareResult.rows,
     mitigations: mitigationsResult.rows,
     dataComponents: dataComponentsResult.rows,
-    subTechniques: subTechResult.rows,
+    sub_techniques: subTechResult.rows,
     campaigns: campaignsResult.rows,
   });
 }
