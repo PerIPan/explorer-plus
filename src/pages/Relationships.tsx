@@ -183,6 +183,19 @@ export function Relationships() {
       <PageHeader
         title="Relationships Explorer"
         subtitle="Graph, Actor Profile, and Technique Map views — select an entity to start"
+        actions={
+          selectedId ? (
+            <button
+              type="button"
+              data-print-hide
+              onClick={() => window.print()}
+              className="px-3 py-1.5 text-xs rounded-md border border-[#2a2a4a] text-[#8892b0] hover:text-[#64ffda] hover:border-[#64ffda33] transition-colors"
+              title="Export current view as PDF (Ctrl+P)"
+            >
+              Export PDF
+            </button>
+          ) : undefined
+        }
       />
 
       {/* Entity search — combobox with autocomplete dropdown */}

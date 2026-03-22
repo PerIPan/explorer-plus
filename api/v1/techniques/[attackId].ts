@@ -39,12 +39,13 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   // Run all relationship queries in parallel
   const [groupsResult, softwareResult, mitigationsResult, dataComponentsResult, subTechResult, campaignsResult, tacticsResult] =
     await Promise.all([
-      // Related groups with procedure
+      // Related groups — includes groups using this technique OR any of its sub-techniques
       query<{ attackId: string; name: string; procedure: string | null }>(
-        `SELECT tg.attack_id AS "attackId", tg.name, gt.description AS procedure
+        `SELECT DISTINCT ON (tg.name) tg.attack_id AS "attackId", tg.name, gt.description AS procedure
          FROM group_techniques gt
          JOIN threat_groups tg ON tg.id = gt.group_id
          WHERE gt.technique_id = $1
+            OR gt.technique_id IN (SELECT id FROM techniques WHERE parent_technique_id = $1)
          ORDER BY tg.name ASC`,
         [techId],
       ),

@@ -27,3 +27,53 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #64ffda33;
 }
+
+/* Print / PDF export styles — hide nav, show only main content */
+@media print {
+  /* Hide sidebar, header, and non-content elements */
+  aside, header, nav,
+  [data-print-hide] {
+    display: none !important;
+  }
+
+  /* Remove margins from layout */
+  body {
+    background: white !important;
+    color: #1a1a2e !important;
+  }
+
+  main {
+    margin: 0 !important;
+    padding: 0.5in !important;
+  }
+
+  /* Override dark theme for print */
+  * {
+    color: #1a1a2e !important;
+    border-color: #ccc !important;
+    background-color: transparent !important;
+  }
+
+  /* Keep badges readable */
+  [class*="bg-[#"] {
+    background-color: #f0f0f0 !important;
+    color: #333 !important;
+    border: 1px solid #999 !important;
+  }
+
+  /* Expand all scrollable sections */
+  [class*="max-h-"] {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  /* Remove fixed positioning */
+  .fixed, .sticky {
+    position: static !important;
+  }
+
+  /* Ensure content fills page */
+  .lg\:ml-60 {
+    margin-left: 0 !important;
+  }
+}
