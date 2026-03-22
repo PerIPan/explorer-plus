@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { query } from './_lib/db.js';
-import { withHandler } from './_lib/middleware.js';
+import { query } from './lib/db';
+import { withHandler } from './lib/middleware';
 import { z } from 'zod';
 
 const querySchema = z.object({

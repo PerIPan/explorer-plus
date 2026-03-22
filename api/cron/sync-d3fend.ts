@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { query } from '../v1/_lib/db.js';
+import { query } from '../v1/lib/db';
 
 const D3FEND_API = 'https://d3fend.mitre.org/api/offensive-technique/attack';
 const RATE_LIMIT_MS = 300;

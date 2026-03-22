@@ -1,11 +1,11 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 // Import cron handlers
-import otxHandler from '../../../cron/ingest-otx.js';
-import abuseCh from '../../../cron/ingest-abuse-ch.js';
-import cisaKev from '../../../cron/ingest-cisa-kev.js';
-import rss from '../../../cron/ingest-rss.js';
-import d3fend from '../../../cron/sync-d3fend.js';
+import otxHandler from '../../../cron/ingest-otx';
+import abuseCh from '../../../cron/ingest-abuse-ch';
+import cisaKev from '../../../cron/ingest-cisa-kev';
+import rss from '../../../cron/ingest-rss';
+import d3fend from '../../../cron/sync-d3fend';
 
 const HANDLERS: Record<string, (req: VercelRequest, res: VercelResponse) => Promise<void>> = {
   otx: otxHandler,

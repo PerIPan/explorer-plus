@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { query } from '../_lib/db.js';
-import { withHandler } from '../_lib/middleware.js';
-import { attackIdSchema } from '../_lib/validate.js';
+import { query } from '../lib/db';
+import { withHandler } from '../lib/middleware';
+import { attackIdSchema } from '../lib/validate';
 
 async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   const parsed = attackIdSchema.safeParse(req.query.attackId);

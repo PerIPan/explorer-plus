@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { query } from '../_lib/db.js';
-import { withHandler } from '../_lib/middleware.js';
-import { buildSearchCondition } from '../_lib/queries.js';
+import { query } from '../lib/db';
+import { withHandler } from '../lib/middleware';
+import { buildSearchCondition } from '../lib/queries';
 import { z } from 'zod';
 
 const querySchema = z.object({
