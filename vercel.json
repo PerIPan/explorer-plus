@@ -1,5 +1,6 @@
 {
-  "buildCommand": "npm run build",
+  "framework": "vite",
+  "buildCommand": "npx vite build",
   "outputDirectory": "dist",
   "crons": [
     { "path": "/api/cron/ingest-otx", "schedule": "*/30 * * * *" },
