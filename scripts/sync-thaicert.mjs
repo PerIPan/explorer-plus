@@ -112,14 +112,21 @@ async function main() {
       const refs = Array.isArray(meta.refs) ? meta.refs.filter(Boolean) : null;
       const category = meta.category ?? meta.type ?? null;
       const uuid = entry.uuid ?? null;
+      const motivation = Array.isArray(meta.motivation) ? meta.motivation.join(', ') : (meta.motivation ?? null);
+      const firstSeen = meta.date ?? null;
+      const suspectedVictims = Array.isArray(meta['cfr-suspected-victims']) ? meta['cfr-suspected-victims'].filter(Boolean) : null;
+      const targetCategories = Array.isArray(meta['cfr-target-category']) ? meta['cfr-target-category'].filter(Boolean) : null;
+      const suspectedStateSponsor = meta['cfr-suspected-state-sponsor'] ?? null;
+      const attributionConfidence = meta['attribution-confidence'] ?? null;
 
       const mitreGroupId = findMitreGroupId(name, synonyms ?? [], mitreGroupLookup);
       if (mitreGroupId) linked++;
 
       await pool.query(
         `INSERT INTO external_actors
-           (name, description, source, country, category, synonyms, refs, mitre_group_id, uuid, updated_at)
-         VALUES ($1, $2, 'thaicert', $3, $4, $5, $6, $7, $8, now())
+           (name, description, source, country, category, synonyms, refs, mitre_group_id, uuid,
+            motivation, first_seen, suspected_victims, target_categories, suspected_state_sponsor, attribution_confidence, updated_at)
+         VALUES ($1, $2, 'thaicert', $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, now())
          ON CONFLICT (uuid) DO UPDATE SET
            name          = EXCLUDED.name,
            description   = EXCLUDED.description,
@@ -128,8 +135,15 @@ async function main() {
            synonyms      = EXCLUDED.synonyms,
            refs          = EXCLUDED.refs,
            mitre_group_id = EXCLUDED.mitre_group_id,
+           motivation    = EXCLUDED.motivation,
+           first_seen    = EXCLUDED.first_seen,
+           suspected_victims = EXCLUDED.suspected_victims,
+           target_categories = EXCLUDED.target_categories,
+           suspected_state_sponsor = EXCLUDED.suspected_state_sponsor,
+           attribution_confidence = EXCLUDED.attribution_confidence,
            updated_at    = now()`,
-        [name, description, country, category, synonyms, refs, mitreGroupId, uuid],
+        [name, description, country, category, synonyms, refs, mitreGroupId, uuid,
+         motivation, firstSeen, suspectedVictims, targetCategories, suspectedStateSponsor, attributionConfidence],
       );
 
       upserted++;

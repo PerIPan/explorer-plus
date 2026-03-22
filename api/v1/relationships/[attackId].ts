@@ -73,9 +73,10 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   if (entity.type === 'technique') {
     const [groupsRes, softRes, mitRes, campRes, tacticRes, subRes] = await Promise.all([
       query<{ id: string; attackId: string; name: string }>(
-        `SELECT tg.id, tg.attack_id AS "attackId", tg.name
+        `SELECT DISTINCT tg.id, tg.attack_id AS "attackId", tg.name
          FROM group_techniques gt JOIN threat_groups tg ON tg.id = gt.group_id
-         WHERE gt.technique_id = $1`,
+         WHERE gt.technique_id = $1
+            OR gt.technique_id IN (SELECT id FROM techniques WHERE parent_technique_id = $1)`,
         [entity.id],
       ),
       query<{ id: string; attackId: string; name: string; type: string }>(
