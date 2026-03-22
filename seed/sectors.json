@@ -1,0 +1,14 @@
+{
+  "Government": ["government", "diplomatic", "political"],
+  "Financial": ["financial", "banking", "fintech", "cryptocurrency"],
+  "Healthcare": ["healthcare", "medical", "pharmaceutical", "hospital"],
+  "Defense": ["defense", "military", "aerospace", "aviation"],
+  "Technology": ["technology", "software", "\\bIT\\b", "cloud"],
+  "Energy": ["energy", "\\boil\\b", "\\bgas\\b", "power grid", "utility", "SCADA"],
+  "Telecommunications": ["telecom", "telecommunications", "\\bISP\\b"],
+  "Education": ["education", "university", "academic", "research"],
+  "Manufacturing": ["manufacturing", "industrial", "supply chain"],
+  "Retail": ["retail", "e-commerce", "point-of-sale"],
+  "Transportation": ["transportation", "shipping", "logistics", "maritime"],
+  "Media": ["media", "journalism", "news", "entertainment"]
+}
