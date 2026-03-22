@@ -10,8 +10,7 @@
     { "path": "/api/cron/sync-d3fend", "schedule": "0 6 1 * *" }
   ],
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/$1" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
   ],
   "headers": [
     {
