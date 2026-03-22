@@ -116,7 +116,7 @@ export function EngageActivities() {
     <div className="space-y-6">
       <PageHeader
         title="MITRE Engage Activities"
-        subtitle={`${data?.pagination.total ?? 0} adversary engagement and deception activities`}
+        subtitle={`${data?.pagination?.total ?? 0} adversary engagement and deception activities`}
       />
 
       {/* Info banner */}

@@ -170,7 +170,7 @@ export function ReactActions() {
     <div className="space-y-6">
       <PageHeader
         title="RE&CT Response Actions"
-        subtitle={`${data?.pagination.total ?? 0} incident response actions across IR lifecycle stages`}
+        subtitle={`${data?.pagination?.total ?? 0} incident response actions across IR lifecycle stages`}
       />
 
       {/* Info banner */}

@@ -94,7 +94,7 @@ export function NistControls() {
     <div className="space-y-6">
       <PageHeader
         title="NIST 800-53 Controls"
-        subtitle={`${data?.pagination.total ?? 0} unique controls mapped to ATT&CK techniques`}
+        subtitle={`${data?.pagination?.total ?? 0} unique controls mapped to ATT&CK techniques`}
       />
 
       {/* Filters */}

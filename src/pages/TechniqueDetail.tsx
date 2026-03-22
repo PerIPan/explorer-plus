@@ -331,7 +331,7 @@ function FrameworksTab({ attackId }: { attackId: string }) {
                     <Badge
                       label={ctrl.controlFamily}
                       variant={
-                        (NIST_FAMILY_COLORS[ctrl.controlFamily] as 'blue' | 'purple' | 'orange' | 'pink' | 'teal') ?? 'neutral'
+                        (NIST_FAMILY_COLORS[ctrl.controlFamily] ?? 'neutral') as any
                       }
                     />
                   )}

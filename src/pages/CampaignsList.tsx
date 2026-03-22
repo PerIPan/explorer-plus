@@ -47,7 +47,7 @@ export function CampaignsList() {
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
       const curKey = prev.get('sort') ?? 'last_seen';
-      const curDir = prev.get('order') ?? 'asc';
+      const curDir = prev.get('order') ?? 'desc';
       next.set('sort', key);
       next.set('order', curKey === key && curDir === 'asc' ? 'desc' : 'asc');
       next.set('page', '1');
