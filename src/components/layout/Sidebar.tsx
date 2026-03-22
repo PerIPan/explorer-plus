@@ -10,18 +10,46 @@ interface NavItem {
   label: string;
 }
 
-const mainNav: NavItem[] = [
-  { path: '/', label: 'Dashboard' },
-  { path: '/matrix', label: 'Matrix' },
-  { path: '/techniques', label: 'Techniques' },
-  { path: '/groups', label: 'Groups' },
-  { path: '/campaigns', label: 'Campaigns' },
-  { path: '/software', label: 'Software' },
-  { path: '/data-sources', label: 'Data Sources' },
-  { path: '/mitigations', label: 'Mitigations' },
-  { path: '/tactics', label: 'Tactics' },
-  { path: '/sectors', label: 'Sectors' },
-  { path: '/relationships', label: 'Relationships' },
+interface NavSection {
+  label?: string;
+  items: NavItem[];
+}
+
+const mainSections: NavSection[] = [
+  {
+    items: [
+      { path: '/dashboard', label: 'Dashboard' },
+      { path: '/', label: 'Matrix' },
+    ],
+  },
+  {
+    label: 'Threat Actors',
+    items: [
+      { path: '/groups', label: 'Groups' },
+      { path: '/campaigns', label: 'Campaigns' },
+      { path: '/sectors', label: 'Sectors' },
+    ],
+  },
+  {
+    label: 'Offensive',
+    items: [
+      { path: '/techniques', label: 'Techniques' },
+      { path: '/tactics', label: 'Tactics' },
+      { path: '/software', label: 'Software' },
+    ],
+  },
+  {
+    label: 'Defensive',
+    items: [
+      { path: '/mitigations', label: 'Mitigations' },
+      { path: '/data-sources', label: 'Data Sources' },
+    ],
+  },
+  {
+    items: [
+      { path: '/relationships', label: 'Relationships' },
+    ],
+  },
 ];
 
 const ctiNav: NavItem[] = [
@@ -95,11 +123,17 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent
           [&::-webkit-scrollbar-thumb]:bg-[#2a2a4a] [&::-webkit-scrollbar-thumb]:rounded-full"
       >
-        <div className="px-3 mb-2 text-[10px] font-semibold text-[#8892b0] uppercase tracking-widest">
-          ATT&amp;CK
-        </div>
-        {mainNav.map((item) => (
-          <NavItem key={item.path} path={item.path} label={item.label} end={item.path === '/'} />
+        {mainSections.map((section, si) => (
+          <div key={si} className={si > 0 ? 'mt-3 pt-3 border-t border-[#2a2a4a33]' : ''}>
+            {section.label && (
+              <div className="px-3 mb-1.5 text-[10px] font-semibold text-[#8892b0] uppercase tracking-widest">
+                {section.label}
+              </div>
+            )}
+            {section.items.map((item) => (
+              <NavItem key={item.path} path={item.path} label={item.label} end={item.path === '/'} />
+            ))}
+          </div>
         ))}
       </nav>
 

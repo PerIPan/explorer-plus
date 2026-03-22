@@ -150,6 +150,34 @@ export function ReportsList() {
             className="px-3 py-1.5 rounded-md text-sm bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6] focus:outline-none focus:border-[#64ffda]"
           />
         </label>
+        {/* Quick date filters */}
+        <div className="flex gap-1.5">
+          {[
+            { label: 'This week', days: 7 },
+            { label: 'Last 2 weeks', days: 14 },
+            { label: 'This month', days: 30 },
+            { label: 'All time', days: 0 },
+          ].map((f) => {
+            const sinceDate = f.days > 0
+              ? new Date(Date.now() - f.days * 86400000).toISOString().split('T')[0]
+              : '';
+            const isActive = since === sinceDate;
+            return (
+              <button
+                key={f.label}
+                type="button"
+                onClick={() => setParam('since', sinceDate)}
+                className={`px-2.5 py-1.5 text-xs rounded-md border transition-colors ${
+                  isActive
+                    ? 'border-[#64ffda] text-[#64ffda] bg-[#64ffda14]'
+                    : 'border-[#2a2a4a] text-[#8892b0] hover:text-[#ccd6f6] hover:border-[#4a4a6a]'
+                }`}
+              >
+                {f.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <DataTable

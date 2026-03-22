@@ -98,7 +98,8 @@ export default function App() {
     <Routes>
       <Route element={<Layout />}>
         {/* Dashboard */}
-        <Route index element={<Dashboard />} />
+        <Route index element={<Matrix />} />
+        <Route path="dashboard" element={<Dashboard />} />
 
         {/* Matrix */}
         <Route path="matrix" element={<Matrix />} />

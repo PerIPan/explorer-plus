@@ -21,8 +21,8 @@ export function CampaignsList() {
 
   const page = parseInt(searchParams.get('page') ?? '1', 10);
   const search = searchParams.get('q') ?? '';
-  const sort = searchParams.get('sort') ?? 'attack_id';
-  const order = (searchParams.get('order') ?? 'asc') as 'asc' | 'desc';
+  const sort = searchParams.get('sort') ?? 'last_seen';
+  const order = (searchParams.get('order') ?? 'desc') as 'asc' | 'desc';
 
   const params: Record<string, string> = { page: String(page), limit: '50' };
   if (search) params.search = search;
