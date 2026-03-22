@@ -2,11 +2,11 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "crons": [
-    { "path": "/cron/ingest-otx", "schedule": "*/30 * * * *" },
-    { "path": "/cron/ingest-abuse-ch", "schedule": "0 2 * * *" },
-    { "path": "/cron/ingest-cisa-kev", "schedule": "0 3 * * *" },
-    { "path": "/cron/ingest-rss", "schedule": "0 */6 * * *" },
-    { "path": "/cron/sync-d3fend", "schedule": "0 6 1 * *" }
+    { "path": "/api/cron/ingest-otx", "schedule": "*/30 * * * *" },
+    { "path": "/api/cron/ingest-abuse-ch", "schedule": "0 2 * * *" },
+    { "path": "/api/cron/ingest-cisa-kev", "schedule": "0 3 * * *" },
+    { "path": "/api/cron/ingest-rss", "schedule": "0 */6 * * *" },
+    { "path": "/api/cron/sync-d3fend", "schedule": "0 6 1 * *" }
   ],
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },

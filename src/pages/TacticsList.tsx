@@ -10,21 +10,21 @@ export function TacticsList() {
   const navigate = useNavigate();
   const { data, isLoading } = useTactics({ limit: '100' });
 
-  /** Sort by kill chain order (sort_order) */
+  /** Sort by kill chain order (sortOrder) */
   const sorted = useMemo(
     () =>
-      [...(data?.data ?? [])].sort((a, b) => a.sort_order - b.sort_order),
+      [...(data?.data ?? [])].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)),
     [data]
   );
 
   const columns: ColumnDef<Tactic>[] = [
     {
-      key: 'sort_order',
+      key: 'sortOrder',
       header: '#',
       width: '50px',
       align: 'center',
       render: (row) => (
-        <span className="text-xs text-[#2a2a4a] font-mono">{row.sort_order}</span>
+        <span className="text-xs text-[#2a2a4a] font-mono">{row.sortOrder}</span>
       ),
     },
     {
@@ -40,13 +40,6 @@ export function TacticsList() {
       header: 'Tactic',
       render: (row) => (
         <EntityLink type="tactic" attackId={row.attackId} name={row.name} />
-      ),
-    },
-    {
-      key: 'shortName',
-      header: 'Short Name',
-      render: (row) => (
-        <span className="text-xs text-[#8892b0] font-mono">{row.shortName}</span>
       ),
     },
   ];

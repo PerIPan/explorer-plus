@@ -1,4 +1,4 @@
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useSectors } from '../hooks/useApi';
 import { PageHeader } from '../components/layout/PageHeader';
 import { DataTable, type ColumnDef } from '../components/shared/DataTable';
@@ -6,10 +6,8 @@ import type { Sector } from '../lib/types';
 
 export function SectorsList() {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const page = parseInt(searchParams.get('page') ?? '1', 10);
 
-  const { data, isLoading } = useSectors({ page: String(page), limit: '50' });
+  const { data, isLoading } = useSectors();
 
   const columns: ColumnDef<Sector>[] = [
     {
@@ -20,12 +18,12 @@ export function SectorsList() {
       ),
     },
     {
-      key: 'description',
-      header: 'Description',
+      key: 'groupCount',
+      header: 'Groups',
+      width: '100px',
+      align: 'center',
       render: (row) => (
-        <span className="text-xs text-[#8892b0] line-clamp-1">
-          {row.description ?? '—'}
-        </span>
+        <span className="text-xs text-[#8892b0] font-mono">{row.groupCount}</span>
       ),
     },
   ];
@@ -38,16 +36,8 @@ export function SectorsList() {
         columns={columns}
         data={data?.data ?? []}
         loading={isLoading}
-        pagination={data?.pagination}
-        onPageChange={(p) => {
-          setSearchParams((prev) => {
-            const next = new URLSearchParams(prev);
-            next.set('page', String(p));
-            return next;
-          });
-        }}
-        onRowClick={(row) => navigate(`/sectors/${encodeURIComponent(row.name)}`)}
-        rowKey={(row) => row.id}
+        onRowClick={(row) => navigate(`/sectors/${row.slug ?? encodeURIComponent(row.name)}`)}
+        rowKey={(row) => row.name}
         emptyMessage="No sectors found."
       />
     </div>

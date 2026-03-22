@@ -80,11 +80,9 @@ export function Relationships() {
     [setSearchParams]
   );
 
-  function handleNodeClick(node: GraphNode) {
-    if (node.attackId) {
-      selectEntity(node.attackId);
-    }
-  }
+  const handleNodeClick = useCallback((node: GraphNode) => {
+    if (node.attackId) selectEntity(node.attackId);
+  }, [selectEntity]);
 
   return (
     <div className="space-y-4">

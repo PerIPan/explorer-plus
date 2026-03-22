@@ -111,11 +111,10 @@ export const ForceGraph = forwardRef<ForceGraphHandle, ForceGraphProps>(
       const g = svg.append('g');
 
       /* ── Zoom ── */
-      svg.call(
-        d3.zoom<SVGSVGElement, unknown>()
-          .scaleExtent([0.2, 3])
-          .on('zoom', (event) => g.attr('transform', event.transform))
-      );
+      const zoomBehavior = d3.zoom<SVGSVGElement, unknown>()
+        .scaleExtent([0.2, 3])
+        .on('zoom', (event) => g.attr('transform', event.transform));
+      svg.call(zoomBehavior);
 
       /* ── Edge marker ── */
       svg
@@ -241,6 +240,7 @@ export const ForceGraph = forwardRef<ForceGraphHandle, ForceGraphProps>(
 
       return () => {
         sim.stop();
+        svg.on('.zoom', null);
       };
     }, [data, width, height, onNodeClick, hideTooltip]);
 

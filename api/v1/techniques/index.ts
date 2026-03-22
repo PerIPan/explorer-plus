@@ -66,6 +66,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     attackId: string; name: string; description: string | null;
     url: string | null; platforms: string[] | null; isRevoked: boolean;
     isDeprecated: boolean; stixModified: string | null; domain: string | null;
+    tactics: string[] | null;
   }>(
     `SELECT
        t.attack_id        AS "attackId",
@@ -76,9 +77,14 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
        t.is_revoked       AS "isRevoked",
        t.is_deprecated    AS "isDeprecated",
        t.stix_modified    AS "stixModified",
-       t.domain
+       t.domain,
+       array_agg(DISTINCT ta.name) FILTER (WHERE ta.name IS NOT NULL) AS "tactics"
      FROM techniques t
+     LEFT JOIN technique_tactics tt ON tt.technique_id = t.id
+     LEFT JOIN tactics ta ON ta.id = tt.tactic_id
      ${whereClause}
+     GROUP BY t.id, t.attack_id, t.name, t.description, t.url, t.platforms,
+              t.is_revoked, t.is_deprecated, t.stix_modified, t.domain
      ${sortClause}
      LIMIT $${params.length - 1} OFFSET $${params.length}`,
     params,
@@ -110,6 +116,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
 
   const data = dataResult.rows.map((r) => ({
     ...r,
+    tactics: r.tactics ?? [],
     sub_techniques: subTechniqueMap[r.attackId] ?? [],
   }));
 

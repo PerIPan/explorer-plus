@@ -45,9 +45,9 @@ export function SectorPieChart({ data }: SectorPieChartProps) {
           dataKey="value"
           labelLine={false}
         >
-          {chartData.map((_, i) => (
+          {chartData.map((entry, i) => (
             <Cell
-              key={i}
+              key={entry.name}
               fill={COLORS[i % COLORS.length]}
               fillOpacity={0.85}
               stroke="#0a0a1a"

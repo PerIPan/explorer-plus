@@ -43,8 +43,8 @@ export function TechniquesList() {
   const search = searchParams.get('q') ?? '';
   const tactic = searchParams.get('tactic') ?? '';
   const platform = searchParams.get('platform') ?? '';
-  const sortBy = searchParams.get('sortBy') ?? 'attackId';
-  const sortDir = (searchParams.get('sortDir') ?? 'asc') as 'asc' | 'desc';
+  const sortBy = searchParams.get('sort') ?? 'attackId';
+  const sortDir = (searchParams.get('order') ?? 'asc') as 'asc' | 'desc';
 
   const [expandedParents, setExpandedParents] = useState<Set<string>>(new Set());
 
@@ -52,8 +52,8 @@ export function TechniquesList() {
   if (search) params.q = search;
   if (tactic) params.tactic = tactic;
   if (platform) params.platform = platform;
-  if (sortBy) params.sortBy = sortBy;
-  if (sortDir) params.sortDir = sortDir;
+  if (sortBy) params.sort = sortBy;
+  if (sortDir) params.order = sortDir;
 
   const { data, isLoading } = useTechniques(params);
   const { data: tacticsData } = useTactics({ limit: '100' });
@@ -77,10 +77,10 @@ export function TechniquesList() {
   function handleSort(key: string) {
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
-      const currentDir = prev.get('sortDir') ?? 'asc';
-      const currentKey = prev.get('sortBy') ?? 'attackId';
-      next.set('sortBy', key);
-      next.set('sortDir', currentKey === key && currentDir === 'asc' ? 'desc' : 'asc');
+      const currentDir = prev.get('order') ?? 'asc';
+      const currentKey = prev.get('sort') ?? 'attackId';
+      next.set('sort', key);
+      next.set('order', currentKey === key && currentDir === 'asc' ? 'desc' : 'asc');
       next.set('page', '1');
       return next;
     });
@@ -161,12 +161,15 @@ export function TechniquesList() {
       render: (row) => <PlatformBadges platforms={row.platforms} />,
     },
     {
-      key: 'tacticPhase',
-      header: 'Tactic',
-      sortKey: 'tacticPhase',
+      key: 'tactics',
+      header: 'Tactics',
       render: (row) =>
-        row.tacticPhase ? (
-          <Badge label={row.tacticPhase} variant="yellow" />
+        row.tactics?.length ? (
+          <div className="flex flex-wrap gap-1">
+            {row.tactics.map((tac) => (
+              <Badge key={tac} label={tac} variant="yellow" />
+            ))}
+          </div>
         ) : (
           <span className="text-[#8892b0] text-xs">—</span>
         ),
@@ -193,7 +196,7 @@ export function TechniquesList() {
         >
           <option value="">All Tactics</option>
           {tacticOptions.map((t) => (
-            <option key={t.attackId} value={t.shortName}>
+            <option key={t.attackId} value={t.attackId}>
               {t.name}
             </option>
           ))}

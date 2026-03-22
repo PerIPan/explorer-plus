@@ -8,9 +8,9 @@ export function TacticDetail() {
   const { attackId } = useParams<{ attackId: string }>();
   const { data, isLoading, error } = useTactic(attackId ?? '');
 
-  /** Fetch techniques for this tactic using shortName */
+  /** Fetch techniques for this tactic using attackId */
   const { data: techData, isLoading: techLoading } = useTechniques(
-    data?.shortName ? { tactic: data.shortName, limit: '500' } : {}
+    data?.attackId ? { tactic: data.attackId, limit: '500' } : {}
   );
 
   if (isLoading) {

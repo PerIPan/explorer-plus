@@ -13,13 +13,13 @@ export interface BaseEntity {
 }
 
 export interface SubTechnique extends BaseEntity {
-  tacticPhase: string | null;
+  tactics: string[];
   platforms: string[] | null;
   detection: string | null;
 }
 
 export interface Technique extends BaseEntity {
-  tacticPhase: string | null;
+  tactics: string[];
   platforms: string[] | null;
   detection: string | null;
   sub_techniques: SubTechnique[];
@@ -27,7 +27,6 @@ export interface Technique extends BaseEntity {
 
 export interface Group extends BaseEntity {
   aliases: string[] | null;
-  country: string | null;
 }
 
 export interface Software extends BaseEntity {
@@ -55,20 +54,17 @@ export interface DataSource extends BaseEntity {
 }
 
 export interface Mitigation extends BaseEntity {
-  mitigationId: string | null;
 }
 
 export interface Tactic extends BaseEntity {
-  shortName: string;
-  sort_order: number;
+  sortOrder: number | null;
 }
 
 export interface Sector {
   id: number;
   name: string;
-  description: string | null;
-  createdAt: string;
-  updatedAt: string;
+  slug: string | null;
+  groupCount: number;
 }
 
 export interface Pagination {

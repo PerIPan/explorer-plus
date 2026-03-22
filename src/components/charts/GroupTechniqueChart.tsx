@@ -56,8 +56,8 @@ export function GroupTechniqueChart({ data }: GroupTechniqueChartProps) {
           formatter={(value: number) => [value, 'Techniques']}
         />
         <Bar dataKey="techniqueCount" radius={[0, 4, 4, 0]}>
-          {data.map((_, i) => (
-            <Cell key={i} fill="#f97316" fillOpacity={0.75 + (i % 4) * 0.05} />
+          {data.map((entry, i) => (
+            <Cell key={entry.attackId} fill="#f97316" fillOpacity={0.75 + (i % 4) * 0.05} />
           ))}
         </Bar>
       </BarChart>

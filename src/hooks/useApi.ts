@@ -85,7 +85,7 @@ export function useTactics(params: Record<string, string> = {}) {
 export function useSectors(params: Record<string, string> = {}) {
   return useQuery({
     queryKey: ['sectors', params],
-    queryFn: () => apiFetch<PaginatedResponse<Sector>>('/sectors', params),
+    queryFn: () => apiFetch<{ data: Sector[] }>('/sectors', params),
   });
 }
 
@@ -109,7 +109,7 @@ export function useGroup(attackId: string) {
 
 export function useSoftwareDetail(attackId: string) {
   return useQuery({
-    queryKey: ['software', attackId],
+    queryKey: ['software-detail', attackId],
     queryFn: () => apiFetch<Software>(`/software/${attackId}`),
     enabled: Boolean(attackId),
   });
@@ -157,10 +157,13 @@ export function useSearch(q: string) {
   });
 }
 
-export function useMatrix() {
+export function useMatrix(params?: Record<string, string>) {
   return useQuery({
-    queryKey: ['matrix'],
-    queryFn: () => apiFetch<MatrixData>('/matrix'),
+    queryKey: ['matrix', params],
+    queryFn: async () => {
+      const res = await apiFetch<{ data: MatrixData }>('/matrix', params);
+      return res.data;
+    },
   });
 }
 

@@ -1,8 +1,9 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { query } from '../api/v1/_lib/db';
+import { query } from '../v1/_lib/db';
 
 const D3FEND_API = 'https://d3fend.mitre.org/api/offensive-technique/attack';
 const RATE_LIMIT_MS = 300;
+const BATCH_SIZE = 60;
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -39,15 +40,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   let techniquesProcessed = 0;
 
   try {
+    // Resume from last processed attack_id stored in metadata
+    const lastLogResult = await query<{ metadata: Record<string, unknown> | null }>(
+      `SELECT metadata FROM feed_sync_log
+       WHERE source = 'd3fend' AND status = 'success'
+       ORDER BY completed_at DESC LIMIT 1`,
+    );
+    const lastAttackId = (lastLogResult.rows[0]?.metadata?.lastAttackId as string) ?? null;
+
     const techResult = await query<{ id: string; attack_id: string }>(
       `SELECT id, attack_id FROM techniques
        WHERE is_revoked = false AND is_deprecated = false
        ORDER BY attack_id ASC`,
     );
 
-    const techniques = techResult.rows;
+    const allTechniques = techResult.rows;
+    // Resume after lastAttackId; if cycled through all, restart from beginning
+    let startIndex = 0;
+    if (lastAttackId) {
+      const idx = allTechniques.findIndex((t) => t.attack_id > lastAttackId);
+      startIndex = idx === -1 ? 0 : idx; // restart if we reached the end last time
+    }
 
-    for (const tech of techniques) {
+    const batch = allTechniques.slice(startIndex, startIndex + BATCH_SIZE);
+    let finalAttackId: string | null = null;
+
+    for (const tech of batch) {
       try {
         const resp = await fetch(`${D3FEND_API}/${tech.attack_id}.json`, {
           headers: { Accept: 'application/json' },
@@ -56,6 +74,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         if (resp.status === 404) {
           techniquesProcessed++;
+          finalAttackId = tech.attack_id;
           await sleep(RATE_LIMIT_MS);
           continue;
         }
@@ -93,6 +112,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
 
         techniquesProcessed++;
+        finalAttackId = tech.attack_id;
       } catch (techErr) {
         console.error(`D3FEND error for ${tech.attack_id}:`, techErr);
       }
@@ -103,9 +123,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     await query(
       `UPDATE feed_sync_log
        SET status = 'success', completed_at = NOW(),
-           records_inserted = $1, records_skipped = $2
-       WHERE id = $3`,
-      [recordsInserted, recordsSkipped, logId],
+           records_inserted = $1, records_skipped = $2,
+           metadata = $3
+       WHERE id = $4`,
+      [
+        recordsInserted,
+        recordsSkipped,
+        JSON.stringify({ lastAttackId: finalAttackId }),
+        logId,
+      ],
     );
 
     res.status(200).json({
@@ -114,12 +140,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       recordsInserted,
       recordsSkipped,
       techniquesProcessed,
+      resumedFrom: lastAttackId,
+      lastProcessed: finalAttackId,
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error('D3FEND sync error:', err);
 
-    // Never delete existing mappings on failure
     await query(
       `UPDATE feed_sync_log
        SET status = 'error', completed_at = NOW(), error_message = $1

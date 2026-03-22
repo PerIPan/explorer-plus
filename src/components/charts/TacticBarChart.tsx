@@ -58,9 +58,9 @@ export function TacticBarChart({ data }: TacticBarChartProps) {
           formatter={(value: number) => [value, 'Techniques']}
         />
         <Bar dataKey="count" radius={[0, 4, 4, 0]}>
-          {data.map((_, i) => (
+          {data.map((entry, i) => (
             <Cell
-              key={i}
+              key={entry.tacticName}
               fill={TEAL}
               fillOpacity={0.7 + (i % 3) * 0.1}
             />

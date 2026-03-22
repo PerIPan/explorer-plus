@@ -3,7 +3,6 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useGroups, useSectors } from '../hooks/useApi';
 import { PageHeader } from '../components/layout/PageHeader';
 import { DataTable, type ColumnDef } from '../components/shared/DataTable';
-import { Badge } from '../components/shared/Badge';
 import { DeprecatedBadge } from '../components/shared/DeprecatedBadge';
 import { EntityLink } from '../components/shared/EntityLink';
 import type { Group } from '../lib/types';
@@ -15,14 +14,14 @@ export function GroupsList() {
   const page = parseInt(searchParams.get('page') ?? '1', 10);
   const search = searchParams.get('q') ?? '';
   const sector = searchParams.get('sector') ?? '';
-  const sortBy = searchParams.get('sortBy') ?? 'attackId';
-  const sortDir = (searchParams.get('sortDir') ?? 'asc') as 'asc' | 'desc';
+  const sortBy = searchParams.get('sort') ?? 'attackId';
+  const sortDir = (searchParams.get('order') ?? 'asc') as 'asc' | 'desc';
 
   const params: Record<string, string> = { page: String(page), limit: '50' };
   if (search) params.q = search;
   if (sector) params.sector = sector;
-  if (sortBy) params.sortBy = sortBy;
-  if (sortDir) params.sortDir = sortDir;
+  if (sortBy) params.sort = sortBy;
+  if (sortDir) params.order = sortDir;
 
   const { data, isLoading } = useGroups(params);
   const { data: sectorsData } = useSectors({ limit: '100' });
@@ -42,10 +41,10 @@ export function GroupsList() {
   function handleSort(key: string) {
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
-      const curKey = prev.get('sortBy') ?? 'attackId';
-      const curDir = prev.get('sortDir') ?? 'asc';
-      next.set('sortBy', key);
-      next.set('sortDir', curKey === key && curDir === 'asc' ? 'desc' : 'asc');
+      const curKey = prev.get('sort') ?? 'attackId';
+      const curDir = prev.get('order') ?? 'asc';
+      next.set('sort', key);
+      next.set('order', curKey === key && curDir === 'asc' ? 'desc' : 'asc');
       next.set('page', '1');
       return next;
     });
@@ -87,16 +86,6 @@ export function GroupsList() {
           <span className="text-[#8892b0] text-xs">—</span>
         ),
     },
-    {
-      key: 'country',
-      header: 'Country',
-      render: (row) =>
-        row.country ? (
-          <Badge label={row.country} variant="orange" />
-        ) : (
-          <span className="text-[#8892b0] text-xs">—</span>
-        ),
-    },
   ];
 
   return (
@@ -118,7 +107,7 @@ export function GroupsList() {
         >
           <option value="">All Sectors</option>
           {(sectorsData?.data ?? []).map((s) => (
-            <option key={s.id} value={s.name}>{s.name}</option>
+            <option key={s.name} value={s.name}>{s.name}</option>
           ))}
         </select>
       </div>

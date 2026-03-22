@@ -5,28 +5,14 @@ import { MatrixLegend } from './MatrixLegend';
 
 interface MatrixGridProps {
   data: MatrixData;
-  platformFilter: string;
 }
 
 /**
  * Full ATT&CK matrix — tactics as columns, techniques as cells.
- * groupUsageCount is derived from the number of sub-techniques + a mock usage
- * since the API's MatrixData doesn't include usage counts directly.
- * We use subTechniques.length as a rough proxy for "richness".
+ * groupUsageCount uses subTechniques.length as a proxy for cell "richness".
  */
-export function MatrixGrid({ data, platformFilter }: MatrixGridProps) {
-  const filtered = useMemo(() => {
-    if (!platformFilter) return data;
-    return data.map((col) => ({
-      ...col,
-      techniques: col.techniques.filter((t) => {
-        /** MatrixTechniqueCell doesn't carry platforms — filter at column level isn't possible,
-         *  so we show all techniques when platform filter is active (API doesn't return platform per cell).
-         *  Filtering would require a separate API call; we mark this as best-effort. */
-        return true;
-      }),
-    }));
-  }, [data, platformFilter]);
+export function MatrixGrid({ data }: MatrixGridProps) {
+  const filtered = useMemo(() => data, [data]);
 
   /** Compute max sub-technique count for color scaling */
   const maxUsage = useMemo(() => {
