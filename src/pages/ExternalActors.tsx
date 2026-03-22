@@ -1,3 +1,4 @@
+import React from "react";
 import { useState, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useExternalActors } from '../hooks/useApi';
@@ -186,7 +187,7 @@ export function ExternalActors() {
       width: '160px',
       render: (row) =>
         row.mitreGroupId ? (
-          <EntityLink type="group" attackId={row.mitreGroupId} name={row.mitreGroupId} />
+          <EntityLink type="group" attackId={row.mitreGroupId} name={row.mitreGroupName ?? row.mitreGroupId} />
         ) : (
           <span className="text-[#4a4a6a] text-xs">—</span>
         ),
@@ -287,7 +288,7 @@ export function ExternalActors() {
 
               {!isLoading &&
                 (data?.data ?? []).map((row, rowIndex) => (
-                  <>
+                  <React.Fragment key={row.id}>
                     <tr
                       key={row.id}
                       className={`border-b border-[#2a2a4a] ${rowIndex % 2 === 0 ? 'bg-[#16213e]' : 'bg-[#1a1a2e]'} hover:bg-[#64ffda0a] transition-colors duration-100`}
@@ -299,7 +300,7 @@ export function ExternalActors() {
                       ))}
                     </tr>
                     {expandedId === row.id && <ExpandedRow key={`${row.id}-exp`} actor={row} />}
-                  </>
+                  </React.Fragment>
                 ))}
             </tbody>
           </table>

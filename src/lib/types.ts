@@ -396,6 +396,12 @@ export interface ExternalActor {
   synonyms: string[] | null;
   refs: string[] | null;
   mitreGroupId: string | null;
+  mitreGroupName: string | null;
+  motivation: string | null;
+  suspectedVictims: string[] | null;
+  targetCategories: string[] | null;
+  suspectedStateSponsor: string | null;
+  attributionConfidence: string | null;
 }
 
 export interface TechniqueIntelligence {

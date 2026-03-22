@@ -75,6 +75,11 @@ export function SearchBar() {
   function navigateToEntity(attackId: string, type: string) {
     setShowDropdown(false);
     setValue('');
+    // External actors navigate to list with search filter (no detail page)
+    if (type === 'external_actor') {
+      navigate(`/external-actors?search=${encodeURIComponent(attackId)}`);
+      return;
+    }
     const typeRoutes: Record<string, string> = {
       technique: 'techniques',
       group: 'groups',
