@@ -4,7 +4,7 @@
   "outputDirectory": "dist",
   "functions": {
     "api/**/*.ts": {
-      "includeFiles": ["api/v1/lib/**", "api/cron/**"]
+      "includeFiles": "api/**"
     }
   },
   "crons": [
