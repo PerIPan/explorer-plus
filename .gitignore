@@ -1,0 +1,12 @@
+venv/
+data/
+__pycache__/
+*.pyc
+.env
+.env.local
+.env.production
+.env*.local
+node_modules/
+dist/
+.vercel/
+.superpowers/
