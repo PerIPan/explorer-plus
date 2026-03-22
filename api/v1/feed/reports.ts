@@ -1,0 +1,102 @@
+import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { query } from '../_lib/db';
+import { withHandler } from '../_lib/middleware';
+import { paginationSchema } from '../_lib/validate';
+import { z } from 'zod';
+
+const querySchema = paginationSchema.extend({
+  source: z.string().optional(),
+  since: z.string().optional(),
+  q: z.string().min(1).max(200).optional(),
+  sortBy: z.string().optional(),
+});
+
+async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
+  const parsed = querySchema.safeParse(req.query);
+  if (!parsed.success) {
+    res.status(400).json({ error: 'Invalid query parameters', code: 'VALIDATION_ERROR' });
+    return;
+  }
+
+  const { page, limit, source, since, q, sortBy, order } = parsed.data;
+  const offset = (page - 1) * limit;
+
+  const params: unknown[] = [];
+  const conditions: string[] = [];
+
+  if (source) {
+    params.push(source);
+    conditions.push(`r.source = $${params.length}`);
+  }
+
+  if (since) {
+    const d = new Date(since);
+    if (!isNaN(d.getTime())) {
+      params.push(d.toISOString());
+      conditions.push(`r.published_at >= $${params.length}`);
+    }
+  }
+
+  if (q) {
+    params.push(`%${q}%`);
+    conditions.push(
+      `(r.title ILIKE $${params.length} OR r.summary ILIKE $${params.length})`,
+    );
+  }
+
+  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+  const allowedSort: Record<string, string> = {
+    title: 'r.title',
+    source: 'r.source',
+    published_at: 'r.published_at',
+    created_at: 'r.created_at',
+  };
+  const sortCol = allowedSort[sortBy ?? 'published_at'] ?? 'r.published_at';
+  const sortDir = order === 'asc' ? 'ASC' : 'DESC';
+
+  const countResult = await query<{ count: string }>(
+    `SELECT COUNT(*) FROM threat_reports r ${whereClause}`,
+    params,
+  );
+  const total = parseInt(countResult.rows[0].count, 10);
+
+  params.push(limit, offset);
+  const dataResult = await query<{
+    id: string;
+    title: string;
+    url: string | null;
+    source: string | null;
+    published_at: string | null;
+    created_at: string;
+    technique_count: string;
+  }>(
+    `SELECT
+       r.id,
+       r.title,
+       r.url,
+       r.source,
+       r.published_at,
+       r.created_at,
+       COUNT(rt.technique_id) AS technique_count
+     FROM threat_reports r
+     LEFT JOIN report_techniques rt ON rt.report_id = r.id
+     ${whereClause}
+     GROUP BY r.id
+     ORDER BY ${sortCol} ${sortDir} NULLS LAST
+     LIMIT $${params.length - 1} OFFSET $${params.length}`,
+    params,
+  );
+
+  const data = dataResult.rows.map((r) => ({
+    ...r,
+    technique_count: parseInt(r.technique_count, 10),
+  }));
+
+  res.status(200).json({
+    data,
+    pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+  });
+}
+
+export default withHandler(handler);

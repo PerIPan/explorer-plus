@@ -14,6 +14,12 @@ import type {
   SearchResponse,
   MatrixData,
   GraphData,
+  ThreatReport,
+  IocEntry,
+  SigmaRule,
+  AtomicTest,
+  FeedSyncStatus,
+  TechniqueIntelligence,
 } from '../lib/types';
 
 // ── List / paginated hooks ────────────────────────────────────────────────────
@@ -162,6 +168,52 @@ export function useRelationships(attackId: string) {
   return useQuery({
     queryKey: ['relationships', attackId],
     queryFn: () => apiFetch<GraphData>(`/relationships/${attackId}`),
+    enabled: Boolean(attackId),
+  });
+}
+
+// ── CTI Feed hooks ─────────────────────────────────────────────────────────────
+
+export function useReports(params: Record<string, string> = {}) {
+  return useQuery({
+    queryKey: ['feed-reports', params],
+    queryFn: () => apiFetch<PaginatedResponse<ThreatReport>>('/feed/reports', params),
+  });
+}
+
+export function useIocs(params: Record<string, string> = {}) {
+  return useQuery({
+    queryKey: ['feed-iocs', params],
+    queryFn: () => apiFetch<PaginatedResponse<IocEntry>>('/feed/iocs', params),
+  });
+}
+
+export function useSigmaRules(params: Record<string, string> = {}) {
+  return useQuery({
+    queryKey: ['feed-sigma', params],
+    queryFn: () => apiFetch<PaginatedResponse<SigmaRule>>('/feed/sigma', params),
+  });
+}
+
+export function useAtomicTests(params: Record<string, string> = {}) {
+  return useQuery({
+    queryKey: ['feed-atomic', params],
+    queryFn: () => apiFetch<PaginatedResponse<AtomicTest>>('/feed/atomic', params),
+  });
+}
+
+export function useFeedStatus() {
+  return useQuery({
+    queryKey: ['feed-status'],
+    queryFn: () => apiFetch<{ data: FeedSyncStatus[] }>('/feed/status'),
+    refetchInterval: 30_000,
+  });
+}
+
+export function useIntelligence(attackId: string) {
+  return useQuery({
+    queryKey: ['intelligence', attackId],
+    queryFn: () => apiFetch<TechniqueIntelligence>(`/feed/intelligence/${attackId}`),
     enabled: Boolean(attackId),
   });
 }

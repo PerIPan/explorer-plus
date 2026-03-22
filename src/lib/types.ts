@@ -172,3 +172,104 @@ export type EntityType =
   | 'mitigation'
   | 'data_source'
   | 'tactic';
+
+// ── CTI Feed Types ─────────────────────────────────────────────────────────────
+
+export interface ThreatReport {
+  id: number;
+  title: string;
+  url: string;
+  source: string;
+  published_at: string | null;
+  created_at: string;
+  technique_count: number;
+}
+
+export interface IocEntry {
+  id: number;
+  type: string;
+  value: string;
+  source: string;
+  malware_family: string | null;
+  first_seen_at: string | null;
+  created_at: string;
+}
+
+export interface SigmaRule {
+  id: number;
+  sigma_id: string;
+  title: string;
+  level: string | null;
+  status: string | null;
+  logsource_category: string | null;
+  logsource_product: string | null;
+  technique_attack_id: string | null;
+  technique_name: string | null;
+  created_at: string;
+}
+
+export interface AtomicTest {
+  id: number;
+  test_number: number;
+  name: string;
+  description: string | null;
+  platforms: string[] | null;
+  executor_type: string | null;
+  executor_command: string | null;
+  cleanup_command: string | null;
+  technique_attack_id: string | null;
+  technique_name: string | null;
+}
+
+export interface FeedSyncStatus {
+  source: string;
+  lastSync: string;
+  status: 'running' | 'success' | 'error';
+  recordsInserted: number;
+  recordsSkipped: number;
+  error: string | null;
+  metadata: Record<string, unknown> | null;
+}
+
+export interface TechniqueIntelligence {
+  attackId: string;
+  reports: Array<{
+    id: number;
+    title: string;
+    url: string;
+    source: string;
+    published_at: string | null;
+  }>;
+  sigmaRules: Array<{
+    id: number;
+    sigma_id: string;
+    title: string;
+    level: string | null;
+    status: string | null;
+    logsource_category: string | null;
+    logsource_product: string | null;
+  }>;
+  atomicTests: Array<{
+    id: number;
+    test_number: number;
+    name: string;
+    description: string | null;
+    platforms: string[] | null;
+    executor_type: string | null;
+  }>;
+  defensiveMappings: Array<{
+    id: number;
+    d3fend_id: string;
+    d3fend_label: string;
+    d3fend_description: string | null;
+  }>;
+  iocs: Array<{
+    id: number;
+    type: string;
+    value: string;
+    source: string;
+    malware_family: string | null;
+    first_seen_at: string | null;
+    confidence: string | null;
+  }>;
+}

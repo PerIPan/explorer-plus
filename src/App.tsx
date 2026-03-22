@@ -23,6 +23,11 @@ import { SectorsList } from './pages/SectorsList';
 import { SectorDetail } from './pages/SectorDetail';
 import { Relationships } from './pages/Relationships';
 import { Search } from './pages/Search';
+// CTI pages
+import { ReportsList } from './pages/ReportsList';
+import { IocsList } from './pages/IocsList';
+import { SigmaList } from './pages/SigmaList';
+import { FeedStatus } from './pages/FeedStatus';
 
 /** Root layout — sidebar + top bar + page content */
 function Layout() {
@@ -106,11 +111,11 @@ export default function App() {
         {/* Search */}
         <Route path="search" element={<Search />} />
 
-        {/* CTI (placeholder — future feature) */}
-        <Route path="cti/reports" element={<PlaceholderPage title="Reports" />} />
-        <Route path="cti/iocs" element={<PlaceholderPage title="IOCs" />} />
-        <Route path="cti/sigma" element={<PlaceholderPage title="Sigma" />} />
-        <Route path="cti/feed-status" element={<PlaceholderPage title="Feed Status" />} />
+        {/* CTI Feed pages */}
+        <Route path="cti/reports" element={<ReportsList />} />
+        <Route path="cti/iocs" element={<IocsList />} />
+        <Route path="cti/sigma" element={<SigmaList />} />
+        <Route path="cti/feed-status" element={<FeedStatus />} />
 
         {/* 404 */}
         <Route path="*" element={<PlaceholderPage title="404 - Not Found" />} />

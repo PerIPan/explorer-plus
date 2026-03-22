@@ -1,0 +1,22 @@
+name: Sync Sigma Rules
+on:
+  schedule:
+    - cron: '0 4 * * 0'
+  workflow_dispatch: {}
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Clone SigmaHQ
+        run: git clone --depth 1 https://github.com/SigmaHQ/sigma.git /tmp/sigma
+      - name: Install pg
+        run: npm install pg
+      - name: Parse and sync
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: node scripts/sync-sigma.mjs
