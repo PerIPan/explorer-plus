@@ -168,9 +168,9 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
   const dataComponents = technique.dataComponents ?? [];
 
   // Visible group slice (show up to 6, then "+N more")
-  const GROUP_LIMIT = 6;
-  const visibleGroups = groups.slice(0, GROUP_LIMIT);
-  const extraGroups = groups.length - GROUP_LIMIT;
+  
+  const visibleGroups = groups;
+  
 
   return (
     <div className="space-y-3">
@@ -194,17 +194,11 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
       <MapCard label="Who Uses It" icon={IconPeople} count={groups.length + campaigns.length}>
         {groups.length > 0 ? (
           <MapRow prefix="Groups">
-            {visibleGroups.map((g) => (
-              <EntityLink key={g.attackId} type="group" attackId={g.attackId} name={g.name} />
-            ))}
-            {extraGroups > 0 && (
-              <Link
-                to={`/relationships?entity=${technique.attackId}`}
-                className="text-xs text-[#64ffda] hover:underline self-center"
-              >
-                +{extraGroups} more
-              </Link>
-            )}
+            <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto">
+              {visibleGroups.map((g) => (
+                <EntityLink key={g.attackId} type="group" attackId={g.attackId} name={g.name} />
+              ))}
+            </div>
           </MapRow>
         ) : (
           <p className="text-xs text-[#8892b0]">No groups documented for this technique.</p>
@@ -291,17 +285,11 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
 
         {nistControls.length > 0 ? (
           <MapRow prefix="NIST Controls">
-            {nistControls.slice(0, 8).map((ctrl) => (
-              <Badge key={ctrl.controlId} label={ctrl.controlId} variant="blue" />
-            ))}
-            {nistControls.length > 8 && (
-              <Link
-                to="/frameworks/nist"
-                className="text-xs text-[#64ffda] hover:underline self-center"
-              >
-                +{nistControls.length - 8} more
-              </Link>
-            )}
+            <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto">
+              {nistControls.map((ctrl) => (
+                <Badge key={ctrl.controlId} label={ctrl.controlId} variant="blue" />
+              ))}
+            </div>
           </MapRow>
         ) : (
           fwLoading ? (

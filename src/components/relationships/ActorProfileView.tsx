@@ -337,13 +337,20 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
               <Badge label="group" variant="orange" />
               {group.aliases && group.aliases.length > 0 && (
                 <span className="text-xs text-[#8892b0]">
-                  aka {group.aliases.slice(0, 3).join(', ')}
+                  aka {group.aliases.join(', ')}
                   {group.aliases.length > 3 && ` +${group.aliases.length - 3} more`}
                 </span>
               )}
             </div>
           </div>
         </div>
+
+        {/* Targeted Sectors — first */}
+        {sectors.length > 0 && (
+          <CollapsibleSection title="Targeted Sectors" count={sectors.length} defaultOpen>
+            <TargetedSectors sectors={sectors} />
+          </CollapsibleSection>
+        )}
 
         {/* Campaigns */}
         {campaigns.length > 0 && (
@@ -367,13 +374,6 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
         {software.length > 0 && (
           <CollapsibleSection title="Software Arsenal" count={software.length} defaultOpen>
             <SoftwareArsenal software={software} />
-          </CollapsibleSection>
-        )}
-
-        {/* Sectors */}
-        {sectors.length > 0 && (
-          <CollapsibleSection title="Targeted Sectors" count={sectors.length} defaultOpen>
-            <TargetedSectors sectors={sectors} />
           </CollapsibleSection>
         )}
 

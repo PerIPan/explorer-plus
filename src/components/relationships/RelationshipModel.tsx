@@ -52,7 +52,7 @@ const EDGES: ModelEdge[] = [
   { from: 'software', to: 'technique', label: 'implements' },
   { from: 'campaign', to: 'technique', label: 'uses' },
   { from: 'technique', to: 'tactic', label: 'accomplishes' },
-  { from: 'sector', to: 'group', label: 'targeted by' },
+  { from: 'group', to: 'sector', label: 'targets' },
 
   // Defensive
   { from: 'mitigation', to: 'technique', label: 'prevents' },
@@ -88,9 +88,9 @@ function getEdgePath(from: ModelNode, to: ModelNode): { path: string; midX: numb
   const ex = to.x - (dx / len) * r;
   const ey = to.y - (dy / len) * r;
 
-  // Curve control point
-  const cx = (sx + ex) / 2 + (dy / len) * 30;
-  const cy = (sy + ey) / 2 - (dx / len) * 30;
+  // Curve control point — gentle curve, pushed outward from center
+  const cx = (sx + ex) / 2 + (dy / len) * 15;
+  const cy = (sy + ey) / 2 - (dx / len) * 15;
 
   const midX = (sx + ex) / 2;
   const midY = (sy + ey) / 2;

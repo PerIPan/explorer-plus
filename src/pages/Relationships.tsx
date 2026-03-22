@@ -41,7 +41,7 @@ interface TabDef {
 }
 
 const TABS: TabDef[] = [
-  { id: 'actor', label: 'Actor Profile', forTypes: ['group', 'campaign'] },
+  { id: 'actor', label: 'Threat Actor Profile', forTypes: ['group', 'campaign'] },
   { id: 'technique-map', label: 'Technique Map', forTypes: ['technique'] },
   { id: 'graph', label: 'Graph' },
 ];
@@ -139,15 +139,23 @@ export function Relationships() {
   }, [entityType]);
 
   const selectEntity = useCallback(
-    (attackId: string) => {
+    (attackId: string, knownType?: string) => {
       setSelectedId(attackId);
       setSearchInput(attackId);
       setShowSuggestions(false);
+
+      // Immediately pick the best tab based on known type
+      const bestTab: TabId = knownType === 'group' || knownType === 'campaign'
+        ? 'actor'
+        : knownType === 'technique'
+          ? 'technique-map'
+          : 'graph';
+      setActiveTab(bestTab);
+
       setSearchParams((prev) => {
         const next = new URLSearchParams(prev);
         next.set('entity', attackId);
-        // Tab will auto-select via the entityType effect
-        next.delete('tab');
+        next.set('tab', bestTab);
         return next;
       });
     },
@@ -167,13 +175,13 @@ export function Relationships() {
   );
 
   const handleNodeClick = useCallback((node: GraphNode) => {
-    if (node.attackId) selectEntity(node.attackId);
+    if (node.attackId) selectEntity(node.attackId, node.type);
   }, [selectEntity]);
 
   return (
     <div className="space-y-4">
       <PageHeader
-        title="Relationship Explorer"
+        title="Relationships Explorer"
         subtitle="Graph, Actor Profile, and Technique Map views — select an entity to start"
       />
 
@@ -212,10 +220,10 @@ export function Relationships() {
                 (e.target as HTMLInputElement).blur();
               }
               if (e.key === 'Enter' && suggestions.length > 0) {
-                selectEntity(suggestions[0].attackId);
+                selectEntity(suggestions[0].attackId, suggestions[0].type);
               }
             }}
-            placeholder={selectedId ? 'Search for another entity...' : 'phishing, APT29, PowerShell, T1059...'}
+            placeholder={selectedId ? 'Search for another entity...' : 'Phishing, APT29, PowerShell, T1059...'}
             className="flex-1 bg-transparent text-sm text-[#ccd6f6] placeholder-[#8892b0] focus:outline-none"
           />
           {searchInput && (
@@ -238,7 +246,7 @@ export function Relationships() {
               <button
                 key={s.attackId}
                 type="button"
-                onMouseDown={() => selectEntity(s.attackId)}
+                onMouseDown={() => selectEntity(s.attackId, s.type)}
                 className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-[#64ffda10] transition-colors text-left ${i === 0 ? 'bg-[#ffffff05]' : ''}`}
               >
                 <Badge
