@@ -364,21 +364,7 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
           </CollapsibleSection>
         )}
 
-        {/* Techniques */}
-        {techniques.length > 0 && (
-          <CollapsibleSection title="Techniques" count={techniques.length} defaultOpen>
-            <TechniquesByTactic techniques={techniques} />
-          </CollapsibleSection>
-        )}
-
-        {/* Software */}
-        {software.length > 0 && (
-          <CollapsibleSection title="Software Arsenal" count={software.length} defaultOpen>
-            <SoftwareArsenal software={software} />
-          </CollapsibleSection>
-        )}
-
-        {/* ThaiCERT Extended Intelligence */}
+        {/* ThaiCERT Extended Intelligence — above techniques */}
         {thaiCertResult.data?.data && thaiCertResult.data.data.length > 0 && (
           <CollapsibleSection
             title="ThaiCERT Intelligence"
@@ -439,6 +425,20 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
                 Source: ThaiCERT / ETDA Threat Actor Encyclopedia — not affiliated with MITRE
               </p>
             </div>
+          </CollapsibleSection>
+        )}
+
+        {/* Software Arsenal */}
+        {software.length > 0 && (
+          <CollapsibleSection title="Software Arsenal" count={software.length} defaultOpen>
+            <SoftwareArsenal software={software} />
+          </CollapsibleSection>
+        )}
+
+        {/* Techniques — last, largest section */}
+        {techniques.length > 0 && (
+          <CollapsibleSection title="Techniques" count={techniques.length}>
+            <TechniquesByTactic techniques={techniques} />
           </CollapsibleSection>
         )}
 
