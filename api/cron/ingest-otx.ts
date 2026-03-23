@@ -18,7 +18,7 @@ interface OtxPulse {
   modified: string;
   author_name: string;
   references: string[];
-  attack_ids: Array<{ id: string }>;
+  attack_ids: Array<string | { id: string }>;
   indicators: OtxIndicator[];
 }
 
@@ -127,8 +127,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           // Link ATT&CK techniques and collect IDs for IOC linking
           const techIds: string[] = [];
           for (const atkEntry of pulse.attack_ids ?? []) {
-            const normalized = /^T\d{4}(\.\d{3})?$/.test(atkEntry.id ?? '')
-              ? atkEntry.id
+            // OTX returns attack_ids as string[] or Array<{id:string}>
+            const rawId = typeof atkEntry === 'string' ? atkEntry : atkEntry.id;
+            const normalized = /^T\d{4}(\.\d{3})?$/.test(rawId ?? '')
+              ? rawId
               : null;
             if (!normalized) continue;
 
