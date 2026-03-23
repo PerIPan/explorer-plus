@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMatrix } from '../hooks/useApi';
+import { useSector } from '../contexts/SectorContext';
 import { PageHeader } from '../components/layout/PageHeader';
 import { MatrixGrid } from '../components/matrix/MatrixGrid';
 
 export function Matrix() {
-  const { data, isLoading, error } = useMatrix();
+  const { sectorParam } = useSector();
+  const { data, isLoading, error } = useMatrix(sectorParam);
   const [inputValue, setInputValue] = useState('');
   const [filterText, setFilterText] = useState('');
 

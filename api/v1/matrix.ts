@@ -5,6 +5,7 @@ import { z } from 'zod';
 
 const querySchema = z.object({
   domain: z.string().optional(),
+  sector: z.string().max(50).optional(),
 });
 
 async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
@@ -14,7 +15,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     return;
   }
 
-  const { domain } = parsed.data;
+  const { domain, sector } = parsed.data;
   const params: unknown[] = [];
   const domainCondition = domain ? (() => { params.push(domain); return `AND ta.domain = $${params.length}`; })() : '';
 
@@ -49,7 +50,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
        t.id           AS "techId",
        t.attack_id    AS "attackId",
        t.name,
-       COUNT(DISTINCT gt.group_id) AS "groupUsageCount"
+       COUNT(DISTINCT ${sector ? 'CASE WHEN s.id IS NOT NULL THEN gt.group_id END' : 'gt.group_id'}) AS "groupUsageCount"
      FROM technique_tactics tt
      JOIN techniques t ON t.id = tt.technique_id
        AND t.is_subtechnique = false
@@ -57,7 +58,9 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
        AND t.is_deprecated = false
        ${domainTechCond}
      LEFT JOIN group_techniques gt ON gt.technique_id = t.id
+     ${sector ? (() => { techParams.push(sector); return `LEFT JOIN group_sectors gs ON gs.group_id = gt.group_id LEFT JOIN sectors s ON s.id = gs.sector_id AND s.slug = $${techParams.length}`; })() : ''}
      GROUP BY tt.tactic_id, t.id, t.attack_id, t.name
+     ${sector ? 'HAVING COUNT(DISTINCT CASE WHEN s.id IS NOT NULL THEN gt.group_id END) > 0' : ''}
      ORDER BY t.attack_id ASC`,
     techParams,
   );

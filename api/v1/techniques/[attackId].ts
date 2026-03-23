@@ -2,6 +2,9 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { query } from '../lib/db.js';
 import { withHandler } from '../lib/middleware.js';
 import { attackIdSchema } from '../lib/validate.js';
+import { z } from 'zod';
+
+const optionalSector = z.string().max(50).optional();
 
 async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   const parsed = attackIdSchema.safeParse(req.query.attackId);
@@ -10,6 +13,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     return;
   }
   const attackId = parsed.data;
+  const sector = optionalSector.parse(req.query.sector) || null;
 
   // Fetch main technique
   const techResult = await query<{
@@ -44,10 +48,11 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
         `SELECT DISTINCT ON (tg.name) tg.attack_id AS "attackId", tg.name, gt.description AS procedure
          FROM group_techniques gt
          JOIN threat_groups tg ON tg.id = gt.group_id
-         WHERE gt.technique_id = $1
-            OR gt.technique_id IN (SELECT id FROM techniques WHERE parent_technique_id = $1)
+         WHERE (gt.technique_id = $1
+            OR gt.technique_id IN (SELECT id FROM techniques WHERE parent_technique_id = $1))
+         ${sector ? `AND tg.id IN (SELECT gs.group_id FROM group_sectors gs JOIN sectors s ON s.id = gs.sector_id WHERE s.slug = $2)` : ''}
          ORDER BY tg.name ASC`,
-        [techId],
+        sector ? [techId, sector] : [techId],
       ),
       // Related software
       query<{ attackId: string; name: string; type: string; description: string | null }>(
@@ -55,8 +60,9 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
          FROM software_techniques st
          JOIN attack_software sw ON sw.id = st.software_id
          WHERE st.technique_id = $1
+         ${sector ? `AND sw.id IN (SELECT gsw.software_id FROM group_software gsw JOIN group_sectors gs ON gs.group_id = gsw.group_id JOIN sectors s ON s.id = gs.sector_id WHERE s.slug = $2)` : ''}
          ORDER BY sw.name ASC`,
-        [techId],
+        sector ? [techId, sector] : [techId],
       ),
       // Related mitigations
       query<{ attackId: string; name: string; description: string | null }>(
@@ -93,8 +99,9 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
          FROM campaign_techniques ct
          JOIN campaigns c ON c.id = ct.campaign_id
          WHERE ct.technique_id = $1
+         ${sector ? `AND c.id IN (SELECT gc.campaign_id FROM group_campaigns gc JOIN group_sectors gs ON gs.group_id = gc.group_id JOIN sectors s ON s.id = gs.sector_id WHERE s.slug = $2)` : ''}
          ORDER BY c.name ASC`,
-        [techId],
+        sector ? [techId, sector] : [techId],
       ),
       // Tactics
       query<{ attackId: string; name: string }>(

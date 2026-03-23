@@ -96,10 +96,10 @@ export function useSectors(params: Record<string, string> = {}) {
 
 // ── Detail hooks ──────────────────────────────────────────────────────────────
 
-export function useTechnique(attackId: string) {
+export function useTechnique(attackId: string, params: Record<string, string> = {}) {
   return useQuery({
-    queryKey: ['technique', attackId],
-    queryFn: () => apiFetch<Technique>(`/techniques/${attackId}`),
+    queryKey: ['technique', attackId, params],
+    queryFn: () => apiFetch<Technique>(`/techniques/${attackId}`, params),
     enabled: Boolean(attackId),
   });
 }

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTechnique, useFrameworks, useIntelligence } from '../../hooks/useApi';
+import { useSector } from '../../contexts/SectorContext';
 import { EntityLink } from '../shared/EntityLink';
 import { Badge } from '../shared/Badge';
 
@@ -124,7 +125,8 @@ interface TechniqueMapViewProps {
  * who uses it, how to detect, prevent, respond, and test.
  */
 export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
-  const { data: technique, isLoading: techLoading, error: techError } = useTechnique(attackId);
+  const { sectorParam } = useSector();
+  const { data: technique, isLoading: techLoading, error: techError } = useTechnique(attackId, sectorParam);
   const { data: frameworks, isLoading: fwLoading } = useFrameworks(attackId);
   const { data: intel, isLoading: intelLoading } = useIntelligence(attackId);
 
