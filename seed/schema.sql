@@ -302,6 +302,28 @@ CREATE TABLE IF NOT EXISTS ioc_entries (
   UNIQUE (type, value, source)
 );
 
+-- Partial index for CVE sector filter performance
+CREATE INDEX IF NOT EXISTS idx_ioc_entries_cve_value ON ioc_entries(value) WHERE type = 'cve';
+
+-- ---------------------------------------------------------------------------
+-- cve_details  (NVD enrichment — NOT in truncate list, independent of seed)
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS cve_details (
+  id               UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
+  cve_id           TEXT          NOT NULL UNIQUE,
+  description      TEXT,
+  cvss_score       NUMERIC(3,1),
+  cvss_severity    VARCHAR(20),
+  cvss_vector      TEXT,
+  cwe_id           VARCHAR(20),
+  published_at     TIMESTAMPTZ,
+  nvd_enriched_at  TIMESTAMPTZ,
+  created_at       TIMESTAMPTZ   NOT NULL DEFAULT now(),
+  updated_at       TIMESTAMPTZ   NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_cve_details_severity ON cve_details(cvss_severity);
+
 CREATE TABLE IF NOT EXISTS sigma_rules (
   id                    UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
   sigma_id              VARCHAR(255) UNIQUE,

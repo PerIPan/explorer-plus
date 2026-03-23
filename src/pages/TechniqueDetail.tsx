@@ -259,6 +259,11 @@ function IntelligenceTab({ attackId }: IntelligenceTabProps) {
                     </td>
                     <td className="px-3 py-2 font-mono text-xs max-w-[200px] truncate">
                       {(() => {
+                        if (ioc.type === 'cve') {
+                          return (
+                            <Link to={`/cti/cves/${ioc.value}`} className="text-[var(--accent-teal)] hover:underline">{ioc.value}</Link>
+                          );
+                        }
                         const link = otxUrl(ioc.type, ioc.value);
                         return link ? (
                           <a href={link} target="_blank" rel="noopener noreferrer" className="text-[var(--accent-teal)] hover:underline">{ioc.value}</a>

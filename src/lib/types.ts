@@ -458,3 +458,23 @@ export interface TechniqueIntelligence {
     confidence: string | null;
   }>;
 }
+
+// ── CVE Types ─────────────────────────────────────────────────────────────────
+
+export interface CveEntry {
+  cveId: string;
+  description: string | null;
+  cvssScore: number | null;
+  cvssSeverity: string | null;
+  cweId: string | null;
+  publishedAt: string | null;
+  sources: string[];
+  techniqueCount: number;
+}
+
+export interface CveDetail extends Omit<CveEntry, 'sources' | 'techniqueCount'> {
+  cvssVector: string | null;
+  sources: Array<{ source: string; sourceRef: string | null }>;
+  techniques: Array<{ attackId: string; name: string; tactics: string[] }>;
+  reports: Array<{ id: string; title: string; url: string | null; source: string | null; publishedAt: string | null }>;
+}

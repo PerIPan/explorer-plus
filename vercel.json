@@ -12,7 +12,8 @@
     { "path": "/api/cron/ingest-abuse-ch", "schedule": "0 2 * * *" },
     { "path": "/api/cron/ingest-cisa-kev", "schedule": "0 3 * * *" },
     { "path": "/api/cron/ingest-rss", "schedule": "0 */6 * * *" },
-    { "path": "/api/cron/sync-d3fend", "schedule": "0 6 1 * *" }
+    { "path": "/api/cron/sync-d3fend", "schedule": "0 6 1 * *" },
+    { "path": "/api/cron/enrich-nvd", "schedule": "0 */4 * * *" }
   ],
   "rewrites": [
     { "source": "/((?!api/).*)", "destination": "/index.html" }

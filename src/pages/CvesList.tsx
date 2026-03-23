@@ -1,26 +1,49 @@
 import { useCallback, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { useIocs } from '../hooks/useApi';
+import { useCves } from '../hooks/useApi';
 import { useSector } from '../contexts/SectorContext';
 import { apiFetch } from '../lib/api';
 import { PageHeader } from '../components/layout/PageHeader';
 import { DataTable, type ColumnDef } from '../components/shared/DataTable';
 import { EntityLink } from '../components/shared/EntityLink';
 import { Badge } from '../components/shared/Badge';
-import type { IocEntry } from '../lib/types';
+import type { CveEntry } from '../lib/types';
 
-/** Clipboard copy button with brief "Copied!" feedback */
+const SEVERITIES = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'];
+const SOURCES = ['otx', 'cisa_kev'];
+
+const SEVERITY_COLORS: Record<string, string> = {
+  CRITICAL: 'bg-[var(--pink-faint)] text-[var(--accent-pink)] border-[var(--pink-dim)]',
+  HIGH: 'bg-[var(--orange-faint)] text-[var(--accent-orange)] border-[var(--orange-dim)]',
+  MEDIUM: 'bg-[var(--yellow-faint)] text-[var(--accent-yellow)] border-[var(--yellow-dim)]',
+  LOW: 'bg-[var(--blue-faint)] text-[var(--accent-blue)] border-[var(--blue-dim)]',
+};
+
+const SOURCE_VARIANTS: Record<string, 'teal' | 'orange' | 'purple' | 'blue' | 'green' | 'pink'> = {
+  otx: 'teal',
+  cisa_kev: 'blue',
+};
+
+function SeverityBadge({ severity }: { severity: string | null }) {
+  if (!severity) return <span className="text-[var(--text-secondary)] text-xs">—</span>;
+  const classes = SEVERITY_COLORS[severity] ?? 'bg-[var(--hover-overlay)] text-[var(--text-secondary)] border-[var(--border-color)]';
+  return (
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${classes}`}>
+      {severity}
+    </span>
+  );
+}
+
+/** Clipboard copy button */
 function CopyButton({ value }: { value: string }) {
   const [copied, setCopied] = useState(false);
-
   function handleCopy() {
     navigator.clipboard.writeText(value).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
-    }).catch(() => {/* silent fail */});
+    }).catch(() => {/* silent */});
   }
-
   return (
     <button
       type="button"
@@ -40,48 +63,12 @@ function CopyButton({ value }: { value: string }) {
   );
 }
 
-const IOC_TYPES = ['ip', 'domain', 'url', 'hash', 'email'];
-const SOURCES = ['otx', 'threatfox', 'malwarebazaar', 'cisa_kev'];
-
-const TYPE_VARIANTS: Record<string, 'teal' | 'orange' | 'purple' | 'blue' | 'green' | 'pink'> = {
-  ip: 'orange',
-  domain: 'teal',
-  url: 'blue',
-  hash: 'purple',
-  email: 'green',
-};
-
-const SOURCE_VARIANTS: Record<string, 'teal' | 'orange' | 'purple' | 'blue' | 'green' | 'pink'> = {
-  otx: 'teal',
-  threatfox: 'orange',
-  malwarebazaar: 'purple',
-  cisa_kev: 'blue',
-};
-
-function formatDate(iso: string | null): string {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-}
-
-/** Generate OTX indicator URL from IOC type and value */
-function otxUrl(type: string, value: string): string | null {
-  const map: Record<string, string> = {
-    cve: 'cve', ip: 'IPv4', domain: 'domain', url: 'url', hash: 'file', email: 'email',
-  };
-  const otxType = map[type];
-  return otxType ? `https://otx.alienvault.com/indicator/${otxType}/${encodeURIComponent(value)}` : null;
-}
-
-/** Clickable technique count with popover showing linked techniques */
-function TechniquePopover({ iocId, count }: { iocId: string; count: number }) {
+/** Clickable technique count with popover */
+function TechniquePopover({ cveId, count }: { cveId: string; count: number }) {
   const [open, setOpen] = useState(false);
   const { data, isLoading } = useQuery({
-    queryKey: ['ioc-techniques', iocId],
-    queryFn: () => apiFetch<{ data: Array<{ attackId: string; name: string }> }>(`/feed/iocs/${iocId}/techniques`),
+    queryKey: ['cve-detail', cveId],
+    queryFn: () => apiFetch<{ techniques: Array<{ attackId: string; name: string }> }>(`/cves/${cveId}`),
     enabled: open,
   });
 
@@ -107,14 +94,14 @@ function TechniquePopover({ iocId, count }: { iocId: string; count: number }) {
                 Loading...
               </div>
             )}
-            {data?.data && (
+            {data?.techniques && (
               <div className="flex flex-col gap-1">
-                {data.data.map((t) => (
+                {data.techniques.map((t) => (
                   <EntityLink key={t.attackId} type="technique" attackId={t.attackId} name={t.name} />
                 ))}
               </div>
             )}
-            {!isLoading && data?.data?.length === 0 && (
+            {!isLoading && data?.techniques?.length === 0 && (
               <span className="text-xs text-[var(--text-secondary)]">No techniques found.</span>
             )}
           </div>
@@ -124,103 +111,103 @@ function TechniquePopover({ iocId, count }: { iocId: string; count: number }) {
   );
 }
 
-const columns: ColumnDef<IocEntry>[] = [
+function formatDate(iso: string | null): string {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('en-US', {
+    year: 'numeric', month: 'short', day: 'numeric',
+  });
+}
+
+const columns: ColumnDef<CveEntry>[] = [
   {
-    key: 'type',
-    header: 'Type',
-    width: '90px',
+    key: 'cvssSeverity',
+    header: 'Severity',
+    width: '100px',
+    render: (row) => <SeverityBadge severity={row.cvssSeverity} />,
+  },
+  {
+    key: 'cveId',
+    header: 'CVE ID',
     render: (row) => (
-      <Badge label={row.type} variant={TYPE_VARIANTS[row.type] ?? 'neutral'} />
+      <div className="flex items-center gap-0.5">
+        <Link
+          to={`/cti/cves/${row.cveId}`}
+          className="font-mono text-xs text-[var(--accent-teal)] hover:underline"
+        >
+          {row.cveId}
+        </Link>
+        <CopyButton value={row.cveId} />
+      </div>
     ),
   },
   {
-    key: 'value',
-    header: 'Value',
-    render: (row) => {
-      const link = otxUrl(row.type, row.value);
-      const showDesc = row.type === 'cve' && row.description;
-      return (
-        <div className={showDesc ? 'flex flex-col gap-0.5' : ''}>
-          <div className="flex items-center gap-0.5">
-            {link ? (
-              <a
-                href={link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-mono text-xs text-[var(--accent-teal)] hover:underline max-w-[240px] truncate"
-                title={row.value}
-              >
-                {row.value}
-              </a>
-            ) : (
-              <span
-                className="font-mono text-xs text-[var(--text-primary)] max-w-[240px] truncate"
-                title={row.value}
-              >
-                {row.value}
-              </span>
-            )}
-            <CopyButton value={row.value} />
-          </div>
-          {showDesc && (
-            <span
-              className="text-[11px] text-[var(--text-secondary)] max-w-[320px] truncate"
-              title={row.description!}
-            >
-              {row.description}
-            </span>
-          )}
-        </div>
-      );
-    },
-  },
-  {
-    key: 'source',
-    header: 'Source',
-    width: '140px',
-    render: (row) => (
-      <Badge label={row.source} variant={SOURCE_VARIANTS[row.source] ?? 'neutral'} />
-    ),
-  },
-  {
-    key: 'malware_family',
-    header: 'Malware Family',
-    width: '160px',
+    key: 'description',
+    header: 'Description',
     render: (row) =>
-      row.malware_family ? (
-        <span className="text-[var(--accent-orange)] text-xs">{row.malware_family}</span>
+      row.description ? (
+        <span
+          className="text-xs text-[var(--text-secondary)] max-w-[320px] truncate block"
+          title={row.description}
+        >
+          {row.description}
+        </span>
       ) : (
         <span className="text-[var(--text-secondary)] text-xs">—</span>
       ),
   },
   {
-    key: 'first_seen_at',
-    header: 'First Seen',
-    width: '120px',
+    key: 'cvssScore',
+    header: 'CVSS',
+    width: '70px',
     render: (row) => (
-      <span className="text-[var(--text-secondary)] text-xs">{formatDate(row.first_seen_at)}</span>
+      <span className="text-xs text-[var(--text-primary)] font-mono">
+        {row.cvssScore != null ? row.cvssScore.toFixed(1) : '—'}
+      </span>
     ),
   },
   {
-    key: 'technique_count',
+    key: 'cweId',
+    header: 'CWE',
+    width: '90px',
+    render: (row) =>
+      row.cweId ? (
+        <span className="text-xs text-[var(--accent-blue)] font-mono">{row.cweId}</span>
+      ) : (
+        <span className="text-[var(--text-secondary)] text-xs">—</span>
+      ),
+  },
+  {
+    key: 'sources',
+    header: 'Sources',
+    width: '140px',
+    render: (row) => (
+      <div className="flex flex-wrap gap-1">
+        {row.sources.map((s) => (
+          <Badge key={s} label={s} variant={SOURCE_VARIANTS[s] ?? 'neutral'} />
+        ))}
+      </div>
+    ),
+  },
+  {
+    key: 'techniqueCount',
     header: 'Techniques',
     width: '100px',
     align: 'center',
     render: (row) =>
-      (row.technique_count ?? 0) > 0 ? (
-        <TechniquePopover iocId={row.id} count={row.technique_count!} />
+      row.techniqueCount > 0 ? (
+        <TechniquePopover cveId={row.cveId} count={row.techniqueCount} />
       ) : (
         <span className="text-[var(--text-secondary)] text-xs">—</span>
       ),
   },
 ];
 
-export function IocsList() {
+export function CvesList() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { sectorParam } = useSector();
 
   const page = parseInt(searchParams.get('page') ?? '1', 10);
-  const type = searchParams.get('type') ?? '';
+  const severity = searchParams.get('severity') ?? '';
   const source = searchParams.get('source') ?? '';
   const q = searchParams.get('q') ?? '';
 
@@ -241,36 +228,36 @@ export function IocsList() {
   );
 
   const params: Record<string, string> = { page: String(page), limit: '100', ...sectorParam };
-  if (type) params.type = type;
+  if (severity) params.severity = severity;
   if (source) params.source = source;
   if (q) params.q = q;
 
-  const { data, isLoading } = useIocs(params);
+  const { data, isLoading } = useCves(params);
 
   return (
     <div className="space-y-4">
       <PageHeader
-        title="Indicators of Compromise"
-        subtitle="Hashes, domains, IPs, and URLs from ThreatFox, MalwareBazaar, and OTX"
+        title="Vulnerabilities"
+        subtitle="Known CVEs from OTX and CISA KEV, enriched with NVD metadata"
       />
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3">
         <input
           type="search"
-          placeholder="Search IOCs..."
+          placeholder="Search CVEs..."
           value={q}
           onChange={(e) => setParam('q', e.target.value)}
           className="min-w-[200px] px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent-teal)]"
         />
         <select
-          value={type}
-          onChange={(e) => setParam('type', e.target.value)}
+          value={severity}
+          onChange={(e) => setParam('severity', e.target.value)}
           className="min-w-[140px] px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-teal)]"
         >
-          <option value="">All Types</option>
-          {IOC_TYPES.map((t) => (
-            <option key={t} value={t}>{t.toUpperCase()}</option>
+          <option value="">All Severities</option>
+          {SEVERITIES.map((s) => (
+            <option key={s} value={s}>{s}</option>
           ))}
         </select>
         <select
@@ -291,8 +278,8 @@ export function IocsList() {
         loading={isLoading}
         pagination={data?.pagination}
         onPageChange={(p) => setParam('page', String(p))}
-        rowKey={(row) => row.id}
-        emptyMessage="No IOCs found. Trigger a feed sync to populate data."
+        rowKey={(row) => row.cveId}
+        emptyMessage="No CVEs found. Trigger a feed sync to populate data."
       />
     </div>
   );

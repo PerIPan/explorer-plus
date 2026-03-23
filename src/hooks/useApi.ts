@@ -25,6 +25,8 @@ import type {
   EngageSummary,
   ReactAction,
   ExternalActor,
+  CveEntry,
+  CveDetail,
 } from '../lib/types';
 
 // ── List / paginated hooks ────────────────────────────────────────────────────
@@ -256,6 +258,23 @@ export function useReactActions(params: Record<string, string> = {}) {
   return useQuery({
     queryKey: ['react-actions', params],
     queryFn: () => apiFetch<PaginatedResponse<ReactAction>>('/frameworks/react', params),
+  });
+}
+
+// ── CVE hooks ────────────────────────────────────────────────────────────────
+
+export function useCves(params: Record<string, string> = {}) {
+  return useQuery({
+    queryKey: ['cves', params],
+    queryFn: () => apiFetch<PaginatedResponse<CveEntry>>('/cves', params),
+  });
+}
+
+export function useCveDetail(cveId: string) {
+  return useQuery({
+    queryKey: ['cve-detail', cveId],
+    queryFn: () => apiFetch<CveDetail>(`/cves/${cveId}`),
+    enabled: Boolean(cveId),
   });
 }
 

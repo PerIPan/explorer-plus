@@ -29,6 +29,8 @@ const SectorDetail    = lazy(() => import('./pages/SectorDetail').then((m) => ({
 const Relationships   = lazy(() => import('./pages/Relationships').then((m) => ({ default: m.Relationships })));
 const Search          = lazy(() => import('./pages/Search').then((m) => ({ default: m.Search })));
 // CTI pages
+const CvesList        = lazy(() => import('./pages/CvesList').then((m) => ({ default: m.CvesList })));
+const CveDetail       = lazy(() => import('./pages/CveDetail').then((m) => ({ default: m.CveDetail })));
 const ReportsList     = lazy(() => import('./pages/ReportsList').then((m) => ({ default: m.ReportsList })));
 const IocsList        = lazy(() => import('./pages/IocsList').then((m) => ({ default: m.IocsList })));
 const SigmaList       = lazy(() => import('./pages/SigmaList').then((m) => ({ default: m.SigmaList })));
@@ -167,10 +169,11 @@ function Layout() {
                 <em>MITRE ATT&CK</em>. One interface for adversary behavior, detection, and compliance.
               </p>
               <ul className="space-y-2 pl-4 list-disc marker:text-[var(--accent-teal)]">
-                <li><strong>14 data sources</strong> — techniques, groups, campaigns, software, mitigations, data sources, tactics, sectors + live feeds from AlienVault OTX, RSS, CISA KEV, Sigma, Atomic Red Team, D3FEND</li>
+                <li><strong>15 data sources</strong> — techniques, groups, campaigns, software, mitigations, data sources, tactics, sectors + live feeds from AlienVault OTX, RSS, CISA KEV, NVD, Sigma, Atomic Red Team, D3FEND</li>
                 <li><strong>Relationships Explorer</strong> — search any entity, see connections via Threat Actor Profile, Technique Map, or D3 force graph</li>
                 <li><strong>Frameworks</strong> — NIST 800-53 controls, MITRE Engage deception, RE&CT response playbooks mapped per technique</li>
-                <li><strong>IOCs</strong> — CVEs, hashes, domains, IPs linked to AlienVault OTX indicator pages</li>
+                <li><strong>CVEs</strong> — known vulnerabilities from OTX and CISA KEV, enriched with CVSS scores and descriptions from NVD</li>
+                <li><strong>IOCs</strong> — hashes, domains, IPs, URLs linked to AlienVault OTX indicator pages</li>
                 <li><strong>Non-MITRE Actors</strong> — 500+ threat actors from ThaiCERT/ETDA with motivation, state sponsor, and victim data</li>
                 <li><strong>Global sector filter</strong> — narrow the entire view by industry (Finance, Healthcare, etc.)</li>
                 <li><strong>Auto-updating</strong> — scheduled feeds keep data current; ATT&CK re-seeded on new MITRE releases</li>
@@ -254,6 +257,8 @@ export default function App() {
           <Route path="search" element={<Search />} />
 
           {/* CTI Feed pages */}
+          <Route path="cti/cves" element={<CvesList />} />
+          <Route path="cti/cves/:cveId" element={<CveDetail />} />
           <Route path="cti/reports" element={<ReportsList />} />
           <Route path="cti/iocs" element={<IocsList />} />
           <Route path="cti/sigma" element={<SigmaList />} />

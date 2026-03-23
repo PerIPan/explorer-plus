@@ -44,6 +44,9 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   if (type) {
     params.push(type);
     conditions.push(`i.type = $${params.length}`);
+  } else {
+    // Exclude CVEs by default — they have their own /cves endpoint
+    conditions.push(`i.type != 'cve'`);
   }
 
   if (source) {
