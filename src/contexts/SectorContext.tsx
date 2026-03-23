@@ -1,4 +1,4 @@
-import { createContext, useContext, useCallback, useMemo, useRef, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useCallback, useMemo, useEffect, type ReactNode } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 interface SectorContextValue {
@@ -23,23 +23,19 @@ export function SectorProvider({ children }: { children: ReactNode }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const urlSector = searchParams.get('sector') || null;
 
-  // Persist sector in sessionStorage so it survives navigation
-  const sectorRef = useRef<string | null>(
-    urlSector ?? sessionStorage.getItem(STORAGE_KEY),
-  );
+  // Derive sector: URL takes priority, sessionStorage as fallback
+  const storedSector = typeof window !== 'undefined' ? sessionStorage.getItem(STORAGE_KEY) : null;
+  const sector = urlSector ?? storedSector;
 
-  // Sync ref when URL has sector
-  if (urlSector) {
-    sectorRef.current = urlSector;
-  }
-
-  const sector = sectorRef.current;
-
-  // Persist to sessionStorage and re-inject into URL on navigation
+  // Persist to sessionStorage when URL sector changes
   useEffect(() => {
     if (urlSector) {
       sessionStorage.setItem(STORAGE_KEY, urlSector);
     }
+  }, [urlSector]);
+
+  // Re-inject sector into URL when navigating to a page that lost it
+  useEffect(() => {
     if (sector && !urlSector) {
       setSearchParams((prev) => {
         const next = new URLSearchParams(prev);
@@ -51,7 +47,6 @@ export function SectorProvider({ children }: { children: ReactNode }) {
 
   const setSector = useCallback(
     (slug: string | null) => {
-      sectorRef.current = slug;
       if (slug) {
         sessionStorage.setItem(STORAGE_KEY, slug);
       } else {

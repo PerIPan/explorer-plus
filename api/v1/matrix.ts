@@ -16,10 +16,11 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   }
 
   const { domain, sector } = parsed.data;
-  const params: unknown[] = [];
-  const domainCondition = domain ? (() => { params.push(domain); return `AND ta.domain = $${params.length}`; })() : '';
 
   // Tactics
+  const tacticParams: unknown[] = [];
+  const domainWhere = domain ? (() => { tacticParams.push(domain); return `WHERE domain = $${tacticParams.length}`; })() : '';
+
   const tacticsResult = await query<{
     id: string; attackId: string; name: string; description: string | null;
     sortOrder: number | null; domain: string | null;
@@ -27,9 +28,9 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     `SELECT id, attack_id AS "attackId", name, description,
             sort_order AS "sortOrder", domain
      FROM tactics
-     ${domain ? `WHERE domain = $1` : ''}
+     ${domainWhere}
      ORDER BY sort_order ASC NULLS LAST`,
-    params,
+    tacticParams,
   );
 
   if (tacticsResult.rows.length === 0) {
@@ -65,7 +66,16 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     techParams,
   );
 
-  // Sub-techniques
+  // Sub-techniques — sector-filtered when active
+  const subParams: unknown[] = [];
+  const subSectorFilter = sector
+    ? (() => { subParams.push(sector); return `AND t.id IN (
+        SELECT gt.technique_id FROM group_techniques gt
+        JOIN group_sectors gs ON gs.group_id = gt.group_id
+        JOIN sectors s ON s.id = gs.sector_id WHERE s.slug = $${subParams.length}
+      )`; })()
+    : '';
+
   const subTechResult = await query<{
     parentId: string; attackId: string; name: string;
   }>(
@@ -77,7 +87,9 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
      WHERE t.is_subtechnique = true
        AND t.is_revoked = false
        AND t.is_deprecated = false
+       ${subSectorFilter}
      ORDER BY t.attack_id ASC`,
+    subParams,
   );
 
   // Build sub-technique map keyed by parent UUID
