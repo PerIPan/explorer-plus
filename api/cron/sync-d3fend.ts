@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { query } from '../v1/lib/db.js';
+import { verifyCronAuth } from './lib/auth.js';
 
 const D3FEND_API = 'https://d3fend.mitre.org/api/offensive-technique/attack';
 const RATE_LIMIT_MS = 200;
@@ -38,6 +39,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.status(405).json({ error: 'Method not allowed' });
     return;
   }
+  if (!verifyCronAuth(req, res)) return;
 
   const logResult = await query<{ id: string }>(
     `INSERT INTO feed_sync_log (source, status, started_at)
@@ -181,6 +183,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       [msg, logId],
     );
 
-    res.status(500).json({ ok: false, error: msg });
+    console.error('[cron] error:', msg);
+    res.status(500).json({ ok: false, error: 'Feed sync failed' });
   }
 }

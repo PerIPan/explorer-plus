@@ -31,16 +31,16 @@ const TABS: { id: TabId; label: string }[] = [
 ];
 
 const LEVEL_COLORS: Record<string, string> = {
-  critical: 'bg-[#f472b618] text-[#f472b6] border-[#f472b633]',
-  high: 'bg-[#f9731618] text-[#f97316] border-[#f9731633]',
-  medium: 'bg-[#fbbf2418] text-[#fbbf24] border-[#fbbf2433]',
-  low: 'bg-[#60a5fa18] text-[#60a5fa] border-[#60a5fa33]',
-  informational: 'bg-[#34d39918] text-[#34d399] border-[#34d39933]',
+  critical: 'bg-[var(--pink-faint)] text-[var(--accent-pink)] border-[var(--pink-dim)]',
+  high: 'bg-[var(--orange-faint)] text-[var(--accent-orange)] border-[var(--orange-dim)]',
+  medium: 'bg-[var(--yellow-faint)] text-[var(--accent-yellow)] border-[var(--yellow-dim)]',
+  low: 'bg-[var(--blue-faint)] text-[var(--accent-blue)] border-[var(--blue-dim)]',
+  informational: 'bg-[var(--green-faint)] text-[var(--accent-green)] border-[var(--green-dim)]',
 };
 
 function LevelBadge({ level }: { level: string | null }) {
   if (!level) return null;
-  const classes = LEVEL_COLORS[level.toLowerCase()] ?? 'bg-[#ffffff08] text-[#8892b0] border-[#2a2a4a]';
+  const classes = LEVEL_COLORS[level.toLowerCase()] ?? 'bg-[var(--hover-overlay)] text-[var(--text-secondary)] border-[var(--border-color)]';
   return (
     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${classes}`}>
       {level}
@@ -77,8 +77,8 @@ function IntelligenceTab({ attackId }: IntelligenceTabProps) {
 
   if (isLoading) {
     return (
-      <div className="flex items-center gap-2 text-[#8892b0] text-sm py-6">
-        <span className="inline-block w-4 h-4 border-2 border-[#64ffda33] border-t-[#64ffda] rounded-full animate-spin" />
+      <div className="flex items-center gap-2 text-[var(--text-secondary)] text-sm py-6">
+        <span className="inline-block w-4 h-4 border-2 border-[var(--teal-dim)] border-t-[var(--accent-teal)] rounded-full animate-spin" />
         Loading intelligence data...
       </div>
     );
@@ -86,7 +86,7 @@ function IntelligenceTab({ attackId }: IntelligenceTabProps) {
 
   if (error || !data) {
     return (
-      <p className="text-[#8892b0] text-sm py-6">
+      <p className="text-[var(--text-secondary)] text-sm py-6">
         Intelligence data unavailable. Feeds may not have been synced yet.
       </p>
     );
@@ -101,9 +101,9 @@ function IntelligenceTab({ attackId }: IntelligenceTabProps) {
 
   if (isEmpty) {
     return (
-      <p className="text-[#8892b0] text-sm py-6">
+      <p className="text-[var(--text-secondary)] text-sm py-6">
         No intelligence data found for this technique. Trigger a feed sync from{' '}
-        <Link to="/cti/feed-status" className="text-[#64ffda] hover:underline">
+        <Link to="/cti/feed-status" className="text-[var(--accent-teal)] hover:underline">
           Feed Status
         </Link>
         .
@@ -116,26 +116,26 @@ function IntelligenceTab({ attackId }: IntelligenceTabProps) {
       {/* Recent Reports */}
       {data.reports.length > 0 && (
         <section>
-          <h3 className="text-sm font-semibold text-[#a8b2d8] uppercase tracking-wider mb-3">
+          <h3 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-3">
             Recent Reports ({data.reports.length})
           </h3>
           <div className="space-y-2">
             {data.reports.map((r) => (
               <div
                 key={r.id}
-                className="flex items-center justify-between gap-3 py-2 px-3 rounded-md bg-[#16213e] border border-[#2a2a4a]"
+                className="flex items-center justify-between gap-3 py-2 px-3 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)]"
               >
                 <a
                   href={r.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-[#ccd6f6] text-sm hover:text-[#64ffda] hover:underline flex-1 truncate"
+                  className="text-[var(--text-primary)] text-sm hover:text-[var(--accent-teal)] hover:underline flex-1 truncate"
                 >
                   {r.title}
                 </a>
                 <div className="flex items-center gap-2 shrink-0">
                   <Badge label={r.source} variant="neutral" />
-                  <span className="text-[#8892b0] text-xs">{formatDate(r.published_at)}</span>
+                  <span className="text-[var(--text-secondary)] text-xs">{formatDate(r.published_at)}</span>
                 </div>
               </div>
             ))}
@@ -146,23 +146,23 @@ function IntelligenceTab({ attackId }: IntelligenceTabProps) {
       {/* Sigma Rules */}
       {data.sigmaRules.length > 0 && (
         <section>
-          <h3 className="text-sm font-semibold text-[#a8b2d8] uppercase tracking-wider mb-3">
+          <h3 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-3">
             Sigma Detection Rules ({data.sigmaRules.length})
           </h3>
           <div className="space-y-2">
             {data.sigmaRules.map((rule) => (
               <div
                 key={rule.id}
-                className="flex items-center justify-between gap-3 py-2 px-3 rounded-md bg-[#16213e] border border-[#2a2a4a]"
+                className="flex items-center justify-between gap-3 py-2 px-3 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)]"
               >
                 <div className="flex-1 min-w-0">
-                  <span className="text-[#ccd6f6] text-sm">{rule.title}</span>
-                  <span className="ml-2 font-mono text-xs text-[#8892b0]">{rule.sigma_id}</span>
+                  <span className="text-[var(--text-primary)] text-sm">{rule.title}</span>
+                  <span className="ml-2 font-mono text-xs text-[var(--text-secondary)]">{rule.sigma_id}</span>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <LevelBadge level={rule.level} />
                   {rule.logsource_product && (
-                    <span className="text-[#8892b0] text-xs">{rule.logsource_product}</span>
+                    <span className="text-[var(--text-secondary)] text-xs">{rule.logsource_product}</span>
                   )}
                 </div>
               </div>
@@ -174,18 +174,18 @@ function IntelligenceTab({ attackId }: IntelligenceTabProps) {
       {/* Atomic Tests */}
       {data.atomicTests.length > 0 && (
         <section>
-          <h3 className="text-sm font-semibold text-[#a8b2d8] uppercase tracking-wider mb-3">
+          <h3 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-3">
             Atomic Red Team Tests ({data.atomicTests.length})
           </h3>
           <div className="space-y-2">
             {data.atomicTests.map((test) => (
               <div
                 key={test.id}
-                className="py-2 px-3 rounded-md bg-[#16213e] border border-[#2a2a4a] space-y-1"
+                className="py-2 px-3 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)] space-y-1"
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-[#64ffda] text-xs font-mono">#{test.test_number}</span>
-                  <span className="text-[#ccd6f6] text-sm">{test.name}</span>
+                  <span className="text-[var(--accent-teal)] text-xs font-mono">#{test.test_number}</span>
+                  <span className="text-[var(--text-primary)] text-sm">{test.name}</span>
                   {test.executor_type && (
                     <Badge label={test.executor_type} variant="purple" />
                   )}
@@ -206,21 +206,21 @@ function IntelligenceTab({ attackId }: IntelligenceTabProps) {
       {/* D3FEND Defensive Mappings */}
       {data.defensiveMappings.length > 0 && (
         <section>
-          <h3 className="text-sm font-semibold text-[#a8b2d8] uppercase tracking-wider mb-3">
+          <h3 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-3">
             D3FEND Defensive Mappings ({data.defensiveMappings.length})
           </h3>
           <div className="space-y-2">
             {data.defensiveMappings.map((dm) => (
               <div
                 key={dm.id}
-                className="py-2 px-3 rounded-md bg-[#16213e] border border-[#2a2a4a]"
+                className="py-2 px-3 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)]"
               >
                 <div className="flex items-center gap-2">
-                  <span className="font-mono text-xs text-[#64ffda]">{dm.d3fend_id}</span>
-                  <span className="text-[#ccd6f6] text-sm">{dm.d3fend_label}</span>
+                  <span className="font-mono text-xs text-[var(--accent-teal)]">{dm.d3fend_id}</span>
+                  <span className="text-[var(--text-primary)] text-sm">{dm.d3fend_label}</span>
                 </div>
                 {dm.d3fend_label && (
-                  <p className="text-[#8892b0] text-xs mt-1 line-clamp-2">{dm.d3fend_label}</p>
+                  <p className="text-[var(--text-secondary)] text-xs mt-1 line-clamp-2">{dm.d3fend_label}</p>
                 )}
               </div>
             ))}
@@ -231,17 +231,17 @@ function IntelligenceTab({ attackId }: IntelligenceTabProps) {
       {/* Related IOCs */}
       {data.iocs.length > 0 && (
         <section>
-          <h3 className="text-sm font-semibold text-[#a8b2d8] uppercase tracking-wider mb-3">
+          <h3 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-3">
             Related IOCs ({data.iocs.length})
           </h3>
-          <div className="overflow-x-auto rounded-lg border border-[#2a2a4a]">
+          <div className="overflow-x-auto rounded-lg border border-[var(--border-color)]">
             <table className="w-full text-sm">
-              <thead className="bg-[#16213e] border-b border-[#2a2a4a]">
+              <thead className="bg-[var(--surface-card)] border-b border-[var(--border-color)]">
                 <tr>
                   {['Type', 'Value', 'Source', 'Malware', 'First Seen', 'Confidence'].map((h) => (
                     <th
                       key={h}
-                      className="px-3 py-2 text-left text-xs font-semibold text-[#a8b2d8] uppercase tracking-wider"
+                      className="px-3 py-2 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider"
                     >
                       {h}
                     </th>
@@ -252,7 +252,7 @@ function IntelligenceTab({ attackId }: IntelligenceTabProps) {
                 {data.iocs.map((ioc, i) => (
                   <tr
                     key={ioc.id}
-                    className={`border-b border-[#2a2a4a] last:border-0 ${i % 2 === 0 ? 'bg-[#16213e]' : 'bg-[#1a1a2e]'}`}
+                    className={`border-b border-[var(--border-color)] last:border-0 ${i % 2 === 0 ? 'bg-[var(--surface-card)]' : 'bg-[var(--surface-base)]'}`}
                   >
                     <td className="px-3 py-2">
                       <Badge label={ioc.type} variant="neutral" />
@@ -261,16 +261,16 @@ function IntelligenceTab({ attackId }: IntelligenceTabProps) {
                       {(() => {
                         const link = otxUrl(ioc.type, ioc.value);
                         return link ? (
-                          <a href={link} target="_blank" rel="noopener noreferrer" className="text-[#64ffda] hover:underline">{ioc.value}</a>
+                          <a href={link} target="_blank" rel="noopener noreferrer" className="text-[var(--accent-teal)] hover:underline">{ioc.value}</a>
                         ) : (
-                          <span className="text-[#ccd6f6]">{ioc.value}</span>
+                          <span className="text-[var(--text-primary)]">{ioc.value}</span>
                         );
                       })()}
                     </td>
-                    <td className="px-3 py-2 text-xs text-[#8892b0]">{ioc.source}</td>
-                    <td className="px-3 py-2 text-xs text-[#f97316]">{ioc.malware_family ?? '—'}</td>
-                    <td className="px-3 py-2 text-xs text-[#8892b0]">{formatDate(ioc.first_seen_at)}</td>
-                    <td className="px-3 py-2 text-xs text-[#8892b0]">{ioc.confidence ?? '—'}</td>
+                    <td className="px-3 py-2 text-xs text-[var(--text-secondary)]">{ioc.source}</td>
+                    <td className="px-3 py-2 text-xs text-[var(--accent-orange)]">{ioc.malware_family ?? '—'}</td>
+                    <td className="px-3 py-2 text-xs text-[var(--text-secondary)]">{formatDate(ioc.first_seen_at)}</td>
+                    <td className="px-3 py-2 text-xs text-[var(--text-secondary)]">{ioc.confidence ?? '—'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -295,8 +295,8 @@ function FrameworksTab({ attackId }: { attackId: string }) {
 
   if (isLoading) {
     return (
-      <div className="flex items-center gap-2 text-[#8892b0] text-sm py-6">
-        <span className="inline-block w-4 h-4 border-2 border-[#64ffda33] border-t-[#64ffda] rounded-full animate-spin" />
+      <div className="flex items-center gap-2 text-[var(--text-secondary)] text-sm py-6">
+        <span className="inline-block w-4 h-4 border-2 border-[var(--teal-dim)] border-t-[var(--accent-teal)] rounded-full animate-spin" />
         Loading framework mappings...
       </div>
     );
@@ -304,7 +304,7 @@ function FrameworksTab({ attackId }: { attackId: string }) {
 
   if (error || !data) {
     return (
-      <p className="text-[#8892b0] text-sm py-6">
+      <p className="text-[var(--text-secondary)] text-sm py-6">
         Framework data unavailable.
       </p>
     );
@@ -314,9 +314,9 @@ function FrameworksTab({ attackId }: { attackId: string }) {
 
   if (isEmpty) {
     return (
-      <p className="text-[#8892b0] text-sm py-6">
+      <p className="text-[var(--text-secondary)] text-sm py-6">
         No framework mappings found for this technique. Run{' '}
-        <code className="text-[#64ffda] text-xs font-mono">
+        <code className="text-[var(--accent-teal)] text-xs font-mono">
           node scripts/sync-frameworks.mjs
         </code>{' '}
         to populate data.
@@ -329,20 +329,20 @@ function FrameworksTab({ attackId }: { attackId: string }) {
       {/* NIST 800-53 */}
       {data.nist.length > 0 && (
         <section>
-          <h3 className="text-sm font-semibold text-[#a8b2d8] uppercase tracking-wider mb-3">
+          <h3 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-3">
             NIST 800-53 Controls ({data.nist.length})
           </h3>
           <div className="space-y-2">
             {data.nist.map((ctrl) => (
               <div
                 key={ctrl.controlId}
-                className="flex items-start gap-3 py-2 px-3 rounded-md bg-[#16213e] border border-[#2a2a4a]"
+                className="flex items-start gap-3 py-2 px-3 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)]"
               >
-                <span className="font-mono text-xs text-[#64ffda] mt-0.5 shrink-0 w-14">
+                <span className="font-mono text-xs text-[var(--accent-teal)] mt-0.5 shrink-0 w-14">
                   {ctrl.controlId}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <span className="text-[#ccd6f6] text-sm">
+                  <span className="text-[var(--text-primary)] text-sm">
                     {ctrl.controlName ?? ctrl.controlId}
                   </span>
                 </div>
@@ -356,7 +356,7 @@ function FrameworksTab({ attackId }: { attackId: string }) {
                     />
                   )}
                   {ctrl.mappingType && (
-                    <span className="text-[#8892b0] text-xs">{ctrl.mappingType}</span>
+                    <span className="text-[var(--text-secondary)] text-xs">{ctrl.mappingType}</span>
                   )}
                 </div>
               </div>
@@ -365,7 +365,7 @@ function FrameworksTab({ attackId }: { attackId: string }) {
           <div className="pt-2">
             <Link
               to="/frameworks/nist"
-              className="text-xs text-[#64ffda] hover:underline"
+              className="text-xs text-[var(--accent-teal)] hover:underline"
             >
               Browse all NIST 800-53 controls
             </Link>
@@ -376,20 +376,20 @@ function FrameworksTab({ attackId }: { attackId: string }) {
       {/* MITRE Engage */}
       {data.engage.length > 0 && (
         <section>
-          <h3 className="text-sm font-semibold text-[#a8b2d8] uppercase tracking-wider mb-3">
+          <h3 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-3">
             MITRE Engage Activities ({data.engage.length})
           </h3>
           <div className="space-y-2">
             {data.engage.map((act) => (
               <div
                 key={act.engageId}
-                className="py-2 px-3 rounded-md bg-[#16213e] border border-[#2a2a4a]"
+                className="py-2 px-3 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)]"
               >
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-mono text-xs text-[#64ffda] shrink-0">
+                  <span className="font-mono text-xs text-[var(--accent-teal)] shrink-0">
                     {act.engageId}
                   </span>
-                  <span className="text-[#ccd6f6] text-sm">{act.engageName}</span>
+                  <span className="text-[var(--text-primary)] text-sm">{act.engageName}</span>
                   {act.goal && (
                     <Badge label={act.goal} variant="orange" />
                   )}
@@ -398,7 +398,7 @@ function FrameworksTab({ attackId }: { attackId: string }) {
                   )}
                 </div>
                 {act.engageDescription && (
-                  <p className="text-[#8892b0] text-xs mt-1 line-clamp-2">
+                  <p className="text-[var(--text-secondary)] text-xs mt-1 line-clamp-2">
                     {act.engageDescription}
                   </p>
                 )}
@@ -408,7 +408,7 @@ function FrameworksTab({ attackId }: { attackId: string }) {
           <div className="pt-2">
             <Link
               to="/frameworks/engage"
-              className="text-xs text-[#64ffda] hover:underline"
+              className="text-xs text-[var(--accent-teal)] hover:underline"
             >
               Browse all Engage activities
             </Link>
@@ -418,17 +418,17 @@ function FrameworksTab({ attackId }: { attackId: string }) {
 
       {/* RE&CT — general link (actions are not per-technique) */}
       <section>
-        <h3 className="text-sm font-semibold text-[#a8b2d8] uppercase tracking-wider mb-3">
+        <h3 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-3">
           RE&CT Incident Response
         </h3>
-        <p className="text-[#8892b0] text-sm">
+        <p className="text-[var(--text-secondary)] text-sm">
           RE&CT response actions are not mapped per-technique — they cover the full IR lifecycle.
           View the full action catalogue to find relevant response steps for this technique type.
         </p>
         <div className="pt-2">
           <Link
             to="/frameworks/react"
-            className="text-xs text-[#64ffda] hover:underline"
+            className="text-xs text-[var(--accent-teal)] hover:underline"
           >
             Browse RE&CT response actions
           </Link>
@@ -445,8 +445,8 @@ export function TechniqueDetail() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64 text-[#8892b0]">
-        <span className="inline-block w-5 h-5 border-2 border-[#64ffda33] border-t-[#64ffda] rounded-full animate-spin mr-2" />
+      <div className="flex items-center justify-center h-64 text-[var(--text-secondary)]">
+        <span className="inline-block w-5 h-5 border-2 border-[var(--teal-dim)] border-t-[var(--accent-teal)] rounded-full animate-spin mr-2" />
         Loading...
       </div>
     );
@@ -454,7 +454,7 @@ export function TechniqueDetail() {
 
   if (error || !data) {
     return (
-      <div className="flex items-center justify-center h-64 text-[#f97316]">
+      <div className="flex items-center justify-center h-64 text-[var(--accent-orange)]">
         Technique not found.
       </div>
     );
@@ -481,7 +481,7 @@ export function TechniqueDetail() {
             {(data.isRevoked || data.isDeprecated) && (
               <DeprecatedBadge isRevoked={data.isRevoked} />
             )}
-            <span className="font-mono text-xs text-[#64ffda] bg-[#64ffda18] border border-[#64ffda33] px-2 py-1 rounded">
+            <span className="font-mono text-xs text-[var(--accent-teal)] bg-[var(--teal-faint)] border border-[var(--teal-dim)] px-2 py-1 rounded">
               {data.attackId}
             </span>
           </div>
@@ -489,10 +489,10 @@ export function TechniqueDetail() {
       />
 
       {/* Metadata strip */}
-      <div className="flex flex-wrap gap-4 text-sm bg-[#16213e] border border-[#2a2a4a] rounded-lg px-4 py-3">
+      <div className="flex flex-wrap gap-4 text-sm bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg px-4 py-3">
         {data.tactics && data.tactics.length > 0 && (
           <div className="flex items-center gap-2">
-            <span className="text-[#8892b0]">Tactic:</span>
+            <span className="text-[var(--text-secondary)]">Tactic:</span>
             {data.tactics.map((t) => (
               <Badge key={t} label={t} variant="yellow" />
             ))}
@@ -500,7 +500,7 @@ export function TechniqueDetail() {
         )}
         {data.platforms?.length ? (
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[#8892b0]">Platforms:</span>
+            <span className="text-[var(--text-secondary)]">Platforms:</span>
             {data.platforms.map((p) => (
               <Badge key={p} label={p} variant="blue" />
             ))}
@@ -511,7 +511,7 @@ export function TechniqueDetail() {
             href={data.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs text-[#64ffda] hover:underline"
+            className="text-xs text-[var(--accent-teal)] hover:underline"
           >
             MITRE Reference
           </a>
@@ -519,7 +519,7 @@ export function TechniqueDetail() {
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-[#2a2a4a]">
+      <div className="border-b border-[var(--border-color)]">
         <div className="relative">
           <div
             className="flex gap-1 overflow-x-auto
@@ -534,8 +534,8 @@ export function TechniqueDetail() {
                   px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors duration-150
                   border-b-2 -mb-px
                   ${activeTab === tab.id
-                    ? 'text-[#64ffda] border-[#64ffda]'
-                    : 'text-[#8892b0] border-transparent hover:text-[#ccd6f6]'
+                    ? 'text-[var(--accent-teal)] border-[var(--accent-teal)]'
+                    : 'text-[var(--text-secondary)] border-transparent hover:text-[var(--text-primary)]'
                   }
                 `}
               >
@@ -544,7 +544,7 @@ export function TechniqueDetail() {
             ))}
           </div>
           <div
-            className="pointer-events-none absolute right-0 top-0 h-full w-10 bg-gradient-to-l from-[#0a0a1a] to-transparent z-10"
+            className="pointer-events-none absolute right-0 top-0 h-full w-10 bg-gradient-to-l from-[var(--surface-deep)] to-transparent z-10"
             aria-hidden="true"
           />
         </div>
@@ -556,20 +556,20 @@ export function TechniqueDetail() {
           <div className="space-y-6">
             {description && (
               <div>
-                <h3 className="text-sm font-semibold text-[#a8b2d8] uppercase tracking-wider mb-2">
+                <h3 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-2">
                   Description
                 </h3>
-                <p className="text-[#ccd6f6] text-sm leading-relaxed whitespace-pre-wrap">
+                <p className="text-[var(--text-primary)] text-sm leading-relaxed whitespace-pre-wrap">
                   {description}
                 </p>
               </div>
             )}
             {detection && (
               <div>
-                <h3 className="text-sm font-semibold text-[#a8b2d8] uppercase tracking-wider mb-2">
+                <h3 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-2">
                   Detection
                 </h3>
-                <p className="text-[#ccd6f6] text-sm leading-relaxed whitespace-pre-wrap">
+                <p className="text-[var(--text-primary)] text-sm leading-relaxed whitespace-pre-wrap">
                   {detection}
                 </p>
               </div>
@@ -583,7 +583,7 @@ export function TechniqueDetail() {
               data.sub_techniques.map((sub) => (
                 <div
                   key={sub.attackId}
-                  className="flex items-center gap-3 py-2 border-b border-[#2a2a4a] last:border-0"
+                  className="flex items-center gap-3 py-2 border-b border-[var(--border-color)] last:border-0"
                 >
                   <EntityLink
                     type="technique"
@@ -596,7 +596,7 @@ export function TechniqueDetail() {
                 </div>
               ))
             ) : (
-              <p className="text-[#8892b0] text-sm">No sub-techniques.</p>
+              <p className="text-[var(--text-secondary)] text-sm">No sub-techniques.</p>
             )}
           </div>
         )}
@@ -604,13 +604,13 @@ export function TechniqueDetail() {
         {activeTab === 'groups' && (
           <div className="space-y-3">
             {(data.groups ?? []).length === 0 ? (
-              <p className="text-[#8892b0] text-sm py-4">No groups linked to this technique.</p>
+              <p className="text-[var(--text-secondary)] text-sm py-4">No groups linked to this technique.</p>
             ) : (
               (data.groups ?? []).map((g) => (
-                <div key={g.attackId} className="py-2 border-b border-[#2a2a4a] last:border-0 space-y-1">
+                <div key={g.attackId} className="py-2 border-b border-[var(--border-color)] last:border-0 space-y-1">
                   <EntityLink type="group" attackId={g.attackId} name={g.name} />
                   {g.procedure && (
-                    <p className="text-[#8892b0] text-xs leading-relaxed pl-1">{g.procedure}</p>
+                    <p className="text-[var(--text-secondary)] text-xs leading-relaxed pl-1">{g.procedure}</p>
                   )}
                 </div>
               ))
@@ -618,7 +618,7 @@ export function TechniqueDetail() {
             <div className="pt-2">
               <Link
                 to={`/relationships?entity=${data.attackId}`}
-                className="text-xs text-[#64ffda] hover:underline"
+                className="text-xs text-[var(--accent-teal)] hover:underline"
               >
                 View full graph
               </Link>
@@ -629,16 +629,16 @@ export function TechniqueDetail() {
         {activeTab === 'software' && (
           <div className="space-y-3">
             {(data.software ?? []).length === 0 ? (
-              <p className="text-[#8892b0] text-sm py-4">No software linked to this technique.</p>
+              <p className="text-[var(--text-secondary)] text-sm py-4">No software linked to this technique.</p>
             ) : (
               (data.software ?? []).map((s) => (
-                <div key={s.attackId} className="py-2 border-b border-[#2a2a4a] last:border-0 space-y-1">
+                <div key={s.attackId} className="py-2 border-b border-[var(--border-color)] last:border-0 space-y-1">
                   <div className="flex items-center gap-2">
                     <EntityLink type="software" attackId={s.attackId} name={s.name} />
                     <Badge label={s.type} variant={s.type === 'malware' ? 'pink' : 'purple'} />
                   </div>
                   {s.description && (
-                    <p className="text-[#8892b0] text-xs leading-relaxed pl-1">{s.description}</p>
+                    <p className="text-[var(--text-secondary)] text-xs leading-relaxed pl-1">{s.description}</p>
                   )}
                 </div>
               ))
@@ -646,7 +646,7 @@ export function TechniqueDetail() {
             <div className="pt-2">
               <Link
                 to={`/relationships?entity=${data.attackId}`}
-                className="text-xs text-[#64ffda] hover:underline"
+                className="text-xs text-[var(--accent-teal)] hover:underline"
               >
                 View full graph
               </Link>
@@ -657,13 +657,13 @@ export function TechniqueDetail() {
         {activeTab === 'mitigations' && (
           <div className="space-y-3">
             {(data.mitigations ?? []).length === 0 ? (
-              <p className="text-[#8892b0] text-sm py-4">No mitigations linked to this technique.</p>
+              <p className="text-[var(--text-secondary)] text-sm py-4">No mitigations linked to this technique.</p>
             ) : (
               (data.mitigations ?? []).map((m) => (
-                <div key={m.attackId} className="py-2 border-b border-[#2a2a4a] last:border-0 space-y-1">
+                <div key={m.attackId} className="py-2 border-b border-[var(--border-color)] last:border-0 space-y-1">
                   <EntityLink type="mitigation" attackId={m.attackId} name={m.name} />
                   {m.description && (
-                    <p className="text-[#8892b0] text-xs leading-relaxed pl-1">{m.description}</p>
+                    <p className="text-[var(--text-secondary)] text-xs leading-relaxed pl-1">{m.description}</p>
                   )}
                 </div>
               ))
@@ -671,7 +671,7 @@ export function TechniqueDetail() {
             <div className="pt-2">
               <Link
                 to={`/relationships?entity=${data.attackId}`}
-                className="text-xs text-[#64ffda] hover:underline"
+                className="text-xs text-[var(--accent-teal)] hover:underline"
               >
                 View full graph
               </Link>
@@ -682,10 +682,10 @@ export function TechniqueDetail() {
         {activeTab === 'datasources' && (
           <div className="space-y-3">
             {(data.dataComponents ?? []).length === 0 ? (
-              <p className="text-[#8892b0] text-sm py-4">No data sources linked to this technique.</p>
+              <p className="text-[var(--text-secondary)] text-sm py-4">No data sources linked to this technique.</p>
             ) : (
               (data.dataComponents ?? []).map((dc, i) => (
-                <div key={i} className="py-2 border-b border-[#2a2a4a] last:border-0 space-y-1">
+                <div key={i} className="py-2 border-b border-[var(--border-color)] last:border-0 space-y-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <EntityLink
                       type="data_source"
@@ -695,7 +695,7 @@ export function TechniqueDetail() {
                     <Badge label={dc.componentName} variant="pink" />
                   </div>
                   {dc.description && (
-                    <p className="text-[#8892b0] text-xs leading-relaxed pl-1">{dc.description}</p>
+                    <p className="text-[var(--text-secondary)] text-xs leading-relaxed pl-1">{dc.description}</p>
                   )}
                 </div>
               ))
@@ -703,7 +703,7 @@ export function TechniqueDetail() {
             <div className="pt-2">
               <Link
                 to={`/relationships?entity=${data.attackId}`}
-                className="text-xs text-[#64ffda] hover:underline"
+                className="text-xs text-[var(--accent-teal)] hover:underline"
               >
                 View full graph
               </Link>
@@ -714,13 +714,13 @@ export function TechniqueDetail() {
         {activeTab === 'campaigns' && (
           <div className="space-y-3">
             {(data.campaigns ?? []).length === 0 ? (
-              <p className="text-[#8892b0] text-sm py-4">No campaigns linked to this technique.</p>
+              <p className="text-[var(--text-secondary)] text-sm py-4">No campaigns linked to this technique.</p>
             ) : (
               (data.campaigns ?? []).map((c) => (
-                <div key={c.attackId} className="py-2 border-b border-[#2a2a4a] last:border-0 space-y-1">
+                <div key={c.attackId} className="py-2 border-b border-[var(--border-color)] last:border-0 space-y-1">
                   <EntityLink type="campaign" attackId={c.attackId} name={c.name} />
                   {c.description && (
-                    <p className="text-[#8892b0] text-xs leading-relaxed pl-1">{c.description}</p>
+                    <p className="text-[var(--text-secondary)] text-xs leading-relaxed pl-1">{c.description}</p>
                   )}
                 </div>
               ))
@@ -728,7 +728,7 @@ export function TechniqueDetail() {
             <div className="pt-2">
               <Link
                 to={`/relationships?entity=${data.attackId}`}
-                className="text-xs text-[#64ffda] hover:underline"
+                className="text-xs text-[var(--accent-teal)] hover:underline"
               >
                 View full graph
               </Link>

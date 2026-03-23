@@ -200,7 +200,7 @@ export function Relationships() {
               type="button"
               data-print-hide
               onClick={() => window.print()}
-              className="px-3 py-1.5 text-xs rounded-md border border-[#2a2a4a] text-[#8892b0] hover:text-[#64ffda] hover:border-[#64ffda33] transition-colors"
+              className="px-3 py-1.5 text-xs rounded-md border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--accent-teal)] hover:border-[var(--teal-dim)] transition-colors"
               title="Export current view as PDF (Ctrl+P)"
             >
               Export PDF
@@ -211,8 +211,8 @@ export function Relationships() {
 
       {/* Entity search — combobox with autocomplete dropdown */}
       <div className="relative max-w-2xl" ref={containerRef}>
-        <div className={`flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#16213e] border transition-colors ${showSuggestions && suggestions.length > 0 ? 'border-[#64ffda] rounded-b-none' : 'border-[#2a2a4a]'} focus-within:border-[#64ffda]`}>
-          <svg className="w-4 h-4 text-[#8892b0] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className={`flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[var(--surface-card)] border transition-colors ${showSuggestions && suggestions.length > 0 ? 'border-[var(--accent-teal)] rounded-b-none' : 'border-[var(--border-color)]'} focus-within:border-[var(--accent-teal)]`}>
+          <svg className="w-4 h-4 text-[var(--text-secondary)] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
           {selectedId && !showSuggestions && graphData?.center && (
@@ -248,13 +248,13 @@ export function Relationships() {
               }
             }}
             placeholder={selectedId ? 'Search for another entity...' : 'Phishing, APT29, PowerShell, T1059...'}
-            className="flex-1 bg-transparent text-sm text-[#ccd6f6] placeholder-[#8892b0] focus:outline-none"
+            className="flex-1 bg-transparent text-sm text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none"
           />
           {searchInput && (
             <button
               type="button"
               onClick={() => { setSearchInput(''); setShowSuggestions(false); }}
-              className="text-[#8892b0] hover:text-[#ccd6f6] text-xs"
+              className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-xs"
             >
               Clear
             </button>
@@ -262,8 +262,8 @@ export function Relationships() {
         </div>
 
         {showSuggestions && suggestions.length > 0 && (
-          <div className="absolute top-full w-full z-50 bg-[#16213e] border border-t-0 border-[#64ffda] rounded-b-lg shadow-2xl overflow-hidden max-h-80 overflow-y-auto">
-            <div className="px-3 py-1.5 text-[10px] uppercase tracking-wider text-[#8892b0] bg-[#0a0a1a]">
+          <div className="absolute top-full w-full z-50 bg-[var(--surface-card)] border border-t-0 border-[var(--accent-teal)] rounded-b-lg shadow-2xl overflow-hidden max-h-80 overflow-y-auto">
+            <div className="px-3 py-1.5 text-[10px] uppercase tracking-wider text-[var(--text-secondary)] bg-[var(--surface-deep)]">
               {suggestions.length} results — click to explore
             </div>
             {suggestions.map((s, i) => (
@@ -271,21 +271,21 @@ export function Relationships() {
                 key={s.attackId}
                 type="button"
                 onMouseDown={() => selectEntity(s.attackId, s.type)}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-[#64ffda10] transition-colors text-left ${i === 0 ? 'bg-[#ffffff05]' : ''}`}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-[var(--teal-ghost)] transition-colors text-left ${i === 0 ? 'bg-[var(--hover-subtle)]' : ''}`}
               >
                 <Badge
                   label={typeLabel(s.type)}
                   variant={TYPE_VARIANT[s.type] ?? 'neutral'}
                 />
-                <span className="font-mono text-xs text-[#64ffda] w-20 flex-shrink-0">{s.attackId}</span>
-                <span className="text-sm text-[#ccd6f6] truncate">{s.name}</span>
+                <span className="font-mono text-xs text-[var(--accent-teal)] w-20 flex-shrink-0">{s.attackId}</span>
+                <span className="text-sm text-[var(--text-primary)] truncate">{s.name}</span>
               </button>
             ))}
           </div>
         )}
 
         {showSuggestions && searchInput.length >= 2 && suggestions.length === 0 && (
-          <div className="absolute top-full w-full z-50 bg-[#16213e] border border-t-0 border-[#64ffda] rounded-b-lg shadow-2xl p-4 text-center text-sm text-[#8892b0]">
+          <div className="absolute top-full w-full z-50 bg-[var(--surface-card)] border border-t-0 border-[var(--accent-teal)] rounded-b-lg shadow-2xl p-4 text-center text-sm text-[var(--text-secondary)]">
             No results for &ldquo;{searchInput}&rdquo;
           </div>
         )}
@@ -296,7 +296,7 @@ export function Relationships() {
         <div className="flex items-center justify-center h-[500px] text-center">
           <div>
             <svg
-              className="w-12 h-12 text-[#4a4a6a] mx-auto mb-4"
+              className="w-12 h-12 text-[var(--text-secondary)] mx-auto mb-4"
               fill="none"
               stroke="currentColor"
               strokeWidth={1.5}
@@ -305,10 +305,10 @@ export function Relationships() {
             >
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
-            <div className="text-4xl font-light text-[#4a4a6a] mb-3">
+            <div className="text-4xl font-light text-[var(--text-secondary)] mb-3">
               Select an entity
             </div>
-            <p className="text-sm text-[#8892b0] max-w-sm">
+            <p className="text-sm text-[var(--text-secondary)] max-w-sm">
               Search for any technique, group, software, or campaign to explore
               its relationships across graph, actor profile, and technique map views.
             </p>
@@ -318,22 +318,22 @@ export function Relationships() {
 
       {/* Loading */}
       {selectedId && isLoading && (
-        <div className="flex items-center justify-center h-20 text-[#8892b0]">
-          <span className="inline-block w-5 h-5 border-2 border-[#64ffda33] border-t-[#64ffda] rounded-full animate-spin mr-2" />
+        <div className="flex items-center justify-center h-20 text-[var(--text-secondary)]">
+          <span className="inline-block w-5 h-5 border-2 border-[var(--teal-dim)] border-t-[var(--accent-teal)] rounded-full animate-spin mr-2" />
           Loading...
         </div>
       )}
 
       {/* Error */}
       {selectedId && error && (
-        <div className="flex items-center justify-center h-20 text-[#f97316]">
+        <div className="flex items-center justify-center h-20 text-[var(--accent-orange)]">
           Failed to load relationships.
         </div>
       )}
 
       {/* Tab bar — shown once entity is selected and graph has loaded */}
       {selectedId && !isLoading && !error && graphData && (
-        <div className="border-b border-[#2a2a4a]">
+        <div className="border-b border-[var(--border-color)]">
           <div className="flex gap-1">
             {visibleTabs.map((tab) => (
               <button
@@ -344,8 +344,8 @@ export function Relationships() {
                   px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors duration-150
                   border-b-2 -mb-px
                   ${activeTab === tab.id
-                    ? 'text-[#64ffda] border-[#64ffda]'
-                    : 'text-[#8892b0] border-transparent hover:text-[#ccd6f6]'
+                    ? 'text-[var(--accent-teal)] border-[var(--accent-teal)]'
+                    : 'text-[var(--text-secondary)] border-transparent hover:text-[var(--text-primary)]'
                   }
                 `}
               >
@@ -363,12 +363,12 @@ export function Relationships() {
           {activeTab === 'graph' && (
             <div className="space-y-3">
               {/* Stats bar */}
-              <div className="flex items-center gap-4 text-xs text-[#8892b0]">
+              <div className="flex items-center gap-4 text-xs text-[var(--text-secondary)]">
                 <span>
-                  <span className="text-[#ccd6f6] font-medium">{graphData.nodes.length}</span> nodes
+                  <span className="text-[var(--text-primary)] font-medium">{graphData.nodes.length}</span> nodes
                 </span>
                 <span>
-                  <span className="text-[#ccd6f6] font-medium">{graphData.edges.length}</span> edges
+                  <span className="text-[var(--text-primary)] font-medium">{graphData.edges.length}</span> edges
                 </span>
                 {graphData.truncated && (
                   <Badge label="Truncated — too many connections" variant="yellow" />
@@ -376,7 +376,7 @@ export function Relationships() {
                 <button
                   type="button"
                   onClick={() => graphRef.current?.reset()}
-                  className="ml-auto px-3 py-1 text-xs rounded-md border border-[#64ffda33] text-[#64ffda] bg-[#64ffda0a] hover:bg-[#64ffda18] transition-colors"
+                  className="ml-auto px-3 py-1 text-xs rounded-md border border-[var(--teal-dim)] text-[var(--accent-teal)] bg-[var(--teal-ghost)] hover:bg-[var(--teal-faint)] transition-colors"
                 >
                   Re-layout
                 </button>
@@ -391,7 +391,7 @@ export function Relationships() {
 
               {/* Legend */}
               <div className="flex flex-wrap items-center gap-2 pt-2">
-                <span className="text-xs text-[#8892b0] font-semibold mr-1">Node types:</span>
+                <span className="text-xs text-[var(--text-secondary)] font-semibold mr-1">Node types:</span>
                 {Object.entries(TYPE_VARIANT).map(([type, variant]) => (
                   <Badge
                     key={type}

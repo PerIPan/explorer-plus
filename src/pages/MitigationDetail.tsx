@@ -10,8 +10,8 @@ export function MitigationDetail() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64 text-[#8892b0]">
-        <span className="inline-block w-5 h-5 border-2 border-[#64ffda33] border-t-[#64ffda] rounded-full animate-spin mr-2" />
+      <div className="flex items-center justify-center h-64 text-[var(--text-secondary)]">
+        <span className="inline-block w-5 h-5 border-2 border-[var(--teal-dim)] border-t-[var(--accent-teal)] rounded-full animate-spin mr-2" />
         Loading...
       </div>
     );
@@ -19,7 +19,7 @@ export function MitigationDetail() {
 
   if (error || !data) {
     return (
-      <div className="flex items-center justify-center h-64 text-[#f97316]">
+      <div className="flex items-center justify-center h-64 text-[var(--accent-orange)]">
         Mitigation not found.
       </div>
     );
@@ -42,7 +42,7 @@ export function MitigationDetail() {
             {(data.isRevoked || data.isDeprecated) && (
               <DeprecatedBadge isRevoked={data.isRevoked} />
             )}
-            <span className="font-mono text-xs text-[#34d399] bg-[#34d39918] border border-[#34d39933] px-2 py-1 rounded">
+            <span className="font-mono text-xs text-[var(--accent-green)] bg-[var(--green-faint)] border border-[var(--green-dim)] px-2 py-1 rounded">
               {data.attackId}
             </span>
           </div>
@@ -50,11 +50,11 @@ export function MitigationDetail() {
       />
 
       {description && (
-        <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5">
-          <h3 className="text-sm font-semibold text-[#a8b2d8] uppercase tracking-wider mb-3">
+        <div className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg p-5">
+          <h3 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-3">
             Description
           </h3>
-          <p className="text-[#ccd6f6] text-sm leading-relaxed whitespace-pre-wrap">
+          <p className="text-[var(--text-primary)] text-sm leading-relaxed whitespace-pre-wrap">
             {description}
           </p>
         </div>
@@ -65,25 +65,25 @@ export function MitigationDetail() {
           href={data.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-xs text-[#64ffda] hover:underline"
+          className="inline-flex items-center gap-1 text-xs text-[var(--accent-teal)] hover:underline"
         >
           View on MITRE ATT&CK
         </a>
       )}
 
-      <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5">
+      <div className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg p-5">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold text-[#8892b0] uppercase tracking-wider">
+          <h3 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
             Mitigated Techniques
           </h3>
           <Link
             to={`/relationships?entity=${data.attackId}`}
-            className="text-xs text-[#64ffda] hover:underline"
+            className="text-xs text-[var(--accent-teal)] hover:underline"
           >
             View full graph &rarr;
           </Link>
         </div>
-        <p className="text-sm text-[#8892b0]">
+        <p className="text-sm text-[var(--text-secondary)]">
           Explore techniques this mitigation addresses in the Relationships Explorer.
         </p>
       </div>

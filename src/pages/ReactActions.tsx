@@ -20,12 +20,12 @@ const STAGES = [
 type Stage = typeof STAGES[number];
 
 const STAGE_COLORS: Record<Stage, string> = {
-  preparation:      'bg-[#60a5fa18] text-[#60a5fa] border-[#60a5fa33]',
-  identification:   'bg-[#fbbf2418] text-[#fbbf24] border-[#fbbf2433]',
-  containment:      'bg-[#f9731618] text-[#f97316] border-[#f9731633]',
-  eradication:      'bg-[#f472b618] text-[#f472b6] border-[#f472b633]',
-  recovery:         'bg-[#34d39918] text-[#34d399] border-[#34d39933]',
-  lessons_learned:  'bg-[#a78bfa18] text-[#a78bfa] border-[#a78bfa33]',
+  preparation:      'bg-[var(--blue-faint)] text-[var(--accent-blue)] border-[var(--blue-dim)]',
+  identification:   'bg-[var(--yellow-faint)] text-[var(--accent-yellow)] border-[var(--yellow-dim)]',
+  containment:      'bg-[var(--orange-faint)] text-[var(--accent-orange)] border-[var(--orange-dim)]',
+  eradication:      'bg-[var(--pink-faint)] text-[var(--accent-pink)] border-[var(--pink-dim)]',
+  recovery:         'bg-[var(--green-faint)] text-[var(--accent-green)] border-[var(--green-dim)]',
+  lessons_learned:  'bg-[var(--purple-faint)] text-[var(--accent-purple)] border-[var(--purple-dim)]',
 };
 
 const STAGE_LABELS: Record<Stage, string> = {
@@ -38,9 +38,9 @@ const STAGE_LABELS: Record<Stage, string> = {
 };
 
 function StageBadge({ stage }: { stage: string | null }) {
-  if (!stage) return <span className="text-[#8892b0] text-xs">—</span>;
+  if (!stage) return <span className="text-[var(--text-secondary)] text-xs">—</span>;
   const classes =
-    STAGE_COLORS[stage as Stage] ?? 'bg-[#ffffff08] text-[#8892b0] border-[#2a2a4a]';
+    STAGE_COLORS[stage as Stage] ?? 'bg-[var(--hover-overlay)] text-[var(--text-secondary)] border-[var(--border-color)]';
   const label = STAGE_LABELS[stage as Stage] ?? stage;
   return (
     <span
@@ -61,20 +61,20 @@ function ActionCard({
   onToggle: () => void;
 }) {
   return (
-    <div className="rounded-lg bg-[#16213e] border border-[#2a2a4a] overflow-hidden">
+    <div className="rounded-lg bg-[var(--surface-card)] border border-[var(--border-color)] overflow-hidden">
       <button
         type="button"
         onClick={onToggle}
-        className="w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-[#ffffff05] transition-colors"
+        className="w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-[var(--hover-subtle)] transition-colors"
       >
-        <span className="font-mono text-xs text-[#64ffda] mt-0.5 shrink-0 w-16">
+        <span className="font-mono text-xs text-[var(--accent-teal)] mt-0.5 shrink-0 w-16">
           {action.actionId}
         </span>
-        <span className="flex-1 text-[#ccd6f6] text-sm">{action.title}</span>
+        <span className="flex-1 text-[var(--text-primary)] text-sm">{action.title}</span>
         <div className="flex items-center gap-2 shrink-0">
           <StageBadge stage={action.stage} />
           <svg
-            className={`w-4 h-4 text-[#8892b0] transition-transform ${expanded ? 'rotate-180' : ''}`}
+            className={`w-4 h-4 text-[var(--text-secondary)] transition-transform ${expanded ? 'rotate-180' : ''}`}
             fill="none"
             stroke="currentColor"
             strokeWidth={2}
@@ -87,23 +87,23 @@ function ActionCard({
       </button>
 
       {expanded && (
-        <div className="px-4 pb-4 pt-1 space-y-3 border-t border-[#2a2a4a]">
+        <div className="px-4 pb-4 pt-1 space-y-3 border-t border-[var(--border-color)]">
           {action.description && (
             <div>
-              <div className="text-[10px] font-semibold text-[#a8b2d8] uppercase tracking-wider mb-1">
+              <div className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1">
                 Description
               </div>
-              <p className="text-[#8892b0] text-sm leading-relaxed whitespace-pre-wrap">
+              <p className="text-[var(--text-secondary)] text-sm leading-relaxed whitespace-pre-wrap">
                 {action.description}
               </p>
             </div>
           )}
           {action.workflow && (
             <div>
-              <div className="text-[10px] font-semibold text-[#a8b2d8] uppercase tracking-wider mb-1">
+              <div className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1">
                 Workflow
               </div>
-              <pre className="text-[#8892b0] text-xs leading-relaxed whitespace-pre-wrap font-mono bg-[#0a0a1a] rounded p-3">
+              <pre className="text-[var(--text-secondary)] text-xs leading-relaxed whitespace-pre-wrap font-mono bg-[var(--surface-deep)] rounded p-3">
                 {action.workflow}
               </pre>
             </div>
@@ -176,7 +176,7 @@ export function ReactActions() {
       />
 
       {/* Info banner */}
-      <div className="px-4 py-3 rounded-lg bg-[#16213e] border border-[#2a2a4a] text-sm text-[#8892b0]">
+      <div className="px-4 py-3 rounded-lg bg-[var(--surface-card)] border border-[var(--border-color)] text-sm text-[var(--text-secondary)]">
         RE&CT is an Incident Response framework by the ATC Project that maps
         response actions to the IR lifecycle. Actions cover detection, analysis,
         containment, and recovery phases.{' '}
@@ -184,7 +184,7 @@ export function ReactActions() {
           href="https://github.com/atc-project/atc-react"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[#64ffda] hover:underline"
+          className="text-[var(--accent-teal)] hover:underline"
         >
           atc-project/atc-react
         </a>
@@ -199,9 +199,9 @@ export function ReactActions() {
           onChange={(e) => setSearch(e.target.value)}
           className="
             flex-1 min-w-[200px] max-w-sm px-3 py-2 rounded-md text-sm
-            bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6]
-            placeholder:text-[#4a5568]
-            focus:outline-none focus:ring-1 focus:ring-[#64ffda] focus:border-[#64ffda]
+            bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)]
+            placeholder:text-[var(--text-secondary)]
+            focus:outline-none focus:ring-1 focus:ring-[var(--accent-teal)] focus:border-[var(--accent-teal)]
           "
         />
         <select
@@ -209,8 +209,8 @@ export function ReactActions() {
           onChange={(e) => setParam('stage', e.target.value)}
           className="
             px-3 py-2 rounded-md text-sm
-            bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6]
-            focus:outline-none focus:ring-1 focus:ring-[#64ffda] focus:border-[#64ffda]
+            bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)]
+            focus:outline-none focus:ring-1 focus:ring-[var(--accent-teal)] focus:border-[var(--accent-teal)]
           "
         >
           <option value="">All stages</option>
@@ -221,8 +221,8 @@ export function ReactActions() {
       </div>
 
       {isLoading ? (
-        <div className="flex items-center gap-2 text-[#8892b0] text-sm py-6">
-          <span className="inline-block w-4 h-4 border-2 border-[#64ffda33] border-t-[#64ffda] rounded-full animate-spin" />
+        <div className="flex items-center gap-2 text-[var(--text-secondary)] text-sm py-6">
+          <span className="inline-block w-4 h-4 border-2 border-[var(--teal-dim)] border-t-[var(--accent-teal)] rounded-full animate-spin" />
           Loading...
         </div>
       ) : (
@@ -232,10 +232,10 @@ export function ReactActions() {
             if (!actions || actions.length === 0) return null;
             return (
               <section key={s}>
-                <h3 className="flex items-center gap-2 text-sm font-semibold text-[#a8b2d8] uppercase tracking-wider mb-3">
+                <h3 className="flex items-center gap-2 text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-3">
                   <StageBadge stage={s} />
                   <span>{STAGE_LABELS[s]}</span>
-                  <span className="text-[#8892b0] font-normal normal-case tracking-normal">
+                  <span className="text-[var(--text-secondary)] font-normal normal-case tracking-normal">
                     ({actions.length})
                   </span>
                 </h3>
@@ -255,7 +255,7 @@ export function ReactActions() {
 
           {unstagedActions.length > 0 && (
             <section>
-              <h3 className="text-sm font-semibold text-[#a8b2d8] uppercase tracking-wider mb-3">
+              <h3 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-3">
                 Other ({unstagedActions.length})
               </h3>
               <div className="space-y-2">
@@ -272,7 +272,7 @@ export function ReactActions() {
           )}
 
           {filteredData.length === 0 && (
-            <p className="text-[#8892b0] text-sm py-6">
+            <p className="text-[var(--text-secondary)] text-sm py-6">
               {search ? 'No actions match your search.' : 'No RE&CT actions found. Run the sync script to populate data.'}
             </p>
           )}

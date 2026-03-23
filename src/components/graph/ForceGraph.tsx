@@ -9,6 +9,7 @@ import {
 import * as d3 from 'd3';
 import type { GraphData, GraphNode, GraphEdge } from '../../lib/types';
 import { GraphTooltip } from './GraphTooltip';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 interface ForceGraphProps {
   data: GraphData;
@@ -19,22 +20,6 @@ interface ForceGraphProps {
 
 export interface ForceGraphHandle {
   reset: () => void;
-}
-
-/** Entity type → accent color mapping (mirrors EntityLink colors) */
-const NODE_COLORS: Record<string, string> = {
-  technique: '#64ffda',
-  group: '#f97316',
-  software: '#a78bfa',
-  campaign: '#60a5fa',
-  mitigation: '#34d399',
-  data_source: '#f472b6',
-  tactic: '#fbbf24',
-  external_actor: '#94a3b8',
-};
-
-function nodeColor(type: string): string {
-  return NODE_COLORS[type] ?? '#8892b0';
 }
 
 interface SimNode extends d3.SimulationNodeDatum, GraphNode {}
@@ -59,6 +44,23 @@ export const ForceGraph = forwardRef<ForceGraphHandle, ForceGraphProps>(
     const svgRef = useRef<SVGSVGElement>(null);
     const simulationRef = useRef<d3.Simulation<SimNode, SimEdge> | null>(null);
     const [tooltip, setTooltip] = useState<TooltipState | null>(null);
+    const colors = useThemeColors();
+
+    /** Entity type → accent color mapping */
+    const NODE_COLORS: Record<string, string> = {
+      technique: colors.accentTeal,
+      group: colors.accentOrange,
+      software: colors.accentPurple,
+      campaign: colors.accentBlue,
+      mitigation: colors.accentGreen,
+      data_source: colors.accentPink,
+      tactic: colors.accentYellow,
+      external_actor: colors.accentNeutral,
+    };
+
+    function nodeColor(type: string): string {
+      return NODE_COLORS[type] ?? colors.textSecondary;
+    }
 
     useImperativeHandle(ref, () => ({
       reset() {
@@ -109,7 +111,7 @@ export const ForceGraph = forwardRef<ForceGraphHandle, ForceGraphProps>(
         .attr('viewBox', `0 0 ${width} ${height}`)
         .attr('width', '100%')
         .attr('height', height)
-        .style('background', '#0a0a1a');
+        .style('background', colors.surfaceDeep);
 
       const g = svg.append('g');
 
@@ -132,7 +134,7 @@ export const ForceGraph = forwardRef<ForceGraphHandle, ForceGraphProps>(
         .attr('orient', 'auto')
         .append('path')
         .attr('d', 'M0,-4L8,0L0,4')
-        .attr('fill', '#2a2a4a');
+        .attr('fill', colors.borderColor);
 
       /* ── Edges ── */
       const edgeSel = g
@@ -140,7 +142,7 @@ export const ForceGraph = forwardRef<ForceGraphHandle, ForceGraphProps>(
         .selectAll<SVGLineElement, SimEdge>('line')
         .data(edges)
         .join('line')
-        .attr('stroke', '#2a2a4a')
+        .attr('stroke', colors.borderColor)
         .attr('stroke-width', 1.5)
         .attr('marker-end', 'url(#arrow)')
         .style('cursor', 'default');
@@ -151,7 +153,7 @@ export const ForceGraph = forwardRef<ForceGraphHandle, ForceGraphProps>(
             x: event.clientX,
             y: event.clientY,
             content: (
-              <span className="text-[#8892b0]">
+              <span className="text-[var(--text-secondary)]">
                 {d.relationship}
               </span>
             ),
@@ -210,9 +212,9 @@ export const ForceGraph = forwardRef<ForceGraphHandle, ForceGraphProps>(
         .attr('y', 24)
         .attr('text-anchor', 'middle')
         .attr('font-size', 11)
-        .attr('fill', '#8892b0')
+        .attr('fill', colors.textSecondary)
         .attr('paint-order', 'stroke')
-        .attr('stroke', '#0a0a1a')
+        .attr('stroke', colors.surfaceDeep)
         .attr('stroke-width', 3)
         .each(function (d) {
           // Use textContent — never innerHTML
@@ -234,9 +236,9 @@ export const ForceGraph = forwardRef<ForceGraphHandle, ForceGraphProps>(
                   {d.label}
                 </div>
                 {d.attackId && (
-                  <div className="font-mono text-[#8892b0]">{d.attackId}</div>
+                  <div className="font-mono text-[var(--text-secondary)]">{d.attackId}</div>
                 )}
-                <div className="text-[#8892b0] capitalize">{d.type.replace('_', ' ')}</div>
+                <div className="text-[var(--text-secondary)] capitalize">{d.type.replace('_', ' ')}</div>
               </div>
             ),
           });
@@ -258,11 +260,11 @@ export const ForceGraph = forwardRef<ForceGraphHandle, ForceGraphProps>(
         sim.stop();
         svg.on('.zoom', null);
       };
-    }, [data, width, height, onNodeClick, hideTooltip]);
+    }, [data, width, height, onNodeClick, hideTooltip, colors]);
 
     return (
       <div className="relative">
-        <svg ref={svgRef} className="rounded-lg border border-[#2a2a4a]" />
+        <svg ref={svgRef} className="rounded-lg border border-[var(--border-color)]" />
         {tooltip && (
           <GraphTooltip x={tooltip.x} y={tooltip.y} content={tooltip.content} />
         )}

@@ -4,6 +4,7 @@ import { Sidebar } from './components/layout/Sidebar';
 import { SearchBar } from './components/layout/SearchBar';
 import { SectorDropdown } from './components/layout/SectorDropdown';
 import { SectorProvider } from './contexts/SectorContext';
+import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { RelationshipModel } from './components/relationships/RelationshipModel';
 
 // Lazy-loaded pages
@@ -42,10 +43,34 @@ const ExternalActors  = lazy(() => import('./pages/ExternalActors').then((m) => 
 /** Simple spinner used as Suspense fallback */
 function LoadingSpinner() {
   return (
-    <div className="flex items-center justify-center h-64 text-[#8892b0]">
-      <span className="inline-block w-5 h-5 border-2 border-[#64ffda33] border-t-[#64ffda] rounded-full animate-spin mr-2" />
+    <div className="flex items-center justify-center h-64 text-[var(--text-secondary)]">
+      <span className="inline-block w-5 h-5 border-2 border-[var(--teal-dim)] border-t-[var(--accent-teal)] rounded-full animate-spin mr-2" />
       Loading...
     </div>
+  );
+}
+
+/** Theme toggle — sun/moon icon */
+function ThemeToggle() {
+  const { theme, toggle } = useTheme();
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      data-print-hide
+      className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--accent-teal)] hover:border-[var(--teal-dim)] transition-colors"
+      title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
+    >
+      {theme === 'dark' ? (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
+      ) : (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+        </svg>
+      )}
+    </button>
   );
 }
 
@@ -57,7 +82,7 @@ function Layout() {
 
   return (
     <SectorProvider>
-    <div className="flex min-h-screen bg-[#0a0a1a]">
+    <div className="flex min-h-screen bg-[var(--surface-deep)]">
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div
@@ -72,13 +97,13 @@ function Layout() {
       {/* Main area pushed right of the fixed sidebar on lg+ */}
       <div className="flex-1 flex flex-col lg:ml-60 min-h-screen">
         {/* Top header bar */}
-        <header className="sticky top-0 z-30 flex items-center gap-4 px-6 py-3 bg-[#16213e] shadow-sm border-b border-[#2a2a4a]">
+        <header className="sticky top-0 z-30 flex items-center gap-4 px-6 py-3 bg-[var(--surface-card)] shadow-sm border-b border-[var(--border-color)]">
           {/* Hamburger — visible only below lg */}
           <button
             type="button"
             aria-label="Open navigation menu"
             onClick={() => setSidebarOpen(true)}
-            className="lg:hidden flex-shrink-0 p-1 rounded-md text-[#8892b0] hover:text-[#ccd6f6] hover:bg-[#ffffff08] transition-colors"
+            className="lg:hidden flex-shrink-0 p-1 rounded-md text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--hover-overlay)] transition-colors"
           >
             <svg
               className="w-5 h-5"
@@ -96,16 +121,17 @@ function Layout() {
           <button
             type="button"
             onClick={() => setModelOpen(true)}
-            className="flex-shrink-0 px-3 py-1.5 text-xs rounded-md border border-[#2a2a4a] text-[#8892b0] hover:text-[#64ffda] hover:border-[#64ffda33] transition-colors"
+            className="flex-shrink-0 px-3 py-1.5 text-xs rounded-md border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--accent-teal)] hover:border-[var(--teal-dim)] transition-colors"
             title="ATT&CK data model — entity relationships"
           >
             Data Model
           </button>
+          <ThemeToggle />
           <button
             type="button"
             onClick={() => setHelpOpen(true)}
             data-print-hide
-            className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full border border-[#2a2a4a] text-[#8892b0] hover:text-[#64ffda] hover:border-[#64ffda33] transition-colors"
+            className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--accent-teal)] hover:border-[var(--teal-dim)] transition-colors"
             title="About this application"
           >
             ?
@@ -124,23 +150,23 @@ function Layout() {
       {helpOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setHelpOpen(false)}>
           <div
-            className="bg-[#0a0a1a] border border-[#2a2a4a] rounded-xl shadow-2xl w-[95vw] max-w-[640px] max-h-[85vh] overflow-y-auto"
+            className="bg-[var(--surface-deep)] border border-[var(--border-color)] rounded-xl shadow-2xl w-[95vw] max-w-[640px] max-h-[85vh] overflow-y-auto"
             onClick={e => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[#2a2a4a]">
-              <h2 className="text-lg font-semibold text-[#ccd6f6]">About ATT&CK Explorer Plus (CLA)</h2>
-              <button onClick={() => setHelpOpen(false)} className="p-2 rounded-md text-[#8892b0] hover:text-[#ccd6f6] hover:bg-[#ffffff08]">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border-color)]">
+              <h2 className="text-lg font-semibold text-[var(--text-primary)]">About ATT&CK Explorer Plus (CLA)</h2>
+              <button onClick={() => setHelpOpen(false)} className="p-2 rounded-md text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--hover-overlay)]">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
-            <div className="px-6 py-5 space-y-4 text-sm text-[#ccd6f6] leading-relaxed">
+            <div className="px-6 py-5 space-y-4 text-sm text-[var(--text-primary)] leading-relaxed">
               <p>
                 <strong>ATT&CK Explorer Plus</strong> — a threat intelligence platform on{' '}
                 <em>MITRE ATT&CK</em>. One interface for adversary behavior, detection, and compliance.
               </p>
-              <ul className="space-y-2 pl-4 list-disc marker:text-[#64ffda]">
+              <ul className="space-y-2 pl-4 list-disc marker:text-[var(--accent-teal)]">
                 <li><strong>14 data sources</strong> — techniques, groups, campaigns, software, mitigations, data sources, tactics, sectors + live feeds from AlienVault OTX, RSS, CISA KEV, Sigma, Atomic Red Team, D3FEND</li>
                 <li><strong>Relationships Explorer</strong> — search any entity, see connections via Threat Actor Profile, Technique Map, or D3 force graph</li>
                 <li><strong>Frameworks</strong> — NIST 800-53 controls, MITRE Engage deception, RE&CT response playbooks mapped per technique</li>
@@ -149,7 +175,7 @@ function Layout() {
                 <li><strong>Global sector filter</strong> — narrow the entire view by industry (Finance, Healthcare, etc.)</li>
                 <li><strong>Auto-updating</strong> — scheduled feeds keep data current; ATT&CK re-seeded on new MITRE releases</li>
               </ul>
-              <p className="text-[#8892b0] text-xs pt-2 border-t border-[#2a2a4a]">
+              <p className="text-[var(--text-secondary)] text-xs pt-2 border-t border-[var(--border-color)]">
                 Built with React, TypeScript, PostgreSQL, and Vercel. ATT&CK data version shown in the Overview page.
                 Not affiliated with or endorsed by MITRE Corporation.
               </p>
@@ -167,8 +193,8 @@ function PlaceholderPage({ title }: { title: string }) {
   return (
     <div className="flex items-center justify-center h-64">
       <div className="text-center">
-        <div className="text-[#64ffda] text-4xl font-light mb-2">{title}</div>
-        <div className="text-[#8892b0] text-sm">Coming soon</div>
+        <div className="text-[var(--accent-teal)] text-4xl font-light mb-2">{title}</div>
+        <div className="text-[var(--text-secondary)] text-sm">Coming soon</div>
       </div>
     </div>
   );
@@ -176,6 +202,7 @@ function PlaceholderPage({ title }: { title: string }) {
 
 export default function App() {
   return (
+    <ThemeProvider>
     <Routes>
       <Route element={<Layout />}>
         <Route element={<Suspense fallback={<LoadingSpinner />}><Outlet /></Suspense>}>
@@ -245,5 +272,6 @@ export default function App() {
         </Route>
       </Route>
     </Routes>
+    </ThemeProvider>
   );
 }

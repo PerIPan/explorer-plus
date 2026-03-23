@@ -14,7 +14,7 @@ export function SectorsList() {
       key: 'name',
       header: 'Sector',
       render: (row) => (
-        <span className="text-[#ccd6f6] font-medium">{row.name}</span>
+        <span className="text-[var(--text-primary)] font-medium">{row.name}</span>
       ),
     },
     {
@@ -23,7 +23,7 @@ export function SectorsList() {
       width: '100px',
       align: 'center',
       render: (row) => (
-        <span className="text-xs text-[#8892b0] font-mono">{row.groupCount}</span>
+        <span className="text-xs text-[var(--text-secondary)] font-mono">{row.groupCount}</span>
       ),
     },
   ];

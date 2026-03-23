@@ -34,13 +34,13 @@ function TechniquePopover({ reportId, count }: { reportId: string; count: number
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-8 z-50 bg-[#16213e] border border-[#2a2a4a] rounded-lg shadow-2xl p-3 min-w-[240px] max-h-[300px] overflow-y-auto">
-            <div className="text-[10px] text-[#8892b0] uppercase tracking-wider mb-2">
+          <div className="absolute right-0 top-8 z-50 bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg shadow-2xl p-3 min-w-[240px] max-h-[300px] overflow-y-auto">
+            <div className="text-[10px] text-[var(--text-secondary)] uppercase tracking-wider mb-2">
               Linked Techniques ({count})
             </div>
             {isLoading && (
-              <div className="flex items-center gap-2 text-[#8892b0] text-xs py-2">
-                <span className="inline-block w-3 h-3 border-2 border-[#64ffda33] border-t-[#64ffda] rounded-full animate-spin" />
+              <div className="flex items-center gap-2 text-[var(--text-secondary)] text-xs py-2">
+                <span className="inline-block w-3 h-3 border-2 border-[var(--teal-dim)] border-t-[var(--accent-teal)] rounded-full animate-spin" />
                 Loading...
               </div>
             )}
@@ -52,7 +52,7 @@ function TechniquePopover({ reportId, count }: { reportId: string; count: number
               </div>
             )}
             {!isLoading && data?.data?.length === 0 && (
-              <span className="text-xs text-[#8892b0]">No techniques found.</span>
+              <span className="text-xs text-[var(--text-secondary)]">No techniques found.</span>
             )}
           </div>
         </>
@@ -98,7 +98,7 @@ const columns: ColumnDef<ThreatReport>[] = [
         target="_blank"
         rel="noopener noreferrer"
         onClick={(e) => e.stopPropagation()}
-        className="text-[#ccd6f6] hover:text-[#64ffda] hover:underline transition-colors"
+        className="text-[var(--text-primary)] hover:text-[var(--accent-teal)] hover:underline transition-colors"
       >
         {row.title}
       </a>
@@ -122,7 +122,7 @@ const columns: ColumnDef<ThreatReport>[] = [
     sortKey: 'published_at',
     width: '130px',
     render: (row) => (
-      <span className="text-[#8892b0] text-xs">{formatDate(row.published_at)}</span>
+      <span className="text-[var(--text-secondary)] text-xs">{formatDate(row.published_at)}</span>
     ),
   },
   {
@@ -134,7 +134,7 @@ const columns: ColumnDef<ThreatReport>[] = [
       row.technique_count > 0 ? (
         <TechniquePopover reportId={row.id} count={row.technique_count} />
       ) : (
-        <span className="text-[#8892b0] text-xs">—</span>
+        <span className="text-[var(--text-secondary)] text-xs">—</span>
       ),
   },
 ];
@@ -185,12 +185,12 @@ export function ReportsList() {
           placeholder="Search reports..."
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          className="min-w-[200px] px-3 py-1.5 rounded-md text-sm bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6] placeholder-[#8892b0] focus:outline-none focus:border-[#64ffda]"
+          className="min-w-[200px] px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent-teal)]"
         />
         <select
           value={source}
           onChange={(e) => setParam('source', e.target.value)}
-          className="min-w-[140px] px-3 py-1.5 rounded-md text-sm bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6] focus:outline-none focus:border-[#64ffda]"
+          className="min-w-[140px] px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-teal)]"
         >
           <option value="">All Sources</option>
           {SOURCES.map((s) => (
@@ -198,12 +198,12 @@ export function ReportsList() {
           ))}
         </select>
         <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-[#8892b0]">Since:</span>
+          <span className="text-xs font-medium text-[var(--text-secondary)]">Since:</span>
           <input
             type="date"
             value={since}
             onChange={(e) => setParam('since', e.target.value)}
-            className="px-3 py-1.5 rounded-md text-sm bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6] focus:outline-none focus:border-[#64ffda]"
+            className="px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-teal)]"
           />
         </label>
         {/* Quick date filters */}
@@ -225,8 +225,8 @@ export function ReportsList() {
                 onClick={() => setParam('since', sinceDate)}
                 className={`px-2.5 py-1.5 text-xs rounded-md border transition-colors ${
                   isActive
-                    ? 'border-[#64ffda] text-[#64ffda] bg-[#64ffda14]'
-                    : 'border-[#2a2a4a] text-[#8892b0] hover:text-[#ccd6f6] hover:border-[#4a4a6a]'
+                    ? 'border-[var(--accent-teal)] text-[var(--accent-teal)] bg-[var(--teal-faint)]'
+                    : 'border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--border-hover)]'
                 }`}
               >
                 {f.label}

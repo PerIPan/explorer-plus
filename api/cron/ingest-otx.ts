@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { query } from '../v1/lib/db.js';
+import { verifyCronAuth } from './lib/auth.js';
 
 const OTX_BASE = 'https://otx.alienvault.com/api/v1';
 const MAX_PAGES = 1;       // Keep small — Vercel function timeout ~10s
@@ -51,6 +52,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.status(405).json({ error: 'Method not allowed' });
     return;
   }
+  if (!verifyCronAuth(req, res)) return;
 
   const apiKey = process.env.OTX_API_KEY;
   if (!apiKey) {
@@ -212,6 +214,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       [errorMessage, logId],
     );
 
-    res.status(500).json({ ok: false, error: errorMessage });
+    res.status(500).json({ ok: false, error: 'Feed sync failed' });
   }
 }

@@ -43,7 +43,7 @@ export function DataSourcesList() {
       sortKey: 'attack_id',
       width: '120px',
       render: (row) => (
-        <span className="font-mono text-xs text-[#f472b6]">{row.attackId}</span>
+        <span className="font-mono text-xs text-[var(--accent-pink)]">{row.attackId}</span>
       ),
     },
     {
@@ -61,7 +61,7 @@ export function DataSourcesList() {
       width: '160px',
       render: (row) => {
         const count = row.componentCount ?? 0;
-        const colorClass = count > 3 ? 'text-[#f472b6]' : 'text-[#8892b0]';
+        const colorClass = count > 3 ? 'text-[var(--accent-pink)]' : 'text-[var(--text-secondary)]';
         return (
           <span className={`text-sm font-semibold tabular-nums ${colorClass}`}>
             {count}
@@ -81,7 +81,7 @@ export function DataSourcesList() {
           placeholder="Search data sources..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="min-w-[200px] px-3 py-1.5 rounded-md text-sm bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6] placeholder-[#8892b0] focus:outline-none focus:border-[#64ffda]"
+          className="min-w-[200px] px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent-teal)]"
         />
       </div>
 

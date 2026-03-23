@@ -11,7 +11,7 @@ export function DeprecatedBadge({ isRevoked = false }: DeprecatedBadgeProps) {
     <span
       className="
         inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium
-        bg-[#fbbf2410] text-[#fbbf24] border border-[#fbbf2433]
+        bg-[#fbbf2410] text-[var(--accent-yellow)] border border-[var(--yellow-dim)]
         line-through decoration-[#fbbf2466]
       "
       aria-label={isRevoked ? 'This entity has been revoked' : 'This entity is deprecated'}

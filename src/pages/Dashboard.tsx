@@ -96,31 +96,31 @@ function formatReportDate(iso: string | null): string {
 }
 
 const SOURCE_COLOR: Record<string, string> = {
-  otx: 'text-[#64ffda] bg-[#64ffda10] border-[#64ffda30]',
-  dfir_report: 'text-[#f97316] bg-[#f9731610] border-[#f9731630]',
-  unit42: 'text-[#60a5fa] bg-[#60a5fa10] border-[#60a5fa30]',
-  microsoft_security: 'text-[#60a5fa] bg-[#60a5fa10] border-[#60a5fa30]',
-  talos: 'text-[#a78bfa] bg-[#a78bfa10] border-[#a78bfa30]',
+  otx: 'text-[var(--accent-teal)] bg-[var(--teal-ghost)] border-[#64ffda30]',
+  dfir_report: 'text-[var(--accent-orange)] bg-[#f9731610] border-[#f9731630]',
+  unit42: 'text-[var(--accent-blue)] bg-[#60a5fa10] border-[#60a5fa30]',
+  microsoft_security: 'text-[var(--accent-blue)] bg-[#60a5fa10] border-[#60a5fa30]',
+  talos: 'text-[var(--accent-purple)] bg-[#a78bfa10] border-[#a78bfa30]',
 };
 
 // ── Quick links config ─────────────────────────────────────────────────────────
 
 const QUICK_LINKS = [
-  { label: 'ATT&CK Matrix', href: '/matrix', color: 'text-[#64ffda]', desc: 'Full technique grid' },
-  { label: 'CTI Reports', href: '/cti/reports', color: 'text-[#f97316]', desc: 'Latest threat intel' },
-  { label: 'Sigma Rules', href: '/cti/sigma', color: 'text-[#a78bfa]', desc: 'Detection rules' },
-  { label: 'IOCs', href: '/cti/iocs', color: 'text-[#60a5fa]', desc: 'Indicators of compromise' },
-  { label: 'NIST Controls', href: '/frameworks/nist', color: 'text-[#34d399]', desc: 'SP 800-53 mappings' },
-  { label: 'ENGAGE', href: '/frameworks/engage', color: 'text-[#fbbf24]', desc: 'Defensive activities' },
+  { label: 'ATT&CK Matrix', href: '/matrix', color: 'text-[var(--accent-teal)]', desc: 'Full technique grid' },
+  { label: 'CTI Reports', href: '/cti/reports', color: 'text-[var(--accent-orange)]', desc: 'Latest threat intel' },
+  { label: 'Sigma Rules', href: '/cti/sigma', color: 'text-[var(--accent-purple)]', desc: 'Detection rules' },
+  { label: 'IOCs', href: '/cti/iocs', color: 'text-[var(--accent-blue)]', desc: 'Indicators of compromise' },
+  { label: 'NIST Controls', href: '/frameworks/nist', color: 'text-[var(--accent-green)]', desc: 'SP 800-53 mappings' },
+  { label: 'ENGAGE', href: '/frameworks/engage', color: 'text-[var(--accent-yellow)]', desc: 'Defensive activities' },
 ];
 
 // ── Skeleton components ───────────────────────────────────────────────────────
 
 function VersionBannerSkeleton() {
   return (
-    <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg px-5 py-3 flex items-center justify-between animate-pulse">
-      <div className="h-4 w-48 rounded bg-[#2a2a4a]" />
-      <div className="h-4 w-32 rounded bg-[#2a2a4a]" />
+    <div className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg px-5 py-3 flex items-center justify-between animate-pulse">
+      <div className="h-4 w-48 rounded bg-[var(--border-color)]" />
+      <div className="h-4 w-32 rounded bg-[var(--border-color)]" />
     </div>
   );
 }
@@ -142,7 +142,7 @@ export function Dashboard() {
     return (
       <div className="space-y-6">
         {/* Version banner skeleton */}
-        <div className="h-7 w-48 rounded bg-[#16213e] animate-pulse" />
+        <div className="h-7 w-48 rounded bg-[var(--surface-card)] animate-pulse" />
         <VersionBannerSkeleton />
 
         {/* Stat cards skeleton */}
@@ -150,14 +150,14 @@ export function Dashboard() {
           {Array.from({ length: 6 }).map((_, i) => (
             <div
               key={i}
-              className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5 space-y-3 animate-pulse"
+              className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg p-5 space-y-3 animate-pulse"
             >
               <div className="flex justify-between">
-                <div className="h-7 w-14 rounded bg-[#2a2a4a]" />
-                <div className="h-5 w-5 rounded bg-[#2a2a4a]" />
+                <div className="h-7 w-14 rounded bg-[var(--border-color)]" />
+                <div className="h-5 w-5 rounded bg-[var(--border-color)]" />
               </div>
-              <div className="h-3 w-20 rounded bg-[#2a2a4a]" />
-              <div className="h-3 w-12 rounded bg-[#2a2a4a]" />
+              <div className="h-3 w-20 rounded bg-[var(--border-color)]" />
+              <div className="h-3 w-12 rounded bg-[var(--border-color)]" />
             </div>
           ))}
         </div>
@@ -167,10 +167,10 @@ export function Dashboard() {
           {Array.from({ length: 2 }).map((_, i) => (
             <div
               key={i}
-              className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5 animate-pulse"
+              className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg p-5 animate-pulse"
             >
-              <div className="h-4 w-40 rounded bg-[#2a2a4a] mb-4" />
-              <div className="h-52 rounded bg-[#2a2a4a]" />
+              <div className="h-4 w-40 rounded bg-[var(--border-color)] mb-4" />
+              <div className="h-52 rounded bg-[var(--border-color)]" />
             </div>
           ))}
         </div>
@@ -180,14 +180,14 @@ export function Dashboard() {
           {Array.from({ length: 3 }).map((_, i) => (
             <div
               key={i}
-              className={`bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5 animate-pulse ${i === 0 ? 'xl:col-span-2' : ''}`}
+              className={`bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg p-5 animate-pulse ${i === 0 ? 'xl:col-span-2' : ''}`}
             >
-              <div className="h-4 w-44 rounded bg-[#2a2a4a] mb-4" />
+              <div className="h-4 w-44 rounded bg-[var(--border-color)] mb-4" />
               <div className="space-y-2.5">
                 {Array.from({ length: 5 }).map((_, j) => (
                   <div key={j} className="flex items-center justify-between py-1.5">
-                    <div className="h-3 w-32 rounded bg-[#2a2a4a]" />
-                    <div className="h-3 w-10 rounded bg-[#2a2a4a]" />
+                    <div className="h-3 w-32 rounded bg-[var(--border-color)]" />
+                    <div className="h-3 w-10 rounded bg-[var(--border-color)]" />
                   </div>
                 ))}
               </div>
@@ -202,7 +202,7 @@ export function Dashboard() {
 
   if (error || !data) {
     return (
-      <div className="flex items-center justify-center h-64 text-[#f97316]">
+      <div className="flex items-center justify-center h-64 text-[var(--accent-orange)]">
         Failed to load dashboard data.
       </div>
     );
@@ -225,31 +225,31 @@ export function Dashboard() {
 
       {/* ── ATT&CK version banner ── */}
       {attackVersion && (
-        <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg px-5 py-3 flex flex-wrap items-center justify-between gap-3">
+        <div className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg px-5 py-3 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-[#8892b0] uppercase tracking-wide">
+              <span className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wide">
                 ATT&CK Version
               </span>
-              <span className="text-sm font-bold text-[#64ffda] tabular-nums">
+              <span className="text-sm font-bold text-[var(--accent-teal)] tabular-nums">
                 v{attackVersion.attackVersion}
               </span>
             </div>
-            <div className="w-px h-4 bg-[#2a2a4a]" />
+            <div className="w-px h-4 bg-[var(--border-color)]" />
             <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-[#8892b0] uppercase tracking-wide">
+              <span className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wide">
                 Domain
               </span>
-              <span className="text-sm font-semibold text-[#ccd6f6]">
+              <span className="text-sm font-semibold text-[var(--text-primary)]">
                 {attackVersion.domain}
               </span>
             </div>
-            <div className="w-px h-4 bg-[#2a2a4a]" />
+            <div className="w-px h-4 bg-[var(--border-color)]" />
             <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-[#8892b0] uppercase tracking-wide">
+              <span className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wide">
                 Last Seeded
               </span>
-              <span className="text-sm text-[#8892b0]">
+              <span className="text-sm text-[var(--text-secondary)]">
                 {formatSeeded(attackVersion.seededAt)}
               </span>
             </div>
@@ -258,7 +258,7 @@ export function Dashboard() {
             href="https://attack.mitre.org/"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 text-xs text-[#8892b0] hover:text-[#64ffda] transition-colors"
+            className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)] hover:text-[var(--accent-teal)] transition-colors"
           >
             MITRE ATT&CK
             <IconExternalLink />
@@ -271,9 +271,9 @@ export function Dashboard() {
         <StatCard
           label="Techniques"
           value={stats.techniqueCount}
-          accent="text-[#64ffda]"
+          accent="text-[var(--accent-teal)]"
           href="/techniques"
-          hoverBorder="hover:border-[#64ffda]"
+          hoverBorder="hover:border-[var(--accent-teal)]"
           hoverBg="hover:bg-[#64ffda06]"
           icon={<IconShield />}
           description="ATT&CK techniques"
@@ -281,7 +281,7 @@ export function Dashboard() {
         <StatCard
           label="Groups"
           value={stats.groupCount}
-          accent="text-[#f97316]"
+          accent="text-[var(--accent-orange)]"
           href="/groups"
           hoverBorder="hover:border-[#f97316]"
           hoverBg="hover:bg-[#f9731606]"
@@ -291,7 +291,7 @@ export function Dashboard() {
         <StatCard
           label="Software"
           value={stats.softwareCount}
-          accent="text-[#a78bfa]"
+          accent="text-[var(--accent-purple)]"
           href="/software"
           hoverBorder="hover:border-[#a78bfa]"
           hoverBg="hover:bg-[#a78bfa06]"
@@ -301,7 +301,7 @@ export function Dashboard() {
         <StatCard
           label="Campaigns"
           value={stats.campaignCount}
-          accent="text-[#60a5fa]"
+          accent="text-[var(--accent-blue)]"
           href="/campaigns"
           hoverBorder="hover:border-[#60a5fa]"
           hoverBg="hover:bg-[#60a5fa06]"
@@ -311,7 +311,7 @@ export function Dashboard() {
         <StatCard
           label="Mitigations"
           value={stats.mitigationCount}
-          accent="text-[#34d399]"
+          accent="text-[var(--accent-green)]"
           href="/mitigations"
           hoverBorder="hover:border-[#34d399]"
           hoverBg="hover:bg-[#34d39906]"
@@ -321,7 +321,7 @@ export function Dashboard() {
         <StatCard
           label="Data Sources"
           value={stats.dataSourceCount}
-          accent="text-[#f472b6]"
+          accent="text-[var(--accent-pink)]"
           href="/data-sources"
           hoverBorder="hover:border-[#f472b6]"
           hoverBg="hover:bg-[#f472b606]"
@@ -334,50 +334,50 @@ export function Dashboard() {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
 
         {/* Top 10 groups */}
-        <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5">
+        <div className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg p-5">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold text-[#ccd6f6]">Top 10 Groups</h2>
-            <Link to="/groups" className="text-xs text-[#f97316] hover:underline">View all</Link>
+            <h2 className="text-sm font-semibold text-[var(--text-primary)]">Top 10 Groups</h2>
+            <Link to="/groups" className="text-xs text-[var(--accent-orange)] hover:underline">View all</Link>
           </div>
           {topGroups.length > 0 ? (
             <div className="space-y-1">
               {topGroups.slice(0, 10).map((g, i) => (
-                <div key={g.attackId} className="flex items-center justify-between py-1.5 border-b border-[#2a2a4a] last:border-0">
+                <div key={g.attackId} className="flex items-center justify-between py-1.5 border-b border-[var(--border-color)] last:border-0">
                   <div className="flex items-center gap-3 min-w-0">
-                    <span className={`text-xs font-bold font-mono w-5 text-right shrink-0 ${i === 0 ? 'text-[#fbbf24]' : i === 1 ? 'text-[#8892b0]' : i === 2 ? 'text-[#f97316]' : 'text-[#4a5568]'}`}>
+                    <span className={`text-xs font-bold font-mono w-5 text-right shrink-0 ${i === 0 ? 'text-[var(--accent-yellow)]' : i === 1 ? 'text-[var(--text-secondary)]' : i === 2 ? 'text-[var(--accent-orange)]' : 'text-[var(--text-secondary)]'}`}>
                       {i + 1}
                     </span>
                     <EntityLink type="group" attackId={g.attackId} name={g.name} />
                   </div>
-                  <span className="ml-2 text-sm font-semibold text-[#f97316] tabular-nums shrink-0">{g.techniqueCount}</span>
+                  <span className="ml-2 text-sm font-semibold text-[var(--accent-orange)] tabular-nums shrink-0">{g.techniqueCount}</span>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-[#8892b0] text-sm">No group data available.</p>
+            <p className="text-[var(--text-secondary)] text-sm">No group data available.</p>
           )}
         </div>
 
         {/* Most targeted techniques */}
-        <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5">
+        <div className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg p-5">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold text-[#ccd6f6]">
+            <h2 className="text-sm font-semibold text-[var(--text-primary)]">
               Most Targeted Techniques
             </h2>
-            <Link to="/techniques" className="text-xs text-[#64ffda] hover:underline">View all</Link>
+            <Link to="/techniques" className="text-xs text-[var(--accent-teal)] hover:underline">View all</Link>
           </div>
           {topTechniques.length > 0 ? (
             <div className="space-y-1">
               {topTechniques.map((t, i) => (
                 <div
                   key={t.attackId}
-                  className="flex items-center justify-between py-1.5 border-b border-[#2a2a4a] last:border-0"
+                  className="flex items-center justify-between py-1.5 border-b border-[var(--border-color)] last:border-0"
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <span
                       className={`
                         text-xs font-bold font-mono w-5 text-right shrink-0
-                        ${i === 0 ? 'text-[#fbbf24]' : i === 1 ? 'text-[#8892b0]' : i === 2 ? 'text-[#f97316]' : 'text-[#4a5568]'}
+                        ${i === 0 ? 'text-[var(--accent-yellow)]' : i === 1 ? 'text-[var(--text-secondary)]' : i === 2 ? 'text-[var(--accent-orange)]' : 'text-[var(--text-secondary)]'}
                       `}
                     >
                       {i + 1}
@@ -388,14 +388,14 @@ export function Dashboard() {
                       name={t.name}
                     />
                   </div>
-                  <span className="ml-2 text-sm font-semibold text-[#64ffda] tabular-nums shrink-0">
+                  <span className="ml-2 text-sm font-semibold text-[var(--accent-teal)] tabular-nums shrink-0">
                     {t.groupCount} groups
                   </span>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-[#8892b0] text-sm">No technique data available.</p>
+            <p className="text-[var(--text-secondary)] text-sm">No technique data available.</p>
           )}
         </div>
 
@@ -403,14 +403,14 @@ export function Dashboard() {
         <div className="flex flex-col gap-6">
 
           {/* Recent reports */}
-          <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5 flex-1">
+          <div className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg p-5 flex-1">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-semibold text-[#ccd6f6]">
+              <h2 className="text-sm font-semibold text-[var(--text-primary)]">
                 Recent Reports
               </h2>
               <Link
                 to="/cti/reports"
-                className="flex items-center gap-1 text-xs text-[#8892b0] hover:text-[#64ffda] transition-colors"
+                className="flex items-center gap-1 text-xs text-[var(--text-secondary)] hover:text-[var(--accent-teal)] transition-colors"
               >
                 All reports
                 <IconArrowRight />
@@ -421,15 +421,15 @@ export function Dashboard() {
               <div className="space-y-2.5">
                 {Array.from({ length: 4 }).map((_, i) => (
                   <div key={i} className="flex justify-between items-start animate-pulse">
-                    <div className="h-3 w-44 rounded bg-[#2a2a4a]" />
-                    <div className="h-3 w-10 rounded bg-[#2a2a4a]" />
+                    <div className="h-3 w-44 rounded bg-[var(--border-color)]" />
+                    <div className="h-3 w-10 rounded bg-[var(--border-color)]" />
                   </div>
                 ))}
               </div>
             ) : recentReports.length === 0 ? (
-              <p className="text-[#8892b0] text-xs">
+              <p className="text-[var(--text-secondary)] text-xs">
                 No recent reports. Trigger a{' '}
-                <Link to="/cti/feed-status" className="text-[#64ffda] hover:underline">
+                <Link to="/cti/feed-status" className="text-[var(--accent-teal)] hover:underline">
                   feed sync
                 </Link>
                 .
@@ -442,29 +442,29 @@ export function Dashboard() {
                       href={r.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-start justify-between gap-2 py-1.5 border-b border-[#2a2a4a] last:border-0"
+                      className="flex items-start justify-between gap-2 py-1.5 border-b border-[var(--border-color)] last:border-0"
                     >
                       <div className="min-w-0">
-                        <p className="text-xs text-[#ccd6f6] group-hover:text-[#64ffda] transition-colors line-clamp-2 leading-relaxed">
+                        <p className="text-xs text-[var(--text-primary)] group-hover:text-[var(--accent-teal)] transition-colors line-clamp-2 leading-relaxed">
                           {r.title}
                         </p>
                         <div className="flex items-center gap-2 mt-1">
                           <span
                             className={`
                               inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border
-                              ${SOURCE_COLOR[r.source] ?? 'text-[#8892b0] bg-[#8892b010] border-[#8892b030]'}
+                              ${SOURCE_COLOR[r.source] ?? 'text-[var(--text-secondary)] bg-[#8892b010] border-[#8892b030]'}
                             `}
                           >
                             {r.source}
                           </span>
                           {r.technique_count > 0 && (
-                            <span className="text-[10px] text-[#64ffda] font-mono">
+                            <span className="text-[10px] text-[var(--accent-teal)] font-mono">
                               {r.technique_count} ttps
                             </span>
                           )}
                         </div>
                       </div>
-                      <span className="text-[10px] text-[#8892b0] shrink-0 mt-0.5">
+                      <span className="text-[10px] text-[var(--text-secondary)] shrink-0 mt-0.5">
                         {formatReportDate(r.published_at)}
                       </span>
                     </a>
@@ -475,8 +475,8 @@ export function Dashboard() {
           </div>
 
           {/* Quick links */}
-          <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5">
-            <h2 className="text-sm font-semibold text-[#ccd6f6] mb-3">
+          <div className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg p-5">
+            <h2 className="text-sm font-semibold text-[var(--text-primary)] mb-3">
               Quick Links
             </h2>
             <div className="grid grid-cols-2 gap-2">
@@ -484,12 +484,12 @@ export function Dashboard() {
                 <Link
                   key={ql.href}
                   to={ql.href}
-                  className="flex flex-col gap-0.5 rounded-md px-3 py-2.5 border border-[#2a2a4a] hover:border-[#4a4a6a] hover:bg-[#ffffff06] transition-all group"
+                  className="flex flex-col gap-0.5 rounded-md px-3 py-2.5 border border-[var(--border-color)] hover:border-[var(--border-hover)] hover:bg-[var(--hover-overlay)] transition-all group"
                 >
                   <span className={`text-xs font-semibold ${ql.color} group-hover:brightness-110`}>
                     {ql.label}
                   </span>
-                  <span className="text-[10px] text-[#8892b0]">{ql.desc}</span>
+                  <span className="text-[10px] text-[var(--text-secondary)]">{ql.desc}</span>
                 </Link>
               ))}
             </div>
@@ -499,31 +499,31 @@ export function Dashboard() {
 
       {/* ── Charts row (bottom) ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5">
+        <div className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg p-5">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold text-[#ccd6f6]">Techniques per Tactic</h2>
-            <Link to="/tactics" className="flex items-center gap-1 text-xs text-[#8892b0] hover:text-[#fbbf24] transition-colors">
+            <h2 className="text-sm font-semibold text-[var(--text-primary)]">Techniques per Tactic</h2>
+            <Link to="/tactics" className="flex items-center gap-1 text-xs text-[var(--text-secondary)] hover:text-[var(--accent-yellow)] transition-colors">
               All tactics <IconArrowRight />
             </Link>
           </div>
-          <p className="text-xs text-[#8892b0] mb-3">Click a bar to explore that tactic</p>
+          <p className="text-xs text-[var(--text-secondary)] mb-3">Click a bar to explore that tactic</p>
           {tacticDistribution.length > 0 ? (
             <TacticBarChart data={tacticDistribution} onBarClick={(tacticId) => navigate(`/tactics/${tacticId}`)} />
           ) : (
-            <p className="text-[#8892b0] text-sm">No data available.</p>
+            <p className="text-[var(--text-secondary)] text-sm">No data available.</p>
           )}
         </div>
-        <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5">
+        <div className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg p-5">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold text-[#ccd6f6]">Groups by Sector</h2>
-            <Link to="/sectors" className="flex items-center gap-1 text-xs text-[#8892b0] hover:text-[#f472b6] transition-colors">
+            <h2 className="text-sm font-semibold text-[var(--text-primary)]">Groups by Sector</h2>
+            <Link to="/sectors" className="flex items-center gap-1 text-xs text-[var(--text-secondary)] hover:text-[var(--accent-pink)] transition-colors">
               All sectors <IconArrowRight />
             </Link>
           </div>
           {sectorBreakdown.length > 0 ? (
             <SectorPieChart data={sectorBreakdown} />
           ) : (
-            <p className="text-[#8892b0] text-sm">No sector data available.</p>
+            <p className="text-[var(--text-secondary)] text-sm">No sector data available.</p>
           )}
         </div>
       </div>

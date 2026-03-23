@@ -56,7 +56,7 @@ export function CampaignsList() {
       sortKey: 'attack_id',
       width: '120px',
       render: (row) => (
-        <span className="font-mono text-xs text-[#60a5fa]">{row.attackId}</span>
+        <span className="font-mono text-xs text-[var(--accent-blue)]">{row.attackId}</span>
       ),
     },
     {
@@ -78,7 +78,7 @@ export function CampaignsList() {
       sortKey: 'first_seen',
       width: '120px',
       render: (row) => (
-        <span className="text-sm text-[#8892b0]">{fmtDate(row.firstSeen)}</span>
+        <span className="text-sm text-[var(--text-secondary)]">{fmtDate(row.firstSeen)}</span>
       ),
     },
     {
@@ -87,7 +87,7 @@ export function CampaignsList() {
       sortKey: 'last_seen',
       width: '120px',
       render: (row) => (
-        <span className="text-sm text-[#8892b0]">{fmtDate(row.lastSeen)}</span>
+        <span className="text-sm text-[var(--text-secondary)]">{fmtDate(row.lastSeen)}</span>
       ),
     },
     {
@@ -96,7 +96,7 @@ export function CampaignsList() {
       width: '180px',
       render: (row) => {
         if (!row.firstSeen && !row.lastSeen) {
-          return <span className="text-[#8892b0] text-xs">—</span>;
+          return <span className="text-[var(--text-secondary)] text-xs">—</span>;
         }
         const now = new Date();
         const windowStart = new Date('2010-01-01').getTime();
@@ -107,9 +107,9 @@ export function CampaignsList() {
         const left = Math.max(0, ((start - windowStart) / range) * 100);
         const width = Math.max(1, Math.min(100 - left, ((end - start) / range) * 100));
         return (
-          <div className="relative h-3 rounded bg-[#0a0a1a] border border-[#2a2a4a] overflow-hidden">
+          <div className="relative h-3 rounded bg-[var(--surface-deep)] border border-[var(--border-color)] overflow-hidden">
             <div
-              className="absolute top-0.5 bottom-0.5 rounded bg-[#60a5fa] opacity-70"
+              className="absolute top-0.5 bottom-0.5 rounded bg-[var(--accent-blue)] opacity-70"
               style={{ left: `${left}%`, width: `${width}%` }}
             />
           </div>
@@ -128,7 +128,7 @@ export function CampaignsList() {
           placeholder="Search campaigns..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="min-w-[200px] px-3 py-1.5 rounded-md text-sm bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6] placeholder-[#8892b0] focus:outline-none focus:border-[#64ffda]"
+          className="min-w-[200px] px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent-teal)]"
         />
       </div>
 

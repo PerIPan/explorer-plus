@@ -9,6 +9,7 @@ import {
   Cell,
 } from 'recharts';
 import type { TacticDistribution } from '../../lib/types';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 interface TacticBarChartProps {
   data: TacticDistribution[];
@@ -16,13 +17,13 @@ interface TacticBarChartProps {
   onBarClick?: (tacticId: string) => void;
 }
 
-const TEAL = '#64ffda';
-
 /**
  * Horizontal bar chart showing technique count per tactic.
  * Bars are clickable when onBarClick is provided.
  */
 export function TacticBarChart({ data, onBarClick }: TacticBarChartProps) {
+  const c = useThemeColors();
+
   return (
     <ResponsiveContainer width="100%" height={320}>
       <BarChart
@@ -39,40 +40,40 @@ export function TacticBarChart({ data, onBarClick }: TacticBarChartProps) {
       >
         <CartesianGrid
           strokeDasharray="3 3"
-          stroke="#2a2a4a"
+          stroke={c.borderColor}
           horizontal={false}
         />
         <XAxis
           type="number"
-          tick={{ fill: '#8892b0', fontSize: 11 }}
-          axisLine={{ stroke: '#2a2a4a' }}
+          tick={{ fill: c.textSecondary, fontSize: 11 }}
+          axisLine={{ stroke: c.borderColor }}
           tickLine={false}
         />
         <YAxis
           type="category"
           dataKey="tacticName"
           width={130}
-          tick={{ fill: '#ccd6f6', fontSize: 11 }}
+          tick={{ fill: c.textPrimary, fontSize: 11 }}
           axisLine={false}
           tickLine={false}
         />
         <Tooltip
-          cursor={{ fill: '#64ffda08' }}
+          cursor={{ fill: `${c.accentTeal}08` }}
           contentStyle={{
-            background: '#16213e',
-            border: '1px solid #2a2a4a',
+            background: c.surfaceCard,
+            border: `1px solid ${c.borderColor}`,
             borderRadius: 6,
             fontSize: 12,
           }}
-          labelStyle={{ color: '#8892b0' }}
-          itemStyle={{ color: '#ccd6f6' }}
+          labelStyle={{ color: c.textSecondary }}
+          itemStyle={{ color: c.textPrimary }}
           formatter={(value) => [value, 'Techniques']}
         />
         <Bar dataKey="count" radius={[0, 4, 4, 0]}>
           {data.map((entry, i) => (
             <Cell
               key={entry.tacticName}
-              fill={TEAL}
+              fill={c.accentTeal}
               fillOpacity={0.7 + (i % 3) * 0.1}
             />
           ))}

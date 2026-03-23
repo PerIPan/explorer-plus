@@ -62,7 +62,7 @@ export function SoftwareList() {
       sortKey: 'attack_id',
       width: '120px',
       render: (row) => (
-        <span className="font-mono text-xs text-[#a78bfa]">{row.attackId}</span>
+        <span className="font-mono text-xs text-[var(--accent-purple)]">{row.attackId}</span>
       ),
     },
     {
@@ -103,7 +103,7 @@ export function SoftwareList() {
             )}
           </div>
         ) : (
-          <span className="text-[#8892b0] text-xs">—</span>
+          <span className="text-[var(--text-secondary)] text-xs">—</span>
         ),
     },
   ];
@@ -118,12 +118,12 @@ export function SoftwareList() {
           placeholder="Search software..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="min-w-[200px] px-3 py-1.5 rounded-md text-sm bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6] placeholder-[#8892b0] focus:outline-none focus:border-[#64ffda]"
+          className="min-w-[200px] px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent-teal)]"
         />
         <select
           value={type}
           onChange={(e) => setParam('type', e.target.value)}
-          className="min-w-[140px] px-3 py-1.5 rounded-md text-sm bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6] focus:outline-none focus:border-[#64ffda]"
+          className="min-w-[140px] px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-teal)]"
         >
           <option value="">All Types</option>
           <option value="malware">Malware</option>

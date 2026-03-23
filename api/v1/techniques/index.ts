@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { query } from '../lib/db.js';
 import { withHandler } from '../lib/middleware.js';
 import { buildSearchCondition, buildPaginationClause, buildSortClause } from '../lib/queries.js';
-import { paginationSchema } from '../lib/validate.js';
+import { paginationSchema, platformSchema } from '../lib/validate.js';
 import { z } from 'zod';
 
 // Map frontend sort keys to qualified SQL columns (avoids ambiguity with JOINs)
@@ -15,7 +15,7 @@ const SORT_MAP: Record<string, string> = {
 const querySchema = paginationSchema.extend({
   search: z.string().min(3).max(200).optional(),
   tactic: z.string().optional(),
-  platform: z.string().optional(),
+  platform: platformSchema.optional(),
   sector: z.string().max(50).optional(),
   include_deprecated: z.coerce.boolean().default(false),
 });

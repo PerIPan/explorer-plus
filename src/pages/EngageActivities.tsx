@@ -10,17 +10,17 @@ import type { EngageSummary } from '../lib/types';
 const FUSE_KEYS = ['engageName', 'engageDescription', 'goal', 'approach'];
 
 const GOAL_COLORS: Record<string, string> = {
-  Expose:  'bg-[#f9731618] text-[#f97316] border-[#f9731633]',
-  Affect:  'bg-[#f472b618] text-[#f472b6] border-[#f472b633]',
-  Elicit:  'bg-[#a78bfa18] text-[#a78bfa] border-[#a78bfa33]',
-  Prepare: 'bg-[#34d39918] text-[#34d399] border-[#34d39933]',
-  Understand: 'bg-[#60a5fa18] text-[#60a5fa] border-[#60a5fa33]',
+  Expose:  'bg-[var(--orange-faint)] text-[var(--accent-orange)] border-[var(--orange-dim)]',
+  Affect:  'bg-[var(--pink-faint)] text-[var(--accent-pink)] border-[var(--pink-dim)]',
+  Elicit:  'bg-[var(--purple-faint)] text-[var(--accent-purple)] border-[var(--purple-dim)]',
+  Prepare: 'bg-[var(--green-faint)] text-[var(--accent-green)] border-[var(--green-dim)]',
+  Understand: 'bg-[var(--blue-faint)] text-[var(--accent-blue)] border-[var(--blue-dim)]',
 };
 
 function GoalBadge({ goal }: { goal: string | null }) {
-  if (!goal) return <span className="text-[#8892b0] text-xs">—</span>;
+  if (!goal) return <span className="text-[var(--text-secondary)] text-xs">—</span>;
   const classes =
-    GOAL_COLORS[goal] ?? 'bg-[#ffffff08] text-[#8892b0] border-[#2a2a4a]';
+    GOAL_COLORS[goal] ?? 'bg-[var(--hover-overlay)] text-[var(--text-secondary)] border-[var(--border-color)]';
   return (
     <span
       className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${classes}`}
@@ -36,7 +36,7 @@ const columns: ColumnDef<EngageSummary>[] = [
     header: 'ID',
     width: '110px',
     render: (row) => (
-      <span className="font-mono text-sm text-[#64ffda]">{row.engageId}</span>
+      <span className="font-mono text-sm text-[var(--accent-teal)]">{row.engageId}</span>
     ),
   },
   {
@@ -44,9 +44,9 @@ const columns: ColumnDef<EngageSummary>[] = [
     header: 'Activity',
     render: (row) => (
       <div>
-        <div className="text-[#ccd6f6] text-sm">{row.engageName}</div>
+        <div className="text-[var(--text-primary)] text-sm">{row.engageName}</div>
         {row.engageDescription && (
-          <div className="text-[#8892b0] text-xs mt-0.5 line-clamp-2">
+          <div className="text-[var(--text-secondary)] text-xs mt-0.5 line-clamp-2">
             {row.engageDescription}
           </div>
         )}
@@ -67,7 +67,7 @@ const columns: ColumnDef<EngageSummary>[] = [
       row.approach ? (
         <Badge label={row.approach} variant="purple" />
       ) : (
-        <span className="text-[#8892b0] text-xs">—</span>
+        <span className="text-[var(--text-secondary)] text-xs">—</span>
       ),
   },
   {
@@ -76,7 +76,7 @@ const columns: ColumnDef<EngageSummary>[] = [
     width: '100px',
     align: 'center',
     render: (row) => (
-      <span className="text-[#ccd6f6] text-sm font-medium">{row.techniqueCount}</span>
+      <span className="text-[var(--text-primary)] text-sm font-medium">{row.techniqueCount}</span>
     ),
   },
 ];
@@ -123,7 +123,7 @@ export function EngageActivities() {
       />
 
       {/* Info banner */}
-      <div className="px-4 py-3 rounded-lg bg-[#16213e] border border-[#2a2a4a] text-sm text-[#8892b0]">
+      <div className="px-4 py-3 rounded-lg bg-[var(--surface-card)] border border-[var(--border-color)] text-sm text-[var(--text-secondary)]">
         MITRE Engage is a framework for planning and discussing adversary engagement operations.
         Activities are mapped to ATT&CK techniques to enable defenders to think about
         how to expose, affect, or elicit information from adversaries.{' '}
@@ -131,7 +131,7 @@ export function EngageActivities() {
           href="https://engage.mitre.org"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[#64ffda] hover:underline"
+          className="text-[var(--accent-teal)] hover:underline"
         >
           engage.mitre.org
         </a>
@@ -146,9 +146,9 @@ export function EngageActivities() {
           onChange={(e) => setSearch(e.target.value)}
           className="
             flex-1 min-w-[200px] max-w-sm px-3 py-2 rounded-md text-sm
-            bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6]
-            placeholder:text-[#4a5568]
-            focus:outline-none focus:ring-1 focus:ring-[#64ffda] focus:border-[#64ffda]
+            bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)]
+            placeholder:text-[var(--text-secondary)]
+            focus:outline-none focus:ring-1 focus:ring-[var(--accent-teal)] focus:border-[var(--accent-teal)]
           "
         />
         {uniqueGoals.length > 0 && (
@@ -157,8 +157,8 @@ export function EngageActivities() {
             onChange={(e) => setParam('goal', e.target.value)}
             className="
               px-3 py-2 rounded-md text-sm
-              bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6]
-              focus:outline-none focus:ring-1 focus:ring-[#64ffda] focus:border-[#64ffda]
+              bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)]
+              focus:outline-none focus:ring-1 focus:ring-[var(--accent-teal)] focus:border-[var(--accent-teal)]
             "
           >
             <option value="">All goals</option>

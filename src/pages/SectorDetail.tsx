@@ -13,8 +13,8 @@ export function SectorDetail() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64 text-[#8892b0]">
-        <span className="inline-block w-5 h-5 border-2 border-[#64ffda33] border-t-[#64ffda] rounded-full animate-spin mr-2" />
+      <div className="flex items-center justify-center h-64 text-[var(--text-secondary)]">
+        <span className="inline-block w-5 h-5 border-2 border-[var(--teal-dim)] border-t-[var(--accent-teal)] rounded-full animate-spin mr-2" />
         Loading...
       </div>
     );
@@ -22,7 +22,7 @@ export function SectorDetail() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-64 text-[#f97316]">
+      <div className="flex items-center justify-center h-64 text-[var(--accent-orange)]">
         Failed to load sector data.
       </div>
     );
@@ -40,10 +40,10 @@ export function SectorDetail() {
         ]}
       />
 
-      <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5">
-        <h3 className="text-sm font-semibold text-[#a8b2d8] uppercase tracking-wider mb-4">
+      <div className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg p-5">
+        <h3 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-4">
           Groups targeting this sector
-          <span className="ml-2 text-[#f97316] font-semibold normal-case text-sm">
+          <span className="ml-2 text-[var(--accent-orange)] font-semibold normal-case text-sm">
             ({groups.length})
           </span>
         </h3>
@@ -53,7 +53,7 @@ export function SectorDetail() {
             {groups.map((g) => (
               <div
                 key={g.attackId}
-                className="bg-[#1a1a2e] border border-[#2a2a4a] rounded-lg p-3 hover:border-[#f9731644] transition-colors"
+                className="bg-[var(--surface-base)] border border-[var(--border-color)] rounded-lg p-3 hover:border-[var(--orange-dim)] transition-colors"
               >
                 <EntityLink
                   type="group"
@@ -64,7 +64,7 @@ export function SectorDetail() {
             ))}
           </div>
         ) : (
-          <p className="text-[#8892b0] text-sm">No groups found for this sector.</p>
+          <p className="text-[var(--text-secondary)] text-sm">No groups found for this sector.</p>
         )}
       </div>
     </div>

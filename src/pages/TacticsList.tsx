@@ -26,7 +26,7 @@ export function TacticsList() {
       width: '50px',
       align: 'center',
       render: (row) => (
-        <span className="text-xs text-[#2a2a4a] font-mono">{row.sortOrder}</span>
+        <span className="text-xs text-[var(--border-color)] font-mono">{row.sortOrder}</span>
       ),
     },
     {
@@ -34,7 +34,7 @@ export function TacticsList() {
       header: 'ATT&CK ID',
       width: '120px',
       render: (row) => (
-        <span className="font-mono text-xs text-[#fbbf24]">{row.attackId}</span>
+        <span className="font-mono text-xs text-[var(--accent-yellow)]">{row.attackId}</span>
       ),
     },
     {

@@ -35,14 +35,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  // Auth via CRON_SECRET header
+  // Auth via CRON_SECRET header — required in production
   const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret) {
-    const provided = req.headers['x-cron-secret'] ?? req.headers['authorization'];
-    if (provided !== cronSecret && provided !== `Bearer ${cronSecret}`) {
-      res.status(401).json({ error: 'Unauthorized', code: 'UNAUTHORIZED' });
-      return;
-    }
+  if (!cronSecret) {
+    res.status(500).json({ error: 'Server misconfigured: CRON_SECRET not set' });
+    return;
+  }
+  const provided = req.headers['x-cron-secret'] ?? req.headers['authorization'];
+  if (provided !== cronSecret && provided !== `Bearer ${cronSecret}`) {
+    res.status(401).json({ error: 'Unauthorized', code: 'UNAUTHORIZED' });
+    return;
   }
 
   const { source } = req.query;
@@ -60,7 +62,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     await cronHandler(req, res);
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    res.status(500).json({ error: msg });
+    console.error(`[sync/${sourceKey}]`, err);
+    res.status(500).json({ error: 'Feed sync failed' });
   }
 }

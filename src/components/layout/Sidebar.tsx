@@ -76,8 +76,8 @@ function NavItemLink({ path, label, tooltip, end }: NavItem & { end?: boolean })
         [
           'block px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150',
           isActive
-            ? 'text-[#64ffda] bg-[#64ffda1a] border-l-2 border-[#64ffda]'
-            : 'text-[#8892b0] hover:text-[#ccd6f6] hover:bg-[#ffffff08]',
+            ? 'text-[var(--accent-teal)] bg-[var(--teal-faint)] border-l-2 border-[var(--accent-teal)]'
+            : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--hover-overlay)]',
         ].join(' ')
       }
     >
@@ -90,26 +90,26 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   return (
     <aside
       className={[
-        'fixed top-0 left-0 h-screen w-60 bg-[#16213e] border-r border-[#2a2a4a] flex flex-col z-50 overflow-y-auto',
+        'fixed top-0 left-0 h-screen w-60 bg-[var(--surface-card)] border-r border-[var(--border-color)] flex flex-col z-50 overflow-y-auto',
         'transition-transform duration-200 ease-in-out',
         open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
       ].join(' ')}
       aria-label="Main navigation"
     >
       {/* Logo / Title */}
-      <div className="px-4 py-5 border-b border-[#2a2a4a] flex items-center justify-between">
+      <div className="px-4 py-5 border-b border-[var(--border-color)] flex items-center justify-between">
         <Link to="/" className="group">
-          <div className="text-[#64ffda] font-bold text-sm tracking-widest uppercase group-hover:text-[#9efce5] transition-colors">
+          <div className="text-[var(--accent-teal)] font-bold text-sm tracking-widest uppercase group-hover:text-[var(--accent-teal-light)] transition-colors">
             MITRE ATT&amp;CK
           </div>
-          <div className="text-[#8892b0] text-xs mt-0.5 group-hover:text-[#ccd6f6] transition-colors">Explorer Plus</div>
+          <div className="text-[var(--text-secondary)] text-xs mt-0.5 group-hover:text-[var(--text-primary)] transition-colors">Explorer Plus</div>
         </Link>
         {/* Close button — visible only below lg */}
         <button
           type="button"
           aria-label="Close navigation menu"
           onClick={onClose}
-          className="lg:hidden p-1 rounded-md text-[#8892b0] hover:text-[#ccd6f6] hover:bg-[#ffffff08] transition-colors"
+          className="lg:hidden p-1 rounded-md text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--hover-overlay)] transition-colors"
         >
           <svg
             className="w-4 h-4"
@@ -127,14 +127,14 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       {/* Main Nav */}
       <nav
         className="flex-1 px-2 py-4 space-y-0.5 overflow-y-auto
-          [scrollbar-width:thin] [scrollbar-color:#2a2a4a_transparent]
+          [scrollbar-width:thin] [scrollbar-color:var(--border-color)_transparent]
           [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent
-          [&::-webkit-scrollbar-thumb]:bg-[#2a2a4a] [&::-webkit-scrollbar-thumb]:rounded-full"
+          [&::-webkit-scrollbar-thumb]:bg-[var(--border-color)] [&::-webkit-scrollbar-thumb]:rounded-full"
       >
         {mainSections.map((section, si) => (
-          <div key={si} className={si > 0 ? 'mt-3 pt-3 border-t border-[#2a2a4a33]' : ''}>
+          <div key={si} className={si > 0 ? 'mt-3 pt-3 border-t border-[var(--border-faint)]' : ''}>
             {section.label && (
-              <div className="px-3 mb-1.5 ml-1 border-l-2 border-[#64ffda44] pl-2 text-[11px] font-bold text-[#64ffda] uppercase tracking-widest">
+              <div className="px-3 mb-1.5 ml-1 border-l-2 border-[var(--teal-muted)] pl-2 text-[11px] font-bold text-[var(--accent-teal)] uppercase tracking-widest">
                 {section.label}
               </div>
             )}
@@ -146,11 +146,11 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       </nav>
 
       {/* Separator */}
-      <div className="mx-4 border-t border-[#2a2a4a]" />
+      <div className="mx-4 border-t border-[var(--border-color)]" />
 
       {/* CTI Section */}
       <div className="px-2 py-4">
-        <div className="px-3 mb-2 ml-1 border-l-2 border-[#64ffda44] pl-2 text-[11px] font-bold text-[#64ffda] uppercase tracking-widest">
+        <div className="px-3 mb-2 ml-1 border-l-2 border-[var(--teal-muted)] pl-2 text-[11px] font-bold text-[var(--accent-teal)] uppercase tracking-widest">
           CTI
         </div>
         <div className="space-y-0.5">
@@ -161,11 +161,11 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       </div>
 
       {/* Separator */}
-      <div className="mx-4 border-t border-[#2a2a4a]" />
+      <div className="mx-4 border-t border-[var(--border-color)]" />
 
       {/* Frameworks Section */}
       <div className="px-2 py-4">
-        <div className="px-3 mb-2 ml-1 border-l-2 border-[#64ffda44] pl-2 text-[11px] font-bold text-[#64ffda] uppercase tracking-widest" title="Not filtered by sector">
+        <div className="px-3 mb-2 ml-1 border-l-2 border-[var(--teal-muted)] pl-2 text-[11px] font-bold text-[var(--accent-teal)] uppercase tracking-widest" title="Not filtered by sector">
           Frameworks
         </div>
         <div className="space-y-0.5">
@@ -176,11 +176,11 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       </div>
 
       {/* Separator */}
-      <div className="mx-4 border-t border-[#2a2a4a]" />
+      <div className="mx-4 border-t border-[var(--border-color)]" />
 
       {/* Extended Intel Section */}
       <div className="px-2 py-4">
-        <div className="px-3 mb-2 ml-1 border-l-2 border-[#64ffda44] pl-2 text-[11px] font-bold text-[#64ffda] uppercase tracking-widest">
+        <div className="px-3 mb-2 ml-1 border-l-2 border-[var(--teal-muted)] pl-2 text-[11px] font-bold text-[var(--accent-teal)] uppercase tracking-widest">
           Extended Intel
         </div>
         <div className="space-y-0.5">

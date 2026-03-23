@@ -20,7 +20,7 @@ const PLATFORM_VARIANTS: Record<string, 'teal' | 'orange' | 'purple' | 'blue' | 
 };
 
 function PlatformBadges({ platforms }: { platforms: string[] | null }) {
-  if (!platforms?.length) return <span className="text-[#8892b0] text-xs">—</span>;
+  if (!platforms?.length) return <span className="text-[var(--text-secondary)] text-xs">—</span>;
   return (
     <div className="flex flex-wrap gap-1">
       {platforms.slice(0, 3).map((p) => (
@@ -133,14 +133,14 @@ export function TechniquesList() {
                 e.stopPropagation();
                 toggleExpand(row.attackId);
               }}
-              className="text-base text-[#64ffda] hover:text-[#9efce5] transition-colors leading-none"
+              className="text-base text-[var(--accent-teal)] hover:text-[var(--accent-teal-light)] transition-colors leading-none"
               aria-label={expandedParents.has(row.attackId) ? 'Collapse' : 'Expand'}
             >
               {expandedParents.has(row.attackId) ? '▾' : '▸'}
             </button>
           )}
           {row._isSubTechnique && <span className="w-4" />}
-          <span className={`font-mono text-xs ${row._isSubTechnique ? 'text-[#64ffda88]' : 'text-[#64ffda]'}`}>
+          <span className={`font-mono text-xs ${row._isSubTechnique ? 'text-[var(--accent-teal)]' : 'text-[var(--accent-teal)]'}`}>
             {row.attackId}
           </span>
         </div>
@@ -152,7 +152,7 @@ export function TechniquesList() {
       sortKey: 'name',
       render: (row) => (
         <div className={`flex items-center gap-2 ${row._isSubTechnique ? 'pl-4' : ''}`}>
-          <span className="text-[#ccd6f6]">{row.name}</span>
+          <span className="text-[var(--text-primary)]">{row.name}</span>
           {(row.isRevoked || row.isDeprecated) && (
             <DeprecatedBadge isRevoked={row.isRevoked} />
           )}
@@ -175,7 +175,7 @@ export function TechniquesList() {
             ))}
           </div>
         ) : (
-          <span className="text-[#8892b0] text-xs">—</span>
+          <span className="text-[var(--text-secondary)] text-xs">—</span>
         ),
     },
   ];
@@ -191,12 +191,12 @@ export function TechniquesList() {
           placeholder="Search techniques..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="min-w-[200px] px-3 py-1.5 rounded-md text-sm bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6] placeholder-[#8892b0] focus:outline-none focus:border-[#64ffda]"
+          className="min-w-[200px] px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent-teal)]"
         />
         <select
           value={tactic}
           onChange={(e) => setParam('tactic', e.target.value)}
-          className="min-w-[140px] px-3 py-1.5 rounded-md text-sm bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6] focus:outline-none focus:border-[#64ffda]"
+          className="min-w-[140px] px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-teal)]"
         >
           <option value="">All Tactics</option>
           {tacticOptions.map((t) => (
@@ -208,7 +208,7 @@ export function TechniquesList() {
         <select
           value={platform}
           onChange={(e) => setParam('platform', e.target.value)}
-          className="min-w-[140px] px-3 py-1.5 rounded-md text-sm bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6] focus:outline-none focus:border-[#64ffda]"
+          className="min-w-[140px] px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-teal)]"
         >
           <option value="">All Platforms</option>
           {['Windows', 'Linux', 'macOS', 'Cloud', 'Azure', 'Google Workspace', 'SaaS'].map((p) => (

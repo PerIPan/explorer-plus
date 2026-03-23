@@ -26,7 +26,7 @@ export function Matrix() {
         title="ATT&CK Matrix"
         subtitle="Techniques organized by tactic — click any cell to view details"
         actions={
-          <span className="text-[#8892b0] text-sm">
+          <span className="text-[var(--text-secondary)] text-sm">
             {totalTechniques} techniques across {(data ?? []).length} tactics
           </span>
         }
@@ -37,7 +37,7 @@ export function Matrix() {
         <div className="flex items-center gap-2 max-w-sm">
           <div className="relative flex-1">
             <svg
-              className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#8892b0]"
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--text-secondary)]"
               fill="none"
               stroke="currentColor"
               strokeWidth={2}
@@ -51,14 +51,14 @@ export function Matrix() {
               placeholder="Filter techniques by name or ID..."
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 rounded-md text-sm bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6] placeholder-[#8892b0] focus:outline-none focus:border-[#64ffda] transition-colors"
+              className="w-full pl-8 pr-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent-teal)] transition-colors"
             />
           </div>
           {inputValue && (
             <button
               type="button"
               onClick={() => { setInputValue(''); setFilterText(''); }}
-              className="text-xs text-[#8892b0] hover:text-[#ccd6f6] transition-colors"
+              className="text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
             >
               Clear
             </button>
@@ -67,14 +67,14 @@ export function Matrix() {
       )}
 
       {isLoading && (
-        <div className="flex items-center justify-center h-64 text-[#8892b0]">
-          <span className="inline-block w-5 h-5 border-2 border-[#64ffda33] border-t-[#64ffda] rounded-full animate-spin mr-2" />
+        <div className="flex items-center justify-center h-64 text-[var(--text-secondary)]">
+          <span className="inline-block w-5 h-5 border-2 border-[var(--teal-dim)] border-t-[var(--accent-teal)] rounded-full animate-spin mr-2" />
           Loading matrix...
         </div>
       )}
 
       {error && (
-        <div className="flex items-center justify-center h-64 text-[#f97316]">
+        <div className="flex items-center justify-center h-64 text-[var(--accent-orange)]">
           Failed to load matrix data.
         </div>
       )}

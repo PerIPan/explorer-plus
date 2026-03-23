@@ -8,16 +8,16 @@ import { Badge } from '../shared/Badge';
 // ── Level badge (reused pattern from TechniqueDetail) ─────────────────────────
 
 const LEVEL_COLORS: Record<string, string> = {
-  critical: 'bg-[#f472b618] text-[#f472b6] border-[#f472b633]',
-  high: 'bg-[#f9731618] text-[#f97316] border-[#f9731633]',
-  medium: 'bg-[#fbbf2418] text-[#fbbf24] border-[#fbbf2433]',
-  low: 'bg-[#60a5fa18] text-[#60a5fa] border-[#60a5fa33]',
-  informational: 'bg-[#34d39918] text-[#34d399] border-[#34d39933]',
+  critical: 'bg-[var(--pink-faint)] text-[var(--accent-pink)] border-[var(--pink-dim)]',
+  high: 'bg-[var(--orange-faint)] text-[var(--accent-orange)] border-[var(--orange-dim)]',
+  medium: 'bg-[var(--yellow-faint)] text-[var(--accent-yellow)] border-[var(--yellow-dim)]',
+  low: 'bg-[var(--blue-faint)] text-[var(--accent-blue)] border-[var(--blue-dim)]',
+  informational: 'bg-[var(--green-faint)] text-[var(--accent-green)] border-[var(--green-dim)]',
 };
 
 function LevelBadge({ level }: { level: string | null }) {
   if (!level) return null;
-  const cls = LEVEL_COLORS[level.toLowerCase()] ?? 'bg-[#ffffff08] text-[#8892b0] border-[#2a2a4a]';
+  const cls = LEVEL_COLORS[level.toLowerCase()] ?? 'bg-[var(--hover-overlay)] text-[var(--text-secondary)] border-[var(--border-color)]';
   return (
     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${cls}`}>
       {level}
@@ -39,21 +39,21 @@ function MapCard({ label, icon, count, defaultOpen = true, children }: MapCardPr
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div className="border border-[#2a2a4a] rounded-lg overflow-hidden">
+    <div className="border border-[var(--border-color)] rounded-lg overflow-hidden">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between px-4 py-3 bg-[#16213e] hover:bg-[#1a2a4a] transition-colors text-left gap-3"
+        className="w-full flex items-center justify-between px-4 py-3 bg-[var(--surface-card)] hover:bg-[var(--surface-base)] transition-colors text-left gap-3"
       >
         <div className="flex items-center gap-2">
-          <span className="text-[#64ffda] w-4 h-4 shrink-0">{icon}</span>
-          <span className="text-sm font-bold text-[#a8b2d8] uppercase tracking-wider">{label}</span>
+          <span className="text-[var(--accent-teal)] w-4 h-4 shrink-0">{icon}</span>
+          <span className="text-sm font-bold text-[var(--text-secondary)] uppercase tracking-wider">{label}</span>
           {count !== undefined && (
-            <span className="text-xs text-[#8892b0]">({count})</span>
+            <span className="text-xs text-[var(--text-secondary)]">({count})</span>
           )}
         </div>
         <svg
-          className={`w-4 h-4 text-[#8892b0] shrink-0 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+          className={`w-4 h-4 text-[var(--text-secondary)] shrink-0 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -63,7 +63,7 @@ function MapCard({ label, icon, count, defaultOpen = true, children }: MapCardPr
         </svg>
       </button>
       {open && (
-        <div className="px-4 py-4 bg-[#0f1929] space-y-3">
+        <div className="px-4 py-4 bg-[var(--surface-alt)] space-y-3">
           {children}
         </div>
       )}
@@ -75,7 +75,7 @@ function MapCard({ label, icon, count, defaultOpen = true, children }: MapCardPr
 function MapRow({ prefix, children }: { prefix: string; children: React.ReactNode }) {
   return (
     <div className="flex gap-3">
-      <span className="text-xs text-[#8892b0] w-32 shrink-0 pt-0.5">{prefix}</span>
+      <span className="text-xs text-[var(--text-secondary)] w-32 shrink-0 pt-0.5">{prefix}</span>
       <div className="flex-1 flex flex-wrap gap-1.5">{children}</div>
     </div>
   );
@@ -132,8 +132,8 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
 
   if (techLoading) {
     return (
-      <div className="flex items-center gap-2 text-[#8892b0] text-sm py-8 justify-center">
-        <span className="inline-block w-5 h-5 border-2 border-[#64ffda33] border-t-[#64ffda] rounded-full animate-spin" />
+      <div className="flex items-center gap-2 text-[var(--text-secondary)] text-sm py-8 justify-center">
+        <span className="inline-block w-5 h-5 border-2 border-[var(--teal-dim)] border-t-[var(--accent-teal)] rounded-full animate-spin" />
         Loading technique map...
       </div>
     );
@@ -141,7 +141,7 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
 
   if (techError || !technique) {
     return (
-      <div className="text-[#f97316] text-sm py-8 text-center">
+      <div className="text-[var(--accent-orange)] text-sm py-8 text-center">
         Failed to load technique data.
       </div>
     );
@@ -179,9 +179,9 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
     <div className="space-y-3">
       {/* Technique header */}
       <div className="pb-1">
-        <h2 className="text-lg font-semibold text-[#ccd6f6]">{technique.name}</h2>
+        <h2 className="text-lg font-semibold text-[var(--text-primary)]">{technique.name}</h2>
         <div className="flex flex-wrap items-center gap-2 mt-1">
-          <span className="font-mono text-xs text-[#64ffda] bg-[#64ffda18] border border-[#64ffda33] px-2 py-0.5 rounded">
+          <span className="font-mono text-xs text-[var(--accent-teal)] bg-[var(--teal-faint)] border border-[var(--teal-dim)] px-2 py-0.5 rounded">
             {technique.attackId}
           </span>
           {technique.tactics?.map((tactic) => (
@@ -204,7 +204,7 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
             </div>
           </MapRow>
         ) : (
-          <p className="text-xs text-[#8892b0]">No groups documented for this technique.</p>
+          <p className="text-xs text-[var(--text-secondary)]">No groups documented for this technique.</p>
         )}
         {campaigns.length > 0 && (
           <MapRow prefix="Campaigns">
@@ -240,7 +240,7 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
               <Badge label={`${sigmaRules.length} rules`} variant="teal" />
               {Object.entries(sigmaByLevel).map(([lvl, count]) => (
                 <span key={lvl} className="flex items-center gap-1">
-                  <span className="text-xs text-[#ccd6f6] font-mono">{count}</span>
+                  <span className="text-xs text-[var(--text-primary)] font-mono">{count}</span>
                   <LevelBadge level={lvl} />
                 </span>
               ))}
@@ -249,21 +249,21 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
         ) : (
           intelLoading ? (
             <MapRow prefix="Sigma Rules">
-              <span className="text-xs text-[#8892b0] italic">Loading...</span>
+              <span className="text-xs text-[var(--text-secondary)] italic">Loading...</span>
             </MapRow>
           ) : (
             <MapRow prefix="Sigma Rules">
-              <span className="text-xs text-[#8892b0]">No sigma rules in feed yet.</span>
+              <span className="text-xs text-[var(--text-secondary)]">No sigma rules in feed yet.</span>
             </MapRow>
           )
         )}
 
         {technique.detection && (
-          <div className="mt-2 pt-2 border-t border-[#2a2a4a]">
-            <p className="text-xs text-[#8892b0] font-semibold uppercase tracking-wider mb-1">
+          <div className="mt-2 pt-2 border-t border-[var(--border-color)]">
+            <p className="text-xs text-[var(--text-secondary)] font-semibold uppercase tracking-wider mb-1">
               Detection Notes
             </p>
-            <p className="text-xs text-[#a8b2d8] leading-relaxed line-clamp-4">
+            <p className="text-xs text-[var(--text-secondary)] leading-relaxed line-clamp-4">
               {technique.detection}
             </p>
           </div>
@@ -282,7 +282,7 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
           </MapRow>
         ) : (
           <MapRow prefix="Mitigations">
-            <span className="text-xs text-[#8892b0]">No mitigations linked.</span>
+            <span className="text-xs text-[var(--text-secondary)]">No mitigations linked.</span>
           </MapRow>
         )}
 
@@ -297,11 +297,11 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
         ) : (
           fwLoading ? (
             <MapRow prefix="NIST Controls">
-              <span className="text-xs text-[#8892b0] italic">Loading...</span>
+              <span className="text-xs text-[var(--text-secondary)] italic">Loading...</span>
             </MapRow>
           ) : (
             <MapRow prefix="NIST Controls">
-              <span className="text-xs text-[#8892b0]">No NIST controls mapped yet.</span>
+              <span className="text-xs text-[var(--text-secondary)]">No NIST controls mapped yet.</span>
             </MapRow>
           )
         )}
@@ -315,10 +315,10 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
           <MapRow prefix="MITRE Engage">
             {engageActivities.map((act) => (
               <div key={act.engageId} className="flex items-center gap-1">
-                <span className="font-mono text-xs text-[#64ffda] bg-[#64ffda0a] border border-[#64ffda22] px-1.5 py-0.5 rounded">
+                <span className="font-mono text-xs text-[var(--accent-teal)] bg-[var(--teal-ghost)] border border-[var(--teal-dim)] px-1.5 py-0.5 rounded">
                   {act.engageId}
                 </span>
-                <span className="text-xs text-[#ccd6f6]">{act.engageName}</span>
+                <span className="text-xs text-[var(--text-primary)]">{act.engageName}</span>
                 {act.goal && <Badge label={act.goal} variant="orange" />}
               </div>
             ))}
@@ -326,11 +326,11 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
         ) : (
           fwLoading ? (
             <MapRow prefix="MITRE Engage">
-              <span className="text-xs text-[#8892b0] italic">Loading...</span>
+              <span className="text-xs text-[var(--text-secondary)] italic">Loading...</span>
             </MapRow>
           ) : (
             <MapRow prefix="MITRE Engage">
-              <span className="text-xs text-[#8892b0]">No Engage activities mapped yet.</span>
+              <span className="text-xs text-[var(--text-secondary)]">No Engage activities mapped yet.</span>
             </MapRow>
           )
         )}
@@ -338,10 +338,10 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
           <MapRow prefix="D3FEND">
             {d3fendMappings.map((m) => (
               <div key={m.d3fend_id} className="flex items-center gap-1">
-                <span className="font-mono text-xs text-[#34d399] bg-[#34d3990a] border border-[#34d39922] px-1.5 py-0.5 rounded">
+                <span className="font-mono text-xs text-[var(--accent-green)] bg-[var(--green-faint)] border border-[var(--green-dim)] px-1.5 py-0.5 rounded">
                   {m.d3fend_id}
                 </span>
-                <span className="text-xs text-[#ccd6f6]">{m.d3fend_label}</span>
+                <span className="text-xs text-[var(--text-primary)]">{m.d3fend_label}</span>
                 {m.d3fend_tactic && <Badge label={m.d3fend_tactic} variant="green" />}
               </div>
             ))}
@@ -349,16 +349,16 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
         ) : (
           intelLoading ? (
             <MapRow prefix="D3FEND">
-              <span className="text-xs text-[#8892b0] italic">Loading...</span>
+              <span className="text-xs text-[var(--text-secondary)] italic">Loading...</span>
             </MapRow>
           ) : (
             <MapRow prefix="D3FEND">
-              <span className="text-xs text-[#8892b0]">No D3FEND mappings yet.</span>
+              <span className="text-xs text-[var(--text-secondary)]">No D3FEND mappings yet.</span>
             </MapRow>
           )
         )}
         <MapRow prefix="RE&CT">
-          <Link to="/frameworks/react" className="text-xs text-[#64ffda] hover:underline">
+          <Link to="/frameworks/react" className="text-xs text-[var(--accent-teal)] hover:underline">
             Browse response actions
           </Link>
         </MapRow>
@@ -380,12 +380,12 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
               {atomicTests.map((test) => (
                 <div
                   key={test.id}
-                  className="flex items-center gap-2 py-1.5 px-3 rounded-md bg-[#16213e] border border-[#2a2a4a]"
+                  className="flex items-center gap-2 py-1.5 px-3 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)]"
                 >
-                  <span className="font-mono text-xs text-[#64ffda] shrink-0">
+                  <span className="font-mono text-xs text-[var(--accent-teal)] shrink-0">
                     #{test.test_number}
                   </span>
-                  <span className="text-xs text-[#ccd6f6] flex-1 truncate">{test.name}</span>
+                  <span className="text-xs text-[var(--text-primary)] flex-1 truncate">{test.name}</span>
                   {test.executor_type && (
                     <Badge label={test.executor_type} variant="purple" />
                   )}
@@ -396,11 +396,11 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
         ) : (
           intelLoading ? (
             <MapRow prefix="Atomic Red Team">
-              <span className="text-xs text-[#8892b0] italic">Loading...</span>
+              <span className="text-xs text-[var(--text-secondary)] italic">Loading...</span>
             </MapRow>
           ) : (
             <MapRow prefix="Atomic Red Team">
-              <span className="text-xs text-[#8892b0]">No atomic tests in feed yet.</span>
+              <span className="text-xs text-[var(--text-secondary)]">No atomic tests in feed yet.</span>
             </MapRow>
           )
         )}
@@ -419,12 +419,12 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
                     href={r.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 py-1.5 px-3 rounded-md bg-[#16213e] border border-[#2a2a4a] hover:border-[#64ffda33] transition-colors group"
+                    className="flex items-center gap-2 py-1.5 px-3 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)] hover:border-[var(--teal-dim)] transition-colors group"
                   >
-                    <span className="text-xs text-[#ccd6f6] group-hover:text-[#64ffda] flex-1 truncate">{r.title}</span>
+                    <span className="text-xs text-[var(--text-primary)] group-hover:text-[var(--accent-teal)] flex-1 truncate">{r.title}</span>
                     <Badge label={r.source} variant="neutral" />
                     {r.published_at && (
-                      <span className="text-[10px] text-[#8892b0] shrink-0">
+                      <span className="text-[10px] text-[var(--text-secondary)] shrink-0">
                         {new Date(r.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </span>
                     )}
@@ -434,11 +434,11 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
             ) : (
               intelLoading ? (
                 <MapRow prefix="Reports">
-                  <span className="text-xs text-[#8892b0] italic">Loading...</span>
+                  <span className="text-xs text-[var(--text-secondary)] italic">Loading...</span>
                 </MapRow>
               ) : (
                 <MapRow prefix="Reports">
-                  <span className="text-xs text-[#8892b0]">No threat reports linked yet.</span>
+                  <span className="text-xs text-[var(--text-secondary)]">No threat reports linked yet.</span>
                 </MapRow>
               )
             )}

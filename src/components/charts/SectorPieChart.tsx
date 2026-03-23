@@ -7,28 +7,23 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import type { SectorBreakdown } from '../../lib/types';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 interface SectorPieChartProps {
   data: SectorBreakdown[];
 }
 
-const COLORS = [
-  '#64ffda',
-  '#f97316',
-  '#a78bfa',
-  '#60a5fa',
-  '#34d399',
-  '#f472b6',
-  '#fbbf24',
-  '#4ade80',
-  '#fb7185',
-  '#38bdf8',
-];
-
 /**
  * Pie chart showing group distribution by sector.
  */
 export function SectorPieChart({ data }: SectorPieChartProps) {
+  const c = useThemeColors();
+  const COLORS = [
+    c.accentTeal, c.accentOrange, c.accentPurple, c.accentBlue,
+    c.accentGreen, c.accentPink, c.accentYellow,
+    '#4ade80', '#fb7185', '#38bdf8',
+  ];
+
   const chartData = data.map((d) => ({
     name: d.sectorName,
     value: d.groupCount,
@@ -50,25 +45,25 @@ export function SectorPieChart({ data }: SectorPieChartProps) {
               key={entry.name}
               fill={COLORS[i % COLORS.length]}
               fillOpacity={0.85}
-              stroke="#0a0a1a"
+              stroke={c.surfaceDeep}
               strokeWidth={2}
             />
           ))}
         </Pie>
         <Tooltip
           contentStyle={{
-            background: '#16213e',
-            border: '1px solid #2a2a4a',
+            background: c.surfaceCard,
+            border: `1px solid ${c.borderColor}`,
             borderRadius: 6,
             fontSize: 12,
           }}
-          labelStyle={{ color: '#8892b0' }}
-          itemStyle={{ color: '#ccd6f6' }}
+          labelStyle={{ color: c.textSecondary }}
+          itemStyle={{ color: c.textPrimary }}
           formatter={(value: any, name: any) => [value, name]}
         />
         <Legend
           formatter={(value: string) => (
-            <span style={{ color: '#8892b0', fontSize: 11 }}>{value}</span>
+            <span style={{ color: c.textSecondary, fontSize: 11 }}>{value}</span>
           )}
         />
       </PieChart>

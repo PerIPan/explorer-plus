@@ -35,14 +35,14 @@ const columns: ColumnDef<NistControlSummary>[] = [
     header: 'Control ID',
     width: '120px',
     render: (row) => (
-      <span className="font-mono text-sm text-[#64ffda]">{row.controlId}</span>
+      <span className="font-mono text-sm text-[var(--accent-teal)]">{row.controlId}</span>
     ),
   },
   {
     key: 'controlName',
     header: 'Control Name',
     render: (row) => (
-      <span className="text-[#ccd6f6] text-sm">{row.controlName ?? '—'}</span>
+      <span className="text-[var(--text-primary)] text-sm">{row.controlName ?? '—'}</span>
     ),
   },
   {
@@ -53,7 +53,7 @@ const columns: ColumnDef<NistControlSummary>[] = [
       row.controlFamily ? (
         <Badge label={row.controlFamily} variant="blue" />
       ) : (
-        <span className="text-[#8892b0] text-xs">—</span>
+        <span className="text-[var(--text-secondary)] text-xs">—</span>
       ),
   },
   {
@@ -62,7 +62,7 @@ const columns: ColumnDef<NistControlSummary>[] = [
     width: '100px',
     align: 'center',
     render: (row) => (
-      <span className="text-[#ccd6f6] text-sm font-medium">{row.techniqueCount}</span>
+      <span className="text-[var(--text-primary)] text-sm font-medium">{row.techniqueCount}</span>
     ),
   },
 ];
@@ -108,9 +108,9 @@ export function NistControls() {
           onChange={(e) => setParam('search', e.target.value)}
           className="
             flex-1 min-w-[200px] max-w-sm px-3 py-2 rounded-md text-sm
-            bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6]
-            placeholder:text-[#4a5568]
-            focus:outline-none focus:ring-1 focus:ring-[#64ffda] focus:border-[#64ffda]
+            bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)]
+            placeholder:text-[var(--text-secondary)]
+            focus:outline-none focus:ring-1 focus:ring-[var(--accent-teal)] focus:border-[var(--accent-teal)]
           "
         />
         <select
@@ -118,8 +118,8 @@ export function NistControls() {
           onChange={(e) => setParam('family', e.target.value)}
           className="
             px-3 py-2 rounded-md text-sm
-            bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6]
-            focus:outline-none focus:ring-1 focus:ring-[#64ffda] focus:border-[#64ffda]
+            bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)]
+            focus:outline-none focus:ring-1 focus:ring-[var(--accent-teal)] focus:border-[var(--accent-teal)]
           "
         >
           <option value="">All families</option>

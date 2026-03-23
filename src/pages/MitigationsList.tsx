@@ -57,7 +57,7 @@ export function MitigationsList() {
       sortKey: 'attack_id',
       width: '120px',
       render: (row) => (
-        <span className="font-mono text-xs text-[#34d399]">{row.attackId}</span>
+        <span className="font-mono text-xs text-[var(--accent-green)]">{row.attackId}</span>
       ),
     },
     {
@@ -85,7 +85,7 @@ export function MitigationsList() {
           placeholder="Search mitigations..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="min-w-[200px] px-3 py-1.5 rounded-md text-sm bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6] placeholder-[#8892b0] focus:outline-none focus:border-[#64ffda]"
+          className="min-w-[200px] px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent-teal)]"
         />
       </div>
 

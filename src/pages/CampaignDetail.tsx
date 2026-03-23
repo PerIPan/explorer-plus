@@ -20,8 +20,8 @@ export function CampaignDetail() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64 text-[#8892b0]">
-        <span className="inline-block w-5 h-5 border-2 border-[#64ffda33] border-t-[#64ffda] rounded-full animate-spin mr-2" />
+      <div className="flex items-center justify-center h-64 text-[var(--text-secondary)]">
+        <span className="inline-block w-5 h-5 border-2 border-[var(--teal-dim)] border-t-[var(--accent-teal)] rounded-full animate-spin mr-2" />
         Loading...
       </div>
     );
@@ -29,7 +29,7 @@ export function CampaignDetail() {
 
   if (error || !data) {
     return (
-      <div className="flex items-center justify-center h-64 text-[#f97316]">
+      <div className="flex items-center justify-center h-64 text-[var(--accent-orange)]">
         Campaign not found.
       </div>
     );
@@ -52,7 +52,7 @@ export function CampaignDetail() {
             {(data.isRevoked || data.isDeprecated) && (
               <DeprecatedBadge isRevoked={data.isRevoked} />
             )}
-            <span className="font-mono text-xs text-[#60a5fa] bg-[#60a5fa18] border border-[#60a5fa33] px-2 py-1 rounded">
+            <span className="font-mono text-xs text-[var(--accent-blue)] bg-[var(--blue-faint)] border border-[var(--blue-dim)] px-2 py-1 rounded">
               {data.attackId}
             </span>
           </div>
@@ -61,21 +61,21 @@ export function CampaignDetail() {
 
       {/* Timeline card — only render when at least one date exists (FIX 25) */}
       {(data.firstSeen || data.lastSeen) && (
-        <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5">
-          <h3 className="text-sm font-semibold text-[#8892b0] uppercase tracking-wider mb-3">
+        <div className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg p-5">
+          <h3 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-3">
             Timeline
           </h3>
           <div className="flex gap-8 text-sm mb-3">
             {data.firstSeen && (
               <div>
-                <span className="text-[#8892b0]">First Seen: </span>
-                <span className="text-[#ccd6f6]">{fmtDate(data.firstSeen)}</span>
+                <span className="text-[var(--text-secondary)]">First Seen: </span>
+                <span className="text-[var(--text-primary)]">{fmtDate(data.firstSeen)}</span>
               </div>
             )}
             {data.lastSeen && (
               <div>
-                <span className="text-[#8892b0]">Last Seen: </span>
-                <span className="text-[#ccd6f6]">{fmtDate(data.lastSeen)}</span>
+                <span className="text-[var(--text-secondary)]">Last Seen: </span>
+                <span className="text-[var(--text-primary)]">{fmtDate(data.lastSeen)}</span>
               </div>
             )}
           </div>
@@ -89,8 +89,8 @@ export function CampaignDetail() {
 
       {/* Aliases */}
       {data.aliases?.length ? (
-        <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5">
-          <h3 className="text-sm font-semibold text-[#a8b2d8] uppercase tracking-wider mb-3">
+        <div className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg p-5">
+          <h3 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-3">
             Aliases
           </h3>
           <div className="flex flex-wrap gap-1.5">
@@ -103,32 +103,32 @@ export function CampaignDetail() {
 
       {/* Description */}
       {description && (
-        <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5">
-          <h3 className="text-sm font-semibold text-[#a8b2d8] uppercase tracking-wider mb-3">
+        <div className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg p-5">
+          <h3 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-3">
             Description
           </h3>
-          <p className="text-[#ccd6f6] text-sm leading-relaxed whitespace-pre-wrap">
+          <p className="text-[var(--text-primary)] text-sm leading-relaxed whitespace-pre-wrap">
             {description}
           </p>
         </div>
       )}
 
       {/* Relationships — FIX 23 */}
-      <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5">
+      <div className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg p-5">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold text-[#8892b0] uppercase tracking-wider">
+          <h3 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
             Relationships
           </h3>
           <Link
             to={`/relationships?entity=${data.attackId}`}
-            className="text-xs text-[#64ffda] hover:underline"
+            className="text-xs text-[var(--accent-teal)] hover:underline"
           >
             View full graph &rarr;
           </Link>
         </div>
-        <p className="text-sm text-[#8892b0]">
+        <p className="text-sm text-[var(--text-secondary)]">
           Explore techniques, groups, and software for{' '}
-          <span className="text-[#ccd6f6] font-medium">{data.name}</span>{' '}
+          <span className="text-[var(--text-primary)] font-medium">{data.name}</span>{' '}
           in the Relationships Explorer.
         </p>
       </div>

@@ -13,8 +13,8 @@ export function GraphTooltip({ x, y, content }: GraphTooltipProps) {
     <div
       className="
         fixed z-50 pointer-events-none
-        bg-[#16213e] border border-[#2a2a4a] rounded-lg
-        px-3 py-2 text-xs text-[#ccd6f6]
+        bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg
+        px-3 py-2 text-xs text-[var(--text-primary)]
         shadow-xl max-w-[220px]
       "
       style={{

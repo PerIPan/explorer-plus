@@ -111,7 +111,7 @@ export function SearchBar() {
   return (
     <form onSubmit={handleSubmit} role="search" className="relative w-full max-w-xl">
       {/* Search icon */}
-      <span aria-hidden="true" className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8892b0] pointer-events-none">
+      <span aria-hidden="true" className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] pointer-events-none">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="11" cy="11" r="8" />
           <path d="m21 21-4.35-4.35" />
@@ -129,22 +129,22 @@ export function SearchBar() {
         aria-label="Search MITRE ATT&CK entities"
         className="
           w-full pl-9 pr-16 py-2 rounded-md text-sm
-          bg-[#16213e] border border-[#2a2a4a]
-          text-[#ccd6f6] placeholder-[#8892b0]
-          focus:outline-none focus:border-[#64ffda] focus:ring-1 focus:ring-[#64ffda33]
+          bg-[var(--surface-card)] border border-[var(--border-color)]
+          text-[var(--text-primary)] placeholder-[var(--text-secondary)]
+          focus:outline-none focus:border-[var(--accent-teal)] focus:ring-1 focus:ring-[#64ffda33]
           transition-colors duration-150
         "
       />
 
       {/* Keyboard hint */}
-      <span aria-hidden="true" className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8892b0] text-xs border border-[#2a2a4a] rounded px-1 py-0.5 font-mono">
+      <span aria-hidden="true" className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] text-xs border border-[var(--border-color)] rounded px-1 py-0.5 font-mono">
         /
       </span>
 
       {/* Fuse.js dropdown */}
       {showDropdown && suggestions.length > 0 && (
-        <div className="absolute top-full mt-1 w-full z-50 bg-[#16213e] border border-[#2a2a4a] rounded-lg shadow-2xl overflow-hidden max-h-80 overflow-y-auto">
-          <div className="px-3 py-1.5 text-[10px] uppercase tracking-wider text-[#8892b0] bg-[#0a0a1a]">
+        <div className="absolute top-full mt-1 w-full z-50 bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg shadow-2xl overflow-hidden max-h-80 overflow-y-auto">
+          <div className="px-3 py-1.5 text-[10px] uppercase tracking-wider text-[var(--text-secondary)] bg-[var(--surface-deep)]">
             {suggestions.length} results
           </div>
           {suggestions.map((s, i) => (
@@ -152,14 +152,14 @@ export function SearchBar() {
               key={s.attackId}
               type="button"
               onMouseDown={() => navigateToEntity(s.attackId, s.type)}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-[#64ffda10] transition-colors text-left ${i === 0 ? 'bg-[#ffffff05]' : ''}`}
+              className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-[var(--teal-ghost)] transition-colors text-left ${i === 0 ? 'bg-[var(--hover-subtle)]' : ''}`}
             >
               <Badge
                 label={s.type.replace('_', ' ')}
                 variant={TYPE_VARIANT[s.type] ?? 'neutral'}
               />
-              <span className="font-mono text-xs text-[#64ffda] w-20 flex-shrink-0">{s.attackId}</span>
-              <span className="text-sm text-[#ccd6f6] truncate">{s.name}</span>
+              <span className="font-mono text-xs text-[var(--accent-teal)] w-20 flex-shrink-0">{s.attackId}</span>
+              <span className="text-sm text-[var(--text-primary)] truncate">{s.name}</span>
             </button>
           ))}
         </div>

@@ -9,6 +9,7 @@ import {
   Cell,
 } from 'recharts';
 import type { TopGroup } from '../../lib/types';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 interface GroupTechniqueChartProps {
   data: TopGroup[];
@@ -21,6 +22,8 @@ interface GroupTechniqueChartProps {
  * Bars are clickable when onBarClick is provided.
  */
 export function GroupTechniqueChart({ data, onBarClick }: GroupTechniqueChartProps) {
+  const c = useThemeColors();
+
   return (
     <ResponsiveContainer width="100%" height={280}>
       <BarChart
@@ -37,38 +40,38 @@ export function GroupTechniqueChart({ data, onBarClick }: GroupTechniqueChartPro
       >
         <CartesianGrid
           strokeDasharray="3 3"
-          stroke="#2a2a4a"
+          stroke={c.borderColor}
           horizontal={false}
         />
         <XAxis
           type="number"
-          tick={{ fill: '#8892b0', fontSize: 11 }}
-          axisLine={{ stroke: '#2a2a4a' }}
+          tick={{ fill: c.textSecondary, fontSize: 11 }}
+          axisLine={{ stroke: c.borderColor }}
           tickLine={false}
         />
         <YAxis
           type="category"
           dataKey="name"
           width={100}
-          tick={{ fill: '#ccd6f6', fontSize: 11 }}
+          tick={{ fill: c.textPrimary, fontSize: 11 }}
           axisLine={false}
           tickLine={false}
         />
         <Tooltip
-          cursor={{ fill: '#f9731608' }}
+          cursor={{ fill: `${c.accentOrange}08` }}
           contentStyle={{
-            background: '#16213e',
-            border: '1px solid #2a2a4a',
+            background: c.surfaceCard,
+            border: `1px solid ${c.borderColor}`,
             borderRadius: 6,
             fontSize: 12,
           }}
-          labelStyle={{ color: '#8892b0' }}
-          itemStyle={{ color: '#ccd6f6' }}
+          labelStyle={{ color: c.textSecondary }}
+          itemStyle={{ color: c.textPrimary }}
           formatter={(value) => [value, 'Techniques']}
         />
         <Bar dataKey="techniqueCount" radius={[0, 4, 4, 0]}>
           {data.map((entry, i) => (
-            <Cell key={entry.attackId} fill="#f97316" fillOpacity={0.75 + (i % 4) * 0.05} />
+            <Cell key={entry.attackId} fill={c.accentOrange} fillOpacity={0.75 + (i % 4) * 0.05} />
           ))}
         </Bar>
       </BarChart>

@@ -10,17 +10,17 @@ import type { SigmaRule } from '../lib/types';
 
 // Override yellow specifically using className
 function LevelBadge({ level }: { level: string | null }) {
-  if (!level) return <span className="text-[#8892b0] text-xs">—</span>;
+  if (!level) return <span className="text-[var(--text-secondary)] text-xs">—</span>;
 
   const colorMap: Record<string, string> = {
-    critical: 'bg-[#f472b618] text-[#f472b6] border-[#f472b633]',
-    high: 'bg-[#f9731618] text-[#f97316] border-[#f9731633]',
-    medium: 'bg-[#fbbf2418] text-[#fbbf24] border-[#fbbf2433]',
-    low: 'bg-[#60a5fa18] text-[#60a5fa] border-[#60a5fa33]',
-    informational: 'bg-[#34d39918] text-[#34d399] border-[#34d39933]',
+    critical: 'bg-[var(--pink-faint)] text-[var(--accent-pink)] border-[var(--pink-dim)]',
+    high: 'bg-[var(--orange-faint)] text-[var(--accent-orange)] border-[var(--orange-dim)]',
+    medium: 'bg-[var(--yellow-faint)] text-[var(--accent-yellow)] border-[var(--yellow-dim)]',
+    low: 'bg-[var(--blue-faint)] text-[var(--accent-blue)] border-[var(--blue-dim)]',
+    informational: 'bg-[var(--green-faint)] text-[var(--accent-green)] border-[var(--green-dim)]',
   };
 
-  const classes = colorMap[level.toLowerCase()] ?? 'bg-[#ffffff08] text-[#8892b0] border-[#2a2a4a]';
+  const classes = colorMap[level.toLowerCase()] ?? 'bg-[var(--hover-overlay)] text-[var(--text-secondary)] border-[var(--border-color)]';
 
   return (
     <span
@@ -40,8 +40,8 @@ const columns: ColumnDef<SigmaRule>[] = [
     sortKey: 'title',
     render: (row) => (
       <div>
-        <span className="text-[#ccd6f6]">{row.title}</span>
-        <div className="text-[#8892b0] text-xs font-mono mt-0.5">{row.sigma_id}</div>
+        <span className="text-[var(--text-primary)]">{row.title}</span>
+        <div className="text-[var(--text-secondary)] text-xs font-mono mt-0.5">{row.sigma_id}</div>
       </div>
     ),
   },
@@ -57,7 +57,7 @@ const columns: ColumnDef<SigmaRule>[] = [
           name={row.technique_name}
         />
       ) : (
-        <span className="text-[#8892b0] text-xs">—</span>
+        <span className="text-[var(--text-secondary)] text-xs">—</span>
       ),
   },
   {
@@ -74,7 +74,7 @@ const columns: ColumnDef<SigmaRule>[] = [
       row.status ? (
         <Badge label={row.status} variant="neutral" />
       ) : (
-        <span className="text-[#8892b0] text-xs">—</span>
+        <span className="text-[var(--text-secondary)] text-xs">—</span>
       ),
   },
   {
@@ -84,9 +84,9 @@ const columns: ColumnDef<SigmaRule>[] = [
     render: (row) => {
       const parts = [row.logsource_product, row.logsource_category].filter(Boolean).join(' / ');
       return parts ? (
-        <span className="text-[#8892b0] text-xs">{parts}</span>
+        <span className="text-[var(--text-secondary)] text-xs">{parts}</span>
       ) : (
-        <span className="text-[#8892b0] text-xs">—</span>
+        <span className="text-[var(--text-secondary)] text-xs">—</span>
       );
     },
   },
@@ -137,7 +137,7 @@ export function SigmaList() {
           placeholder="Search rules..."
           value={q}
           onChange={(e) => setParam('q', e.target.value)}
-          className="min-w-[200px] px-3 py-1.5 rounded-md text-sm bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6] placeholder-[#8892b0] focus:outline-none focus:border-[#64ffda]"
+          className="min-w-[200px] px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent-teal)]"
         />
         <div className="flex flex-col gap-1">
           <input
@@ -145,14 +145,14 @@ export function SigmaList() {
             placeholder="Technique ID (e.g. T1059)"
             value={technique}
             onChange={(e) => setParam('technique', e.target.value)}
-            className="min-w-[200px] px-3 py-1.5 rounded-md text-sm bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6] placeholder-[#8892b0] focus:outline-none focus:border-[#64ffda]"
+            className="min-w-[200px] px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent-teal)]"
           />
-          <span className="text-[10px] text-[#8892b0]">Enter exact ID, e.g. T1059.001</span>
+          <span className="text-[10px] text-[var(--text-secondary)]">Enter exact ID, e.g. T1059.001</span>
         </div>
         <select
           value={level}
           onChange={(e) => setParam('level', e.target.value)}
-          className="min-w-[140px] px-3 py-1.5 rounded-md text-sm bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6] focus:outline-none focus:border-[#64ffda]"
+          className="min-w-[140px] px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-teal)]"
         >
           <option value="">All Levels</option>
           {LEVELS.map((l) => (

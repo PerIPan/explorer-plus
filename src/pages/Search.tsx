@@ -15,13 +15,13 @@ const ENTITY_PATH: Record<EntityType, string> = {
 };
 
 const ENTITY_COLOR: Record<EntityType, string> = {
-  technique: 'text-[#64ffda]',
-  group: 'text-[#f97316]',
-  software: 'text-[#a78bfa]',
-  mitigation: 'text-[#34d399]',
-  campaign: 'text-[#60a5fa]',
-  data_source: 'text-[#f472b6]',
-  tactic: 'text-[#fbbf24]',
+  technique: 'text-[var(--accent-teal)]',
+  group: 'text-[var(--accent-orange)]',
+  software: 'text-[var(--accent-purple)]',
+  mitigation: 'text-[var(--accent-green)]',
+  campaign: 'text-[var(--accent-blue)]',
+  data_source: 'text-[var(--accent-pink)]',
+  tactic: 'text-[var(--accent-yellow)]',
 };
 
 const EXAMPLE_CHIPS = ['APT29', 'T1059', 'Mimikatz', 'Phishing'];
@@ -29,10 +29,10 @@ const EXAMPLE_CHIPS = ['APT29', 'T1059', 'Mimikatz', 'Phishing'];
 function SectionHeader({ label, count }: { label: string; count: number }) {
   return (
     <div className="flex items-center gap-3 mb-2">
-      <h2 className="text-sm font-semibold text-[#ccd6f6] uppercase tracking-wider">
+      <h2 className="text-sm font-semibold text-[var(--text-primary)] uppercase tracking-wider">
         {label}
       </h2>
-      <span className="text-xs font-semibold text-[#64ffda] bg-[#64ffda18] border border-[#64ffda33] px-2 py-0.5 rounded-full tabular-nums">
+      <span className="text-xs font-semibold text-[var(--accent-teal)] bg-[var(--teal-faint)] border border-[var(--teal-dim)] px-2 py-0.5 rounded-full tabular-nums">
         {count}
       </span>
     </div>
@@ -56,12 +56,12 @@ function ResultRow({
   return (
     <Link
       to={`/${path}/${attackId}`}
-      className="flex items-center gap-3 py-2 px-3 rounded-md hover:bg-[#64ffda0a] transition-colors duration-100 group"
+      className="flex items-center gap-3 py-2 px-3 rounded-md hover:bg-[var(--teal-ghost)] transition-colors duration-100 group"
     >
       <span className={`font-mono text-xs w-24 shrink-0 ${color}`}>{attackId}</span>
-      <span className="text-sm text-[#ccd6f6] group-hover:text-white truncate flex-1">{name}</span>
+      <span className="text-sm text-[var(--text-primary)] group-hover:text-white truncate flex-1">{name}</span>
       {context && (
-        <span className="text-xs text-[#8892b0] truncate max-w-[200px] shrink-0 hidden sm:block">
+        <span className="text-xs text-[var(--text-secondary)] truncate max-w-[200px] shrink-0 hidden sm:block">
           {context}
         </span>
       )}
@@ -102,14 +102,14 @@ export function Search() {
       {/* Example chips — shown when no query (FIX 27) */}
       {!q && (
         <div className="space-y-2">
-          <p className="text-xs text-[#8892b0]">Try searching for:</p>
+          <p className="text-xs text-[var(--text-secondary)]">Try searching for:</p>
           <div className="flex flex-wrap gap-2">
             {EXAMPLE_CHIPS.map((chip) => (
               <button
                 key={chip}
                 type="button"
                 onClick={() => setQuery(chip)}
-                className="px-3 py-1.5 text-xs rounded-md border border-[#64ffda33] text-[#64ffda] bg-[#64ffda0a] hover:bg-[#64ffda18] transition-colors"
+                className="px-3 py-1.5 text-xs rounded-md border border-[var(--teal-dim)] text-[var(--accent-teal)] bg-[var(--teal-ghost)] hover:bg-[var(--teal-faint)] transition-colors"
               >
                 {chip}
               </button>
@@ -120,35 +120,35 @@ export function Search() {
 
       {/* Short query hint */}
       {q.length > 0 && q.trim().length < 3 && (
-        <p className="text-[#8892b0] text-sm">
+        <p className="text-[var(--text-secondary)] text-sm">
           Please enter at least 3 characters to search.
         </p>
       )}
 
       {/* Loading */}
       {isLoading && (
-        <div className="flex items-center text-[#8892b0]">
-          <span className="inline-block w-5 h-5 border-2 border-[#64ffda33] border-t-[#64ffda] rounded-full animate-spin mr-2" />
+        <div className="flex items-center text-[var(--text-secondary)]">
+          <span className="inline-block w-5 h-5 border-2 border-[var(--teal-dim)] border-t-[var(--accent-teal)] rounded-full animate-spin mr-2" />
           Searching...
         </div>
       )}
 
       {/* Error */}
       {error && (
-        <p className="text-[#f97316] text-sm">Search failed. Try again.</p>
+        <p className="text-[var(--accent-orange)] text-sm">Search failed. Try again.</p>
       )}
 
       {/* No results */}
       {!isLoading && !error && data && totalCount === 0 && q.trim().length >= 3 && (
         <div className="space-y-3">
-          <p className="text-[#8892b0] text-sm">No results found for &ldquo;{q}&rdquo;.</p>
+          <p className="text-[var(--text-secondary)] text-sm">No results found for &ldquo;{q}&rdquo;.</p>
           <div className="flex flex-wrap gap-2">
             {EXAMPLE_CHIPS.map((chip) => (
               <button
                 key={chip}
                 type="button"
                 onClick={() => setQuery(chip)}
-                className="px-3 py-1.5 text-xs rounded-md border border-[#2a2a4a] text-[#8892b0] hover:text-[#ccd6f6] hover:bg-[#ffffff08] transition-colors"
+                className="px-3 py-1.5 text-xs rounded-md border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--hover-overlay)] transition-colors"
               >
                 {chip}
               </button>
@@ -185,7 +185,7 @@ export function Search() {
           {data.techniques.length > 0 && (
             <section>
               <SectionHeader label="Techniques" count={data.techniques.length} />
-              <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg divide-y divide-[#2a2a4a]">
+              <div className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg divide-y divide-[var(--border-color)]">
                 {data.techniques.map((t) => (
                   <ResultRow
                     key={t.attackId}
@@ -203,7 +203,7 @@ export function Search() {
           {data.groups.length > 0 && (
             <section>
               <SectionHeader label="Groups" count={data.groups.length} />
-              <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg divide-y divide-[#2a2a4a]">
+              <div className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg divide-y divide-[var(--border-color)]">
                 {data.groups.map((g) => (
                   <ResultRow
                     key={g.attackId}
@@ -221,7 +221,7 @@ export function Search() {
           {data.software.length > 0 && (
             <section>
               <SectionHeader label="Software" count={data.software.length} />
-              <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg divide-y divide-[#2a2a4a]">
+              <div className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg divide-y divide-[var(--border-color)]">
                 {data.software.map((s) => (
                   <ResultRow
                     key={s.attackId}
@@ -239,7 +239,7 @@ export function Search() {
           {data.mitigations.length > 0 && (
             <section>
               <SectionHeader label="Mitigations" count={data.mitigations.length} />
-              <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg divide-y divide-[#2a2a4a]">
+              <div className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg divide-y divide-[var(--border-color)]">
                 {data.mitigations.map((m) => (
                   <ResultRow
                     key={m.attackId}
@@ -256,7 +256,7 @@ export function Search() {
           {data.campaigns.length > 0 && (
             <section>
               <SectionHeader label="Campaigns" count={data.campaigns.length} />
-              <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg divide-y divide-[#2a2a4a]">
+              <div className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg divide-y divide-[var(--border-color)]">
                 {data.campaigns.map((c) => (
                   <ResultRow
                     key={c.attackId}
@@ -273,7 +273,7 @@ export function Search() {
           {data.data_sources.length > 0 && (
             <section>
               <SectionHeader label="Data Sources" count={data.data_sources.length} />
-              <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg divide-y divide-[#2a2a4a]">
+              <div className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg divide-y divide-[var(--border-color)]">
                 {data.data_sources.map((ds) => (
                   <ResultRow
                     key={ds.attackId}

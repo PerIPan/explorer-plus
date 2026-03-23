@@ -9,8 +9,8 @@ export function DataSourceDetail() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64 text-[#8892b0]">
-        <span className="inline-block w-5 h-5 border-2 border-[#64ffda33] border-t-[#64ffda] rounded-full animate-spin mr-2" />
+      <div className="flex items-center justify-center h-64 text-[var(--text-secondary)]">
+        <span className="inline-block w-5 h-5 border-2 border-[var(--teal-dim)] border-t-[var(--accent-teal)] rounded-full animate-spin mr-2" />
         Loading...
       </div>
     );
@@ -18,7 +18,7 @@ export function DataSourceDetail() {
 
   if (error || !data) {
     return (
-      <div className="flex items-center justify-center h-64 text-[#f97316]">
+      <div className="flex items-center justify-center h-64 text-[var(--accent-orange)]">
         Data source not found.
       </div>
     );
@@ -37,18 +37,18 @@ export function DataSourceDetail() {
           { label: data.attackId },
         ]}
         actions={
-          <span className="font-mono text-xs text-[#f472b6] bg-[#f472b618] border border-[#f472b633] px-2 py-1 rounded">
+          <span className="font-mono text-xs text-[var(--accent-pink)] bg-[var(--pink-faint)] border border-[var(--pink-dim)] px-2 py-1 rounded">
             {data.attackId}
           </span>
         }
       />
 
       {description && (
-        <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5">
-          <h3 className="text-sm font-semibold text-[#a8b2d8] uppercase tracking-wider mb-3">
+        <div className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg p-5">
+          <h3 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-3">
             Description
           </h3>
-          <p className="text-[#ccd6f6] text-sm leading-relaxed whitespace-pre-wrap">
+          <p className="text-[var(--text-primary)] text-sm leading-relaxed whitespace-pre-wrap">
             {description}
           </p>
         </div>
@@ -56,8 +56,8 @@ export function DataSourceDetail() {
 
       {/* Data components */}
       {data.components?.length ? (
-        <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5">
-          <h3 className="text-sm font-semibold text-[#a8b2d8] uppercase tracking-wider mb-4">
+        <div className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg p-5">
+          <h3 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-4">
             Data Components ({data.components.length})
           </h3>
           <div className="space-y-3">
@@ -69,15 +69,15 @@ export function DataSourceDetail() {
               return (
                 <div
                   key={key}
-                  className="border border-[#2a2a4a] rounded-lg p-3 bg-[#1a1a2e]"
+                  className="border border-[var(--border-color)] rounded-lg p-3 bg-[var(--surface-base)]"
                 >
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-sm font-medium text-[#f472b6]">
+                    <span className="text-sm font-medium text-[var(--accent-pink)]">
                       {name}
                     </span>
                   </div>
                   {compDesc && (
-                    <p className="text-xs text-[#8892b0] leading-relaxed">
+                    <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
                       {compDesc}
                     </p>
                   )}

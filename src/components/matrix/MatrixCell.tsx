@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import type { MatrixTechniqueCell } from '../../lib/types';
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface MatrixCellProps {
   technique: MatrixTechniqueCell;
@@ -13,6 +14,7 @@ interface MatrixCellProps {
  */
 export function MatrixCell({ technique, groupUsageCount, maxUsage }: MatrixCellProps) {
   const navigate = useNavigate();
+  const { theme } = useTheme();
   const ratio = maxUsage > 0 ? groupUsageCount / maxUsage : 0;
 
   /** Interpolate opacity from 0.08 (unused) to 0.75 (most used) */
@@ -20,9 +22,10 @@ export function MatrixCell({ technique, groupUsageCount, maxUsage }: MatrixCellP
     ? 0
     : Math.round((0.12 + ratio * 0.63) * 100) / 100;
 
+  const heatColor = theme === 'dark' ? 'rgba(100,255,218,' : 'rgba(13,148,136,';
   const bgStyle =
     groupUsageCount > 0
-      ? { backgroundColor: `rgba(100,255,218,${tealOpacity})` }
+      ? { backgroundColor: `${heatColor}${tealOpacity})` }
       : {};
 
   return (
@@ -32,18 +35,18 @@ export function MatrixCell({ technique, groupUsageCount, maxUsage }: MatrixCellP
       onClick={() => navigate(`/techniques/${technique.attackId}`)}
       className="
         w-full text-left px-1.5 py-1 rounded text-[11px] leading-tight
-        border border-[#2a2a4a] transition-all duration-150
-        hover:border-[#64ffda55] hover:brightness-125 focus:outline-none
-        focus:ring-1 focus:ring-[#64ffda55]
+        border border-[var(--border-color)] transition-all duration-150
+        hover:border-[var(--teal-muted)] hover:brightness-125 focus:outline-none
+        focus:ring-1 focus:ring-[var(--teal-muted)]
         cursor-pointer
       "
       style={bgStyle}
     >
-      <div className="font-mono text-[10px] text-[#8892b0] mb-0.5">
+      <div className="font-mono text-[10px] text-[var(--text-secondary)] mb-0.5">
         {technique.attackId}
       </div>
       <div
-        className="text-[#ccd6f6] overflow-hidden"
+        className="text-[var(--text-primary)] overflow-hidden"
         style={{
           display: '-webkit-box',
           WebkitLineClamp: 2,
@@ -53,7 +56,7 @@ export function MatrixCell({ technique, groupUsageCount, maxUsage }: MatrixCellP
         {technique.name}
       </div>
       {technique.subTechniques.length > 0 && (
-        <div className="text-[10px] text-[#64ffda] font-medium mt-0.5">
+        <div className="text-[10px] text-[var(--accent-teal)] font-medium mt-0.5">
           ▸ {technique.subTechniques.length} sub
         </div>
       )}

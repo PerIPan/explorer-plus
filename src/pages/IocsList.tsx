@@ -26,7 +26,7 @@ function CopyButton({ value }: { value: string }) {
       type="button"
       onClick={handleCopy}
       title="Copy to clipboard"
-      className={`ml-1.5 flex-shrink-0 transition-colors duration-150 ${copied ? 'text-[#64ffda]' : 'text-[#8892b0] hover:text-[#64ffda]'}`}
+      className={`ml-1.5 flex-shrink-0 transition-colors duration-150 ${copied ? 'text-[var(--accent-teal)]' : 'text-[var(--text-secondary)] hover:text-[var(--accent-teal)]'}`}
       aria-label="Copy value"
     >
       {copied ? (
@@ -98,13 +98,13 @@ function TechniquePopover({ iocId, count }: { iocId: string; count: number }) {
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-8 z-50 bg-[#16213e] border border-[#2a2a4a] rounded-lg shadow-2xl p-3 min-w-[240px] max-h-[300px] overflow-y-auto">
-            <div className="text-[10px] text-[#8892b0] uppercase tracking-wider mb-2">
+          <div className="absolute right-0 top-8 z-50 bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg shadow-2xl p-3 min-w-[240px] max-h-[300px] overflow-y-auto">
+            <div className="text-[10px] text-[var(--text-secondary)] uppercase tracking-wider mb-2">
               Linked Techniques ({count})
             </div>
             {isLoading && (
-              <div className="flex items-center gap-2 text-[#8892b0] text-xs py-2">
-                <span className="inline-block w-3 h-3 border-2 border-[#64ffda33] border-t-[#64ffda] rounded-full animate-spin" />
+              <div className="flex items-center gap-2 text-[var(--text-secondary)] text-xs py-2">
+                <span className="inline-block w-3 h-3 border-2 border-[var(--teal-dim)] border-t-[var(--accent-teal)] rounded-full animate-spin" />
                 Loading...
               </div>
             )}
@@ -116,7 +116,7 @@ function TechniquePopover({ iocId, count }: { iocId: string; count: number }) {
               </div>
             )}
             {!isLoading && data?.data?.length === 0 && (
-              <span className="text-xs text-[#8892b0]">No techniques found.</span>
+              <span className="text-xs text-[var(--text-secondary)]">No techniques found.</span>
             )}
           </div>
         </>
@@ -146,14 +146,14 @@ const columns: ColumnDef<IocEntry>[] = [
               href={link}
               target="_blank"
               rel="noopener noreferrer"
-              className="font-mono text-xs text-[#64ffda] hover:underline max-w-[240px] truncate"
+              className="font-mono text-xs text-[var(--accent-teal)] hover:underline max-w-[240px] truncate"
               title={row.value}
             >
               {row.value}
             </a>
           ) : (
             <span
-              className="font-mono text-xs text-[#ccd6f6] max-w-[240px] truncate"
+              className="font-mono text-xs text-[var(--text-primary)] max-w-[240px] truncate"
               title={row.value}
             >
               {row.value}
@@ -178,9 +178,9 @@ const columns: ColumnDef<IocEntry>[] = [
     width: '160px',
     render: (row) =>
       row.malware_family ? (
-        <span className="text-[#f97316] text-xs">{row.malware_family}</span>
+        <span className="text-[var(--accent-orange)] text-xs">{row.malware_family}</span>
       ) : (
-        <span className="text-[#8892b0] text-xs">—</span>
+        <span className="text-[var(--text-secondary)] text-xs">—</span>
       ),
   },
   {
@@ -188,7 +188,7 @@ const columns: ColumnDef<IocEntry>[] = [
     header: 'First Seen',
     width: '120px',
     render: (row) => (
-      <span className="text-[#8892b0] text-xs">{formatDate(row.first_seen_at)}</span>
+      <span className="text-[var(--text-secondary)] text-xs">{formatDate(row.first_seen_at)}</span>
     ),
   },
   {
@@ -200,7 +200,7 @@ const columns: ColumnDef<IocEntry>[] = [
       (row.technique_count ?? 0) > 0 ? (
         <TechniquePopover iocId={row.id} count={row.technique_count!} />
       ) : (
-        <span className="text-[#8892b0] text-xs">—</span>
+        <span className="text-[var(--text-secondary)] text-xs">—</span>
       ),
   },
 ];
@@ -251,12 +251,12 @@ export function IocsList() {
           placeholder="Search IOCs..."
           value={q}
           onChange={(e) => setParam('q', e.target.value)}
-          className="min-w-[200px] px-3 py-1.5 rounded-md text-sm bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6] placeholder-[#8892b0] focus:outline-none focus:border-[#64ffda]"
+          className="min-w-[200px] px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent-teal)]"
         />
         <select
           value={type}
           onChange={(e) => setParam('type', e.target.value)}
-          className="min-w-[140px] px-3 py-1.5 rounded-md text-sm bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6] focus:outline-none focus:border-[#64ffda]"
+          className="min-w-[140px] px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-teal)]"
         >
           <option value="">All Types</option>
           {IOC_TYPES.map((t) => (
@@ -266,7 +266,7 @@ export function IocsList() {
         <select
           value={source}
           onChange={(e) => setParam('source', e.target.value)}
-          className="min-w-[140px] px-3 py-1.5 rounded-md text-sm bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6] focus:outline-none focus:border-[#64ffda]"
+          className="min-w-[140px] px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-teal)]"
         >
           <option value="">All Sources</option>
           {SOURCES.map((s) => (

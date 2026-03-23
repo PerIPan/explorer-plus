@@ -49,8 +49,8 @@ async function findExternalActor(name: string): Promise<EntityRow | null> {
 
 async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   const rawId = typeof req.query.attackId === 'string' ? decodeURIComponent(req.query.attackId) : '';
-  if (!rawId) {
-    res.status(400).json({ error: 'Missing identifier', code: 'VALIDATION_ERROR' });
+  if (!rawId || rawId.length > 200) {
+    res.status(400).json({ error: 'Missing or invalid identifier', code: 'VALIDATION_ERROR' });
     return;
   }
 

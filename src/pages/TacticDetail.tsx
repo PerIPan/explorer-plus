@@ -27,8 +27,8 @@ export function TacticDetail() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64 text-[#8892b0]">
-        <span className="inline-block w-5 h-5 border-2 border-[#64ffda33] border-t-[#64ffda] rounded-full animate-spin mr-2" />
+      <div className="flex items-center justify-center h-64 text-[var(--text-secondary)]">
+        <span className="inline-block w-5 h-5 border-2 border-[var(--teal-dim)] border-t-[var(--accent-teal)] rounded-full animate-spin mr-2" />
         Loading...
       </div>
     );
@@ -36,7 +36,7 @@ export function TacticDetail() {
 
   if (error || !data) {
     return (
-      <div className="flex items-center justify-center h-64 text-[#f97316]">
+      <div className="flex items-center justify-center h-64 text-[var(--accent-orange)]">
         Tactic not found.
       </div>
     );
@@ -55,30 +55,30 @@ export function TacticDetail() {
           { label: data.attackId },
         ]}
         actions={
-          <span className="font-mono text-xs text-[#fbbf24] bg-[#fbbf2418] border border-[#fbbf2433] px-2 py-1 rounded">
+          <span className="font-mono text-xs text-[var(--accent-yellow)] bg-[var(--yellow-faint)] border border-[var(--yellow-dim)] px-2 py-1 rounded">
             {data.attackId}
           </span>
         }
       />
 
       {description && (
-        <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5">
-          <h3 className="text-sm font-semibold text-[#8892b0] uppercase tracking-wider mb-3">
+        <div className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg p-5">
+          <h3 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-3">
             Description
           </h3>
-          <p className="text-[#ccd6f6] text-sm leading-relaxed whitespace-pre-wrap">
+          <p className="text-[var(--text-primary)] text-sm leading-relaxed whitespace-pre-wrap">
             {description}
           </p>
         </div>
       )}
 
       {/* Techniques list with search filter */}
-      <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5">
+      <div className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg p-5">
         <div className="flex items-center justify-between gap-4 mb-4 flex-wrap">
-          <h3 className="text-sm font-semibold text-[#8892b0] uppercase tracking-wider">
+          <h3 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
             Techniques
             {!isLoading && (
-              <span className="ml-2 text-[#64ffda] font-semibold normal-case text-sm">
+              <span className="ml-2 text-[var(--accent-teal)] font-semibold normal-case text-sm">
                 ({techniques.length}{techFilter ? ` of ${allTechniques.length}` : ''})
               </span>
             )}
@@ -89,14 +89,14 @@ export function TacticDetail() {
               placeholder="Filter techniques..."
               value={techFilter}
               onChange={(e) => setTechFilter(e.target.value)}
-              className="min-w-[200px] px-3 py-1.5 rounded-md text-sm bg-[#0a0a1a] border border-[#2a2a4a] text-[#ccd6f6] placeholder-[#8892b0] focus:outline-none focus:border-[#64ffda]"
+              className="min-w-[200px] px-3 py-1.5 rounded-md text-sm bg-[var(--surface-deep)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent-teal)]"
             />
           )}
         </div>
 
         {isLoading ? (
-          <div className="flex items-center text-[#8892b0] text-sm">
-            <span className="inline-block w-4 h-4 border-2 border-[#64ffda33] border-t-[#64ffda] rounded-full animate-spin mr-2" />
+          <div className="flex items-center text-[var(--text-secondary)] text-sm">
+            <span className="inline-block w-4 h-4 border-2 border-[var(--teal-dim)] border-t-[var(--accent-teal)] rounded-full animate-spin mr-2" />
             Loading techniques...
           </div>
         ) : techniques.length > 0 ? (
@@ -111,7 +111,7 @@ export function TacticDetail() {
             ))}
           </div>
         ) : (
-          <p className="text-[#8892b0] text-sm">
+          <p className="text-[var(--text-secondary)] text-sm">
             {techFilter ? 'No techniques match your filter.' : 'No techniques found for this tactic.'}
           </p>
         )}

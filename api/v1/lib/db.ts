@@ -10,7 +10,7 @@ function getPool(): Pool {
       connectionString,
       statement_timeout: 5000,
       max: isProduction ? 1 : 10,
-      ssl: isProduction ? { rejectUnauthorized: false } : undefined,
+      ssl: isProduction ? { rejectUnauthorized: true } : undefined,
     });
   }
   return pool;

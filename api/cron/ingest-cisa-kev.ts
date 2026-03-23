@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { query } from '../v1/lib/db.js';
+import { verifyCronAuth } from './lib/auth.js';
 
 const CISA_KEV_URL =
   'https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json';
@@ -24,6 +25,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.status(405).json({ error: 'Method not allowed' });
     return;
   }
+  if (!verifyCronAuth(req, res)) return;
 
   const logResult = await query<{ id: string }>(
     `INSERT INTO feed_sync_log (source, status, started_at)
@@ -97,6 +99,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       [msg, logId],
     );
 
-    res.status(500).json({ ok: false, error: msg });
+    console.error('[cron] error:', msg);
+    res.status(500).json({ ok: false, error: 'Feed sync failed' });
   }
 }

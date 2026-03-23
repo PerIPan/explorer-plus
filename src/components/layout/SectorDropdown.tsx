@@ -22,7 +22,7 @@ export function SectorDropdown() {
   return (
     <div className="relative flex items-center gap-1.5">
       <svg
-        className="w-4 h-4 text-[#8892b0] flex-shrink-0"
+        className="w-4 h-4 text-[var(--text-secondary)] flex-shrink-0"
         fill="none"
         stroke="currentColor"
         strokeWidth={2}
@@ -37,16 +37,16 @@ export function SectorDropdown() {
         className={`
           appearance-none bg-transparent text-xs pr-5 py-1 cursor-pointer
           border-none focus:outline-none focus:ring-0
-          ${sector ? 'text-[#64ffda] font-medium' : 'text-[#8892b0]'}
+          ${sector ? 'text-[var(--accent-teal)] font-medium' : 'text-[var(--text-secondary)]'}
         `}
         title="Filter by industry sector"
       >
-        <option value="" className="bg-[#0a0a1a] text-[#ccd6f6]">All Sectors</option>
+        <option value="" className="bg-[var(--surface-deep)] text-[var(--text-primary)]">All Sectors</option>
         {sectors.map((s) => (
           <option
             key={s.slug ?? s.name}
             value={s.slug ?? ''}
-            className="bg-[#0a0a1a] text-[#ccd6f6]"
+            className="bg-[var(--surface-deep)] text-[var(--text-primary)]"
           >
             {s.name} ({s.groupCount})
           </option>
@@ -56,7 +56,7 @@ export function SectorDropdown() {
         <button
           type="button"
           onClick={() => setSector(null)}
-          className="text-[#64ffda] hover:text-[#9efce5] text-xs"
+          className="text-[var(--accent-teal)] hover:text-[var(--accent-teal-light)] text-xs"
           title="Clear sector filter"
         >
           ✕

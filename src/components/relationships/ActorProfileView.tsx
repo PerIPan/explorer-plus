@@ -56,21 +56,21 @@ function CollapsibleSection({ title, count, badge, defaultOpen = false, children
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div className="border border-[#2a2a4a] rounded-lg overflow-hidden">
+    <div className="border border-[var(--border-color)] rounded-lg overflow-hidden">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between px-4 py-3 bg-[#16213e] hover:bg-[#1a2a4a] transition-colors text-left gap-3"
+        className="w-full flex items-center justify-between px-4 py-3 bg-[var(--surface-card)] hover:bg-[var(--surface-base)] transition-colors text-left gap-3"
       >
         <div className="flex items-center gap-2 min-w-0">
-          <span className="text-sm font-semibold text-[#ccd6f6] truncate">{title}</span>
+          <span className="text-sm font-semibold text-[var(--text-primary)] truncate">{title}</span>
           {count !== undefined && (
-            <span className="text-xs text-[#8892b0] shrink-0">({count})</span>
+            <span className="text-xs text-[var(--text-secondary)] shrink-0">({count})</span>
           )}
           {badge && <Badge label={badge.label} variant={badge.variant} />}
         </div>
         <svg
-          className={`w-4 h-4 text-[#8892b0] shrink-0 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+          className={`w-4 h-4 text-[var(--text-secondary)] shrink-0 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -80,7 +80,7 @@ function CollapsibleSection({ title, count, badge, defaultOpen = false, children
         </svg>
       </button>
       {open && (
-        <div className="px-4 py-3 bg-[#0f1929] space-y-1.5">
+        <div className="px-4 py-3 bg-[var(--surface-alt)] space-y-1.5">
           {children}
         </div>
       )}
@@ -100,11 +100,11 @@ function NestedSection({ title, count, children }: NestedSectionProps) {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="ml-3 border-l border-[#2a2a4a] pl-3">
+    <div className="ml-3 border-l border-[var(--border-color)] pl-3">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1.5 py-1 text-xs text-[#8892b0] hover:text-[#ccd6f6] transition-colors"
+        className="flex items-center gap-1.5 py-1 text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
       >
         <svg
           className={`w-3 h-3 shrink-0 transition-transform duration-150 ${open ? 'rotate-90' : ''}`}
@@ -138,8 +138,8 @@ function CampaignCard({ campaign }: { campaign: GroupCampaign }) {
       badge={{ label: campaign.attackId, variant: 'blue' }}
     >
       {isLoading && (
-        <div className="flex items-center gap-2 text-[#8892b0] text-xs py-2">
-          <span className="inline-block w-3 h-3 border-2 border-[#64ffda33] border-t-[#64ffda] rounded-full animate-spin" />
+        <div className="flex items-center gap-2 text-[var(--text-secondary)] text-xs py-2">
+          <span className="inline-block w-3 h-3 border-2 border-[var(--teal-dim)] border-t-[var(--accent-teal)] rounded-full animate-spin" />
           Loading campaign details...
         </div>
       )}
@@ -160,12 +160,12 @@ function CampaignCard({ campaign }: { campaign: GroupCampaign }) {
             </NestedSection>
           )}
           {!data.techniques?.length && !data.software?.length && (
-            <p className="text-xs text-[#8892b0] py-1">No techniques or software recorded for this campaign.</p>
+            <p className="text-xs text-[var(--text-secondary)] py-1">No techniques or software recorded for this campaign.</p>
           )}
         </>
       )}
       {!isLoading && !data && (
-        <p className="text-xs text-[#f97316] py-1">Campaign details unavailable.</p>
+        <p className="text-xs text-[var(--accent-orange)] py-1">Campaign details unavailable.</p>
       )}
     </CollapsibleSection>
   );
@@ -236,7 +236,7 @@ function TechniquesByTactic({ techniques }: { techniques: GroupTechnique[] }) {
               <EntityLink type="technique" attackId={t.attackId} name={t.name} />
             </div>
             {children.length > 0 && (
-              <div className="ml-4 pl-2 border-l border-[#2a2a4a] space-y-0.5 mt-0.5">
+              <div className="ml-4 pl-2 border-l border-[var(--border-color)] space-y-0.5 mt-0.5">
                 {children.map((sub) => (
                   <div key={sub.attackId} className="flex items-center gap-2 py-0.5">
                     <EntityLink type="technique" attackId={sub.attackId} name={sub.name} />
@@ -299,15 +299,15 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
   if (entityType === 'external_actor') {
     if (externalActorResult.isLoading) {
       return (
-        <div className="flex items-center gap-2 text-[#8892b0] text-sm py-8 justify-center">
-          <span className="inline-block w-5 h-5 border-2 border-[#64ffda33] border-t-[#64ffda] rounded-full animate-spin" />
+        <div className="flex items-center gap-2 text-[var(--text-secondary)] text-sm py-8 justify-center">
+          <span className="inline-block w-5 h-5 border-2 border-[var(--teal-dim)] border-t-[var(--accent-teal)] rounded-full animate-spin" />
           Loading actor profile...
         </div>
       );
     }
     if (externalActorResult.error || !externalActorResult.data) {
       return (
-        <div className="text-[#f97316] text-sm py-8 text-center">
+        <div className="text-[var(--accent-orange)] text-sm py-8 text-center">
           Failed to load actor profile.
         </div>
       );
@@ -317,7 +317,7 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
       <div className="space-y-3">
         <div className="flex items-start gap-3 pb-1">
           <div>
-            <h2 className="text-lg font-semibold text-[#ccd6f6]">{actor.name}</h2>
+            <h2 className="text-lg font-semibold text-[var(--text-primary)]">{actor.name}</h2>
             <div className="flex items-center gap-2 mt-1">
               <Badge label="Non-MITRE" variant="neutral" />
               <Badge label="ThaiCERT / ETDA" variant="neutral" />
@@ -328,13 +328,13 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
         </div>
 
         <CollapsibleSection title="ThaiCERT Intelligence" defaultOpen>
-          <div className="bg-[#0a0a1a] border border-[#2a2a4a] rounded-lg p-4 space-y-2">
+          <div className="bg-[var(--surface-deep)] border border-[var(--border-color)] rounded-lg p-4 space-y-2">
             {actor.description && (
-              <p className="text-sm text-[#8892b0] leading-relaxed">{actor.description}</p>
+              <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{actor.description}</p>
             )}
             {actor.synonyms && actor.synonyms.length > 0 && (
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs text-[#8892b0]">Also known as:</span>
+                <span className="text-xs text-[var(--text-secondary)]">Also known as:</span>
                 {actor.synonyms.map((s) => (
                   <Badge key={s} label={s} variant="neutral" />
                 ))}
@@ -342,31 +342,31 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
             )}
             {actor.firstSeen && (
               <div className="flex items-center gap-2">
-                <span className="text-xs text-[#8892b0]">First seen:</span>
-                <span className="text-xs text-[#ccd6f6]">{actor.firstSeen}</span>
+                <span className="text-xs text-[var(--text-secondary)]">First seen:</span>
+                <span className="text-xs text-[var(--text-primary)]">{actor.firstSeen}</span>
               </div>
             )}
             {actor.motivation && (
               <div className="flex items-center gap-2">
-                <span className="text-xs text-[#8892b0]">Motivation:</span>
-                <span className="text-xs text-[#ccd6f6]">{actor.motivation}</span>
+                <span className="text-xs text-[var(--text-secondary)]">Motivation:</span>
+                <span className="text-xs text-[var(--text-primary)]">{actor.motivation}</span>
               </div>
             )}
             {actor.suspectedStateSponsor && (
               <div className="flex items-center gap-2">
-                <span className="text-xs text-[#8892b0]">State sponsor:</span>
+                <span className="text-xs text-[var(--text-secondary)]">State sponsor:</span>
                 <Badge label={actor.suspectedStateSponsor} variant="orange" />
               </div>
             )}
             {actor.attributionConfidence && (
               <div className="flex items-center gap-2">
-                <span className="text-xs text-[#8892b0]">Confidence:</span>
-                <span className="text-xs text-[#ccd6f6]">{actor.attributionConfidence}</span>
+                <span className="text-xs text-[var(--text-secondary)]">Confidence:</span>
+                <span className="text-xs text-[var(--text-primary)]">{actor.attributionConfidence}</span>
               </div>
             )}
             {actor.suspectedVictims && actor.suspectedVictims.length > 0 && (
               <div>
-                <span className="text-xs text-[#8892b0]">Suspected victims:</span>
+                <span className="text-xs text-[var(--text-secondary)]">Suspected victims:</span>
                 <div className="flex flex-wrap gap-1 mt-1">
                   {actor.suspectedVictims.map((v) => (
                     <Badge key={v} label={v} variant="purple" />
@@ -376,7 +376,7 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
             )}
             {actor.targetCategories && actor.targetCategories.length > 0 && (
               <div>
-                <span className="text-xs text-[#8892b0]">Target categories:</span>
+                <span className="text-xs text-[var(--text-secondary)]">Target categories:</span>
                 <div className="flex flex-wrap gap-1 mt-1">
                   {actor.targetCategories.map((c) => (
                     <Badge key={c} label={c} variant="green" />
@@ -386,7 +386,7 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
             )}
             {actor.refs && actor.refs.length > 0 && (
               <div>
-                <span className="text-xs text-[#8892b0]">References:</span>
+                <span className="text-xs text-[var(--text-secondary)]">References:</span>
                 <div className="flex flex-wrap gap-2 mt-1">
                   {actor.refs.map((ref, i) => (
                     <a
@@ -394,7 +394,7 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
                       href={ref}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-xs text-[#64ffda] hover:underline break-all"
+                      className="text-xs text-[var(--accent-teal)] hover:underline break-all"
                     >
                       {ref}
                     </a>
@@ -404,15 +404,15 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
             )}
             {actor.mitreGroupId && (
               <div className="flex items-center gap-2 pt-1">
-                <span className="text-xs text-[#8892b0]">MITRE mapping:</span>
-                <span className="font-mono text-xs text-[#f97316]">{actor.mitreGroupId}</span>
+                <span className="text-xs text-[var(--text-secondary)]">MITRE mapping:</span>
+                <span className="font-mono text-xs text-[var(--accent-orange)]">{actor.mitreGroupId}</span>
                 {actor.mitreGroupName && (
-                  <span className="text-xs text-[#ccd6f6]">({actor.mitreGroupName})</span>
+                  <span className="text-xs text-[var(--text-primary)]">({actor.mitreGroupName})</span>
                 )}
               </div>
             )}
           </div>
-          <p className="text-[10px] text-[#4a4a6a] pt-1">
+          <p className="text-[10px] text-[var(--text-secondary)] pt-1">
             Source: ThaiCERT / ETDA Threat Actor Encyclopedia — not affiliated with MITRE
           </p>
         </CollapsibleSection>
@@ -425,8 +425,8 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
 
   if (isLoading) {
     return (
-      <div className="flex items-center gap-2 text-[#8892b0] text-sm py-8 justify-center">
-        <span className="inline-block w-5 h-5 border-2 border-[#64ffda33] border-t-[#64ffda] rounded-full animate-spin" />
+      <div className="flex items-center gap-2 text-[var(--text-secondary)] text-sm py-8 justify-center">
+        <span className="inline-block w-5 h-5 border-2 border-[var(--teal-dim)] border-t-[var(--accent-teal)] rounded-full animate-spin" />
         Loading actor profile...
       </div>
     );
@@ -434,7 +434,7 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
 
   if (error) {
     return (
-      <div className="text-[#f97316] text-sm py-8 text-center">
+      <div className="text-[var(--accent-orange)] text-sm py-8 text-center">
         Failed to load actor profile.
       </div>
     );
@@ -456,14 +456,14 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
         {/* Header */}
         <div className="flex items-start gap-3 pb-1">
           <div>
-            <h2 className="text-lg font-semibold text-[#ccd6f6]">{group.name}</h2>
+            <h2 className="text-lg font-semibold text-[var(--text-primary)]">{group.name}</h2>
             <div className="flex items-center gap-2 mt-1">
-              <span className="font-mono text-xs text-[#f97316] bg-[#f9731618] border border-[#f9731633] px-2 py-0.5 rounded">
+              <span className="font-mono text-xs text-[var(--accent-orange)] bg-[var(--orange-faint)] border border-[var(--orange-dim)] px-2 py-0.5 rounded">
                 {group.attackId}
               </span>
               <Badge label="group" variant="orange" />
               {group.aliases && group.aliases.length > 0 && (
-                <span className="text-xs text-[#8892b0]">
+                <span className="text-xs text-[var(--text-secondary)]">
                   aka {group.aliases.join(', ')}
                   {group.aliases.length > 3 && ` +${group.aliases.length - 3} more`}
                 </span>
@@ -499,30 +499,30 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
           >
             <div className="space-y-3">
               {thaiCertResult.data.data.map((actor: ExternalActor) => (
-                <div key={actor.id} className="bg-[#0a0a1a] border border-[#2a2a4a] rounded-lg p-4 space-y-2">
+                <div key={actor.id} className="bg-[var(--surface-deep)] border border-[var(--border-color)] rounded-lg p-4 space-y-2">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-sm font-medium text-[#94a3b8]">{actor.name}</span>
+                    <span className="text-sm font-medium text-[var(--accent-neutral)]">{actor.name}</span>
                     <Badge label="ThaiCERT / ETDA" variant="neutral" />
                     {actor.country && <Badge label={actor.country} variant="blue" />}
                     {actor.attributionConfidence && (
-                      <span className="text-[10px] text-[#8892b0]">confidence: {actor.attributionConfidence}</span>
+                      <span className="text-[10px] text-[var(--text-secondary)]">confidence: {actor.attributionConfidence}</span>
                     )}
                   </div>
                   {actor.motivation && (
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-[#8892b0]">Motivation:</span>
-                      <span className="text-xs text-[#ccd6f6]">{actor.motivation}</span>
+                      <span className="text-xs text-[var(--text-secondary)]">Motivation:</span>
+                      <span className="text-xs text-[var(--text-primary)]">{actor.motivation}</span>
                     </div>
                   )}
                   {actor.suspectedStateSponsor && (
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-[#8892b0]">State sponsor:</span>
+                      <span className="text-xs text-[var(--text-secondary)]">State sponsor:</span>
                       <Badge label={actor.suspectedStateSponsor} variant="orange" />
                     </div>
                   )}
                   {actor.suspectedVictims && actor.suspectedVictims.length > 0 && (
                     <div>
-                      <span className="text-xs text-[#8892b0]">Suspected victims:</span>
+                      <span className="text-xs text-[var(--text-secondary)]">Suspected victims:</span>
                       <div className="flex flex-wrap gap-1 mt-1">
                         {actor.suspectedVictims.map((v) => (
                           <Badge key={v} label={v} variant="purple" />
@@ -532,7 +532,7 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
                   )}
                   {actor.targetCategories && actor.targetCategories.length > 0 && (
                     <div>
-                      <span className="text-xs text-[#8892b0]">Target categories:</span>
+                      <span className="text-xs text-[var(--text-secondary)]">Target categories:</span>
                       <div className="flex flex-wrap gap-1 mt-1">
                         {actor.targetCategories.map((c) => (
                           <Badge key={c} label={c} variant="green" />
@@ -542,12 +542,12 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
                   )}
                   {actor.refs && actor.refs.length > 0 && (
                     <div>
-                      <span className="text-xs text-[#8892b0]">{actor.refs.length} references</span>
+                      <span className="text-xs text-[var(--text-secondary)]">{actor.refs.length} references</span>
                     </div>
                   )}
                 </div>
               ))}
-              <p className="text-[10px] text-[#4a4a6a] pt-1">
+              <p className="text-[10px] text-[var(--text-secondary)] pt-1">
                 Source: ThaiCERT / ETDA Threat Actor Encyclopedia — not affiliated with MITRE
               </p>
             </div>
@@ -569,7 +569,7 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
         )}
 
         {techniques.length === 0 && software.length === 0 && campaigns.length === 0 && (
-          <p className="text-[#8892b0] text-sm py-4 text-center">
+          <p className="text-[var(--text-secondary)] text-sm py-4 text-center">
             No relationship data available for this group.
           </p>
         )}
@@ -591,14 +591,14 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
       {/* Header */}
       <div className="flex items-start gap-3 pb-1">
         <div>
-          <h2 className="text-lg font-semibold text-[#ccd6f6]">{campaign.name}</h2>
+          <h2 className="text-lg font-semibold text-[var(--text-primary)]">{campaign.name}</h2>
           <div className="flex items-center gap-2 mt-1">
-            <span className="font-mono text-xs text-[#60a5fa] bg-[#60a5fa18] border border-[#60a5fa33] px-2 py-0.5 rounded">
+            <span className="font-mono text-xs text-[var(--accent-blue)] bg-[var(--blue-faint)] border border-[var(--blue-dim)] px-2 py-0.5 rounded">
               {campaign.attackId}
             </span>
             <Badge label="campaign" variant="blue" />
             {campaign.firstSeen && (
-              <span className="text-xs text-[#8892b0]">
+              <span className="text-xs text-[var(--text-secondary)]">
                 {new Date(campaign.firstSeen).getFullYear()}
                 {campaign.lastSeen ? ` – ${new Date(campaign.lastSeen).getFullYear()}` : ''}
               </span>
@@ -644,7 +644,7 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
       )}
 
       {techniques.length === 0 && software.length === 0 && groups.length === 0 && (
-        <p className="text-[#8892b0] text-sm py-4 text-center">
+        <p className="text-[var(--text-secondary)] text-sm py-4 text-center">
           No relationship data available for this campaign.
         </p>
       )}

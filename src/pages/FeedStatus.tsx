@@ -25,11 +25,11 @@ function StatusDot({ status }: { status: string }) {
   const colorMap: Record<string, string> = {
     success: 'bg-[#34d399]',
     running: 'bg-[#fbbf24] animate-pulse',
-    error: 'bg-[#f97316]',
+    error: 'bg-[var(--accent-orange)]',
   };
   return (
     <span
-      className={`inline-block w-2.5 h-2.5 rounded-full ${colorMap[status] ?? 'bg-[#8892b0]'}`}
+      className={`inline-block w-2.5 h-2.5 rounded-full ${colorMap[status] ?? 'bg-[var(--text-secondary)]'}`}
       title={status}
     />
   );
@@ -37,11 +37,11 @@ function StatusDot({ status }: { status: string }) {
 
 function StatusBadge({ status }: { status: string }) {
   const styleMap: Record<string, string> = {
-    success: 'bg-[#34d39918] text-[#34d399] border-[#34d39933]',
-    running: 'bg-[#fbbf2418] text-[#fbbf24] border-[#fbbf2433]',
-    error: 'bg-[#f9731618] text-[#f97316] border-[#f9731633]',
+    success: 'bg-[var(--green-faint)] text-[var(--accent-green)] border-[var(--green-dim)]',
+    running: 'bg-[var(--yellow-faint)] text-[var(--accent-yellow)] border-[var(--yellow-dim)]',
+    error: 'bg-[var(--orange-faint)] text-[var(--accent-orange)] border-[var(--orange-dim)]',
   };
-  const classes = styleMap[status] ?? 'bg-[#ffffff08] text-[#8892b0] border-[#2a2a4a]';
+  const classes = styleMap[status] ?? 'bg-[var(--hover-overlay)] text-[var(--text-secondary)] border-[var(--border-color)]';
   return (
     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${classes}`}>
       {status}
@@ -61,7 +61,7 @@ function SyncButton({ source, disabled, onSync }: SyncButtonProps) {
       type="button"
       disabled={disabled}
       onClick={() => onSync(source)}
-      className="px-3 py-1 text-xs rounded-md border border-[#64ffda33] text-[#64ffda] bg-[#64ffda0a] hover:bg-[#64ffda18] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+      className="px-3 py-1 text-xs rounded-md border border-[var(--teal-dim)] text-[var(--accent-teal)] bg-[var(--teal-ghost)] hover:bg-[var(--teal-faint)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
     >
       {disabled ? 'Syncing...' : 'Sync Now'}
     </button>
@@ -76,28 +76,28 @@ interface FeedCardProps {
 
 function FeedCard({ feed, syncing, onSync }: FeedCardProps) {
   return (
-    <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5 space-y-3">
+    <div className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg p-5 space-y-3">
       {/* Header row */}
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2">
           <StatusDot status={feed.status} />
-          <h3 className="text-[#ccd6f6] font-medium text-sm">
+          <h3 className="text-[var(--text-primary)] font-medium text-sm">
             {SOURCE_LABELS[feed.source] ?? feed.source}
           </h3>
         </div>
       </div>
 
       {/* Stats row */}
-      <div className="flex items-center gap-4 text-xs text-[#8892b0]">
-        <span>Last sync: <span className="text-[#ccd6f6]">{formatTimeAgo(feed.lastSync)}</span></span>
-        <span>Inserted: <span className="text-[#64ffda]">{feed.recordsInserted.toLocaleString()}</span></span>
-        <span>Skipped: <span className="text-[#ccd6f6]">{feed.recordsSkipped.toLocaleString()}</span></span>
+      <div className="flex items-center gap-4 text-xs text-[var(--text-secondary)]">
+        <span>Last sync: <span className="text-[var(--text-primary)]">{formatTimeAgo(feed.lastSync)}</span></span>
+        <span>Inserted: <span className="text-[var(--accent-teal)]">{feed.recordsInserted.toLocaleString()}</span></span>
+        <span>Skipped: <span className="text-[var(--text-primary)]">{feed.recordsSkipped.toLocaleString()}</span></span>
         <StatusBadge status={feed.status} />
       </div>
 
       {/* Error message */}
       {feed.error && (
-        <div className="text-xs text-[#f97316] bg-[#f9731608] border border-[#f9731620] rounded p-2 font-mono break-words">
+        <div className="text-xs text-[var(--accent-orange)] bg-[var(--orange-faint)] border border-[var(--orange-dim)] rounded p-2 font-mono break-words">
           {feed.error}
         </div>
       )}
@@ -108,17 +108,17 @@ function FeedCard({ feed, syncing, onSync }: FeedCardProps) {
 /** Placeholder card for sources not yet in the DB log */
 function EmptyFeedCard({ source, syncing, onSync }: { source: string; syncing: boolean; onSync: (s: string) => void }) {
   return (
-    <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5 space-y-3">
+    <div className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg p-5 space-y-3">
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2">
-          <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#8892b0]" />
-          <h3 className="text-[#ccd6f6] font-medium text-sm">
+          <span className="inline-block w-2.5 h-2.5 rounded-full bg-[var(--text-secondary)]" />
+          <h3 className="text-[var(--text-primary)] font-medium text-sm">
             {SOURCE_LABELS[source] ?? source}
           </h3>
         </div>
         <SyncButton source={source} disabled={syncing} onSync={onSync} />
       </div>
-      <p className="text-xs text-[#8892b0]">Never synced</p>
+      <p className="text-xs text-[var(--text-secondary)]">Never synced</p>
     </div>
   );
 }
@@ -151,13 +151,9 @@ export function FeedStatus() {
     });
 
     try {
-      const cronSecret = import.meta.env.VITE_CRON_SECRET ?? '';
       const resp = await fetch(`/api/v1/feed/${source}/sync`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Cron-Secret': cronSecret,
-        },
+        headers: { 'Content-Type': 'application/json' },
       });
 
       if (!resp.ok) {

@@ -39,7 +39,7 @@ export function Pagination({
   return (
     <div className="flex items-center justify-between gap-4 py-3">
       {/* Item count */}
-      <div className="text-xs text-[#8892b0]">
+      <div className="text-xs text-[var(--text-secondary)]">
         {total === 0 ? 'No results' : `${from}–${to} of ${total.toLocaleString()}`}
       </div>
 
@@ -52,9 +52,9 @@ export function Pagination({
             disabled={page <= 1}
             aria-label="Previous page"
             className="
-              min-h-[32px] min-w-[60px] px-2 py-1 rounded text-sm text-[#8892b0]
+              min-h-[32px] min-w-[60px] px-2 py-1 rounded text-sm text-[var(--text-secondary)]
               inline-flex items-center gap-1
-              hover:text-[#ccd6f6] hover:bg-[#ffffff08]
+              hover:text-[var(--text-primary)] hover:bg-[var(--hover-overlay)]
               disabled:opacity-30 disabled:cursor-not-allowed
               transition-colors duration-150
             "
@@ -70,7 +70,7 @@ export function Pagination({
             p === '...' ? (
               <span
                 key={`ellipsis-${i}`}
-                className="px-2 py-1 text-sm text-[#8892b0]"
+                className="px-2 py-1 text-sm text-[var(--text-secondary)]"
                 aria-hidden="true"
               >
                 &hellip;
@@ -85,8 +85,8 @@ export function Pagination({
                   px-2.5 py-1 rounded text-sm transition-colors duration-150
                   ${
                     p === page
-                      ? 'bg-[#64ffda18] text-[#64ffda] border border-[#64ffda33]'
-                      : 'text-[#8892b0] hover:text-[#ccd6f6] hover:bg-[#ffffff08]'
+                      ? 'bg-[var(--teal-faint)] text-[var(--accent-teal)] border border-[var(--teal-dim)]'
+                      : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--hover-overlay)]'
                   }
                 `}
               >
@@ -101,9 +101,9 @@ export function Pagination({
             disabled={page >= totalPages}
             aria-label="Next page"
             className="
-              min-h-[32px] min-w-[60px] px-2 py-1 rounded text-sm text-[#8892b0]
+              min-h-[32px] min-w-[60px] px-2 py-1 rounded text-sm text-[var(--text-secondary)]
               inline-flex items-center gap-1
-              hover:text-[#ccd6f6] hover:bg-[#ffffff08]
+              hover:text-[var(--text-primary)] hover:bg-[var(--hover-overlay)]
               disabled:opacity-30 disabled:cursor-not-allowed
               transition-colors duration-150
             "

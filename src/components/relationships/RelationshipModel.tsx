@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 interface ModelNode {
   id: string;
@@ -20,34 +21,29 @@ interface ModelEdge {
   style?: 'solid' | 'dashed';
 }
 
-const NODES: ModelNode[] = [
-  // ── Technique at center ─────────────────────────────────────────────────
-  { id: 'technique', label: 'Technique', x: 550, y: 330, color: '#64ffda', bg: '#64ffda18', path: '/techniques', description: 'Attack methods and sub-techniques used by adversaries', category: 'core' },
-
-  // ── Core ATT&CK — top-left quadrant ─────────────────────────────────────
-  { id: 'tactic', label: 'Tactic', x: 550, y: 120, color: '#fbbf24', bg: '#fbbf2418', path: '/tactics', description: 'Kill chain phases: Reconnaissance to Impact', category: 'core' },
-  { id: 'group', label: 'Threat Group', x: 160, y: 200, color: '#f97316', bg: '#f9731618', path: '/groups', description: 'Tracked adversary groups (APT29, Lazarus, etc.)', category: 'core' },
-  { id: 'software', label: 'Software', x: 160, y: 380, color: '#a78bfa', bg: '#a78bfa18', path: '/software', description: 'Malware and tools used in attacks', category: 'core' },
-  { id: 'campaign', label: 'Campaign', x: 340, y: 120, color: '#60a5fa', bg: '#60a5fa18', path: '/campaigns', description: 'Named intrusion operations with timelines', category: 'core' },
-  { id: 'sector', label: 'Sector', x: 50, y: 60, color: '#f472b6', bg: '#f472b618', path: '/sectors', description: 'Industries targeted by threat groups', category: 'core' },
-
-  // ── Defensive & Compliance — right side, spread vertically ──────────────
-  { id: 'mitigation', label: 'Mitigation', x: 850, y: 160, color: '#34d399', bg: '#34d39918', path: '/mitigations', description: 'Countermeasures to prevent techniques', category: 'defensive' },
-  { id: 'sigma', label: 'Sigma Rules', x: 850, y: 370, color: '#c084fc', bg: '#c084fc18', path: '/cti/sigma', description: 'Detection signatures mapped to techniques', category: 'defensive' },
-  { id: 'nist', label: 'NIST 800-53', x: 1050, y: 160, color: '#38bdf8', bg: '#38bdf818', path: '/frameworks/nist', description: 'Federal security controls', category: 'compliance' },
-  { id: 'engage', label: 'MITRE Engage', x: 1050, y: 330, color: '#fb923c', bg: '#fb923c18', path: '/frameworks/engage', description: 'Adversary deception & engagement', category: 'compliance' },
-  { id: 'react', label: 'RE&CT', x: 1050, y: 500, color: '#4ade80', bg: '#4ade8018', path: '/frameworks/react', description: 'Incident response playbooks', category: 'compliance' },
-
-  // ── Intelligence — bottom, spread horizontally ──────────────────────────
-  { id: 'report', label: 'Threat Reports', x: 340, y: 540, color: '#f97316', bg: '#f9731618', path: '/cti/reports', description: 'Live threat intelligence from OTX, RSS feeds', category: 'intelligence' },
-  { id: 'ioc', label: 'IOCs', x: 550, y: 560, color: '#fb923c', bg: '#fb923c18', path: '/cti/iocs', description: 'CVEs, hashes, domains, IPs from OTX and CISA KEV', category: 'intelligence' },
-  { id: 'atomic', label: 'Atomic Tests', x: 750, y: 540, color: '#ef4444', bg: '#ef444418', path: '/techniques', description: 'Red team test procedures per technique', category: 'intelligence' },
-  { id: 'd3fend', label: 'D3FEND', x: 920, y: 560, color: '#34d399', bg: '#34d39918', path: '/techniques', description: 'Defensive countermeasures from MITRE D3FEND', category: 'intelligence' },
-  { id: 'thaicert', label: 'ETDA Actors', x: 160, y: 60, color: '#94a3b8', bg: '#94a3b818', path: '/external-actors', description: '500+ extended threat actors from ThaiCERT encyclopedia', category: 'intelligence' },
-];
+function makeNodes(c: ReturnType<typeof useThemeColors>): ModelNode[] {
+  const alpha = (hex: string, a: string) => `${hex}${a}`;
+  return [
+    { id: 'technique', label: 'Technique', x: 550, y: 330, color: c.accentTeal, bg: alpha(c.accentTeal, '18'), path: '/techniques', description: 'Attack methods and sub-techniques used by adversaries', category: 'core' },
+    { id: 'tactic', label: 'Tactic', x: 550, y: 120, color: c.accentYellow, bg: alpha(c.accentYellow, '18'), path: '/tactics', description: 'Kill chain phases: Reconnaissance to Impact', category: 'core' },
+    { id: 'group', label: 'Threat Group', x: 160, y: 200, color: c.accentOrange, bg: alpha(c.accentOrange, '18'), path: '/groups', description: 'Tracked adversary groups (APT29, Lazarus, etc.)', category: 'core' },
+    { id: 'software', label: 'Software', x: 160, y: 380, color: c.accentPurple, bg: alpha(c.accentPurple, '18'), path: '/software', description: 'Malware and tools used in attacks', category: 'core' },
+    { id: 'campaign', label: 'Campaign', x: 340, y: 120, color: c.accentBlue, bg: alpha(c.accentBlue, '18'), path: '/campaigns', description: 'Named intrusion operations with timelines', category: 'core' },
+    { id: 'sector', label: 'Sector', x: 50, y: 60, color: c.accentPink, bg: alpha(c.accentPink, '18'), path: '/sectors', description: 'Industries targeted by threat groups', category: 'core' },
+    { id: 'mitigation', label: 'Mitigation', x: 850, y: 160, color: c.accentGreen, bg: alpha(c.accentGreen, '18'), path: '/mitigations', description: 'Countermeasures to prevent techniques', category: 'defensive' },
+    { id: 'sigma', label: 'Sigma Rules', x: 850, y: 370, color: '#c084fc', bg: '#c084fc18', path: '/cti/sigma', description: 'Detection signatures mapped to techniques', category: 'defensive' },
+    { id: 'nist', label: 'NIST 800-53', x: 1050, y: 160, color: '#38bdf8', bg: '#38bdf818', path: '/frameworks/nist', description: 'Federal security controls', category: 'compliance' },
+    { id: 'engage', label: 'MITRE Engage', x: 1050, y: 330, color: '#fb923c', bg: '#fb923c18', path: '/frameworks/engage', description: 'Adversary deception & engagement', category: 'compliance' },
+    { id: 'react', label: 'RE&CT', x: 1050, y: 500, color: '#4ade80', bg: '#4ade8018', path: '/frameworks/react', description: 'Incident response playbooks', category: 'compliance' },
+    { id: 'report', label: 'Threat Reports', x: 340, y: 540, color: c.accentOrange, bg: alpha(c.accentOrange, '18'), path: '/cti/reports', description: 'Live threat intelligence from OTX, RSS feeds', category: 'intelligence' },
+    { id: 'ioc', label: 'IOCs', x: 550, y: 560, color: '#fb923c', bg: '#fb923c18', path: '/cti/iocs', description: 'CVEs, hashes, domains, IPs from OTX and CISA KEV', category: 'intelligence' },
+    { id: 'atomic', label: 'Atomic Tests', x: 750, y: 540, color: '#ef4444', bg: '#ef444418', path: '/techniques', description: 'Red team test procedures per technique', category: 'intelligence' },
+    { id: 'd3fend', label: 'D3FEND', x: 920, y: 560, color: c.accentGreen, bg: alpha(c.accentGreen, '18'), path: '/techniques', description: 'Defensive countermeasures from MITRE D3FEND', category: 'intelligence' },
+    { id: 'thaicert', label: 'ETDA Actors', x: 160, y: 60, color: c.accentNeutral, bg: alpha(c.accentNeutral, '18'), path: '/external-actors', description: '500+ extended threat actors from ThaiCERT encyclopedia', category: 'intelligence' },
+  ];
+}
 
 const EDGES: ModelEdge[] = [
-  // Core relationships
   { from: 'group', to: 'technique', label: 'uses' },
   { from: 'group', to: 'software', label: 'uses' },
   { from: 'group', to: 'campaign', label: 'attributed to' },
@@ -55,17 +51,11 @@ const EDGES: ModelEdge[] = [
   { from: 'campaign', to: 'technique', label: 'uses' },
   { from: 'technique', to: 'tactic', label: 'accomplishes' },
   { from: 'group', to: 'sector', label: 'targets' },
-
-  // Defensive
   { from: 'mitigation', to: 'technique', label: 'prevents' },
   { from: 'sigma', to: 'technique', label: 'detects', style: 'dashed' },
-
-  // Compliance & Frameworks
   { from: 'nist', to: 'technique', label: 'governs', style: 'dashed' },
   { from: 'engage', to: 'technique', label: 'counters', style: 'dashed' },
   { from: 'react', to: 'technique', label: 'responds to', style: 'dashed' },
-
-  // Intelligence
   { from: 'report', to: 'technique', label: 'mentions', style: 'dashed' },
   { from: 'atomic', to: 'technique', label: 'validates', style: 'dashed' },
   { from: 'ioc', to: 'technique', label: 'linked to', style: 'dashed' },
@@ -73,37 +63,21 @@ const EDGES: ModelEdge[] = [
   { from: 'thaicert', to: 'group', label: 'extends', style: 'dashed' },
 ];
 
-const CATEGORIES = [
-  { key: 'core', label: 'ATT&CK Core', color: '#64ffda' },
-  { key: 'defensive', label: 'Detection & Prevention', color: '#34d399' },
-  { key: 'compliance', label: 'Frameworks & Compliance', color: '#38bdf8' },
-  { key: 'intelligence', label: 'Threat Intelligence', color: '#f97316' },
-];
-
 function getEdgePath(from: ModelNode, to: ModelNode): { path: string; midX: number; midY: number; angle: number } {
   const dx = to.x - from.x;
   const dy = to.y - from.y;
   const len = Math.sqrt(dx * dx + dy * dy);
-
-  // Offset start/end by node radius
   const r = 45;
   const sx = from.x + (dx / len) * r;
   const sy = from.y + (dy / len) * r;
   const ex = to.x - (dx / len) * r;
   const ey = to.y - (dy / len) * r;
-
-  // Curve control point — gentle curve, pushed outward from center
   const cx = (sx + ex) / 2 + (dy / len) * 15;
   const cy = (sy + ey) / 2 - (dx / len) * 15;
-
   const midX = (sx + ex) / 2;
   const midY = (sy + ey) / 2;
   const angle = Math.atan2(ey - sy, ex - sx) * (180 / Math.PI);
-
-  return {
-    path: `M ${sx} ${sy} Q ${cx} ${cy} ${ex} ${ey}`,
-    midX, midY, angle,
-  };
+  return { path: `M ${sx} ${sy} Q ${cx} ${cy} ${ex} ${ey}`, midX, midY, angle };
 }
 
 interface Props {
@@ -113,9 +87,18 @@ interface Props {
 
 export function RelationshipModel({ open, onClose }: Props) {
   const navigate = useNavigate();
+  const c = useThemeColors();
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
   const [hoveredEdge, setHoveredEdge] = useState<number | null>(null);
   const [allActive, setAllActive] = useState(false);
+
+  const NODES = makeNodes(c);
+  const CATEGORIES = [
+    { key: 'core', label: 'ATT&CK Core', color: c.accentTeal },
+    { key: 'defensive', label: 'Detection & Prevention', color: c.accentGreen },
+    { key: 'compliance', label: 'Frameworks & Compliance', color: '#38bdf8' },
+    { key: 'intelligence', label: 'Threat Intelligence', color: c.accentOrange },
+  ];
 
   useEffect(() => {
     if (open) {
@@ -132,18 +115,18 @@ export function RelationshipModel({ open, onClose }: Props) {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={onClose}>
       <div
-        className="bg-[#0a0a1a] border border-[#2a2a4a] rounded-xl shadow-2xl w-[95vw] max-w-[1200px] max-h-[90vh] overflow-hidden flex flex-col"
+        className="bg-[var(--surface-deep)] border border-[var(--border-color)] rounded-xl shadow-2xl w-[95vw] max-w-[1200px] max-h-[90vh] overflow-hidden flex flex-col"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#2a2a4a]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border-color)]">
           <div>
-            <h2 className="text-lg font-semibold text-[#ccd6f6]">ATT&CK Object Model Relationships</h2>
-            <p className="text-xs text-[#8892b0] mt-0.5">click any node to navigate — hover for details</p>
+            <h2 className="text-lg font-semibold text-[var(--text-primary)]">ATT&CK Object Model Relationships</h2>
+            <p className="text-xs text-[var(--text-secondary)] mt-0.5">click any node to navigate — hover for details</p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-md text-[#8892b0] hover:text-[#ccd6f6] hover:bg-[#ffffff08] transition-colors"
+            className="p-2 rounded-md text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--hover-overlay)] transition-colors"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -156,10 +139,10 @@ export function RelationshipModel({ open, onClose }: Props) {
           <svg viewBox="0 0 1150 620" className="w-full h-auto min-h-[500px]">
             <defs>
               <marker id="arrow" viewBox="0 0 10 7" refX="10" refY="3.5" markerWidth="8" markerHeight="6" orient="auto-start-reverse">
-                <polygon points="0 0, 10 3.5, 0 7" fill="#4a4a6a" />
+                <polygon points="0 0, 10 3.5, 0 7" fill={c.borderColor} />
               </marker>
               <marker id="arrow-active" viewBox="0 0 10 7" refX="10" refY="3.5" markerWidth="8" markerHeight="6" orient="auto-start-reverse">
-                <polygon points="0 0, 10 3.5, 0 7" fill="#64ffda" />
+                <polygon points="0 0, 10 3.5, 0 7" fill={c.accentTeal} />
               </marker>
             </defs>
 
@@ -179,7 +162,7 @@ export function RelationshipModel({ open, onClose }: Props) {
                   <path
                     d={path}
                     fill="none"
-                    stroke={isActive ? '#64ffda' : '#2a2a4a'}
+                    stroke={isActive ? c.accentTeal : c.borderColor}
                     strokeWidth={isActive ? 2 : 1}
                     strokeDasharray={edge.style === 'dashed' ? '6 4' : undefined}
                     markerEnd={isActive ? 'url(#arrow-active)' : 'url(#arrow)'}
@@ -191,14 +174,14 @@ export function RelationshipModel({ open, onClose }: Props) {
                         x={midX - 30} y={midY - 8}
                         width={60} height={16}
                         rx={3}
-                        fill="#16213e"
-                        stroke="#64ffda33"
+                        fill={c.surfaceCard}
+                        stroke={`${c.accentTeal}33`}
                       />
                       <text
                         x={midX} y={midY + 4}
                         textAnchor="middle"
                         fontSize={9}
-                        fill="#64ffda"
+                        fill={c.accentTeal}
                         className="select-none"
                       >
                         {edge.label}
@@ -220,7 +203,6 @@ export function RelationshipModel({ open, onClose }: Props) {
                   onMouseLeave={() => setHoveredNode(null)}
                   onClick={() => { navigate(node.path); onClose(); }}
                 >
-                  {/* Glow on hover */}
                   {isHovered && (
                     <ellipse
                       cx={node.x} cy={node.y}
@@ -231,7 +213,6 @@ export function RelationshipModel({ open, onClose }: Props) {
                       opacity={0.3}
                     />
                   )}
-                  {/* Node shape */}
                   <ellipse
                     cx={node.x} cy={node.y}
                     rx={48} ry={26}
@@ -241,14 +222,13 @@ export function RelationshipModel({ open, onClose }: Props) {
                     opacity={isHovered ? 1 : 0.85}
                     className="transition-all duration-200"
                   />
-                  {/* Label */}
                   <text
                     x={node.x} y={node.y + 1}
                     textAnchor="middle"
                     dominantBaseline="central"
                     fontSize={11}
                     fontWeight={600}
-                    fill={isHovered ? node.color : '#ccd6f6'}
+                    fill={isHovered ? node.color : c.textPrimary}
                     className="transition-colors duration-200 select-none pointer-events-none"
                   >
                     {node.label}
@@ -268,14 +248,14 @@ export function RelationshipModel({ open, onClose }: Props) {
                     x={node.x - 120} y={tooltipY - 12}
                     width={240} height={24}
                     rx={4}
-                    fill="#16213e"
-                    stroke="#2a2a4a"
+                    fill={c.surfaceCard}
+                    stroke={c.borderColor}
                   />
                   <text
                     x={node.x} y={tooltipY + 2}
                     textAnchor="middle"
                     fontSize={9}
-                    fill="#8892b0"
+                    fill={c.textSecondary}
                     className="select-none"
                   >
                     {node.description}
@@ -287,22 +267,22 @@ export function RelationshipModel({ open, onClose }: Props) {
         </div>
 
         {/* Legend */}
-        <div className="px-6 py-3 border-t border-[#2a2a4a] flex items-center justify-between flex-wrap gap-3">
+        <div className="px-6 py-3 border-t border-[var(--border-color)] flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-4">
             {CATEGORIES.map(cat => (
               <div key={cat.key} className="flex items-center gap-1.5">
                 <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: cat.color, opacity: 0.7 }} />
-                <span className="text-[10px] text-[#8892b0]">{cat.label}</span>
+                <span className="text-[10px] text-[var(--text-secondary)]">{cat.label}</span>
               </div>
             ))}
           </div>
-          <div className="flex items-center gap-4 text-[10px] text-[#4a4a6a]">
+          <div className="flex items-center gap-4 text-[10px] text-[var(--text-secondary)]">
             <span className="flex items-center gap-1.5">
-              <svg width="20" height="2"><line x1="0" y1="1" x2="20" y2="1" stroke="#4a4a6a" strokeWidth="1" /></svg>
+              <svg width="20" height="2"><line x1="0" y1="1" x2="20" y2="1" stroke={c.borderColor} strokeWidth="1" /></svg>
               direct relationship
             </span>
             <span className="flex items-center gap-1.5">
-              <svg width="20" height="2"><line x1="0" y1="1" x2="20" y2="1" stroke="#4a4a6a" strokeWidth="1" strokeDasharray="4 3" /></svg>
+              <svg width="20" height="2"><line x1="0" y1="1" x2="20" y2="1" stroke={c.borderColor} strokeWidth="1" strokeDasharray="4 3" /></svg>
               enrichment mapping
             </span>
           </div>

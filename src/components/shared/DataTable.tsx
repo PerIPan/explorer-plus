@@ -32,7 +32,7 @@ interface DataTableProps<T> {
 
 function SortIcon({ active, dir }: { active: boolean; dir: 'asc' | 'desc' }) {
   return (
-    <span aria-hidden="true" className={`ml-1 inline-block text-xs ${active ? 'text-[#64ffda]' : 'text-[#4a4a6a]'}`}>
+    <span aria-hidden="true" className={`ml-1 inline-block text-xs ${active ? 'text-[var(--accent-teal)]' : 'text-[var(--text-secondary)]'}`}>
       {active && dir === 'asc' ? '\u25B4' : '\u25BE'}
     </span>
   );
@@ -62,10 +62,10 @@ export function DataTable<T extends Record<string, any>>({
 
   return (
     <div className="flex flex-col">
-      <div className="overflow-x-auto rounded-lg border border-[#2a2a4a]">
+      <div className="overflow-x-auto rounded-lg border border-[var(--border-color)]">
         <table className="w-full text-sm border-collapse">
           {/* Sticky header */}
-          <thead className="sticky top-0 z-10 bg-[#16213e] border-b border-[#2a2a4a]">
+          <thead className="sticky top-0 z-10 bg-[var(--surface-card)] border-b border-[var(--border-color)]">
             <tr>
               {columns.map((col) => (
                 <th
@@ -73,9 +73,9 @@ export function DataTable<T extends Record<string, any>>({
                   scope="col"
                   style={col.width ? { width: col.width } : undefined}
                   className={`
-                    px-4 py-3 font-semibold text-xs text-[#8892b0] uppercase tracking-wider
+                    px-4 py-3 font-semibold text-xs text-[var(--text-secondary)] uppercase tracking-wider
                     ${alignClass[col.align ?? 'left']}
-                    ${col.sortKey ? 'cursor-pointer select-none hover:text-[#ccd6f6] transition-colors duration-150' : ''}
+                    ${col.sortKey ? 'cursor-pointer select-none hover:text-[var(--text-primary)] transition-colors duration-150' : ''}
                   `}
                   onClick={col.sortKey && onSort ? () => onSort(col.sortKey!) : undefined}
                   aria-sort={
@@ -105,14 +105,14 @@ export function DataTable<T extends Record<string, any>>({
               Array.from({ length: 8 }).map((_, rowIndex) => (
                 <tr
                   key={rowIndex}
-                  className={`border-b border-[#2a2a4a] last:border-0 ${rowIndex % 2 === 0 ? 'bg-[#16213e]' : 'bg-[#1a1a2e]'}`}
+                  className={`border-b border-[var(--border-color)] last:border-0 ${rowIndex % 2 === 0 ? 'bg-[var(--surface-card)]' : 'bg-[var(--surface-base)]'}`}
                 >
                   {columns.map((col, colIndex) => {
                     const widths = ['w-3/4', 'w-1/2', 'w-1/3'];
                     const w = widths[(colIndex + rowIndex) % widths.length];
                     return (
                       <td key={col.key} className="px-4 py-3">
-                        <div className={`h-4 rounded bg-[#2a2a4a] animate-pulse ${w}`} />
+                        <div className={`h-4 rounded bg-[var(--border-color)] animate-pulse ${w}`} />
                       </td>
                     );
                   })}
@@ -122,10 +122,10 @@ export function DataTable<T extends Record<string, any>>({
 
             {!loading && data.length === 0 && (
               <tr>
-                <td colSpan={columns.length} className="px-4 py-16 text-center text-[#8892b0]">
+                <td colSpan={columns.length} className="px-4 py-16 text-center text-[var(--text-secondary)]">
                   <div className="flex flex-col items-center gap-3">
                     <svg
-                      className="w-10 h-10 text-[#2a2a4a]"
+                      className="w-10 h-10 text-[var(--border-color)]"
                       fill="none"
                       stroke="currentColor"
                       strokeWidth={1.5}
@@ -151,9 +151,9 @@ export function DataTable<T extends Record<string, any>>({
                     tabIndex={onRowClick ? 0 : undefined}
                     onKeyDown={onRowClick ? (e) => { if (e.key === 'Enter') onRowClick(row); } : undefined}
                     className={`
-                      border-b border-[#2a2a4a] last:border-0
-                      ${isEven ? 'bg-[#16213e]' : 'bg-[#1a1a2e]'}
-                      ${onRowClick ? 'cursor-pointer hover:bg-[#64ffda14] focus:outline-none focus:bg-[#64ffda14]' : ''}
+                      border-b border-[var(--border-color)] last:border-0
+                      ${isEven ? 'bg-[var(--surface-card)]' : 'bg-[var(--surface-base)]'}
+                      ${onRowClick ? 'cursor-pointer hover:bg-[var(--teal-faint)] focus:outline-none focus:bg-[var(--teal-faint)]' : ''}
                       transition-colors duration-100
                     `}
                   >
@@ -161,7 +161,7 @@ export function DataTable<T extends Record<string, any>>({
                       <td
                         key={col.key}
                         className={`
-                          px-4 py-3 text-[#ccd6f6]
+                          px-4 py-3 text-[var(--text-primary)]
                           ${alignClass[col.align ?? 'left']}
                         `}
                       >

@@ -11,23 +11,23 @@ export function PageHeader({ title, subtitle, breadcrumb, actions }: PageHeaderP
     <div className="mb-6">
       {breadcrumb && breadcrumb.length > 0 && (
         <nav aria-label="Breadcrumb" className="mb-2">
-          <ol className="flex items-center gap-1.5 text-xs text-[#8892b0]">
+          <ol className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)]">
             {breadcrumb.map((crumb, i) => (
               <li key={i} className="flex items-center gap-1.5">
                 {i > 0 && (
-                  <span aria-hidden="true" className="text-[#2a2a4a]">
+                  <span aria-hidden="true" className="text-[var(--border-color)]">
                     /
                   </span>
                 )}
                 {crumb.href ? (
                   <a
                     href={crumb.href}
-                    className="hover:text-[#ccd6f6] transition-colors duration-150"
+                    className="hover:text-[var(--text-primary)] transition-colors duration-150"
                   >
                     {crumb.label}
                   </a>
                 ) : (
-                  <span className="text-[#ccd6f6]">{crumb.label}</span>
+                  <span className="text-[var(--text-primary)]">{crumb.label}</span>
                 )}
               </li>
             ))}
@@ -37,9 +37,9 @@ export function PageHeader({ title, subtitle, breadcrumb, actions }: PageHeaderP
 
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-[#ccd6f6]">{title}</h1>
+          <h1 className="text-2xl font-semibold text-[var(--text-primary)]">{title}</h1>
           {subtitle && (
-            <p className="mt-1 text-sm text-[#8892b0]">{subtitle}</p>
+            <p className="mt-1 text-sm text-[var(--text-secondary)]">{subtitle}</p>
           )}
         </div>
         {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}

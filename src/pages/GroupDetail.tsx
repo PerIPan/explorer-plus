@@ -11,8 +11,8 @@ export function GroupDetail() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64 text-[#8892b0]">
-        <span className="inline-block w-5 h-5 border-2 border-[#64ffda33] border-t-[#64ffda] rounded-full animate-spin mr-2" />
+      <div className="flex items-center justify-center h-64 text-[var(--text-secondary)]">
+        <span className="inline-block w-5 h-5 border-2 border-[var(--teal-dim)] border-t-[var(--accent-teal)] rounded-full animate-spin mr-2" />
         Loading...
       </div>
     );
@@ -20,7 +20,7 @@ export function GroupDetail() {
 
   if (error || !data) {
     return (
-      <div className="flex items-center justify-center h-64 text-[#f97316]">
+      <div className="flex items-center justify-center h-64 text-[var(--accent-orange)]">
         Group not found.
       </div>
     );
@@ -43,7 +43,7 @@ export function GroupDetail() {
             {(data.isRevoked || data.isDeprecated) && (
               <DeprecatedBadge isRevoked={data.isRevoked} />
             )}
-            <span className="font-mono text-xs text-[#f97316] bg-[#f9731618] border border-[#f9731633] px-2 py-1 rounded">
+            <span className="font-mono text-xs text-[var(--accent-orange)] bg-[var(--orange-faint)] border border-[var(--orange-dim)] px-2 py-1 rounded">
               {data.attackId}
             </span>
           </div>
@@ -51,10 +51,10 @@ export function GroupDetail() {
       />
 
       {/* Single metadata card with labeled rows (FIX 24) */}
-      <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5 space-y-3">
+      <div className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg p-5 space-y-3">
         {data.aliases?.length ? (
           <div className="flex items-start gap-4">
-            <span className="text-xs font-semibold text-[#8892b0] uppercase tracking-wider w-36 shrink-0 pt-0.5">
+            <span className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider w-36 shrink-0 pt-0.5">
               Aliases
             </span>
             <div className="flex flex-wrap gap-1.5">
@@ -66,14 +66,14 @@ export function GroupDetail() {
         ) : null}
         {data.url && (
           <div className="flex items-start gap-4">
-            <span className="text-xs font-semibold text-[#8892b0] uppercase tracking-wider w-36 shrink-0 pt-0.5">
+            <span className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider w-36 shrink-0 pt-0.5">
               Reference
             </span>
             <a
               href={data.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs text-[#64ffda] hover:underline"
+              className="text-xs text-[var(--accent-teal)] hover:underline"
             >
               View on MITRE ATT&amp;CK
             </a>
@@ -83,32 +83,32 @@ export function GroupDetail() {
 
       {/* Description */}
       {description && (
-        <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5">
-          <h3 className="text-sm font-semibold text-[#8892b0] uppercase tracking-wider mb-3">
+        <div className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg p-5">
+          <h3 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-3">
             Description
           </h3>
-          <p className="text-[#ccd6f6] text-sm leading-relaxed whitespace-pre-wrap">
+          <p className="text-[var(--text-primary)] text-sm leading-relaxed whitespace-pre-wrap">
             {description}
           </p>
         </div>
       )}
 
       {/* Relationships — inline preview + full graph link (FIX 23) */}
-      <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5">
+      <div className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg p-5">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold text-[#8892b0] uppercase tracking-wider">
+          <h3 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
             Relationships
           </h3>
           <Link
             to={`/relationships?entity=${data.attackId}`}
-            className="text-xs text-[#64ffda] hover:underline"
+            className="text-xs text-[var(--accent-teal)] hover:underline"
           >
             View full graph &rarr;
           </Link>
         </div>
-        <p className="text-sm text-[#8892b0]">
+        <p className="text-sm text-[var(--text-secondary)]">
           Use the Relationships Explorer to visualize techniques, software, and campaigns used by{' '}
-          <span className="text-[#ccd6f6] font-medium">{data.name}</span>.
+          <span className="text-[var(--text-primary)] font-medium">{data.name}</span>.
         </p>
       </div>
     </div>

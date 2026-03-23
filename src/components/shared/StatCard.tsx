@@ -11,7 +11,7 @@ interface StatCardProps {
   icon?: ReactNode;
   /** If provided, card is rendered as a link to this path. */
   href?: string;
-  /** Border color on hover (e.g. 'hover:border-[#64ffda]'). Used when href is set. */
+  /** Border color on hover (e.g. 'hover:border-[var(--accent-teal)]'). Used when href is set. */
   hoverBorder?: string;
   /** Subtle glow/bg tint on hover (e.g. 'hover:bg-[#64ffda06]'). */
   hoverBg?: string;
@@ -24,11 +24,11 @@ interface StatCardProps {
 export function StatCard({
   label,
   value,
-  accent = 'text-[#64ffda]',
+  accent = 'text-[var(--accent-teal)]',
   description,
   icon,
   href,
-  hoverBorder = 'hover:border-[#64ffda]',
+  hoverBorder = 'hover:border-[var(--accent-teal)]',
   hoverBg = '',
 }: StatCardProps) {
   const inner = (
@@ -43,12 +43,12 @@ export function StatCard({
           </div>
         )}
       </div>
-      <div className="text-sm font-medium text-[#ccd6f6] mt-1">{label}</div>
+      <div className="text-sm font-medium text-[var(--text-primary)] mt-1">{label}</div>
       {description && (
-        <div className="text-xs text-[#8892b0] mt-0.5">{description}</div>
+        <div className="text-xs text-[var(--text-secondary)] mt-0.5">{description}</div>
       )}
       {href && (
-        <div className="mt-2 text-xs text-[#8892b0] flex items-center gap-1 group-hover:text-[#ccd6f6] transition-colors">
+        <div className="mt-2 text-xs text-[var(--text-secondary)] flex items-center gap-1 group-hover:text-[var(--text-primary)] transition-colors">
           View all
           <svg
             className="w-3 h-3 translate-x-0 group-hover:translate-x-0.5 transition-transform"
@@ -66,7 +66,7 @@ export function StatCard({
   );
 
   const baseClass = [
-    'group bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5',
+    'group bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg p-5',
     'flex flex-col transition-all duration-150',
     href ? `${hoverBorder} ${hoverBg} cursor-pointer` : '',
   ]

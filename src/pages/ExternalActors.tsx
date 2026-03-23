@@ -13,17 +13,17 @@ const FUSE_KEYS = ['name', 'description', 'country', 'category'];
 /** Expandable row showing description and reference links. */
 function ExpandedRow({ actor }: { actor: ExternalActor }) {
   return (
-    <tr className="bg-[#0d1526] border-b border-[#2a2a4a]">
+    <tr className="bg-[var(--surface-alt)] border-b border-[var(--border-color)]">
       <td colSpan={6} className="px-6 py-4">
         <div className="space-y-3">
           {actor.description && (
-            <p className="text-sm text-[#8892b0] leading-relaxed max-w-4xl">
+            <p className="text-sm text-[var(--text-secondary)] leading-relaxed max-w-4xl">
               {actor.description}
             </p>
           )}
           {actor.refs && actor.refs.length > 0 && (
             <div>
-              <span className="text-[10px] font-semibold text-[#4a4a6a] uppercase tracking-wider mr-2">
+              <span className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider mr-2">
                 References
               </span>
               <div className="mt-1 flex flex-wrap gap-2">
@@ -33,7 +33,7 @@ function ExpandedRow({ actor }: { actor: ExternalActor }) {
                     href={ref}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-xs text-[#64ffda] hover:underline break-all"
+                    className="text-xs text-[var(--accent-teal)] hover:underline break-all"
                   >
                     {ref}
                   </a>
@@ -42,7 +42,7 @@ function ExpandedRow({ actor }: { actor: ExternalActor }) {
             </div>
           )}
           {!actor.description && (!actor.refs || actor.refs.length === 0) && (
-            <span className="text-xs text-[#4a4a6a]">No additional details available.</span>
+            <span className="text-xs text-[var(--text-secondary)]">No additional details available.</span>
           )}
         </div>
       </td>
@@ -120,7 +120,7 @@ export function ExternalActors() {
           type="button"
           onClick={(e) => { e.stopPropagation(); toggleExpand(row.id); }}
           aria-label={expandedId === row.id ? 'Collapse row' : 'Expand row'}
-          className="text-[#4a4a6a] hover:text-[#64ffda] transition-colors"
+          className="text-[var(--text-secondary)] hover:text-[var(--accent-teal)] transition-colors"
         >
           <svg
             className={`w-3.5 h-3.5 transition-transform duration-150 ${expandedId === row.id ? 'rotate-90' : ''}`}
@@ -140,7 +140,7 @@ export function ExternalActors() {
       header: 'Name',
       sortKey: 'name',
       render: (row) => (
-        <span className="font-medium text-[#ccd6f6] text-sm">{row.name}</span>
+        <span className="font-medium text-[var(--text-primary)] text-sm">{row.name}</span>
       ),
     },
     {
@@ -150,9 +150,9 @@ export function ExternalActors() {
       width: '100px',
       render: (row) =>
         row.country ? (
-          <span className="font-mono text-xs text-[#8892b0] uppercase">{row.country}</span>
+          <span className="font-mono text-xs text-[var(--text-secondary)] uppercase">{row.country}</span>
         ) : (
-          <span className="text-[#4a4a6a] text-xs">—</span>
+          <span className="text-[var(--text-secondary)] text-xs">—</span>
         ),
     },
     {
@@ -162,11 +162,11 @@ export function ExternalActors() {
       width: '130px',
       render: (row) =>
         row.category ? (
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-[#94a3b818] text-[#94a3b8] border border-[#94a3b833]">
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-[var(--neutral-faint)] text-[var(--accent-neutral)] border border-[var(--neutral-dim)]">
             {row.category}
           </span>
         ) : (
-          <span className="text-[#4a4a6a] text-xs">—</span>
+          <span className="text-[var(--text-secondary)] text-xs">—</span>
         ),
     },
     {
@@ -174,12 +174,12 @@ export function ExternalActors() {
       header: 'Synonyms',
       render: (row) =>
         row.synonyms && row.synonyms.length > 0 ? (
-          <span className="text-xs text-[#8892b0]">
+          <span className="text-xs text-[var(--text-secondary)]">
             {row.synonyms.slice(0, 4).join(', ')}
             {row.synonyms.length > 4 ? ` +${row.synonyms.length - 4}` : ''}
           </span>
         ) : (
-          <span className="text-[#4a4a6a] text-xs">—</span>
+          <span className="text-[var(--text-secondary)] text-xs">—</span>
         ),
     },
     {
@@ -190,7 +190,7 @@ export function ExternalActors() {
         row.mitreGroupId ? (
           <EntityLink type="group" attackId={row.mitreGroupId} name={row.mitreGroupName ?? row.mitreGroupId} />
         ) : (
-          <span className="text-[#4a4a6a] text-xs">—</span>
+          <span className="text-[var(--text-secondary)] text-xs">—</span>
         ),
     },
     {
@@ -199,7 +199,7 @@ export function ExternalActors() {
       sortKey: 'source',
       width: '100px',
       render: (row) => (
-        <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-[#38bdf818] text-[#38bdf8] border border-[#38bdf833]">
+        <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-[var(--blue-faint)] text-[var(--accent-blue)] border border-[var(--blue-dim)]">
           {row.source}
         </span>
       ),
@@ -219,12 +219,12 @@ export function ExternalActors() {
           placeholder="Search actors..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="min-w-[200px] px-3 py-1.5 rounded-md text-sm bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6] placeholder-[#8892b0] focus:outline-none focus:border-[#64ffda]"
+          className="min-w-[200px] px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent-teal)]"
         />
         <select
           value={country}
           onChange={(e) => setParam('country', e.target.value)}
-          className="min-w-[140px] px-3 py-1.5 rounded-md text-sm bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6] focus:outline-none focus:border-[#64ffda]"
+          className="min-w-[140px] px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-teal)]"
         >
           <option value="">All Countries</option>
           {countryOptions.map((c) => (
@@ -234,7 +234,7 @@ export function ExternalActors() {
         <select
           value={category}
           onChange={(e) => setParam('category', e.target.value)}
-          className="min-w-[140px] px-3 py-1.5 rounded-md text-sm bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6] focus:outline-none focus:border-[#64ffda]"
+          className="min-w-[140px] px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-teal)]"
         >
           <option value="">All Categories</option>
           {categoryOptions.map((c) => (
@@ -245,21 +245,21 @@ export function ExternalActors() {
 
       {/* Custom table render to support expandable rows */}
       <div className="flex flex-col">
-        <div className="overflow-x-auto rounded-lg border border-[#2a2a4a]">
+        <div className="overflow-x-auto rounded-lg border border-[var(--border-color)]">
           <table className="w-full text-sm border-collapse">
-            <thead className="sticky top-0 z-10 bg-[#16213e] border-b border-[#2a2a4a]">
+            <thead className="sticky top-0 z-10 bg-[var(--surface-card)] border-b border-[var(--border-color)]">
               <tr>
                 {columns.map((col) => (
                   <th
                     key={col.key}
                     scope="col"
                     style={col.width ? { width: col.width } : undefined}
-                    className={`px-4 py-3 font-semibold text-xs text-[#8892b0] uppercase tracking-wider text-left ${col.sortKey ? 'cursor-pointer select-none hover:text-[#ccd6f6] transition-colors duration-150' : ''}`}
+                    className={`px-4 py-3 font-semibold text-xs text-[var(--text-secondary)] uppercase tracking-wider text-left ${col.sortKey ? 'cursor-pointer select-none hover:text-[var(--text-primary)] transition-colors duration-150' : ''}`}
                     onClick={col.sortKey ? () => handleSort(col.sortKey!) : undefined}
                   >
                     {col.header}
                     {col.sortKey && sortBy === col.sortKey && (
-                      <span className="ml-1 text-[#64ffda]">
+                      <span className="ml-1 text-[var(--accent-teal)]">
                         {sortDir === 'asc' ? '\u25B4' : '\u25BE'}
                       </span>
                     )}
@@ -270,10 +270,10 @@ export function ExternalActors() {
             <tbody>
               {isLoading &&
                 Array.from({ length: 8 }).map((_, i) => (
-                  <tr key={i} className={`border-b border-[#2a2a4a] ${i % 2 === 0 ? 'bg-[#16213e]' : 'bg-[#1a1a2e]'}`}>
+                  <tr key={i} className={`border-b border-[var(--border-color)] ${i % 2 === 0 ? 'bg-[var(--surface-card)]' : 'bg-[var(--surface-base)]'}`}>
                     {columns.map((col) => (
                       <td key={col.key} className="px-4 py-3">
-                        <div className="h-4 rounded bg-[#2a2a4a] animate-pulse w-3/4" />
+                        <div className="h-4 rounded bg-[var(--border-color)] animate-pulse w-3/4" />
                       </td>
                     ))}
                   </tr>
@@ -281,7 +281,7 @@ export function ExternalActors() {
 
               {!isLoading && filteredData.length === 0 && (
                 <tr>
-                  <td colSpan={columns.length} className="px-4 py-16 text-center text-[#8892b0] text-sm">
+                  <td colSpan={columns.length} className="px-4 py-16 text-center text-[var(--text-secondary)] text-sm">
                     No actors found.
                   </td>
                 </tr>
@@ -292,10 +292,10 @@ export function ExternalActors() {
                   <React.Fragment key={row.id}>
                     <tr
                       key={row.id}
-                      className={`border-b border-[#2a2a4a] ${rowIndex % 2 === 0 ? 'bg-[#16213e]' : 'bg-[#1a1a2e]'} hover:bg-[#64ffda0a] transition-colors duration-100`}
+                      className={`border-b border-[var(--border-color)] ${rowIndex % 2 === 0 ? 'bg-[var(--surface-card)]' : 'bg-[var(--surface-base)]'} hover:bg-[var(--teal-ghost)] transition-colors duration-100`}
                     >
                       {columns.map((col) => (
-                        <td key={col.key} className="px-4 py-3 text-[#ccd6f6]">
+                        <td key={col.key} className="px-4 py-3 text-[var(--text-primary)]">
                           {col.render ? col.render(row) : String((row as unknown as Record<string, unknown>)[col.key] ?? '')}
                         </td>
                       ))}
@@ -308,12 +308,12 @@ export function ExternalActors() {
         </div>
 
         {!search && data?.pagination && (
-          <div className="mt-4 flex items-center justify-end text-xs text-[#8892b0]">
+          <div className="mt-4 flex items-center justify-end text-xs text-[var(--text-secondary)]">
             <span>{data.pagination.total} actors total</span>
           </div>
         )}
         {search && (
-          <div className="mt-4 flex items-center justify-end text-xs text-[#8892b0]">
+          <div className="mt-4 flex items-center justify-end text-xs text-[var(--text-secondary)]">
             <span>{filteredData.length} actors matching &quot;{search}&quot;</span>
           </div>
         )}
