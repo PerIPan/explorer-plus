@@ -36,7 +36,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
         JOIN sectors s ON s.id = gs.sector_id
         WHERE s.slug = $${params.length}
       )
-      OR r.id NOT IN (SELECT rt3.report_id FROM report_techniques rt3)
+      OR NOT EXISTS (SELECT 1 FROM report_techniques rt3 WHERE rt3.report_id = r.id)
     )`);
   }
 
