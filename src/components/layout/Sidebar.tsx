@@ -134,7 +134,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         {mainSections.map((section, si) => (
           <div key={si} className={si > 0 ? 'mt-3 pt-3 border-t border-[#2a2a4a33]' : ''}>
             {section.label && (
-              <div className="px-3 mb-1.5 text-[10px] font-semibold text-[#8892b0] uppercase tracking-widest">
+              <div className="px-3 mb-1.5 ml-1 border-l-2 border-[#64ffda44] pl-2 text-[11px] font-bold text-[#64ffda] uppercase tracking-widest">
                 {section.label}
               </div>
             )}
@@ -150,7 +150,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
       {/* CTI Section */}
       <div className="px-2 py-4">
-        <div className="px-3 mb-2 text-[10px] font-semibold text-[#8892b0] uppercase tracking-widest">
+        <div className="px-3 mb-2 ml-1 border-l-2 border-[#64ffda44] pl-2 text-[11px] font-bold text-[#64ffda] uppercase tracking-widest">
           CTI
         </div>
         <div className="space-y-0.5">
@@ -165,7 +165,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
       {/* Frameworks Section */}
       <div className="px-2 py-4">
-        <div className="px-3 mb-2 text-[10px] font-semibold text-[#8892b0] uppercase tracking-widest">
+        <div className="px-3 mb-2 ml-1 border-l-2 border-[#64ffda44] pl-2 text-[11px] font-bold text-[#64ffda] uppercase tracking-widest">
           Frameworks
         </div>
         <div className="space-y-0.5">
@@ -180,7 +180,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
       {/* Extended Intel Section */}
       <div className="px-2 py-4">
-        <div className="px-3 mb-2 text-[10px] font-semibold text-[#8892b0] uppercase tracking-widest">
+        <div className="px-3 mb-2 ml-1 border-l-2 border-[#64ffda44] pl-2 text-[11px] font-bold text-[#64ffda] uppercase tracking-widest">
           Extended Intel
         </div>
         <div className="space-y-0.5">
