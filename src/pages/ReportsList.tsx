@@ -1,13 +1,64 @@
 import { useCallback, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useReports } from '../hooks/useApi';
+import { apiFetch } from '../lib/api';
 import { useFuseFilter } from '../hooks/useFuseFilter';
 import { PageHeader } from '../components/layout/PageHeader';
 import { DataTable, type ColumnDef } from '../components/shared/DataTable';
 import { Badge } from '../components/shared/Badge';
+import { EntityLink } from '../components/shared/EntityLink';
 import type { ThreatReport } from '../lib/types';
 
 const FUSE_KEYS = ['title', 'source', 'url'];
+
+/** Clickable technique count that shows linked techniques in a dropdown */
+function TechniquePopover({ reportId, count }: { reportId: string; count: number }) {
+  const [open, setOpen] = useState(false);
+  const { data, isLoading } = useQuery({
+    queryKey: ['report-techniques', reportId],
+    queryFn: () => apiFetch<{ data: Array<{ attackId: string; name: string }> }>(`/feed/reports/${reportId}/techniques`),
+    enabled: open,
+  });
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); setOpen(!open); }}
+        className="cursor-pointer"
+      >
+        <Badge label={String(count)} variant="teal" />
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 top-8 z-50 bg-[#16213e] border border-[#2a2a4a] rounded-lg shadow-2xl p-3 min-w-[240px] max-h-[300px] overflow-y-auto">
+            <div className="text-[10px] text-[#8892b0] uppercase tracking-wider mb-2">
+              Linked Techniques ({count})
+            </div>
+            {isLoading && (
+              <div className="flex items-center gap-2 text-[#8892b0] text-xs py-2">
+                <span className="inline-block w-3 h-3 border-2 border-[#64ffda33] border-t-[#64ffda] rounded-full animate-spin" />
+                Loading...
+              </div>
+            )}
+            {data?.data && (
+              <div className="flex flex-col gap-1">
+                {data.data.map((t) => (
+                  <EntityLink key={t.attackId} type="technique" attackId={t.attackId} name={t.name} />
+                ))}
+              </div>
+            )}
+            {!isLoading && data?.data?.length === 0 && (
+              <span className="text-xs text-[#8892b0]">No techniques found.</span>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
 
 const SOURCE_VARIANTS: Record<string, 'teal' | 'orange' | 'purple' | 'blue' | 'green' | 'pink'> = {
   otx: 'teal',
@@ -80,7 +131,7 @@ const columns: ColumnDef<ThreatReport>[] = [
     align: 'center',
     render: (row) =>
       row.technique_count > 0 ? (
-        <Badge label={String(row.technique_count)} variant="teal" />
+        <TechniquePopover reportId={row.id} count={row.technique_count} />
       ) : (
         <span className="text-[#8892b0] text-xs">—</span>
       ),
