@@ -8,7 +8,7 @@
     }
   },
   "crons": [
-    { "path": "/api/cron/ingest-otx", "schedule": "*/30 * * * *" },
+    { "path": "/api/cron/ingest-otx", "schedule": "0 */4 * * *" },
     { "path": "/api/cron/ingest-abuse-ch", "schedule": "0 2 * * *" },
     { "path": "/api/cron/ingest-cisa-kev", "schedule": "0 3 * * *" },
     { "path": "/api/cron/ingest-rss", "schedule": "0 */6 * * *" },
