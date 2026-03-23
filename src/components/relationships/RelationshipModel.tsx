@@ -31,18 +31,17 @@ const NODES: ModelNode[] = [
 
   // Defensive (right of technique)
   { id: 'mitigation', label: 'Mitigation', x: 750, y: 120, color: '#34d399', bg: '#34d39918', path: '/mitigations', description: 'Countermeasures to prevent techniques', category: 'defensive' },
-  { id: 'datasource', label: 'Data Source', x: 750, y: 300, color: '#f472b6', bg: '#f472b618', path: '/data-sources', description: 'Telemetry for detecting techniques', category: 'defensive' },
-  { id: 'sigma', label: 'Sigma Rules', x: 750, y: 480, color: '#c084fc', bg: '#c084fc18', path: '/cti/sigma', description: 'Detection signatures mapped to techniques', category: 'defensive' },
-  { id: 'd3fend', label: 'D3FEND', x: 880, y: 300, color: '#34d399', bg: '#34d39918', path: '/techniques', description: 'Defensive technique countermeasures from MITRE D3FEND', category: 'defensive' },
+  { id: 'sigma', label: 'Sigma Rules', x: 750, y: 300, color: '#c084fc', bg: '#c084fc18', path: '/cti/sigma', description: 'Detection signatures mapped to techniques', category: 'defensive' },
 
   // Compliance (far right)
   { id: 'nist', label: 'NIST 800-53', x: 980, y: 120, color: '#38bdf8', bg: '#38bdf818', path: '/frameworks/nist', description: 'Federal security controls', category: 'compliance' },
-  { id: 'engage', label: 'MITRE Engage', x: 980, y: 380, color: '#fb923c', bg: '#fb923c18', path: '/frameworks/engage', description: 'Adversary deception & engagement', category: 'compliance' },
+  { id: 'engage', label: 'MITRE Engage', x: 980, y: 300, color: '#fb923c', bg: '#fb923c18', path: '/frameworks/engage', description: 'Adversary deception & engagement', category: 'compliance' },
   { id: 'react', label: 'RE&CT', x: 980, y: 480, color: '#4ade80', bg: '#4ade8018', path: '/frameworks/react', description: 'Incident response playbooks', category: 'compliance' },
 
   // Intelligence (below technique)
   { id: 'report', label: 'Threat Reports', x: 480, y: 520, color: '#f97316', bg: '#f9731618', path: '/cti/reports', description: 'Live threat intelligence from OTX, RSS feeds', category: 'intelligence' },
   { id: 'atomic', label: 'Atomic Tests', x: 600, y: 600, color: '#ef4444', bg: '#ef444418', path: '/techniques', description: 'red team test procedures per technique', category: 'intelligence' },
+  { id: 'd3fend', label: 'D3FEND', x: 700, y: 600, color: '#34d399', bg: '#34d39918', path: '/techniques', description: 'Defensive countermeasures from MITRE D3FEND', category: 'intelligence' },
   { id: 'ioc', label: 'IOCs', x: 300, y: 600, color: '#fb923c', bg: '#fb923c18', path: '/cti/iocs', description: 'CVEs, hashes, domains, IPs from OTX and CISA KEV', category: 'intelligence' },
   { id: 'thaicert', label: 'ETDA Actors', x: 220, y: 30, color: '#94a3b8', bg: '#94a3b818', path: '/external-actors', description: '500+ extended threat actors from ThaiCERT encyclopedia', category: 'intelligence' },
 ];
@@ -59,7 +58,6 @@ const EDGES: ModelEdge[] = [
 
   // Defensive
   { from: 'mitigation', to: 'technique', label: 'prevents' },
-  { from: 'datasource', to: 'technique', label: 'detects' },
   { from: 'sigma', to: 'technique', label: 'detects', style: 'dashed' },
 
   // Compliance & Frameworks
