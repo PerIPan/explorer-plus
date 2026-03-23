@@ -82,7 +82,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       lastCursor ?? new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
     let url: string | null =
-      `${OTX_BASE}/pulses/subscribed?modified_since=${encodeURIComponent(modifiedSince)}&limit=${PULSES_PER_PAGE}&sort=-modified`;
+      `${OTX_BASE}/pulses/subscribed?modified_since=${encodeURIComponent(modifiedSince)}&limit=${PULSES_PER_PAGE}`;
     let pages = 0;
     let latestModified = lastCursor;
 
