@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 interface ModelNode {
@@ -115,6 +115,15 @@ export function RelationshipModel({ open, onClose }: Props) {
   const navigate = useNavigate();
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
   const [hoveredEdge, setHoveredEdge] = useState<number | null>(null);
+  const [allActive, setAllActive] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      setAllActive(true);
+      const timer = setTimeout(() => setAllActive(false), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [open]);
 
   if (!open) return null;
 
@@ -160,7 +169,7 @@ export function RelationshipModel({ open, onClose }: Props) {
               const to = nodeMap[edge.to];
               if (!from || !to) return null;
               const { path, midX, midY } = getEdgePath(from, to);
-              const isActive = hoveredNode === edge.from || hoveredNode === edge.to || hoveredEdge === i;
+              const isActive = allActive || hoveredNode === edge.from || hoveredNode === edge.to || hoveredEdge === i;
 
               return (
                 <g key={i}
@@ -174,7 +183,7 @@ export function RelationshipModel({ open, onClose }: Props) {
                     strokeWidth={isActive ? 2 : 1}
                     strokeDasharray={edge.style === 'dashed' ? '6 4' : undefined}
                     markerEnd={isActive ? 'url(#arrow-active)' : 'url(#arrow)'}
-                    className="transition-all duration-200"
+                    className={`transition-all ${allActive ? 'duration-500' : 'duration-200'}`}
                   />
                   {isActive && (
                     <>
