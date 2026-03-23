@@ -403,6 +403,46 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
           )
         )}
       </MapCard>
+
+      {/* THREAT REPORTS */}
+      {(() => {
+        const reports = intel?.reports ?? [];
+        return (
+          <MapCard label="Threat Reports" icon={IconResponse} count={reports.length}>
+            {reports.length > 0 ? (
+              <div className="space-y-1.5">
+                {reports.map((r) => (
+                  <a
+                    key={r.id}
+                    href={r.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 py-1.5 px-3 rounded-md bg-[#16213e] border border-[#2a2a4a] hover:border-[#64ffda33] transition-colors group"
+                  >
+                    <span className="text-xs text-[#ccd6f6] group-hover:text-[#64ffda] flex-1 truncate">{r.title}</span>
+                    <Badge label={r.source} variant="neutral" />
+                    {r.published_at && (
+                      <span className="text-[10px] text-[#8892b0] shrink-0">
+                        {new Date(r.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </span>
+                    )}
+                  </a>
+                ))}
+              </div>
+            ) : (
+              intelLoading ? (
+                <MapRow prefix="Reports">
+                  <span className="text-xs text-[#8892b0] italic">Loading...</span>
+                </MapRow>
+              ) : (
+                <MapRow prefix="Reports">
+                  <span className="text-xs text-[#8892b0]">No threat reports linked yet.</span>
+                </MapRow>
+              )
+            )}
+          </MapCard>
+        );
+      })()}
     </div>
   );
 }
