@@ -1,4 +1,4 @@
-# ATT&CK Explorer Plus
+# MITRE Explorer Plus
 
 A threat intelligence platform built on **MITRE ATT&CK**. One interface for adversary behavior, detection, and compliance.
 
