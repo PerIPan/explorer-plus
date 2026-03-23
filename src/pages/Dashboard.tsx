@@ -208,7 +208,7 @@ export function Dashboard() {
     );
   }
 
-  const { stats, topGroups, tacticDistribution, sectorBreakdown, attackVersion } = data;
+  const { stats, topGroups, topTechniques, tacticDistribution, sectorBreakdown, attackVersion } = data;
 
   const recentReports = reportsData?.data ?? [];
 
@@ -445,6 +445,47 @@ export function Dashboard() {
               </div>
             ))}
           </div>
+        </div>
+
+        {/* Most targeted techniques */}
+        <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-semibold text-[#ccd6f6]">
+              Most Targeted Techniques
+            </h2>
+            <Link to="/techniques" className="text-xs text-[#64ffda] hover:underline">View all</Link>
+          </div>
+          {topTechniques.length > 0 ? (
+            <div className="space-y-1">
+              {topTechniques.map((t, i) => (
+                <div
+                  key={t.attackId}
+                  className="flex items-center justify-between py-1.5 border-b border-[#2a2a4a] last:border-0"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span
+                      className={`
+                        text-xs font-bold font-mono w-5 text-right shrink-0
+                        ${i === 0 ? 'text-[#fbbf24]' : i === 1 ? 'text-[#8892b0]' : i === 2 ? 'text-[#f97316]' : 'text-[#4a5568]'}
+                      `}
+                    >
+                      {i + 1}
+                    </span>
+                    <EntityLink
+                      type="technique"
+                      attackId={t.attackId}
+                      name={t.name}
+                    />
+                  </div>
+                  <span className="ml-2 text-sm font-semibold text-[#64ffda] tabular-nums shrink-0">
+                    {t.groupCount} groups
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-[#8892b0] text-sm">No technique data available.</p>
+          )}
         </div>
 
         {/* Recent threat reports + quick links */}

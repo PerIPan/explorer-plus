@@ -16,6 +16,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     topGroupsResult,
     tacticDistResult,
     sectorResult,
+    topTechniquesResult,
     versionResult,
   ] = await Promise.all([
     // Entity counts — sector-filtered when active
@@ -113,6 +114,28 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
        GROUP BY s.id, s.name ORDER BY "groupCount" DESC`,
     ),
 
+    // Top 10 most targeted techniques
+    sector
+      ? query<{ attackId: string; name: string; groupCount: string }>(
+          `SELECT t.attack_id AS "attackId", t.name, COUNT(DISTINCT gt.group_id) AS "groupCount"
+           FROM techniques t
+           JOIN group_techniques gt ON gt.technique_id = t.id
+           JOIN group_sectors gs ON gs.group_id = gt.group_id
+           JOIN sectors s ON s.id = gs.sector_id
+           WHERE t.is_revoked = false AND t.is_deprecated = false AND t.is_subtechnique = false AND s.slug = $1
+           GROUP BY t.id, t.attack_id, t.name
+           ORDER BY "groupCount" DESC LIMIT 10`,
+          [sector],
+        )
+      : query<{ attackId: string; name: string; groupCount: string }>(
+          `SELECT t.attack_id AS "attackId", t.name, COUNT(DISTINCT gt.group_id) AS "groupCount"
+           FROM techniques t
+           JOIN group_techniques gt ON gt.technique_id = t.id
+           WHERE t.is_revoked = false AND t.is_deprecated = false AND t.is_subtechnique = false
+           GROUP BY t.id, t.attack_id, t.name
+           ORDER BY "groupCount" DESC LIMIT 10`,
+        ),
+
     // ATT&CK version — always global
     query<{ attackVersion: string; domain: string; seededAt: string }>(
       `SELECT attack_version AS "attackVersion", domain, seeded_at AS "seededAt"
@@ -142,6 +165,11 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     })),
     sectorBreakdown: sectorResult.rows.map((r) => ({
       sectorName: r.sectorName,
+      groupCount: parseInt(r.groupCount, 10),
+    })),
+    topTechniques: topTechniquesResult.rows.map((r) => ({
+      attackId: r.attackId,
+      name: r.name,
       groupCount: parseInt(r.groupCount, 10),
     })),
     attackVersion: versionResult.rows[0] ?? null,

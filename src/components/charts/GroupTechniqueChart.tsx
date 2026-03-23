@@ -60,9 +60,10 @@ export function GroupTechniqueChart({ data, onBarClick }: GroupTechniqueChartPro
             background: '#16213e',
             border: '1px solid #2a2a4a',
             borderRadius: 6,
-            color: '#ccd6f6',
             fontSize: 12,
           }}
+          labelStyle={{ color: '#8892b0' }}
+          itemStyle={{ color: '#ccd6f6' }}
           formatter={(value) => [value, 'Techniques']}
         />
         <Bar dataKey="techniqueCount" radius={[0, 4, 4, 0]}>

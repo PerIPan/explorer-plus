@@ -260,9 +260,16 @@ export interface AttackVersionMeta {
   seededAt: string;
 }
 
+export interface TopTechnique {
+  attackId: string;
+  name: string;
+  groupCount: number;
+}
+
 export interface DashboardData {
   stats: DashboardStats;
   topGroups: TopGroup[];
+  topTechniques: TopTechnique[];
   tacticDistribution: TacticDistribution[];
   sectorBreakdown: SectorBreakdown[];
   /** ATT&CK version metadata from seed_metadata. Null if not yet seeded. */
