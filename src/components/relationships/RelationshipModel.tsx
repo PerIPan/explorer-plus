@@ -33,7 +33,7 @@ const NODES: ModelNode[] = [
 
   // ── Defensive & Compliance — right side, spread vertically ──────────────
   { id: 'mitigation', label: 'Mitigation', x: 850, y: 160, color: '#34d399', bg: '#34d39918', path: '/mitigations', description: 'Countermeasures to prevent techniques', category: 'defensive' },
-  { id: 'sigma', label: 'Sigma Rules', x: 850, y: 420, color: '#c084fc', bg: '#c084fc18', path: '/cti/sigma', description: 'Detection signatures mapped to techniques', category: 'defensive' },
+  { id: 'sigma', label: 'Sigma Rules', x: 850, y: 370, color: '#c084fc', bg: '#c084fc18', path: '/cti/sigma', description: 'Detection signatures mapped to techniques', category: 'defensive' },
   { id: 'nist', label: 'NIST 800-53', x: 1050, y: 160, color: '#38bdf8', bg: '#38bdf818', path: '/frameworks/nist', description: 'Federal security controls', category: 'compliance' },
   { id: 'engage', label: 'MITRE Engage', x: 1050, y: 330, color: '#fb923c', bg: '#fb923c18', path: '/frameworks/engage', description: 'Adversary deception & engagement', category: 'compliance' },
   { id: 'react', label: 'RE&CT', x: 1050, y: 500, color: '#4ade80', bg: '#4ade8018', path: '/frameworks/react', description: 'Incident response playbooks', category: 'compliance' },
