@@ -80,7 +80,7 @@ export function MitigationDetail() {
             to={`/relationships?entity=${data.attackId}`}
             className="text-xs text-[var(--accent-teal)] hover:underline"
           >
-            View full graph &rarr;
+            View relationships &rarr;
           </Link>
         </div>
         <p className="text-sm text-[var(--text-secondary)]">

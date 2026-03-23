@@ -617,10 +617,10 @@ export function TechniqueDetail() {
             )}
             <div className="pt-2">
               <Link
-                to={`/relationships?entity=${data.attackId}`}
+                to={`/relationships?entity=${data.attackId}&tab=technique-map`}
                 className="text-xs text-[var(--accent-teal)] hover:underline"
               >
-                View full graph
+                View technique map
               </Link>
             </div>
           </div>
@@ -645,10 +645,10 @@ export function TechniqueDetail() {
             )}
             <div className="pt-2">
               <Link
-                to={`/relationships?entity=${data.attackId}`}
+                to={`/relationships?entity=${data.attackId}&tab=technique-map`}
                 className="text-xs text-[var(--accent-teal)] hover:underline"
               >
-                View full graph
+                View technique map
               </Link>
             </div>
           </div>
@@ -670,10 +670,10 @@ export function TechniqueDetail() {
             )}
             <div className="pt-2">
               <Link
-                to={`/relationships?entity=${data.attackId}`}
+                to={`/relationships?entity=${data.attackId}&tab=technique-map`}
                 className="text-xs text-[var(--accent-teal)] hover:underline"
               >
-                View full graph
+                View technique map
               </Link>
             </div>
           </div>
@@ -702,10 +702,10 @@ export function TechniqueDetail() {
             )}
             <div className="pt-2">
               <Link
-                to={`/relationships?entity=${data.attackId}`}
+                to={`/relationships?entity=${data.attackId}&tab=technique-map`}
                 className="text-xs text-[var(--accent-teal)] hover:underline"
               >
-                View full graph
+                View technique map
               </Link>
             </div>
           </div>
@@ -727,10 +727,10 @@ export function TechniqueDetail() {
             )}
             <div className="pt-2">
               <Link
-                to={`/relationships?entity=${data.attackId}`}
+                to={`/relationships?entity=${data.attackId}&tab=technique-map`}
                 className="text-xs text-[var(--accent-teal)] hover:underline"
               >
-                View full graph
+                View technique map
               </Link>
             </div>
           </div>

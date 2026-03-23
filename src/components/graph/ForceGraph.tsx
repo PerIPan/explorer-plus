@@ -121,6 +121,11 @@ export const ForceGraph = forwardRef<ForceGraphHandle, ForceGraphProps>(
         .on('zoom', (event) => g.attr('transform', event.transform));
       svg.call(zoomBehavior);
 
+      // Prevent page scroll when using mouse wheel to zoom the graph
+      const svgEl = svgRef.current!;
+      const preventScroll = (e: WheelEvent) => { e.preventDefault(); };
+      svgEl.addEventListener('wheel', preventScroll, { passive: false });
+
       /* ── Edge marker ── */
       svg
         .append('defs')
@@ -259,6 +264,7 @@ export const ForceGraph = forwardRef<ForceGraphHandle, ForceGraphProps>(
       return () => {
         sim.stop();
         svg.on('.zoom', null);
+        svgEl.removeEventListener('wheel', preventScroll);
       };
     }, [data, width, height, onNodeClick, hideTooltip, colors]);
 

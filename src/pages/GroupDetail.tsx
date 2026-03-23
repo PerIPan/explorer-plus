@@ -100,10 +100,10 @@ export function GroupDetail() {
             Relationships
           </h3>
           <Link
-            to={`/relationships?entity=${data.attackId}`}
+            to={`/relationships?entity=${data.attackId}&tab=actor`}
             className="text-xs text-[var(--accent-teal)] hover:underline"
           >
-            View full graph &rarr;
+            View full profile &rarr;
           </Link>
         </div>
         <p className="text-sm text-[var(--text-secondary)]">
