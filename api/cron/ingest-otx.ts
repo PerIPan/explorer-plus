@@ -123,7 +123,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           const reportId = reportResult.rows[0].id;
           recordsInserted++;
 
-          // Link ATT&CK techniques
+          // Link ATT&CK techniques and collect IDs for IOC linking
+          const techIds: string[] = [];
           for (const atkEntry of pulse.attack_ids ?? []) {
             const normalized = /^T\d{4}(\.\d{3})?$/.test(atkEntry.id ?? '')
               ? atkEntry.id
@@ -136,6 +137,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             );
             if (!techResult.rows[0]) continue;
 
+            techIds.push(techResult.rows[0].id);
             await query(
               `INSERT INTO report_techniques (report_id, technique_id)
                VALUES ($1, $2)
@@ -144,17 +146,37 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             );
           }
 
-          // Extract IOCs
+          // Extract IOCs and link to techniques from the same pulse
           for (const indicator of pulse.indicators ?? []) {
             const iocType = mapIocType(indicator.type);
             if (!iocType || !indicator.indicator) continue;
 
-            await query(
-              `INSERT INTO ioc_entries (type, value, source, first_seen)
-               VALUES ($1, $2, 'otx', NOW())
-               ON CONFLICT (type, value, source) DO NOTHING`,
-              [iocType, indicator.indicator],
+            // Generate OTX indicator link
+            const otxTypeMap: Record<string, string> = {
+              ip: 'IPv4', domain: 'domain', url: 'url', hash: 'file', cve: 'cve', email: 'email',
+            };
+            const otxPath = otxTypeMap[iocType] ?? iocType;
+            const sourceRef = `https://otx.alienvault.com/indicator/${otxPath}/${encodeURIComponent(indicator.indicator)}`;
+
+            const iocResult = await query<{ id: string }>(
+              `INSERT INTO ioc_entries (type, value, source, source_ref, first_seen)
+               VALUES ($1, $2, 'otx', $3, NOW())
+               ON CONFLICT (type, value, source) DO UPDATE SET source_ref = EXCLUDED.source_ref
+               RETURNING id`,
+              [iocType, indicator.indicator, sourceRef],
             );
+            const iocId = iocResult.rows[0]?.id;
+            if (!iocId) continue;
+
+            // Link IOC to every technique referenced by this pulse
+            for (const techId of techIds) {
+              await query(
+                `INSERT INTO technique_iocs (technique_id, ioc_id, confidence)
+                 VALUES ($1, $2, 'inferred')
+                 ON CONFLICT DO NOTHING`,
+                [techId, iocId],
+              );
+            }
           }
         } catch (pulseErr) {
           console.error(`Failed to process pulse ${pulse.id}:`, pulseErr);

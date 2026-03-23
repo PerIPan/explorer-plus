@@ -64,6 +64,15 @@ function formatDate(iso: string | null): string {
   });
 }
 
+/** Generate OTX indicator URL from IOC type and value */
+function otxUrl(type: string, value: string): string | null {
+  const map: Record<string, string> = {
+    cve: 'cve', ip: 'IPv4', domain: 'domain', url: 'url', hash: 'file', email: 'email',
+  };
+  const otxType = map[type];
+  return otxType ? `https://otx.alienvault.com/indicator/${otxType}/${encodeURIComponent(value)}` : null;
+}
+
 const columns: ColumnDef<IocEntry>[] = [
   {
     key: 'type',
@@ -76,17 +85,32 @@ const columns: ColumnDef<IocEntry>[] = [
   {
     key: 'value',
     header: 'Value',
-    render: (row) => (
-      <div className="flex items-center gap-0.5">
-        <span
-          className="font-mono text-xs text-[#ccd6f6] max-w-[240px] truncate"
-          title={row.value}
-        >
-          {row.value}
-        </span>
-        <CopyButton value={row.value} />
-      </div>
-    ),
+    render: (row) => {
+      const link = otxUrl(row.type, row.value);
+      return (
+        <div className="flex items-center gap-0.5">
+          {link ? (
+            <a
+              href={link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-mono text-xs text-[#64ffda] hover:underline max-w-[240px] truncate"
+              title={row.value}
+            >
+              {row.value}
+            </a>
+          ) : (
+            <span
+              className="font-mono text-xs text-[#ccd6f6] max-w-[240px] truncate"
+              title={row.value}
+            >
+              {row.value}
+            </span>
+          )}
+          <CopyButton value={row.value} />
+        </div>
+      );
+    },
   },
   {
     key: 'source',
@@ -144,7 +168,7 @@ export function IocsList() {
   const params: Record<string, string> = { page: String(page), limit: '100' };
   if (type) params.type = type;
   if (source) params.source = source;
-  if (q) params.search = q;
+  if (q) params.q = q;
 
   const { data, isLoading } = useIocs(params);
 

@@ -55,6 +55,19 @@ function formatDate(iso: string | null): string {
   });
 }
 
+/** Generate OTX indicator URL from IOC type and value */
+function otxUrl(type: string, value: string): string | null {
+  switch (type) {
+    case 'cve': return `https://otx.alienvault.com/indicator/cve/${encodeURIComponent(value)}`;
+    case 'ip': return `https://otx.alienvault.com/indicator/IPv4/${encodeURIComponent(value)}`;
+    case 'domain': return `https://otx.alienvault.com/indicator/domain/${encodeURIComponent(value)}`;
+    case 'url': return `https://otx.alienvault.com/indicator/url/${encodeURIComponent(value)}`;
+    case 'hash': return `https://otx.alienvault.com/indicator/file/${encodeURIComponent(value)}`;
+    case 'email': return `https://otx.alienvault.com/indicator/email/${encodeURIComponent(value)}`;
+    default: return null;
+  }
+}
+
 interface IntelligenceTabProps {
   attackId: string;
 }
@@ -244,8 +257,15 @@ function IntelligenceTab({ attackId }: IntelligenceTabProps) {
                     <td className="px-3 py-2">
                       <Badge label={ioc.type} variant="neutral" />
                     </td>
-                    <td className="px-3 py-2 font-mono text-xs text-[#ccd6f6] max-w-[200px] truncate">
-                      {ioc.value}
+                    <td className="px-3 py-2 font-mono text-xs max-w-[200px] truncate">
+                      {(() => {
+                        const link = otxUrl(ioc.type, ioc.value);
+                        return link ? (
+                          <a href={link} target="_blank" rel="noopener noreferrer" className="text-[#64ffda] hover:underline">{ioc.value}</a>
+                        ) : (
+                          <span className="text-[#ccd6f6]">{ioc.value}</span>
+                        );
+                      })()}
                     </td>
                     <td className="px-3 py-2 text-xs text-[#8892b0]">{ioc.source}</td>
                     <td className="px-3 py-2 text-xs text-[#f97316]">{ioc.malware_family ?? '—'}</td>

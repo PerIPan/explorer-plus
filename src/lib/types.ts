@@ -346,6 +346,7 @@ export interface IocEntry {
   value: string;
   source: string;
   malware_family: string | null;
+  source_ref: string | null;
   first_seen_at: string | null;
   created_at: string;
 }

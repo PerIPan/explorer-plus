@@ -56,7 +56,9 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   }
 
   const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
-  const sortDir = order === 'asc' ? 'ASC' : 'DESC';
+  // Default to DESC (latest first) when no explicit order given
+  const effectiveOrder = req.query.order ? order : 'desc';
+  const sortDir = effectiveOrder === 'asc' ? 'ASC' : 'DESC';
 
   const countResult = await query<{ count: string }>(
     `SELECT COUNT(*) FROM ioc_entries i ${whereClause}`,
@@ -72,9 +74,10 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     source: string | null;
     malware_family: string | null;
     first_seen: string | null;
+    source_ref: string | null;
     created_at: string;
   }>(
-    `SELECT i.id, i.type, i.value, i.source, i.malware_family, i.first_seen, i.created_at
+    `SELECT i.id, i.type, i.value, i.source, i.malware_family, i.first_seen, i.source_ref, i.created_at
      FROM ioc_entries i
      ${whereClause}
      ORDER BY i.first_seen ${sortDir} NULLS LAST

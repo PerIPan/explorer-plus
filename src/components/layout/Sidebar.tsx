@@ -51,8 +51,7 @@ const mainSections: NavSection[] = [
 
 const ctiNav: NavItem[] = [
   { path: '/cti/reports', label: 'Reports', tooltip: 'threat intelligence reports from OTX, RSS feeds' },
-  // IOCs hidden for now — re-enable when abuse.ch key is active
-  // { path: '/cti/iocs', label: 'IOCs', tooltip: 'indicators of compromise from ThreatFox, MalwareBazaar, CISA KEV' },
+  { path: '/cti/iocs', label: 'IOCs', tooltip: 'CVEs, hashes, domains, IPs from AlienVault OTX, CISA KEV' },
   { path: '/cti/sigma', label: 'Sigma', tooltip: 'structured detection rules shareable across SIEM systems (SigmaHQ)' },
   { path: '/cti/feed-status', label: 'Feed Status', tooltip: 'CTI feed ingestion health and manual sync controls' },
 ];

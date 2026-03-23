@@ -53,7 +53,9 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     created_at: 'r.created_at',
   };
   const sortCol = allowedSort[sortBy ?? 'published_at'] ?? 'r.published_at';
-  const sortDir = order === 'asc' ? 'ASC' : 'DESC';
+  // Default to DESC (latest first) when no explicit order given
+  const effectiveOrder = req.query.order ? order : 'desc';
+  const sortDir = effectiveOrder === 'asc' ? 'ASC' : 'DESC';
 
   const countResult = await query<{ count: string }>(
     `SELECT COUNT(*) FROM threat_reports r ${whereClause}`,
