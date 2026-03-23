@@ -1,10 +1,13 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useEngageActivities } from '../hooks/useApi';
+import { useFuseFilter } from '../hooks/useFuseFilter';
 import { PageHeader } from '../components/layout/PageHeader';
 import { DataTable, type ColumnDef } from '../components/shared/DataTable';
 import { Badge } from '../components/shared/Badge';
 import type { EngageSummary } from '../lib/types';
+
+const FUSE_KEYS = ['engageName', 'engageDescription', 'goal', 'approach'];
 
 const GOAL_COLORS: Record<string, string> = {
   Expose:  'bg-[#f9731618] text-[#f97316] border-[#f9731633]',
@@ -80,15 +83,16 @@ const columns: ColumnDef<EngageSummary>[] = [
 
 export function EngageActivities() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const search = searchParams.get('search') ?? '';
-  const goal   = searchParams.get('goal') ?? '';
-  const page   = parseInt(searchParams.get('page') ?? '1', 10);
+  const [search, setSearch] = useState('');
 
-  const params: Record<string, string> = { page: String(page), limit: '50' };
-  if (search) params.search = search;
+  const goal = searchParams.get('goal') ?? '';
+
+  const params: Record<string, string> = { limit: '5000' };
   if (goal) params.goal = goal;
 
   const { data, isLoading } = useEngageActivities(params);
+
+  const filteredData = useFuseFilter(data?.data ?? [], FUSE_KEYS, search);
 
   const setParam = useCallback(
     (key: string, value: string) => {
@@ -96,14 +100,13 @@ export function EngageActivities() {
         const next = new URLSearchParams(prev);
         if (value) next.set(key, value);
         else next.delete(key);
-        if (key !== 'page') next.delete('page');
         return next;
       });
     },
     [setSearchParams],
   );
 
-  // Extract unique goals from current data for filter
+  // Extract unique goals from all loaded data for filter
   const uniqueGoals = Array.from(
     new Set(
       (data?.data ?? [])
@@ -140,7 +143,7 @@ export function EngageActivities() {
           type="search"
           placeholder="Search activities..."
           value={search}
-          onChange={(e) => setParam('search', e.target.value)}
+          onChange={(e) => setSearch(e.target.value)}
           className="
             flex-1 min-w-[200px] max-w-sm px-3 py-2 rounded-md text-sm
             bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6]
@@ -168,10 +171,8 @@ export function EngageActivities() {
 
       <DataTable
         columns={columns}
-        data={data?.data ?? []}
+        data={filteredData}
         loading={isLoading}
-        pagination={data?.pagination}
-        onPageChange={(p) => setParam('page', String(p))}
         rowKey={(row) => row.engageId}
         emptyMessage="No Engage activities found. Run the sync script to populate data."
       />

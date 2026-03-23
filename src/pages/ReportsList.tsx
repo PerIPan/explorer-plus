@@ -1,10 +1,13 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useReports } from '../hooks/useApi';
+import { useFuseFilter } from '../hooks/useFuseFilter';
 import { PageHeader } from '../components/layout/PageHeader';
 import { DataTable, type ColumnDef } from '../components/shared/DataTable';
 import { Badge } from '../components/shared/Badge';
 import type { ThreatReport } from '../lib/types';
+
+const FUSE_KEYS = ['title', 'source', 'url'];
 
 const SOURCE_VARIANTS: Record<string, 'teal' | 'orange' | 'purple' | 'blue' | 'green' | 'pink'> = {
   otx: 'teal',
@@ -86,10 +89,9 @@ const columns: ColumnDef<ThreatReport>[] = [
 
 export function ReportsList() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const [q, setQ] = useState('');
 
-  const page = parseInt(searchParams.get('page') ?? '1', 10);
   const source = searchParams.get('source') ?? '';
-  const q = searchParams.get('q') ?? '';
   const defaultSince = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
   const since = searchParams.get('since') ?? defaultSince;
 
@@ -102,19 +104,19 @@ export function ReportsList() {
         } else {
           next.delete(key);
         }
-        if (key !== 'page') next.set('page', '1');
         return next;
       });
     },
     [setSearchParams],
   );
 
-  const params: Record<string, string> = { page: String(page), limit: '50' };
+  const params: Record<string, string> = { limit: '5000' };
   if (source) params.source = source;
-  if (q) params.search = q;
   if (since) params.since = since;
 
   const { data, isLoading } = useReports(params);
+
+  const filteredData = useFuseFilter(data?.data ?? [], FUSE_KEYS, q);
 
   return (
     <div className="space-y-4">
@@ -129,7 +131,7 @@ export function ReportsList() {
           type="search"
           placeholder="Search reports..."
           value={q}
-          onChange={(e) => setParam('q', e.target.value)}
+          onChange={(e) => setQ(e.target.value)}
           className="min-w-[200px] px-3 py-1.5 rounded-md text-sm bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6] placeholder-[#8892b0] focus:outline-none focus:border-[#64ffda]"
         />
         <select
@@ -183,10 +185,8 @@ export function ReportsList() {
 
       <DataTable
         columns={columns}
-        data={data?.data ?? []}
+        data={filteredData}
         loading={isLoading}
-        pagination={data?.pagination}
-        onPageChange={(p) => setParam('page', String(p))}
         rowKey={(row) => row.id}
         emptyMessage="No reports found. Trigger a feed sync to populate data."
       />

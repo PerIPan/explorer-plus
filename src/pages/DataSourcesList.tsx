@@ -1,33 +1,35 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useDataSources } from '../hooks/useApi';
+import { useFuseFilter } from '../hooks/useFuseFilter';
 import { PageHeader } from '../components/layout/PageHeader';
 import { DataTable, type ColumnDef } from '../components/shared/DataTable';
 import { EntityLink } from '../components/shared/EntityLink';
 import type { DataSource } from '../lib/types';
 
+const FUSE_KEYS = ['name', 'attackId', 'description'];
+
 export function DataSourcesList() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [search, setSearch] = useState('');
 
-  const page = parseInt(searchParams.get('page') ?? '1', 10);
-  const search = searchParams.get('q') ?? '';
   const sort = searchParams.get('sort') ?? 'attack_id';
   const order = (searchParams.get('order') ?? 'asc') as 'asc' | 'desc';
 
-  const params: Record<string, string> = { page: String(page), limit: '50' };
-  if (search) params.search = search;
+  const params: Record<string, string> = { limit: '5000' };
   if (sort) params.sort = sort;
   if (order) params.order = order;
 
   const { data, isLoading } = useDataSources(params);
+
+  const filteredData = useFuseFilter(data?.data ?? [], FUSE_KEYS, search);
 
   const setParam = useCallback(
     (key: string, value: string) => {
       setSearchParams((prev) => {
         const next = new URLSearchParams(prev);
         if (value) next.set(key, value); else next.delete(key);
-        if (key !== 'page') next.set('page', '1');
         return next;
       });
     },
@@ -41,7 +43,6 @@ export function DataSourcesList() {
       const curDir = prev.get('order') ?? 'asc';
       next.set('sort', key);
       next.set('order', curKey === key && curDir === 'asc' ? 'desc' : 'asc');
-      next.set('page', '1');
       return next;
     });
   }
@@ -90,17 +91,15 @@ export function DataSourcesList() {
           type="search"
           placeholder="Search data sources..."
           value={search}
-          onChange={(e) => setParam('q', e.target.value)}
+          onChange={(e) => setSearch(e.target.value)}
           className="min-w-[200px] px-3 py-1.5 rounded-md text-sm bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6] placeholder-[#8892b0] focus:outline-none focus:border-[#64ffda]"
         />
       </div>
 
       <DataTable
         columns={columns}
-        data={data?.data ?? []}
+        data={filteredData}
         loading={isLoading}
-        pagination={data?.pagination}
-        onPageChange={(p) => setParam('page', String(p))}
         sortBy={sort}
         sortDir={order}
         onSort={handleSort}

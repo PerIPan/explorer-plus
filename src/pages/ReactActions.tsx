@@ -1,9 +1,12 @@
 import { useCallback, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useReactActions } from '../hooks/useApi';
+import { useFuseFilter } from '../hooks/useFuseFilter';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Badge } from '../components/shared/Badge';
 import type { ReactAction } from '../lib/types';
+
+const FUSE_KEYS = ['title', 'description', 'stage'];
 
 const STAGES = [
   'preparation',
@@ -114,16 +117,16 @@ function ActionCard({
 export function ReactActions() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const [search, setSearch] = useState('');
 
-  const search = searchParams.get('search') ?? '';
-  const stage  = searchParams.get('stage') ?? '';
-  const page   = parseInt(searchParams.get('page') ?? '1', 10);
+  const stage = searchParams.get('stage') ?? '';
 
-  const params: Record<string, string> = { page: String(page), limit: '100' };
-  if (search) params.search = search;
+  const params: Record<string, string> = { limit: '5000' };
   if (stage) params.stage = stage;
 
   const { data, isLoading } = useReactActions(params);
+
+  const filteredData = useFuseFilter(data?.data ?? [], FUSE_KEYS, search);
 
   const setParam = useCallback(
     (key: string, value: string) => {
@@ -131,7 +134,6 @@ export function ReactActions() {
         const next = new URLSearchParams(prev);
         if (value) next.set(key, value);
         else next.delete(key);
-        if (key !== 'page') next.delete('page');
         return next;
       });
     },
@@ -147,14 +149,14 @@ export function ReactActions() {
     });
   }, []);
 
-  // Group actions by stage
+  // Group Fuse-filtered actions by stage
   const grouped = STAGES.reduce<Record<string, ReactAction[]>>((acc, s) => {
     acc[s] = [];
     return acc;
   }, {} as Record<string, ReactAction[]>);
 
   const unstagedActions: ReactAction[] = [];
-  for (const action of data?.data ?? []) {
+  for (const action of filteredData) {
     if (action.stage && action.stage in grouped) {
       grouped[action.stage].push(action);
     } else {
@@ -194,7 +196,7 @@ export function ReactActions() {
           type="search"
           placeholder="Search actions..."
           value={search}
-          onChange={(e) => setParam('search', e.target.value)}
+          onChange={(e) => setSearch(e.target.value)}
           className="
             flex-1 min-w-[200px] max-w-sm px-3 py-2 rounded-md text-sm
             bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6]
@@ -269,7 +271,7 @@ export function ReactActions() {
             </section>
           )}
 
-          {(data?.data ?? []).length === 0 && (
+          {filteredData.length === 0 && (
             <p className="text-[#8892b0] text-sm py-6">
               No RE&CT actions found. Run the sync script to populate data.
             </p>

@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTechniques, useTactics } from '../hooks/useApi';
+import { useFuseFilter } from '../hooks/useFuseFilter';
 import { PageHeader } from '../components/layout/PageHeader';
 import { DataTable, type ColumnDef } from '../components/shared/DataTable';
 import { Badge } from '../components/shared/Badge';
@@ -35,21 +36,21 @@ function PlatformBadges({ platforms }: { platforms: string[] | null }) {
   );
 }
 
+const FUSE_KEYS = ['name', 'attackId', 'description'];
+
 export function TechniquesList() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const page = parseInt(searchParams.get('page') ?? '1', 10);
-  const search = searchParams.get('q') ?? '';
   const tactic = searchParams.get('tactic') ?? '';
   const platform = searchParams.get('platform') ?? '';
   const sortBy = searchParams.get('sort') ?? 'attack_id';
   const sortDir = (searchParams.get('order') ?? 'asc') as 'asc' | 'desc';
 
+  const [search, setSearch] = useState('');
   const [expandedParents, setExpandedParents] = useState<Set<string>>(new Set());
 
-  const params: Record<string, string> = { page: String(page), limit: '50' };
-  if (search) params.search = search;
+  const params: Record<string, string> = { limit: '5000' };
   if (tactic) params.tactic = tactic;
   if (platform) params.platform = platform;
   if (sortBy) params.sort = sortBy;
@@ -57,6 +58,9 @@ export function TechniquesList() {
 
   const { data, isLoading } = useTechniques(params);
   const { data: tacticsData } = useTactics({ limit: '100' });
+
+  const allItems = data?.data ?? [];
+  const filtered = useFuseFilter(allItems, FUSE_KEYS, search);
 
   const setParam = useCallback(
     (key: string, value: string) => {
@@ -67,7 +71,6 @@ export function TechniquesList() {
         } else {
           next.delete(key);
         }
-        if (key !== 'page') next.set('page', '1');
         return next;
       });
     },
@@ -81,7 +84,6 @@ export function TechniquesList() {
       const currentKey = prev.get('sort') ?? 'attack_id';
       next.set('sort', key);
       next.set('order', currentKey === key && currentDir === 'asc' ? 'desc' : 'asc');
-      next.set('page', '1');
       return next;
     });
   }
@@ -97,7 +99,7 @@ export function TechniquesList() {
   const tacticOptions = tacticsData?.data ?? [];
 
   /** Flatten rows to include sub-techniques when expanded */
-  const rows = (data?.data ?? []).flatMap((t) => {
+  const rows = filtered.flatMap((t) => {
     const main: Array<Technique & { _isSubTechnique?: boolean; _parentName?: string }> = [
       t as Technique & { _isSubTechnique?: boolean; _parentName?: string },
     ];
@@ -186,7 +188,7 @@ export function TechniquesList() {
           type="search"
           placeholder="Search techniques..."
           value={search}
-          onChange={(e) => setParam('q', e.target.value)}
+          onChange={(e) => setSearch(e.target.value)}
           className="min-w-[200px] px-3 py-1.5 rounded-md text-sm bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6] placeholder-[#8892b0] focus:outline-none focus:border-[#64ffda]"
         />
         <select
@@ -217,8 +219,6 @@ export function TechniquesList() {
         columns={columns}
         data={rows}
         loading={isLoading}
-        pagination={data?.pagination}
-        onPageChange={(p) => setParam('page', String(p))}
         sortBy={sortBy}
         sortDir={sortDir}
         onSort={handleSort}

@@ -124,7 +124,7 @@ function Layout() {
             onClick={e => e.stopPropagation()}
           >
             <div className="flex items-center justify-between px-6 py-4 border-b border-[#2a2a4a]">
-              <h2 className="text-lg font-semibold text-[#ccd6f6]">About ATT&CK Explorer Plus</h2>
+              <h2 className="text-lg font-semibold text-[#ccd6f6]">About ATT&CK Explorer Plus (CLA)</h2>
               <button onClick={() => setHelpOpen(false)} className="p-2 rounded-md text-[#8892b0] hover:text-[#ccd6f6] hover:bg-[#ffffff08]">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -141,7 +141,9 @@ function Layout() {
                 The platform brings together <strong>14 data sources</strong> into one unified view:
                 ATT&CK techniques, threat groups, campaigns, software, mitigations, data sources,
                 tactics, and sectors from MITRE — enriched with <em>live threat intelligence</em> from
-                AlienVault OTX, RSS feeds, CISA KEV, Sigma detection rules, and Atomic Red Team tests.
+                AlienVault OTX, RSS feeds, CISA KEV, Sigma detection rules, Atomic Red Team tests,
+                and <em>D3FEND</em> defensive technique mappings. IOCs link directly to AlienVault OTX
+                indicator pages for deeper investigation.
               </p>
               <p>
                 <strong>Compliance and response frameworks</strong> are integrated directly into each

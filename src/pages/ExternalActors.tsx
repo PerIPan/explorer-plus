@@ -2,10 +2,13 @@ import React from "react";
 import { useState, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useExternalActors } from '../hooks/useApi';
+import { useFuseFilter } from '../hooks/useFuseFilter';
 import { PageHeader } from '../components/layout/PageHeader';
 import { DataTable, type ColumnDef } from '../components/shared/DataTable';
 import { EntityLink } from '../components/shared/EntityLink';
 import type { ExternalActor } from '../lib/types';
+
+const FUSE_KEYS = ['name', 'description', 'country', 'category'];
 
 /** Expandable row showing description and reference links. */
 function ExpandedRow({ actor }: { actor: ExternalActor }) {
@@ -50,16 +53,14 @@ function ExpandedRow({ actor }: { actor: ExternalActor }) {
 export function ExternalActors() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
 
-  const page = parseInt(searchParams.get('page') ?? '1', 10);
-  const search = searchParams.get('q') ?? '';
   const country = searchParams.get('country') ?? '';
   const category = searchParams.get('category') ?? '';
   const sortBy = searchParams.get('sort') ?? 'name';
   const sortDir = (searchParams.get('order') ?? 'asc') as 'asc' | 'desc';
 
-  const params: Record<string, string> = { page: String(page), limit: '50' };
-  if (search) params.search = search;
+  const params: Record<string, string> = { limit: '5000' };
   if (country) params.country = country;
   if (category) params.category = category;
   if (sortBy) params.sort = sortBy;
@@ -67,12 +68,13 @@ export function ExternalActors() {
 
   const { data, isLoading } = useExternalActors(params);
 
+  const filteredData = useFuseFilter(data?.data ?? [], FUSE_KEYS, search);
+
   const setParam = useCallback(
     (key: string, value: string) => {
       setSearchParams((prev) => {
         const next = new URLSearchParams(prev);
         if (value) next.set(key, value); else next.delete(key);
-        if (key !== 'page') next.set('page', '1');
         return next;
       });
     },
@@ -86,7 +88,6 @@ export function ExternalActors() {
       const curDir = prev.get('order') ?? 'asc';
       next.set('sort', key);
       next.set('order', curKey === key && curDir === 'asc' ? 'desc' : 'asc');
-      next.set('page', '1');
       return next;
     });
   }
@@ -95,7 +96,7 @@ export function ExternalActors() {
     setExpandedId((prev) => (prev === id ? null : id));
   }
 
-  // Unique country options from current page data for the dropdown
+  // Unique country options from all loaded data for the dropdown
   const countryOptions = Array.from(
     new Set((data?.data ?? []).map((a) => a.country).filter(Boolean) as string[]),
   ).sort();
@@ -217,7 +218,7 @@ export function ExternalActors() {
           type="search"
           placeholder="Search actors..."
           value={search}
-          onChange={(e) => setParam('q', e.target.value)}
+          onChange={(e) => setSearch(e.target.value)}
           className="min-w-[200px] px-3 py-1.5 rounded-md text-sm bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6] placeholder-[#8892b0] focus:outline-none focus:border-[#64ffda]"
         />
         <select
@@ -278,7 +279,7 @@ export function ExternalActors() {
                   </tr>
                 ))}
 
-              {!isLoading && (data?.data ?? []).length === 0 && (
+              {!isLoading && filteredData.length === 0 && (
                 <tr>
                   <td colSpan={columns.length} className="px-4 py-16 text-center text-[#8892b0] text-sm">
                     No actors found.
@@ -287,7 +288,7 @@ export function ExternalActors() {
               )}
 
               {!isLoading &&
-                (data?.data ?? []).map((row, rowIndex) => (
+                filteredData.map((row, rowIndex) => (
                   <React.Fragment key={row.id}>
                     <tr
                       key={row.id}
@@ -306,32 +307,14 @@ export function ExternalActors() {
           </table>
         </div>
 
-        {data?.pagination && (
-          <div className="mt-4 flex items-center justify-between text-xs text-[#8892b0]">
-            <span>
-              {data.pagination.total} actors total
-            </span>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                disabled={page <= 1}
-                onClick={() => setParam('page', String(page - 1))}
-                className="px-3 py-1.5 rounded-md border border-[#2a2a4a] disabled:opacity-30 hover:border-[#64ffda33] hover:text-[#64ffda] transition-colors"
-              >
-                Previous
-              </button>
-              <span className="px-2">
-                {page} / {data.pagination.totalPages}
-              </span>
-              <button
-                type="button"
-                disabled={page >= data.pagination.totalPages}
-                onClick={() => setParam('page', String(page + 1))}
-                className="px-3 py-1.5 rounded-md border border-[#2a2a4a] disabled:opacity-30 hover:border-[#64ffda33] hover:text-[#64ffda] transition-colors"
-              >
-                Next
-              </button>
-            </div>
+        {!search && data?.pagination && (
+          <div className="mt-4 flex items-center justify-end text-xs text-[#8892b0]">
+            <span>{data.pagination.total} actors total</span>
+          </div>
+        )}
+        {search && (
+          <div className="mt-4 flex items-center justify-end text-xs text-[#8892b0]">
+            <span>{filteredData.length} actors matching &quot;{search}&quot;</span>
           </div>
         )}
       </div>
