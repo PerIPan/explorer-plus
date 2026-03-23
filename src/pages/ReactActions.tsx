@@ -273,7 +273,7 @@ export function ReactActions() {
 
           {filteredData.length === 0 && (
             <p className="text-[#8892b0] text-sm py-6">
-              No RE&CT actions found. Run the sync script to populate data.
+              {search ? 'No actions match your search.' : 'No RE&CT actions found. Run the sync script to populate data.'}
             </p>
           )}
         </div>

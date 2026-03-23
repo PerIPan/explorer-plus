@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useDataSources } from '../hooks/useApi';
 import { useFuseFilter } from '../hooks/useFuseFilter';
@@ -24,17 +24,6 @@ export function DataSourcesList() {
   const { data, isLoading } = useDataSources(params);
 
   const filteredData = useFuseFilter(data?.data ?? [], FUSE_KEYS, search);
-
-  const setParam = useCallback(
-    (key: string, value: string) => {
-      setSearchParams((prev) => {
-        const next = new URLSearchParams(prev);
-        if (value) next.set(key, value); else next.delete(key);
-        return next;
-      });
-    },
-    [setSearchParams]
-  );
 
   function handleSort(key: string) {
     setSearchParams((prev) => {

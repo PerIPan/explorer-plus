@@ -16,7 +16,7 @@ const querySchema = z.object({
   search: z.string().max(200).optional(),
   stage:  z.enum(STAGES).optional(),
   page:   z.coerce.number().int().positive().max(1000).default(1),
-  limit:  z.coerce.number().int().positive().max(200).default(100),
+  limit:  z.coerce.number().int().positive().max(5000).default(100),
 });
 
 async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {

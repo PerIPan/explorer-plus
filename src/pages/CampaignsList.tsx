@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useCampaigns } from '../hooks/useApi';
 import { useFuseFilter } from '../hooks/useFuseFilter';
@@ -35,17 +35,6 @@ export function CampaignsList() {
 
   const allItems = data?.data ?? [];
   const filtered = useFuseFilter(allItems, FUSE_KEYS, search);
-
-  const setParam = useCallback(
-    (key: string, value: string) => {
-      setSearchParams((prev) => {
-        const next = new URLSearchParams(prev);
-        if (value) next.set(key, value); else next.delete(key);
-        return next;
-      });
-    },
-    [setSearchParams]
-  );
 
   function handleSort(key: string) {
     setSearchParams((prev) => {
