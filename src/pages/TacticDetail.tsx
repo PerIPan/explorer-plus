@@ -10,6 +10,21 @@ export function TacticDetail() {
   const { data, isLoading, error } = useTactic(attackId ?? '');
   const [techFilter, setTechFilter] = useState('');
 
+  const allTechniques = data?.techniques ?? [];
+
+  /** Filter + sort alphabetically — must be before early returns (Rules of Hooks) */
+  const techniques = useMemo(() => {
+    const normalized = techFilter.trim().toLowerCase();
+    const filtered = normalized
+      ? allTechniques.filter(
+          (t) =>
+            t.name.toLowerCase().includes(normalized) ||
+            t.attackId.toLowerCase().includes(normalized)
+        )
+      : allTechniques;
+    return [...filtered].sort((a, b) => a.name.localeCompare(b.name));
+  }, [allTechniques, techFilter]);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64 text-[#8892b0]">
@@ -30,21 +45,6 @@ export function TacticDetail() {
   const description = data.description
     ? sanitize(sanitizeMarkdown(data.description))
     : null;
-
-  const allTechniques = data?.techniques ?? [];
-
-  /** Filter + sort alphabetically (FIX 41) */
-  const techniques = useMemo(() => {
-    const normalized = techFilter.trim().toLowerCase();
-    const filtered = normalized
-      ? allTechniques.filter(
-          (t) =>
-            t.name.toLowerCase().includes(normalized) ||
-            t.attackId.toLowerCase().includes(normalized)
-        )
-      : allTechniques;
-    return [...filtered].sort((a, b) => a.name.localeCompare(b.name));
-  }, [allTechniques, techFilter]);
 
   return (
     <div className="space-y-6">
