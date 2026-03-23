@@ -9,16 +9,27 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-interface D3fendDefTech {
-  def_tech_label: string;
-  def_tech_id: string;
-  def_tactic_label?: string;
+interface SparqlValue {
+  type: string;
+  value: string;
+}
+
+interface D3fendBinding {
+  def_tech_id?: SparqlValue;
+  def_tech_label?: SparqlValue;
+  def_tactic_label?: SparqlValue;
+  [key: string]: SparqlValue | undefined;
 }
 
 interface D3fendApiResponse {
-  'off-tech': {
-    label: string;
-    def_to_off_map?: Array<{ def_techs?: D3fendDefTech[] }>;
+  off_to_def?: {
+    results?: {
+      bindings?: D3fendBinding[];
+    };
+  };
+  // Legacy format (pre-2025)
+  'off-tech'?: {
+    def_to_off_map?: Array<{ def_techs?: Array<{ def_tech_id: string; def_tech_label: string; def_tactic_label?: string }> }>;
   };
 }
 
@@ -86,11 +97,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
 
         const data = (await resp.json()) as D3fendApiResponse;
-        const defMap = data['off-tech']?.def_to_off_map ?? [];
 
-        for (const mapping of defMap) {
-          for (const defTech of mapping.def_techs ?? []) {
-            if (!defTech.def_tech_id) continue;
+        // Parse SPARQL bindings (current format) or legacy format
+        const bindings = data.off_to_def?.results?.bindings ?? [];
+        const seen = new Set<string>(); // dedup within same technique
+
+        if (bindings.length > 0) {
+          for (const b of bindings) {
+            const defId = b.def_tech_id?.value;
+            const defLabel = b.def_tech_label?.value;
+            if (!defId || seen.has(defId)) continue;
+            seen.add(defId);
 
             const result = await query(
               `INSERT INTO defensive_mappings
@@ -98,16 +115,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                VALUES ($1, $2, $3, $4, $5)
                ON CONFLICT (technique_id, d3fend_id) DO NOTHING
                RETURNING id`,
-              [
-                tech.id,
-                tech.attack_id,
-                defTech.def_tech_id,
-                defTech.def_tech_label,
-                defTech.def_tactic_label ?? null,
-              ],
+              [tech.id, tech.attack_id, defId, defLabel ?? null, b.def_tactic_label?.value ?? null],
             );
-
             if (result.rows.length > 0) recordsInserted++; else recordsSkipped++;
+          }
+        } else {
+          // Legacy format fallback
+          const defMap = data['off-tech']?.def_to_off_map ?? [];
+          for (const mapping of defMap) {
+            for (const defTech of mapping.def_techs ?? []) {
+              if (!defTech.def_tech_id) continue;
+              const result = await query(
+                `INSERT INTO defensive_mappings
+                   (technique_id, attack_technique_id, d3fend_id, d3fend_name, d3fend_tactic)
+                 VALUES ($1, $2, $3, $4, $5)
+                 ON CONFLICT (technique_id, d3fend_id) DO NOTHING
+                 RETURNING id`,
+                [tech.id, tech.attack_id, defTech.def_tech_id, defTech.def_tech_label, defTech.def_tactic_label ?? null],
+              );
+              if (result.rows.length > 0) recordsInserted++; else recordsSkipped++;
+            }
           }
         }
 
