@@ -137,40 +137,18 @@ function Layout() {
             </div>
             <div className="px-6 py-5 space-y-4 text-sm text-[#ccd6f6] leading-relaxed">
               <p>
-                <strong>ATT&CK Explorer Plus</strong> is a threat intelligence platform built on top of the
-                <em> MITRE ATT&CK</em> framework. It provides security teams with a single interface to
-                explore adversary behavior, detection strategies, and compliance mappings.
+                <strong>ATT&CK Explorer Plus</strong> — a threat intelligence platform on{' '}
+                <em>MITRE ATT&CK</em>. One interface for adversary behavior, detection, and compliance.
               </p>
-              <p>
-                The platform brings together <strong>14 data sources</strong> into one unified view:
-                ATT&CK techniques, threat groups, campaigns, software, mitigations, data sources,
-                tactics, and sectors from MITRE — enriched with <em>live threat intelligence</em> from
-                AlienVault OTX, RSS feeds, CISA KEV, Sigma detection rules, Atomic Red Team tests,
-                and <em>D3FEND</em> defensive technique mappings. IOCs link directly to AlienVault OTX
-                indicator pages for deeper investigation.
-              </p>
-              <p>
-                <strong>Compliance and response frameworks</strong> are integrated directly into each
-                technique: <em>NIST 800-53</em> security controls, <em>MITRE Engage</em> adversary
-                deception activities, and <em>RE&CT</em> incident response playbooks. This means you
-                can go from "what attack is this?" to "how do I detect, prevent, and respond?" in one click.
-              </p>
-              <p>
-                The <strong>Relationships Explorer</strong> is the core of the platform. Search for any
-                entity and instantly see its connections through three views: a <em>Threat Actor Profile</em>
-                showing campaigns, techniques, and targeted sectors; a <em>Technique Map</em> showing who
-                uses it, how to detect it, and which compliance controls apply; and a <em>D3 force graph</em>
-                for visual network exploration.
-              </p>
-              <p>
-                <strong>Extended intelligence</strong> from the <em>ThaiCERT/ETDA encyclopedia</em> adds
-                500+ additional threat actors beyond what MITRE tracks, including motivation, state sponsor
-                attribution, and suspected victim data — automatically linked to ATT&CK groups where possible.
-              </p>
-              <p>
-                All data updates automatically via scheduled feeds. The ATT&CK knowledge base is re-seeded
-                when MITRE releases new versions (approximately twice per year).
-              </p>
+              <ul className="space-y-2 pl-4 list-disc marker:text-[#64ffda]">
+                <li><strong>14 data sources</strong> — techniques, groups, campaigns, software, mitigations, data sources, tactics, sectors + live feeds from AlienVault OTX, RSS, CISA KEV, Sigma, Atomic Red Team, D3FEND</li>
+                <li><strong>Relationships Explorer</strong> — search any entity, see connections via Threat Actor Profile, Technique Map, or D3 force graph</li>
+                <li><strong>Frameworks</strong> — NIST 800-53 controls, MITRE Engage deception, RE&CT response playbooks mapped per technique</li>
+                <li><strong>IOCs</strong> — CVEs, hashes, domains, IPs linked to AlienVault OTX indicator pages</li>
+                <li><strong>Non-MITRE Actors</strong> — 500+ threat actors from ThaiCERT/ETDA with motivation, state sponsor, and victim data</li>
+                <li><strong>Global sector filter</strong> — narrow the entire view by industry (Finance, Healthcare, etc.)</li>
+                <li><strong>Auto-updating</strong> — scheduled feeds keep data current; ATT&CK re-seeded on new MITRE releases</li>
+              </ul>
               <p className="text-[#8892b0] text-xs pt-2 border-t border-[#2a2a4a]">
                 Built with React, TypeScript, PostgreSQL, and Vercel. ATT&CK data version shown in the Overview page.
                 Not affiliated with or endorsed by MITRE Corporation.
