@@ -1,5 +1,6 @@
 import { useNavigate, Link } from 'react-router-dom';
 import { useDashboard, useReports } from '../hooks/useApi';
+import { useSector } from '../contexts/SectorContext';
 import { PageHeader } from '../components/layout/PageHeader';
 import { StatCard } from '../components/shared/StatCard';
 import { EntityLink } from '../components/shared/EntityLink';
@@ -128,7 +129,8 @@ function VersionBannerSkeleton() {
 
 export function Dashboard() {
   const navigate = useNavigate();
-  const { data, isLoading, error } = useDashboard();
+  const { sectorParam } = useSector();
+  const { data, isLoading, error } = useDashboard(sectorParam);
   const { data: reportsData, isLoading: reportsLoading } = useReports({
     limit: '5',
     since: new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0],

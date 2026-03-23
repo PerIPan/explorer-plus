@@ -1,4 +1,4 @@
-import { createContext, useContext, useCallback, useMemo, type ReactNode } from 'react';
+import { createContext, useContext, useCallback, useMemo, useRef, useEffect, type ReactNode } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 interface SectorContextValue {
@@ -17,13 +17,44 @@ const Ctx = createContext<SectorContextValue>({
 });
 
 const EMPTY_PARAM: Record<string, string> = {};
+const STORAGE_KEY = 'mitre-sector';
 
 export function SectorProvider({ children }: { children: ReactNode }) {
   const [searchParams, setSearchParams] = useSearchParams();
-  const sector = searchParams.get('sector') || null;
+  const urlSector = searchParams.get('sector') || null;
+
+  // Persist sector in sessionStorage so it survives navigation
+  const sectorRef = useRef<string | null>(
+    urlSector ?? sessionStorage.getItem(STORAGE_KEY),
+  );
+
+  // If URL has sector, update ref + storage
+  if (urlSector) {
+    sectorRef.current = urlSector;
+    sessionStorage.setItem(STORAGE_KEY, urlSector);
+  }
+
+  const sector = sectorRef.current;
+
+  // Re-inject sector into URL when navigating to a page that lost it
+  useEffect(() => {
+    if (sector && !urlSector) {
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        next.set('sector', sector);
+        return next;
+      }, { replace: true });
+    }
+  }, [sector, urlSector, setSearchParams]);
 
   const setSector = useCallback(
     (slug: string | null) => {
+      sectorRef.current = slug;
+      if (slug) {
+        sessionStorage.setItem(STORAGE_KEY, slug);
+      } else {
+        sessionStorage.removeItem(STORAGE_KEY);
+      }
       setSearchParams((prev) => {
         const next = new URLSearchParams(prev);
         if (slug) {

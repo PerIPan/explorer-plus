@@ -29,10 +29,10 @@ import type {
 
 // ── List / paginated hooks ────────────────────────────────────────────────────
 
-export function useDashboard() {
+export function useDashboard(params: Record<string, string> = {}) {
   return useQuery({
-    queryKey: ['dashboard'],
-    queryFn: () => apiFetch<DashboardData>('/dashboard'),
+    queryKey: ['dashboard', params],
+    queryFn: () => apiFetch<DashboardData>('/dashboard', params),
   });
 }
 
