@@ -349,6 +349,7 @@ export interface IocEntry {
   source_ref: string | null;
   first_seen_at: string | null;
   created_at: string;
+  technique_count?: number;
 }
 
 export interface SigmaRule {

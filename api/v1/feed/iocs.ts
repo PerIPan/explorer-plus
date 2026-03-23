@@ -76,10 +76,14 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     first_seen: string | null;
     source_ref: string | null;
     created_at: string;
+    technique_count: string;
   }>(
-    `SELECT i.id, i.type, i.value, i.source, i.malware_family, i.first_seen, i.source_ref, i.created_at
+    `SELECT i.id, i.type, i.value, i.source, i.malware_family, i.first_seen, i.source_ref, i.created_at,
+            COUNT(ti.technique_id) AS technique_count
      FROM ioc_entries i
+     LEFT JOIN technique_iocs ti ON ti.ioc_id = i.id
      ${whereClause}
+     GROUP BY i.id
      ORDER BY i.first_seen ${sortDir} NULLS LAST
      LIMIT $${params.length - 1} OFFSET $${params.length}`,
     params,
@@ -89,6 +93,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   const data = dataResult.rows.map((r) => ({
     ...r,
     first_seen_at: r.first_seen,
+    technique_count: parseInt(r.technique_count, 10),
   }));
 
   res.status(200).json({

@@ -1,8 +1,11 @@
 import { useCallback, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useIocs } from '../hooks/useApi';
+import { apiFetch } from '../lib/api';
 import { PageHeader } from '../components/layout/PageHeader';
 import { DataTable, type ColumnDef } from '../components/shared/DataTable';
+import { EntityLink } from '../components/shared/EntityLink';
 import { Badge } from '../components/shared/Badge';
 import type { IocEntry } from '../lib/types';
 
@@ -73,6 +76,54 @@ function otxUrl(type: string, value: string): string | null {
   return otxType ? `https://otx.alienvault.com/indicator/${otxType}/${encodeURIComponent(value)}` : null;
 }
 
+/** Clickable technique count with popover showing linked techniques */
+function TechniquePopover({ iocId, count }: { iocId: string; count: number }) {
+  const [open, setOpen] = useState(false);
+  const { data, isLoading } = useQuery({
+    queryKey: ['ioc-techniques', iocId],
+    queryFn: () => apiFetch<{ data: Array<{ attackId: string; name: string }> }>(`/feed/iocs/${iocId}/techniques`),
+    enabled: open,
+  });
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); setOpen(!open); }}
+        className="cursor-pointer"
+      >
+        <Badge label={String(count)} variant="teal" />
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 top-8 z-50 bg-[#16213e] border border-[#2a2a4a] rounded-lg shadow-2xl p-3 min-w-[240px] max-h-[300px] overflow-y-auto">
+            <div className="text-[10px] text-[#8892b0] uppercase tracking-wider mb-2">
+              Linked Techniques ({count})
+            </div>
+            {isLoading && (
+              <div className="flex items-center gap-2 text-[#8892b0] text-xs py-2">
+                <span className="inline-block w-3 h-3 border-2 border-[#64ffda33] border-t-[#64ffda] rounded-full animate-spin" />
+                Loading...
+              </div>
+            )}
+            {data?.data && (
+              <div className="flex flex-col gap-1">
+                {data.data.map((t) => (
+                  <EntityLink key={t.attackId} type="technique" attackId={t.attackId} name={t.name} />
+                ))}
+              </div>
+            )}
+            {!isLoading && data?.data?.length === 0 && (
+              <span className="text-xs text-[#8892b0]">No techniques found.</span>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 const columns: ColumnDef<IocEntry>[] = [
   {
     key: 'type',
@@ -138,6 +189,18 @@ const columns: ColumnDef<IocEntry>[] = [
     render: (row) => (
       <span className="text-[#8892b0] text-xs">{formatDate(row.first_seen_at)}</span>
     ),
+  },
+  {
+    key: 'technique_count',
+    header: 'Techniques',
+    width: '100px',
+    align: 'center',
+    render: (row) =>
+      (row.technique_count ?? 0) > 0 ? (
+        <TechniquePopover iocId={row.id} count={row.technique_count!} />
+      ) : (
+        <span className="text-[#8892b0] text-xs">—</span>
+      ),
   },
 ];
 
