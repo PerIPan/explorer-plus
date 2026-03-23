@@ -53,8 +53,8 @@ export function MatrixCell({ technique, groupUsageCount, maxUsage }: MatrixCellP
         {technique.name}
       </div>
       {technique.subTechniques.length > 0 && (
-        <div className="text-[9px] text-[#64ffda88] mt-0.5">
-          +{technique.subTechniques.length} sub
+        <div className="text-[10px] text-[#64ffda] font-medium mt-0.5">
+          ▸ {technique.subTechniques.length} sub
         </div>
       )}
     </button>

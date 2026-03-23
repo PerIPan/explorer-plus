@@ -35,8 +35,8 @@ const mainSections: NavSection[] = [
   {
     label: 'Offensive',
     items: [
-      { path: '/techniques', label: 'Techniques', tooltip: 'attack techniques and sub-techniques used by adversaries' },
       { path: '/tactics', label: 'Tactics', tooltip: 'kill chain phases: recon → impact' },
+      { path: '/techniques', label: 'Techniques', tooltip: 'attack techniques and sub-techniques used by adversaries' },
       { path: '/software', label: 'Software', tooltip: 'malware and tools used by threat actors' },
     ],
   },
