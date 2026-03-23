@@ -2,6 +2,8 @@ import { lazy, Suspense, useState } from 'react';
 import { Routes, Route, Outlet } from 'react-router-dom';
 import { Sidebar } from './components/layout/Sidebar';
 import { SearchBar } from './components/layout/SearchBar';
+import { SectorDropdown } from './components/layout/SectorDropdown';
+import { SectorProvider } from './contexts/SectorContext';
 import { RelationshipModel } from './components/relationships/RelationshipModel';
 
 // Lazy-loaded pages
@@ -54,6 +56,7 @@ function Layout() {
   const [helpOpen, setHelpOpen] = useState(false);
 
   return (
+    <SectorProvider>
     <div className="flex min-h-screen bg-[#0a0a1a]">
       {/* Mobile overlay */}
       {sidebarOpen && (
@@ -89,6 +92,7 @@ function Layout() {
             </svg>
           </button>
           <SearchBar />
+          <SectorDropdown />
           <button
             type="button"
             onClick={() => setModelOpen(true)}
@@ -176,6 +180,7 @@ function Layout() {
         </div>
       )}
     </div>
+    </SectorProvider>
   );
 }
 

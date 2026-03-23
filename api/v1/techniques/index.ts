@@ -16,6 +16,7 @@ const querySchema = paginationSchema.extend({
   search: z.string().min(3).max(200).optional(),
   tactic: z.string().optional(),
   platform: z.string().optional(),
+  sector: z.string().max(50).optional(),
   include_deprecated: z.coerce.boolean().default(false),
 });
 
@@ -26,7 +27,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     return;
   }
 
-  const { page, limit, sort, order, search, tactic, platform, include_deprecated } = parsed.data;
+  const { page, limit, sort, order, search, tactic, platform, sector, include_deprecated } = parsed.data;
   const sortCol = SORT_MAP[sort ?? 'name'] ?? 't.name';
   const sortDir = order === 'desc' ? 'DESC' : 'ASC';
   const sortClause = `ORDER BY ${sortCol} ${sortDir}`;
@@ -57,6 +58,15 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   if (platform) {
     params.push(`{${platform}}`);
     conditions.push(`t.platforms && $${params.length}::text[]`);
+  }
+
+  if (sector) {
+    params.push(sector);
+    conditions.push(`t.id IN (
+      SELECT gt.technique_id FROM group_techniques gt
+      JOIN group_sectors gs ON gs.group_id = gt.group_id
+      JOIN sectors s ON s.id = gs.sector_id WHERE s.slug = $${params.length}
+    )`);
   }
 
   const whereClause = `WHERE ${conditions.join(' AND ')}`;

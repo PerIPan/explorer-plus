@@ -52,7 +52,6 @@ const mainSections: NavSection[] = [
 const ctiNav: NavItem[] = [
   { path: '/cti/reports', label: 'Reports', tooltip: 'threat intelligence reports from OTX, RSS feeds' },
   { path: '/cti/iocs', label: 'IOCs', tooltip: 'CVEs, hashes, domains, IPs from AlienVault OTX, CISA KEV' },
-  { path: '/cti/sigma', label: 'Sigma', tooltip: 'structured detection rules shareable across SIEM systems (SigmaHQ)' },
   { path: '/cti/feed-status', label: 'Feed Status', tooltip: 'CTI feed ingestion health and manual sync controls' },
 ];
 
@@ -60,6 +59,7 @@ const frameworksNav: NavItem[] = [
   { path: '/frameworks/nist', label: 'NIST 800-53', tooltip: 'compliance controls mapped to techniques' },
   { path: '/frameworks/engage', label: 'Engage', tooltip: 'adversary deception and engagement activities' },
   { path: '/frameworks/react', label: 'RE&CT', tooltip: 'incident response actions and playbooks' },
+  { path: '/cti/sigma', label: 'Sigma Rules', tooltip: 'detection signatures mapped to techniques (SigmaHQ)' },
 ];
 
 const extendedIntelNav: NavItem[] = [
@@ -150,7 +150,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
       {/* CTI Section */}
       <div className="px-2 py-4">
-        <div className="px-3 mb-2 ml-1 border-l-2 border-[#64ffda44] pl-2 text-[11px] font-bold text-[#64ffda] uppercase tracking-widest">
+        <div className="px-3 mb-2 ml-1 border-l-2 border-[#64ffda44] pl-2 text-[11px] font-bold text-[#64ffda] uppercase tracking-widest" title="Not filtered by sector">
           CTI
         </div>
         <div className="space-y-0.5">
@@ -165,7 +165,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
       {/* Frameworks Section */}
       <div className="px-2 py-4">
-        <div className="px-3 mb-2 ml-1 border-l-2 border-[#64ffda44] pl-2 text-[11px] font-bold text-[#64ffda] uppercase tracking-widest">
+        <div className="px-3 mb-2 ml-1 border-l-2 border-[#64ffda44] pl-2 text-[11px] font-bold text-[#64ffda] uppercase tracking-widest" title="Not filtered by sector">
           Frameworks
         </div>
         <div className="space-y-0.5">

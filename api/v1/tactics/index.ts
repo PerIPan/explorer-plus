@@ -1,8 +1,45 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { query } from '../lib/db.js';
 import { withHandler } from '../lib/middleware.js';
+import { z } from 'zod';
+
+const querySchema = z.object({
+  sector: z.string().max(50).optional(),
+});
 
 async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
+  const parsed = querySchema.safeParse(req.query);
+  if (!parsed.success) {
+    res.status(400).json({ error: 'Invalid query parameters', code: 'VALIDATION_ERROR', details: parsed.error.flatten() });
+    return;
+  }
+
+  const { sector } = parsed.data;
+  const params: unknown[] = [];
+  const conditions: string[] = [];
+
+  // Base: count non-revoked, non-deprecated techniques per tactic
+  let techniqueFilter = '';
+  if (sector) {
+    params.push(sector);
+    conditions.push(`ta.id IN (
+      SELECT tt.tactic_id FROM technique_tactics tt
+      JOIN group_techniques gt ON gt.technique_id = tt.technique_id
+      JOIN group_sectors gs ON gs.group_id = gt.group_id
+      JOIN sectors s ON s.id = gs.sector_id
+      WHERE s.slug = $${params.length}
+    )`);
+    // Also filter the technique count to sector-linked techniques only
+    techniqueFilter = `AND tt.technique_id IN (
+      SELECT gt.technique_id FROM group_techniques gt
+      JOIN group_sectors gs ON gs.group_id = gt.group_id
+      JOIN sectors s ON s.id = gs.sector_id
+      WHERE s.slug = $${params.length}
+    )`;
+  }
+
+  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
   const dataResult = await query<{
     attackId: string; name: string; description: string | null;
     url: string | null; sortOrder: number | null; domain: string | null;
@@ -15,13 +52,16 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
        ta.url,
        ta.sort_order   AS "sortOrder",
        ta.domain,
-       COUNT(DISTINCT tt.technique_id) AS "techniqueCount"
+       (SELECT COUNT(DISTINCT tt.technique_id)
+        FROM technique_tactics tt
+        JOIN techniques t ON t.id = tt.technique_id
+          AND t.is_revoked = false AND t.is_deprecated = false
+        WHERE tt.tactic_id = ta.id ${techniqueFilter}
+       ) AS "techniqueCount"
      FROM tactics ta
-     LEFT JOIN technique_tactics tt ON tt.tactic_id = ta.id
-     LEFT JOIN techniques t ON t.id = tt.technique_id
-       AND t.is_revoked = false AND t.is_deprecated = false
-     GROUP BY ta.id, ta.attack_id, ta.name, ta.description, ta.url, ta.sort_order, ta.domain
+     ${whereClause}
      ORDER BY ta.sort_order ASC NULLS LAST`,
+    params,
   );
 
   res.status(200).json({

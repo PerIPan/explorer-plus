@@ -9,7 +9,7 @@ const ALLOWED_SORT = ['name', 'attack_id', 'stix_modified'];
 
 const querySchema = paginationSchema.extend({
   search: z.string().min(3).max(200).optional(),
-  sector: z.string().optional(),
+  sector: z.string().max(50).optional(),
   include_deprecated: z.coerce.boolean().default(false),
 });
 

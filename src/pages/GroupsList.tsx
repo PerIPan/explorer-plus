@@ -1,6 +1,7 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useGroups, useSectors } from '../hooks/useApi';
+import { useGroups } from '../hooks/useApi';
+import { useSector } from '../contexts/SectorContext';
 import { useFuseFilter } from '../hooks/useFuseFilter';
 import { PageHeader } from '../components/layout/PageHeader';
 import { DataTable, type ColumnDef } from '../components/shared/DataTable';
@@ -13,34 +14,21 @@ const FUSE_KEYS = ['name', 'attackId', 'description'];
 export function GroupsList() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { sectorParam } = useSector();
 
-  const sector = searchParams.get('sector') ?? '';
   const sortBy = searchParams.get('sort') ?? 'attack_id';
   const sortDir = (searchParams.get('order') ?? 'asc') as 'asc' | 'desc';
 
   const [search, setSearch] = useState('');
 
-  const params: Record<string, string> = { limit: '5000' };
-  if (sector) params.sector = sector;
+  const params: Record<string, string> = { limit: '5000', ...sectorParam };
   if (sortBy) params.sort = sortBy;
   if (sortDir) params.order = sortDir;
 
   const { data, isLoading } = useGroups(params);
-  const { data: sectorsData } = useSectors({ limit: '100' });
 
   const allItems = data?.data ?? [];
   const filtered = useFuseFilter(allItems, FUSE_KEYS, search);
-
-  const setParam = useCallback(
-    (key: string, value: string) => {
-      setSearchParams((prev) => {
-        const next = new URLSearchParams(prev);
-        if (value) next.set(key, value); else next.delete(key);
-        return next;
-      });
-    },
-    [setSearchParams]
-  );
 
   function handleSort(key: string) {
     setSearchParams((prev) => {
@@ -103,16 +91,6 @@ export function GroupsList() {
           onChange={(e) => setSearch(e.target.value)}
           className="min-w-[200px] px-3 py-1.5 rounded-md text-sm bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6] placeholder-[#8892b0] focus:outline-none focus:border-[#64ffda]"
         />
-        <select
-          value={sector}
-          onChange={(e) => setParam('sector', e.target.value)}
-          className="min-w-[140px] px-3 py-1.5 rounded-md text-sm bg-[#16213e] border border-[#2a2a4a] text-[#ccd6f6] focus:outline-none focus:border-[#64ffda]"
-        >
-          <option value="">All Sectors</option>
-          {(sectorsData?.data ?? []).map((s) => (
-            <option key={s.name} value={s.slug ?? s.name.toLowerCase()}>{s.name}</option>
-          ))}
-        </select>
       </div>
 
       <DataTable

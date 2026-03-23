@@ -11,6 +11,7 @@ const querySchema = paginationSchema.extend({
   search: z.string().min(3).max(200).optional(),
   type: softwareTypeSchema.optional(),
   platform: z.string().optional(),
+  sector: z.string().max(50).optional(),
   include_deprecated: z.coerce.boolean().default(false),
 });
 
@@ -21,7 +22,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     return;
   }
 
-  const { page, limit, sort, order, search, type, platform, include_deprecated } = parsed.data;
+  const { page, limit, sort, order, search, type, platform, sector, include_deprecated } = parsed.data;
   const sortCol = sort ?? 'name';
   const sortClause = buildSortClause(sortCol, order, ALLOWED_SORT);
   const { offset } = buildPaginationClause(page, limit);
@@ -47,6 +48,15 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   if (platform) {
     params.push(`{${platform}}`);
     conditions.push(`sw.platforms && $${params.length}::text[]`);
+  }
+
+  if (sector) {
+    params.push(sector);
+    conditions.push(`sw.id IN (
+      SELECT gsw.software_id FROM group_software gsw
+      JOIN group_sectors gs ON gs.group_id = gsw.group_id
+      JOIN sectors s ON s.id = gs.sector_id WHERE s.slug = $${params.length}
+    )`);
   }
 
   const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
