@@ -44,26 +44,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const data = (await resp.json()) as CisaKevResponse;
     const vulns = data.vulnerabilities ?? [];
 
-    for (const vuln of vulns) {
-      // Use source_ref to store vendor/product info since there's no notes column
-      const sourceRef = [vuln.vendorProject, vuln.product, vuln.vulnerabilityName]
-        .filter(Boolean)
-        .join(' | ');
+    // Batch insert in chunks of 100 to stay within Vercel timeout
+    const BATCH_SIZE = 100;
+    for (let i = 0; i < vulns.length; i += BATCH_SIZE) {
+      const batch = vulns.slice(i, i + BATCH_SIZE);
+      const values: string[] = [];
+      const params: unknown[] = [];
 
-      const result = await query(
-        `INSERT INTO ioc_entries
-           (type, value, source, malware_family, first_seen, source_ref)
-         VALUES ('cve', $1, 'cisa_kev', NULL, $2, $3)
+      for (const vuln of batch) {
+        const sourceRef = [vuln.vendorProject, vuln.product, vuln.vulnerabilityName]
+          .filter(Boolean)
+          .join(' | ');
+        const offset = params.length;
+        values.push(`('cve', $${offset + 1}, 'cisa_kev', NULL, $${offset + 2}, $${offset + 3})`);
+        params.push(vuln.cveID, vuln.dateAdded || null, sourceRef || null);
+      }
+
+      const result = await query<{ id: string }>(
+        `INSERT INTO ioc_entries (type, value, source, malware_family, first_seen, source_ref)
+         VALUES ${values.join(', ')}
          ON CONFLICT (type, value, source) DO NOTHING
          RETURNING id`,
-        [vuln.cveID, vuln.dateAdded || null, sourceRef || null],
+        params,
       );
-
-      if (result.rows.length > 0) {
-        recordsInserted++;
-      } else {
-        recordsSkipped++;
-      }
+      recordsInserted += result.rows.length;
+      recordsSkipped += batch.length - result.rows.length;
     }
 
     await query(
