@@ -33,6 +33,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
               JOIN threat_groups tg ON tg.id = gs.group_id AND tg.is_revoked = false AND tg.is_deprecated = false
               WHERE s.slug = $1) AS "groupCount",
              (SELECT count(DISTINCT gsw.software_id) FROM group_software gsw
+              JOIN attack_software sw ON sw.id = gsw.software_id AND sw.is_revoked = false AND sw.is_deprecated = false
               JOIN group_sectors gs ON gs.group_id = gsw.group_id
               JOIN sectors s ON s.id = gs.sector_id WHERE s.slug = $1) AS "softwareCount",
              (SELECT count(*) FROM mitigations WHERE is_revoked = false AND is_deprecated = false) AS "mitigationCount",

@@ -13,7 +13,8 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     return;
   }
   const attackId = parsed.data;
-  const sector = optionalSector.parse(req.query.sector) || null;
+  const sectorParsed = optionalSector.safeParse(req.query.sector);
+  const sector = sectorParsed.success ? sectorParsed.data ?? null : null;
 
   // Fetch main technique
   const techResult = await query<{

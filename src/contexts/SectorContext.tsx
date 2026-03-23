@@ -28,16 +28,18 @@ export function SectorProvider({ children }: { children: ReactNode }) {
     urlSector ?? sessionStorage.getItem(STORAGE_KEY),
   );
 
-  // If URL has sector, update ref + storage
+  // Sync ref when URL has sector
   if (urlSector) {
     sectorRef.current = urlSector;
-    sessionStorage.setItem(STORAGE_KEY, urlSector);
   }
 
   const sector = sectorRef.current;
 
-  // Re-inject sector into URL when navigating to a page that lost it
+  // Persist to sessionStorage and re-inject into URL on navigation
   useEffect(() => {
+    if (urlSector) {
+      sessionStorage.setItem(STORAGE_KEY, urlSector);
+    }
     if (sector && !urlSector) {
       setSearchParams((prev) => {
         const next = new URLSearchParams(prev);

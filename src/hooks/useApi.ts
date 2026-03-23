@@ -29,7 +29,9 @@ import type {
 
 // ── List / paginated hooks ────────────────────────────────────────────────────
 
-export function useDashboard(params: Record<string, string> = {}) {
+const EMPTY_PARAMS: Record<string, string> = {};
+
+export function useDashboard(params: Record<string, string> = EMPTY_PARAMS) {
   return useQuery({
     queryKey: ['dashboard', params],
     queryFn: () => apiFetch<DashboardData>('/dashboard', params),
