@@ -42,7 +42,7 @@ const NODES: ModelNode[] = [
   { id: 'report', label: 'Threat Reports', x: 340, y: 540, color: '#f97316', bg: '#f9731618', path: '/cti/reports', description: 'Live threat intelligence from OTX, RSS feeds', category: 'intelligence' },
   { id: 'ioc', label: 'IOCs', x: 550, y: 560, color: '#fb923c', bg: '#fb923c18', path: '/cti/iocs', description: 'CVEs, hashes, domains, IPs from OTX and CISA KEV', category: 'intelligence' },
   { id: 'atomic', label: 'Atomic Tests', x: 750, y: 540, color: '#ef4444', bg: '#ef444418', path: '/techniques', description: 'Red team test procedures per technique', category: 'intelligence' },
-  { id: 'd3fend', label: 'D3FEND', x: 850, y: 500, color: '#34d399', bg: '#34d39918', path: '/techniques', description: 'Defensive countermeasures from MITRE D3FEND', category: 'intelligence' },
+  { id: 'd3fend', label: 'D3FEND', x: 920, y: 560, color: '#34d399', bg: '#34d39918', path: '/techniques', description: 'Defensive countermeasures from MITRE D3FEND', category: 'intelligence' },
   { id: 'thaicert', label: 'ETDA Actors', x: 160, y: 60, color: '#94a3b8', bg: '#94a3b818', path: '/external-actors', description: '500+ extended threat actors from ThaiCERT encyclopedia', category: 'intelligence' },
 ];
 
