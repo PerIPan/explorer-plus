@@ -330,121 +330,32 @@ export function Dashboard() {
         />
       </div>
 
-      {/* ── Charts row ── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-        {/* Tactic distribution — bars are clickable */}
-        <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold text-[#ccd6f6]">
-              Techniques per Tactic
-            </h2>
-            <Link
-              to="/tactics"
-              className="flex items-center gap-1 text-xs text-[#8892b0] hover:text-[#fbbf24] transition-colors"
-            >
-              All tactics
-              <IconArrowRight />
-            </Link>
-          </div>
-          <p className="text-xs text-[#8892b0] mb-3">
-            Click a bar to explore that tactic
-          </p>
-          {tacticDistribution.length > 0 ? (
-            <TacticBarChart
-              data={tacticDistribution}
-              onBarClick={(tacticId) => navigate(`/tactics/${tacticId}`)}
-            />
-          ) : (
-            <p className="text-[#8892b0] text-sm">No data available.</p>
-          )}
-        </div>
-
-        {/* Sector breakdown */}
-        <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold text-[#ccd6f6]">
-              Groups by Sector
-            </h2>
-            <Link
-              to="/sectors"
-              className="flex items-center gap-1 text-xs text-[#8892b0] hover:text-[#f472b6] transition-colors"
-            >
-              All sectors
-              <IconArrowRight />
-            </Link>
-          </div>
-          {sectorBreakdown.length > 0 ? (
-            <SectorPieChart data={sectorBreakdown} />
-          ) : (
-            <p className="text-[#8892b0] text-sm">No sector data available.</p>
-          )}
-        </div>
-      </div>
-
-      {/* ── Bottom row: groups chart + groups table + recent reports ── */}
+      {/* ── Middle row: top groups + techniques + recent reports ── */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
 
-        {/* Groups bar chart — clickable bars */}
+        {/* Top 10 groups */}
         <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5">
-          <div className="flex items-center justify-between mb-1">
-            <h2 className="text-sm font-semibold text-[#ccd6f6]">
-              Top Groups by Coverage
-            </h2>
-            <Link
-              to="/groups"
-              className="flex items-center gap-1 text-xs text-[#8892b0] hover:text-[#f97316] transition-colors"
-            >
-              All groups
-              <IconArrowRight />
-            </Link>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-semibold text-[#ccd6f6]">Top 10 Groups</h2>
+            <Link to="/groups" className="text-xs text-[#f97316] hover:underline">View all</Link>
           </div>
-          <p className="text-xs text-[#8892b0] mb-3">Click a bar to open the group</p>
           {topGroups.length > 0 ? (
-            <GroupTechniqueChart
-              data={topGroups.slice(0, 10)}
-              onBarClick={(attackId) => navigate(`/groups/${attackId}`)}
-            />
+            <div className="space-y-1">
+              {topGroups.slice(0, 10).map((g, i) => (
+                <div key={g.attackId} className="flex items-center justify-between py-1.5 border-b border-[#2a2a4a] last:border-0">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className={`text-xs font-bold font-mono w-5 text-right shrink-0 ${i === 0 ? 'text-[#fbbf24]' : i === 1 ? 'text-[#8892b0]' : i === 2 ? 'text-[#f97316]' : 'text-[#4a5568]'}`}>
+                      {i + 1}
+                    </span>
+                    <EntityLink type="group" attackId={g.attackId} name={g.name} />
+                  </div>
+                  <span className="ml-2 text-sm font-semibold text-[#f97316] tabular-nums shrink-0">{g.techniqueCount}</span>
+                </div>
+              ))}
+            </div>
           ) : (
             <p className="text-[#8892b0] text-sm">No group data available.</p>
           )}
-        </div>
-
-        {/* Top 10 groups ranked list */}
-        <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold text-[#ccd6f6]">
-              Top 10 Groups
-            </h2>
-            <span className="text-xs text-[#8892b0]">by technique count</span>
-          </div>
-          <div className="space-y-1">
-            {topGroups.slice(0, 10).map((g, i) => (
-              <div
-                key={g.attackId}
-                className="flex items-center justify-between py-1.5 border-b border-[#2a2a4a] last:border-0"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <span
-                    className={`
-                      text-xs font-bold font-mono w-5 text-right shrink-0
-                      ${i === 0 ? 'text-[#fbbf24]' : i === 1 ? 'text-[#8892b0]' : i === 2 ? 'text-[#f97316]' : 'text-[#4a5568]'}
-                    `}
-                  >
-                    {i + 1}
-                  </span>
-                  <EntityLink
-                    type="group"
-                    attackId={g.attackId}
-                    name={g.name}
-                  />
-                </div>
-                <span className="ml-2 text-sm font-semibold text-[#f97316] tabular-nums shrink-0">
-                  {g.techniqueCount}
-                </span>
-              </div>
-            ))}
-          </div>
         </div>
 
         {/* Most targeted techniques */}
@@ -583,6 +494,37 @@ export function Dashboard() {
               ))}
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* ── Charts row (bottom) ── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-semibold text-[#ccd6f6]">Techniques per Tactic</h2>
+            <Link to="/tactics" className="flex items-center gap-1 text-xs text-[#8892b0] hover:text-[#fbbf24] transition-colors">
+              All tactics <IconArrowRight />
+            </Link>
+          </div>
+          <p className="text-xs text-[#8892b0] mb-3">Click a bar to explore that tactic</p>
+          {tacticDistribution.length > 0 ? (
+            <TacticBarChart data={tacticDistribution} onBarClick={(tacticId) => navigate(`/tactics/${tacticId}`)} />
+          ) : (
+            <p className="text-[#8892b0] text-sm">No data available.</p>
+          )}
+        </div>
+        <div className="bg-[#16213e] border border-[#2a2a4a] rounded-lg p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-semibold text-[#ccd6f6]">Groups by Sector</h2>
+            <Link to="/sectors" className="flex items-center gap-1 text-xs text-[#8892b0] hover:text-[#f472b6] transition-colors">
+              All sectors <IconArrowRight />
+            </Link>
+          </div>
+          {sectorBreakdown.length > 0 ? (
+            <SectorPieChart data={sectorBreakdown} />
+          ) : (
+            <p className="text-[#8892b0] text-sm">No sector data available.</p>
+          )}
         </div>
       </div>
     </div>
