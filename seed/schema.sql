@@ -297,6 +297,7 @@ CREATE TABLE IF NOT EXISTS ioc_entries (
   last_seen       TIMESTAMPTZ,
   tags            TEXT[],
   source_ref      TEXT,
+  description     TEXT,
   created_at      TIMESTAMPTZ  NOT NULL DEFAULT now(),
   UNIQUE (type, value, source)
 );

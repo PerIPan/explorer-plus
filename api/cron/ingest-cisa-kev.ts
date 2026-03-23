@@ -57,20 +57,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const sourceRef = [vuln.vendorProject, vuln.product, vuln.vulnerabilityName]
           .filter(Boolean)
           .join(' | ');
+        const desc = vuln.shortDescription?.trim() || null;
         const offset = params.length;
-        values.push(`('cve', $${offset + 1}, 'cisa_kev', NULL, $${offset + 2}, $${offset + 3})`);
-        params.push(vuln.cveID, vuln.dateAdded || null, sourceRef || null);
+        values.push(`('cve', $${offset + 1}, 'cisa_kev', NULL, $${offset + 2}, $${offset + 3}, $${offset + 4})`);
+        params.push(vuln.cveID, vuln.dateAdded || null, sourceRef || null, desc);
       }
 
-      const result = await query<{ id: string }>(
-        `INSERT INTO ioc_entries (type, value, source, malware_family, first_seen, source_ref)
+      const result = await query<{ id: string; is_insert: boolean }>(
+        `INSERT INTO ioc_entries (type, value, source, malware_family, first_seen, source_ref, description)
          VALUES ${values.join(', ')}
-         ON CONFLICT (type, value, source) DO NOTHING
-         RETURNING id`,
+         ON CONFLICT (type, value, source) DO UPDATE SET description = EXCLUDED.description
+         RETURNING id, (xmax = 0) AS is_insert`,
         params,
       );
-      recordsInserted += result.rows.length;
-      recordsSkipped += batch.length - result.rows.length;
+      recordsInserted += result.rows.filter((r) => r.is_insert).length;
+      recordsSkipped += batch.length - result.rows.filter((r) => r.is_insert).length;
     }
 
     await query(

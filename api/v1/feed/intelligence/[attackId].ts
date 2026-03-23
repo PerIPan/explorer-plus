@@ -103,11 +103,12 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
         source: string | null;
         malware_family: string | null;
         first_seen: string | null;
+        description: string | null;
         confidence: string;
       }>(
         `SELECT
            i.id, i.type, i.value, i.source, i.malware_family, i.first_seen,
-           ti.confidence
+           i.description, ti.confidence
          FROM ioc_entries i
          JOIN technique_iocs ti ON ti.ioc_id = i.id
          WHERE ti.technique_id = $1

@@ -91,10 +91,11 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     malware_family: string | null;
     first_seen: string | null;
     source_ref: string | null;
+    description: string | null;
     created_at: string;
     technique_count: string;
   }>(
-    `SELECT i.id, i.type, i.value, i.source, i.malware_family, i.first_seen, i.source_ref, i.created_at,
+    `SELECT i.id, i.type, i.value, i.source, i.malware_family, i.first_seen, i.source_ref, i.description, i.created_at,
             COUNT(ti.technique_id) AS technique_count
      FROM ioc_entries i
      LEFT JOIN technique_iocs ti ON ti.ioc_id = i.id

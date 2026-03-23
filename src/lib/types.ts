@@ -353,6 +353,7 @@ export interface IocEntry {
   value: string;
   source: string;
   malware_family: string | null;
+  description: string | null;
   source_ref: string | null;
   first_seen_at: string | null;
   created_at: string;
@@ -452,6 +453,7 @@ export interface TechniqueIntelligence {
     value: string;
     source: string;
     malware_family: string | null;
+    description: string | null;
     first_seen_at: string | null;
     confidence: string | null;
   }>;

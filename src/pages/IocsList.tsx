@@ -139,27 +139,38 @@ const columns: ColumnDef<IocEntry>[] = [
     header: 'Value',
     render: (row) => {
       const link = otxUrl(row.type, row.value);
+      const showDesc = row.type === 'cve' && row.description;
       return (
-        <div className="flex items-center gap-0.5">
-          {link ? (
-            <a
-              href={link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-mono text-xs text-[var(--accent-teal)] hover:underline max-w-[240px] truncate"
-              title={row.value}
-            >
-              {row.value}
-            </a>
-          ) : (
+        <div className={showDesc ? 'flex flex-col gap-0.5' : ''}>
+          <div className="flex items-center gap-0.5">
+            {link ? (
+              <a
+                href={link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-mono text-xs text-[var(--accent-teal)] hover:underline max-w-[240px] truncate"
+                title={row.value}
+              >
+                {row.value}
+              </a>
+            ) : (
+              <span
+                className="font-mono text-xs text-[var(--text-primary)] max-w-[240px] truncate"
+                title={row.value}
+              >
+                {row.value}
+              </span>
+            )}
+            <CopyButton value={row.value} />
+          </div>
+          {showDesc && (
             <span
-              className="font-mono text-xs text-[var(--text-primary)] max-w-[240px] truncate"
-              title={row.value}
+              className="text-[11px] text-[var(--text-secondary)] max-w-[320px] truncate"
+              title={row.description!}
             >
-              {row.value}
+              {row.description}
             </span>
           )}
-          <CopyButton value={row.value} />
         </div>
       );
     },
