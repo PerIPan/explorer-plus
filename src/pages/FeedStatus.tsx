@@ -85,7 +85,6 @@ function FeedCard({ feed, syncing, onSync }: FeedCardProps) {
             {SOURCE_LABELS[feed.source] ?? feed.source}
           </h3>
         </div>
-        <SyncButton source={feed.source} disabled={syncing || feed.status === 'running'} onSync={onSync} />
       </div>
 
       {/* Stats row */}

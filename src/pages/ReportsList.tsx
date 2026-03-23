@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useReports } from '../hooks/useApi';
+import { useSector } from '../contexts/SectorContext';
 import { apiFetch } from '../lib/api';
 import { useFuseFilter } from '../hooks/useFuseFilter';
 import { PageHeader } from '../components/layout/PageHeader';
@@ -140,6 +141,7 @@ const columns: ColumnDef<ThreatReport>[] = [
 
 export function ReportsList() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { sectorParam } = useSector();
   const [q, setQ] = useState('');
 
   const source = searchParams.get('source') ?? '';
@@ -161,7 +163,7 @@ export function ReportsList() {
     [setSearchParams],
   );
 
-  const params: Record<string, string> = { limit: '5000' };
+  const params: Record<string, string> = { limit: '5000', ...sectorParam };
   if (source) params.source = source;
   if (since) params.since = since;
 

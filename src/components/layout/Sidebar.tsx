@@ -150,7 +150,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
       {/* CTI Section */}
       <div className="px-2 py-4">
-        <div className="px-3 mb-2 ml-1 border-l-2 border-[#64ffda44] pl-2 text-[11px] font-bold text-[#64ffda] uppercase tracking-widest" title="Not filtered by sector">
+        <div className="px-3 mb-2 ml-1 border-l-2 border-[#64ffda44] pl-2 text-[11px] font-bold text-[#64ffda] uppercase tracking-widest">
           CTI
         </div>
         <div className="space-y-0.5">

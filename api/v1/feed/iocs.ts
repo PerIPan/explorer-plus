@@ -10,6 +10,7 @@ const querySchema = paginationSchema.extend({
   malware: z.string().optional(),
   q: z.string().min(1).max(200).optional(),
   since: z.string().optional(),
+  sector: z.string().max(50).optional(),
 });
 
 async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
@@ -19,11 +20,26 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     return;
   }
 
-  const { page, limit, type, source, malware, q, since, order } = parsed.data;
+  const { page, limit, type, source, malware, q, since, order, sector } = parsed.data;
   const offset = (page - 1) * limit;
 
   const params: unknown[] = [];
   const conditions: string[] = [];
+
+  // Sector filter: show IOCs linked to sector groups OR IOCs with no technique links
+  if (sector) {
+    params.push(sector);
+    conditions.push(`(
+      i.id IN (
+        SELECT ti2.ioc_id FROM technique_iocs ti2
+        JOIN group_techniques gt ON gt.technique_id = ti2.technique_id
+        JOIN group_sectors gs ON gs.group_id = gt.group_id
+        JOIN sectors s ON s.id = gs.sector_id
+        WHERE s.slug = $${params.length}
+      )
+      OR i.id NOT IN (SELECT ti3.ioc_id FROM technique_iocs ti3)
+    )`);
+  }
 
   if (type) {
     params.push(type);

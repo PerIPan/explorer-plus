@@ -9,6 +9,7 @@ const querySchema = paginationSchema.extend({
   since: z.string().optional(),
   q: z.string().min(1).max(200).optional(),
   sortBy: z.string().optional(),
+  sector: z.string().max(50).optional(),
 });
 
 async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
@@ -18,11 +19,26 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     return;
   }
 
-  const { page, limit, source, since, q, sortBy, order } = parsed.data;
+  const { page, limit, source, since, q, sortBy, order, sector } = parsed.data;
   const offset = (page - 1) * limit;
 
   const params: unknown[] = [];
   const conditions: string[] = [];
+
+  // Sector filter: show reports linked to sector groups OR reports with no technique links
+  if (sector) {
+    params.push(sector);
+    conditions.push(`(
+      r.id IN (
+        SELECT rt2.report_id FROM report_techniques rt2
+        JOIN group_techniques gt ON gt.technique_id = rt2.technique_id
+        JOIN group_sectors gs ON gs.group_id = gt.group_id
+        JOIN sectors s ON s.id = gs.sector_id
+        WHERE s.slug = $${params.length}
+      )
+      OR r.id NOT IN (SELECT rt3.report_id FROM report_techniques rt3)
+    )`);
+  }
 
   if (source) {
     params.push(source);

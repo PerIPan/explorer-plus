@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useIocs } from '../hooks/useApi';
+import { useSector } from '../contexts/SectorContext';
 import { apiFetch } from '../lib/api';
 import { PageHeader } from '../components/layout/PageHeader';
 import { DataTable, type ColumnDef } from '../components/shared/DataTable';
@@ -206,6 +207,7 @@ const columns: ColumnDef<IocEntry>[] = [
 
 export function IocsList() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { sectorParam } = useSector();
 
   const page = parseInt(searchParams.get('page') ?? '1', 10);
   const type = searchParams.get('type') ?? '';
@@ -228,7 +230,7 @@ export function IocsList() {
     [setSearchParams],
   );
 
-  const params: Record<string, string> = { page: String(page), limit: '100' };
+  const params: Record<string, string> = { page: String(page), limit: '100', ...sectorParam };
   if (type) params.type = type;
   if (source) params.source = source;
   if (q) params.q = q;
