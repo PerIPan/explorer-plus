@@ -131,7 +131,7 @@ export function TechniquesList() {
                 e.stopPropagation();
                 toggleExpand(row.attackId);
               }}
-              className="text-[#8892b0] hover:text-[#64ffda] transition-colors"
+              className="text-base text-[#64ffda] hover:text-[#9efce5] transition-colors leading-none"
               aria-label={expandedParents.has(row.attackId) ? 'Collapse' : 'Expand'}
             >
               {expandedParents.has(row.attackId) ? '▾' : '▸'}
