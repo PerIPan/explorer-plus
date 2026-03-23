@@ -435,7 +435,8 @@ export interface TechniqueIntelligence {
   defensiveMappings: Array<{
     id: string;
     d3fend_id: string;
-    d3fend_label: string;
+    d3fend_label: string | null;
+    d3fend_tactic: string | null;
   }>;
   iocs: Array<{
     id: string;

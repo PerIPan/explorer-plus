@@ -161,6 +161,7 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
 
   const nistControls = frameworks?.nist ?? [];
   const engageActivities = frameworks?.engage ?? [];
+  const d3fendMappings = intel?.defensiveMappings ?? [];
 
   const groups = technique.groups ?? [];
   const campaigns = technique.campaigns ?? [];
@@ -306,7 +307,7 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
 
       {/* HOW TO RESPOND */}
       <MapCard label="How to Respond" icon={IconResponse}
-        count={engageActivities.length}
+        count={engageActivities.length + d3fendMappings.length}
       >
         {engageActivities.length > 0 ? (
           <MapRow prefix="MITRE Engage">
@@ -328,6 +329,29 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
           ) : (
             <MapRow prefix="MITRE Engage">
               <span className="text-xs text-[#8892b0]">No Engage activities mapped yet.</span>
+            </MapRow>
+          )
+        )}
+        {d3fendMappings.length > 0 ? (
+          <MapRow prefix="D3FEND">
+            {d3fendMappings.map((m) => (
+              <div key={m.d3fend_id} className="flex items-center gap-1">
+                <span className="font-mono text-xs text-[#34d399] bg-[#34d3990a] border border-[#34d39922] px-1.5 py-0.5 rounded">
+                  {m.d3fend_id}
+                </span>
+                <span className="text-xs text-[#ccd6f6]">{m.d3fend_label}</span>
+                {m.d3fend_tactic && <Badge label={m.d3fend_tactic} variant="green" />}
+              </div>
+            ))}
+          </MapRow>
+        ) : (
+          intelLoading ? (
+            <MapRow prefix="D3FEND">
+              <span className="text-xs text-[#8892b0] italic">Loading...</span>
+            </MapRow>
+          ) : (
+            <MapRow prefix="D3FEND">
+              <span className="text-xs text-[#8892b0]">No D3FEND mappings yet.</span>
             </MapRow>
           )
         )}
