@@ -2,7 +2,8 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { query } from '../v1/lib/db.js';
 
 const OTX_BASE = 'https://otx.alienvault.com/api/v1';
-const MAX_PAGES = 5;
+const MAX_PAGES = 1;       // Keep small — Vercel function timeout ~10s
+const PULSES_PER_PAGE = 10; // Fewer pulses per run, cron catches up
 
 interface OtxIndicator {
   type: string;
@@ -81,7 +82,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       lastCursor ?? new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
     let url: string | null =
-      `${OTX_BASE}/pulses/subscribed?modified_since=${encodeURIComponent(modifiedSince)}&limit=50`;
+      `${OTX_BASE}/pulses/subscribed?modified_since=${encodeURIComponent(modifiedSince)}&limit=${PULSES_PER_PAGE}&sort=-modified`;
     let pages = 0;
     let latestModified = lastCursor;
 
