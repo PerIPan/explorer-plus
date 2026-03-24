@@ -162,11 +162,12 @@ export function Relationships() {
     (tab) => !tab.forTypes || (entityType && tab.forTypes.includes(entityType))
   );
 
-  /** When entity type changes, auto-select the best tab */
+  /** When entity type changes, auto-select the best tab (unless URL explicitly set one) */
   useEffect(() => {
+    // Don't override if URL has an explicit tab and entity data hasn't loaded yet
+    if (tabParam && !entityType) return;
     const isVisible = visibleTabs.some((t) => t.id === activeTab);
     if (!isVisible && visibleTabs.length > 0) {
-      // Pick the first type-specific tab, or fall back to graph
       const bestTab = visibleTabs[0]?.id ?? 'graph';
       setActiveTab(bestTab);
       setSearchParams((prev) => {
