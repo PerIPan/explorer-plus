@@ -88,7 +88,7 @@ function NavItemLink({ path, label, tooltip, end }: NavItem & { end?: boolean })
   );
 }
 
-function CollapsibleNavSection({ label, items, defaultOpen = true, title }: { label: string; items: NavItem[]; defaultOpen?: boolean; title?: string }) {
+function CollapsibleNavSection({ label, items, defaultOpen = false, title }: { label: string; items: NavItem[]; defaultOpen?: boolean; title?: string }) {
   const location = useLocation();
   const isActiveRoute = items.some((item) => location.pathname.startsWith(item.path));
   const [open, setOpen] = useState(defaultOpen || isActiveRoute);
