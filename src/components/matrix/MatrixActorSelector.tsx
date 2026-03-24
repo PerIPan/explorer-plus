@@ -90,7 +90,7 @@ export function MatrixActorSelector({ groups, selected, onSelect, onRemove, maxA
         <input
           ref={inputRef}
           type="text"
-          placeholder={atMax ? 'Max 3 actors' : 'Compare actors...'}
+          placeholder={atMax ? 'Max 3 actors' : 'Compare actors\u2026'}
           disabled={atMax}
           value={query}
           onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
@@ -101,7 +101,7 @@ export function MatrixActorSelector({ groups, selected, onSelect, onRemove, maxA
           aria-autocomplete="list"
           aria-controls="actor-selector-listbox"
           aria-activedescendant={open && filtered[highlightIdx] ? `actor-option-${filtered[highlightIdx].attackId}` : undefined}
-          className="min-w-[130px] px-2 py-1 rounded-md text-xs bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent-teal)] transition-colors disabled:opacity-50"
+          className="w-[200px] px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent-teal)] transition-colors disabled:opacity-50"
         />
       </div>
 

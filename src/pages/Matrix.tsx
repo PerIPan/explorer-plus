@@ -122,9 +122,9 @@ export function Matrix() {
       {/* Controls bar */}
       {!isLoading && !error && data && (
         <div className="flex items-center gap-3 justify-between">
-          {/* Left: text filter */}
-          <div className="flex items-center gap-2 max-w-sm">
-            <div className="relative flex-1">
+          {/* Left: technique filter + actor search side by side */}
+          <div className="flex items-center gap-2">
+            <div className="relative">
               <svg
                 className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--text-secondary)]"
                 fill="none"
@@ -137,10 +137,10 @@ export function Matrix() {
               </svg>
               <input
                 type="search"
-                placeholder="Filter techniques by name or ID..."
+                placeholder="Technique name filter..."
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
-                className="w-full pl-8 pr-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent-teal)] transition-colors"
+                className="w-[200px] pl-8 pr-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent-teal)] transition-colors"
               />
             </div>
             {inputValue && (
@@ -152,34 +152,32 @@ export function Matrix() {
                 Clear
               </button>
             )}
+            <MatrixActorSelector
+              groups={groups}
+              selected={selectedActors}
+              onSelect={handleSelectActor}
+              onRemove={handleRemoveActor}
+            />
           </div>
 
-          {/* Right: actor selector */}
-          <MatrixActorSelector
-            groups={groups}
-            selected={selectedActors}
-            onSelect={handleSelectActor}
-            onRemove={handleRemoveActor}
-          />
-        </div>
-      )}
-
-      {/* Actor legend strip */}
-      {selectedActors.length > 0 && (
-        <div className="flex items-center gap-4 text-xs">
-          {selectedActors.map((actor, idx) => (
-            <span key={actor.attackId} className="inline-flex items-center gap-1.5 text-[var(--text-secondary)]">
-              <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: ACTOR_COLORS[actor.colorIndex].css }} />
-              <span className="text-[var(--text-primary)] font-medium">{actor.name}</span>
-              <span>
-                ({groupQueries[idx]?.isLoading ? '...' : `${legendCounts[idx]} techniques`})
+          {/* Right: actor pills + legend */}
+          {selectedActors.length > 0 && (
+            <div className="flex items-center gap-3 text-xs">
+              {selectedActors.map((actor, idx) => (
+                <span key={actor.attackId} className="inline-flex items-center gap-1.5 text-[var(--text-secondary)]">
+                  <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: ACTOR_COLORS[actor.colorIndex].css }} />
+                  <span className="text-[var(--text-primary)] font-medium">{actor.name}</span>
+                  <span>
+                    ({groupQueries[idx]?.isLoading ? '...' : `${legendCounts[idx]} techniques`})
+                  </span>
+                </span>
+              ))}
+              <span className="inline-flex items-center gap-1.5 text-[var(--text-secondary)]">
+                <span className="w-2.5 h-2.5 rounded-full shrink-0 bg-[var(--accent-teal)]" />
+                <span>Shared</span>
               </span>
-            </span>
-          ))}
-          <span className="inline-flex items-center gap-1.5 text-[var(--text-secondary)]">
-            <span className="w-2.5 h-2.5 rounded-full shrink-0 bg-[var(--accent-teal)]" />
-            <span>Shared</span>
-          </span>
+            </div>
+          )}
         </div>
       )}
 
