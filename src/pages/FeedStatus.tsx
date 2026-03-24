@@ -87,9 +87,6 @@ function FeedCard({ feed, syncing, onSync }: FeedCardProps) {
             {SOURCE_LABELS[feed.source] ?? feed.source}
           </h3>
         </div>
-        {!AUTO_ONLY_SOURCES.has(feed.source) && (
-          <SyncButton source={feed.source} disabled={syncing} onSync={onSync} />
-        )}
       </div>
 
       {/* Stats row */}
@@ -123,9 +120,6 @@ function EmptyFeedCard({ source, syncing, onSync }: { source: string; syncing: b
             {SOURCE_LABELS[source] ?? source}
           </h3>
         </div>
-        {!AUTO_ONLY_SOURCES.has(source) && (
-          <SyncButton source={source} disabled={syncing} onSync={onSync} />
-        )}
       </div>
       <p className="text-xs text-[var(--text-secondary)]">
         {AUTO_ONLY_SOURCES.has(source) ? 'Runs automatically via cron' : 'Never synced'}
