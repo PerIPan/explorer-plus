@@ -98,3 +98,111 @@ After a full reseed, restore feeds in this order:
 | `engage_mappings` | MITRE Engage | ~1100 |
 | `react_actions` | RE&CT | ~216 |
 | `external_actors` | ThaiCERT/ETDA | 514 |
+
+## Full Database Restoration After Truncate
+
+When `seed.py` runs, it `TRUNCATE CASCADE`s all entity tables, wiping feed data too. Here's the full restoration procedure:
+
+### Step 1: Seed ATT&CK data (all 3 domains)
+
+```bash
+DATABASE_URL="postgresql://..." python seed/seed.py --update --confirm-destructive
+```
+
+Expected output: ~1,094 techniques, 40 tactics, 191 groups, 914 software across Enterprise + ICS + Mobile.
+
+### Step 2: Restore local scripts (run sequentially)
+
+```bash
+export DATABASE_URL="postgresql://..."
+
+# ETDA actors (~30s)
+node scripts/sync-thaicert.mjs
+
+# NIST 800-53, MITRE Engage, RE&CT (~60s)
+node scripts/sync-frameworks.mjs
+```
+
+### Step 3: Trigger Vercel cron feeds (need CRON_SECRET)
+
+```bash
+export CRON="your-production-cron-secret"
+export BASE="https://mitre-explorer.org/api/cron"
+
+# RSS reports — fast (~10s)
+curl -s -X POST "$BASE/ingest-rss" -H "Authorization: Bearer $CRON"
+
+# abuse.ch IOCs — fast (~15s)
+curl -s -X POST "$BASE/ingest-abuse-ch" -H "Authorization: Bearer $CRON"
+
+# CISA KEV CVEs — fast (~10s)
+curl -s -X POST "$BASE/ingest-cisa-kev" -H "Authorization: Bearer $CRON"
+
+# D3FEND mappings — fast (~30s)
+curl -s -X POST "$BASE/sync-d3fend" -H "Authorization: Bearer $CRON"
+
+# OTX reports + IOCs — slow, run multiple times (3 pulses per batch)
+curl -s -X POST "$BASE/ingest-otx" -H "Authorization: Bearer $CRON"
+# Wait 60s, repeat 3-5 times to catch up
+```
+
+### Step 4: Wait for scheduled enrichment
+
+These run automatically via Vercel cron and don't need manual triggering:
+
+- **NVD enrichment** (every 4h) — adds CVSS scores to CVEs, 20 per batch
+- **VT enrichment** (every 8h) — adds VirusTotal verdicts to IOCs, 10 per batch
+- **OTX** (every 12h) — catches up with more pulses each run
+
+### Step 5: Trigger GitHub Actions (from repo Actions tab)
+
+These cannot be triggered via CLI without `gh` installed:
+
+- **sync-sigma** — clones SigmaHQ repo, parses ~3000 Sigma rules
+- **sync-atomic** — clones Atomic Red Team repo, parses ~1500 test definitions
+
+Go to: `https://github.com/PerIPan/mitre-explorer-plus/actions` → select workflow → "Run workflow"
+
+### Step 6: Verify counts
+
+```sql
+SELECT 'techniques' as tbl, COUNT(*) FROM techniques
+UNION ALL SELECT 'tactics', COUNT(*) FROM tactics
+UNION ALL SELECT 'threat_groups', COUNT(*) FROM threat_groups
+UNION ALL SELECT 'threat_reports', COUNT(*) FROM threat_reports
+UNION ALL SELECT 'ioc_entries', COUNT(*) FROM ioc_entries
+UNION ALL SELECT 'cve_details', COUNT(*) FROM cve_details
+UNION ALL SELECT 'sigma_rules', COUNT(*) FROM sigma_rules
+UNION ALL SELECT 'atomic_tests', COUNT(*) FROM atomic_tests
+UNION ALL SELECT 'nist_controls', COUNT(*) FROM nist_controls
+UNION ALL SELECT 'engage_mappings', COUNT(*) FROM engage_mappings
+UNION ALL SELECT 'react_actions', COUNT(*) FROM react_actions
+UNION ALL SELECT 'external_actors', COUNT(*) FROM external_actors
+UNION ALL SELECT 'defensive_mappings', COUNT(*) FROM defensive_mappings
+ORDER BY tbl;
+```
+
+Expected totals after full restoration:
+
+| Table | Expected |
+|-------|----------|
+| techniques | ~1,094 |
+| tactics | 40 |
+| threat_groups | ~191 |
+| threat_reports | ~60+ |
+| ioc_entries | ~2,500+ |
+| cve_details | ~1,589 |
+| sigma_rules | ~3,000 |
+| atomic_tests | ~1,500 |
+| nist_controls | ~5,300 |
+| engage_mappings | ~1,100 |
+| react_actions | ~216 |
+| external_actors | 514 |
+| defensive_mappings | ~800 |
+
+### Notes
+
+- OTX is the slowest feed — batches of 3 pulses per run, needs multiple triggers to catch up
+- Sigma and Atomic require GitHub Actions (not Vercel cron)
+- NVD enrichment without API key uses 6s delay between requests — very slow for large batches
+- The `CRON_SECRET` is in Vercel env vars (encrypted). Pull with: `npx vercel env pull`
