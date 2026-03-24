@@ -1,9 +1,12 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useNistControls } from '../hooks/useApi';
+import { apiFetch } from '../lib/api';
 import { PageHeader } from '../components/layout/PageHeader';
 import { DataTable, type ColumnDef } from '../components/shared/DataTable';
 import { Badge } from '../components/shared/Badge';
+import { EntityLink } from '../components/shared/EntityLink';
 import type { NistControlSummary } from '../lib/types';
 
 const NIST_FAMILIES = [
@@ -29,13 +32,67 @@ const NIST_FAMILIES = [
   'Supply Chain Risk Management',
 ];
 
+function TechniquePopover({ controlId, count }: { controlId: string; count: number }) {
+  const [open, setOpen] = useState(false);
+  const { data, isLoading } = useQuery({
+    queryKey: ['nist-techniques', controlId],
+    queryFn: () => apiFetch<{ data: Array<{ attackId: string; name: string }> }>(`/frameworks/nist/${controlId}/techniques`),
+    enabled: open,
+  });
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); setOpen(!open); }}
+        className="cursor-pointer"
+      >
+        <Badge label={String(count)} variant="teal" />
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 top-8 z-50 bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg shadow-2xl p-3 min-w-[240px] max-h-[300px] overflow-y-auto">
+            <div className="text-[10px] text-[var(--text-secondary)] uppercase tracking-wider mb-2">
+              Linked Techniques ({count})
+            </div>
+            {isLoading && (
+              <div className="flex items-center gap-2 text-[var(--text-secondary)] text-xs py-2">
+                <span className="inline-block w-3 h-3 border-2 border-[var(--teal-dim)] border-t-[var(--accent-teal)] rounded-full animate-spin" />
+                Loading...
+              </div>
+            )}
+            {data?.data && (
+              <div className="flex flex-col gap-1">
+                {data.data.map((t) => (
+                  <EntityLink key={t.attackId} type="technique" attackId={t.attackId} name={t.name} />
+                ))}
+              </div>
+            )}
+            {!isLoading && data?.data?.length === 0 && (
+              <span className="text-xs text-[var(--text-secondary)]">No techniques found.</span>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 const columns: ColumnDef<NistControlSummary>[] = [
   {
     key: 'controlId',
     header: 'Control ID',
     width: '120px',
     render: (row) => (
-      <span className="font-mono text-sm text-[var(--accent-teal)]">{row.controlId}</span>
+      <a
+        href={`https://csf.tools/reference/nist-sp-800-53/r5/${row.controlId.split('-')[0].toLowerCase()}/${row.controlId.replace(/-0+/g, '-').toLowerCase()}/`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="font-mono text-sm text-[var(--accent-teal)] hover:underline"
+      >
+        {row.controlId}
+      </a>
     ),
   },
   {
@@ -61,9 +118,12 @@ const columns: ColumnDef<NistControlSummary>[] = [
     header: 'Techniques',
     width: '100px',
     align: 'center',
-    render: (row) => (
-      <span className="text-[var(--text-primary)] text-sm font-medium">{row.techniqueCount}</span>
-    ),
+    render: (row) =>
+      row.techniqueCount > 0 ? (
+        <TechniquePopover controlId={row.controlId} count={row.techniqueCount} />
+      ) : (
+        <span className="text-[var(--text-secondary)] text-xs">—</span>
+      ),
   },
 ];
 

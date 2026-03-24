@@ -175,20 +175,21 @@ async function syncEngage(techniqueMap) {
 
   const baseUrl = 'https://raw.githubusercontent.com/mitre/engage/main/Data/json';
 
-  // Download all four files in parallel
-  const [attackMapping, activityDetails, goalApproachMappings, goals] =
+  // Download required files in parallel
+  const [attackMapping, activityDetails, goals, approaches] =
     await Promise.all([
       fetchJson(`${baseUrl}/attack_mapping.json`).catch(() => []),
       fetchJson(`${baseUrl}/activity_details.json`).catch(() => ({})),
-      fetchJson(`${baseUrl}/goal_approach_mappings.json`).catch(() => ({})),
-      fetchJson(`${baseUrl}/goals.json`).catch(() => ({})),
+      fetchJson(`${baseUrl}/goals.json`).catch(() => []),
+      fetchJson(`${baseUrl}/approaches.json`).catch(() => []),
     ]);
 
   console.log(`  Attack mapping records: ${attackMapping.length}`);
 
   /**
    * activityDetails may be an array or an object keyed by ID.
-   * Normalise to a Map: id -> { description, ... }
+   * Each entry has: goals: ["EGO0001"], approaches: ["EAP0001"], description, etc.
+   * Normalise to a Map: id -> { description, goals, approaches, ... }
    */
   const detailsMap = new Map();
   if (Array.isArray(activityDetails)) {
@@ -203,40 +204,17 @@ async function syncEngage(techniqueMap) {
     }
   }
 
-  /**
-   * goalApproachMappings may be an array: [{ id, goal_id, approach_id }]
-   * or a map keyed by activity id.
-   * goals may be: { goal_id: { name, ... } } or array.
-   */
+  /** Map goal IDs (EGO0001) and approach IDs (EAP0001) to their names */
   const goalNameMap = new Map();
-  if (Array.isArray(goals)) {
-    for (const g of goals) {
-      if (g.id) goalNameMap.set(g.id, g.name ?? g.id);
-    }
-  } else {
-    for (const [k, v] of Object.entries(goals)) {
-      goalNameMap.set(k, typeof v === 'string' ? v : v.name ?? k);
-    }
+  const approachArr = Array.isArray(goals) ? goals : Object.entries(goals).map(([k, v]) => ({ id: k, ...(typeof v === 'string' ? { name: v } : v) }));
+  for (const g of approachArr) {
+    if (g.id) goalNameMap.set(g.id, g.name ?? g.id);
   }
 
-  const activityGoalMap = new Map();
-  if (Array.isArray(goalApproachMappings)) {
-    for (const m of goalApproachMappings) {
-      const key = m.id ?? m.eav_id ?? m.eac_id;
-      if (key) {
-        activityGoalMap.set(key, {
-          goal: m.goal ?? m.goal_id ?? null,
-          approach: m.approach ?? m.approach_id ?? null,
-        });
-      }
-    }
-  } else {
-    for (const [k, v] of Object.entries(goalApproachMappings)) {
-      activityGoalMap.set(k, {
-        goal: v.goal ?? v.goal_id ?? null,
-        approach: v.approach ?? v.approach_id ?? null,
-      });
-    }
+  const approachNameMap = new Map();
+  const appArr = Array.isArray(approaches) ? approaches : Object.entries(approaches).map(([k, v]) => ({ id: k, ...(typeof v === 'string' ? { name: v } : v) }));
+  for (const a of appArr) {
+    if (a.id) approachNameMap.set(a.id, a.name ?? a.id);
   }
 
   const client = await pool.connect();
@@ -269,8 +247,10 @@ async function syncEngage(techniqueMap) {
       for (const entry of entries) {
         const techniqueUuid = techniqueMap.get(attackId) ?? null;
         const detail = detailsMap.get(entry.id) ?? {};
-        const goalApproach = activityGoalMap.get(entry.id) ?? {};
-        const goalName = goalNameMap.get(goalApproach.goal) ?? goalApproach.goal ?? null;
+        // activity_details.json stores goals/approaches as arrays of IDs
+        const goalId = detail.goals?.[0] ?? null;
+        const approachId = detail.approaches?.[0] ?? null;
+        const goalName = goalNameMap.get(goalId) ?? goalId;
 
         try {
           await client.query(
@@ -289,7 +269,7 @@ async function syncEngage(techniqueMap) {
               entry.name,
               detail.description ?? null,
               goalName,
-              goalApproach.approach ?? null,
+              approachNameMap.get(approachId) ?? approachId,
               techniqueUuid,
               attackId,
             ],
