@@ -175,8 +175,8 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     // ── Tactic distribution ───────────────────────────────────────────────────
     (() => {
       if (sector && domain) {
-        return query<{ tacticName: string; tacticId: string; count: string }>(
-          `SELECT ta.name AS "tacticName", ta.attack_id AS "tacticId",
+        return query<{ tacticName: string; tacticId: string; count: string; domain: string | null }>(
+          `SELECT ta.name AS "tacticName", ta.attack_id AS "tacticId", ta.domain,
                   COUNT(DISTINCT tt.technique_id) AS count
            FROM tactics ta
            JOIN technique_tactics tt ON tt.tactic_id = ta.id
@@ -186,14 +186,14 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
            JOIN group_sectors gs ON gs.group_id = gt.group_id
            JOIN sectors s ON s.id = gs.sector_id
            WHERE s.slug = $1
-           GROUP BY ta.id, ta.name, ta.attack_id, ta.sort_order
+           GROUP BY ta.id, ta.name, ta.attack_id, ta.domain, ta.sort_order
            ORDER BY ta.sort_order ASC NULLS LAST`,
           [sector, domain],
         );
       }
       if (sector) {
-        return query<{ tacticName: string; tacticId: string; count: string }>(
-          `SELECT ta.name AS "tacticName", ta.attack_id AS "tacticId",
+        return query<{ tacticName: string; tacticId: string; count: string; domain: string | null }>(
+          `SELECT ta.name AS "tacticName", ta.attack_id AS "tacticId", ta.domain,
                   COUNT(DISTINCT tt.technique_id) AS count
            FROM tactics ta
            JOIN technique_tactics tt ON tt.tactic_id = ta.id
@@ -202,31 +202,31 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
            JOIN group_sectors gs ON gs.group_id = gt.group_id
            JOIN sectors s ON s.id = gs.sector_id
            WHERE s.slug = $1
-           GROUP BY ta.id, ta.name, ta.attack_id, ta.sort_order
+           GROUP BY ta.id, ta.name, ta.attack_id, ta.domain, ta.sort_order
            ORDER BY ta.sort_order ASC NULLS LAST`,
           [sector],
         );
       }
       if (domain) {
-        return query<{ tacticName: string; tacticId: string; count: string }>(
-          `SELECT ta.name AS "tacticName", ta.attack_id AS "tacticId",
+        return query<{ tacticName: string; tacticId: string; count: string; domain: string | null }>(
+          `SELECT ta.name AS "tacticName", ta.attack_id AS "tacticId", ta.domain,
                   COUNT(DISTINCT tt.technique_id) AS count
            FROM tactics ta
            JOIN technique_tactics tt ON tt.tactic_id = ta.id
            JOIN techniques t ON t.id = tt.technique_id
              AND t.is_revoked = false AND t.is_deprecated = false AND t.domain = $1
-           GROUP BY ta.id, ta.name, ta.attack_id, ta.sort_order
+           GROUP BY ta.id, ta.name, ta.attack_id, ta.domain, ta.sort_order
            ORDER BY ta.sort_order ASC NULLS LAST`,
           [domain],
         );
       }
-      return query<{ tacticName: string; tacticId: string; count: string }>(
-        `SELECT ta.name AS "tacticName", ta.attack_id AS "tacticId",
+      return query<{ tacticName: string; tacticId: string; count: string; domain: string | null }>(
+        `SELECT ta.name AS "tacticName", ta.attack_id AS "tacticId", ta.domain,
                 COUNT(DISTINCT tt.technique_id) AS count
          FROM tactics ta
          JOIN technique_tactics tt ON tt.tactic_id = ta.id
          JOIN techniques t ON t.id = tt.technique_id AND t.is_revoked = false AND t.is_deprecated = false
-         GROUP BY ta.id, ta.name, ta.attack_id, ta.sort_order
+         GROUP BY ta.id, ta.name, ta.attack_id, ta.domain, ta.sort_order
          ORDER BY ta.sort_order ASC NULLS LAST`,
       );
     })(),
@@ -327,6 +327,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
       tacticName: r.tacticName,
       tacticId: r.tacticId,
       count: parseInt(r.count, 10),
+      domain: r.domain ?? null,
     })),
     sectorBreakdown: sectorResult.rows.map((r) => ({
       sectorName: r.sectorName,

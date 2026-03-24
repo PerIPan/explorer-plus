@@ -233,6 +233,7 @@ export interface TacticDistribution {
   /** ATT&CK ID of the tactic (e.g. "TA0001") — used for click navigation. */
   tacticId: string;
   count: number;
+  domain: string | null;
 }
 
 export interface SectorBreakdown {

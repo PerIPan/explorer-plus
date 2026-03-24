@@ -24,11 +24,19 @@ interface TacticBarChartProps {
 export function TacticBarChart({ data, onBarClick }: TacticBarChartProps) {
   const c = useThemeColors();
 
+  // Add domain prefix for non-enterprise tactics (visible in "All Domains" mode)
+  const chartData = data.map((d) => ({
+    ...d,
+    label: d.domain && d.domain !== 'enterprise-attack'
+      ? `[${d.domain.replace('-attack', '').toUpperCase()}] ${d.tacticName}`
+      : d.tacticName,
+  }));
+
   return (
-    <ResponsiveContainer width="100%" height={Math.max(320, data.length * 40)}>
+    <ResponsiveContainer width="100%" height={Math.max(320, chartData.length * 40)}>
       <BarChart
         layout="vertical"
-        data={data}
+        data={chartData}
         margin={{ top: 4, right: 24, left: 8, bottom: 4 }}
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         onClick={(payload: any) => {
@@ -51,8 +59,8 @@ export function TacticBarChart({ data, onBarClick }: TacticBarChartProps) {
         />
         <YAxis
           type="category"
-          dataKey="tacticName"
-          width={130}
+          dataKey="label"
+          width={160}
           tick={{ fill: c.textPrimary, fontSize: 11 }}
           axisLine={false}
           tickLine={false}

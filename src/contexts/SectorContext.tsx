@@ -25,7 +25,7 @@ export function SectorProvider({ children }: { children: ReactNode }) {
 
   // Derive sector: URL takes priority, sessionStorage as fallback
   // Use a useState initializer so sessionStorage is read only once on mount
-  const [storedSector] = useState<string | null>(() =>
+  const [storedSector, setStoredSector] = useState<string | null>(() =>
     typeof window !== 'undefined' ? sessionStorage.getItem(STORAGE_KEY) : null
   );
   const sector = urlSector ?? storedSector;
@@ -55,6 +55,7 @@ export function SectorProvider({ children }: { children: ReactNode }) {
       } else {
         sessionStorage.removeItem(STORAGE_KEY);
       }
+      setStoredSector(slug);
       setSearchParams((prev) => {
         const next = new URLSearchParams(prev);
         if (slug) {
