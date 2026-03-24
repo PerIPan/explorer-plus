@@ -217,6 +217,7 @@ export function CvesList() {
   const severity = searchParams.get('severity') ?? '';
   const source = searchParams.get('source') ?? '';
   const q = searchParams.get('q') ?? '';
+  const since = searchParams.get('since') ?? '';
 
   const setParam = useCallback(
     (key: string, value: string) => {
@@ -238,6 +239,7 @@ export function CvesList() {
   if (severity) params.severity = severity;
   if (source) params.source = source;
   if (q) params.q = q;
+  if (since) params.since = since;
 
   const { data, isLoading } = useCves(params);
 
@@ -277,6 +279,42 @@ export function CvesList() {
             <option key={s} value={s}>{s}</option>
           ))}
         </select>
+        <label className="flex flex-col gap-1">
+          <span className="text-xs font-medium text-[var(--text-secondary)]">Since:</span>
+          <input
+            type="date"
+            value={since}
+            onChange={(e) => setParam('since', e.target.value)}
+            className="px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-teal)]"
+          />
+        </label>
+        <div className="flex gap-1.5 items-end">
+          {[
+            { label: 'This week', days: 7 },
+            { label: 'This month', days: 30 },
+            { label: '6 months', days: 180 },
+            { label: 'All time', days: 0 },
+          ].map((f) => {
+            const sinceDate = f.days > 0
+              ? new Date(Date.now() - f.days * 86400000).toISOString().split('T')[0]
+              : '';
+            const isActive = since === sinceDate;
+            return (
+              <button
+                key={f.label}
+                type="button"
+                onClick={() => setParam('since', sinceDate)}
+                className={`px-2.5 py-1.5 text-xs rounded-md border transition-colors ${
+                  isActive
+                    ? 'border-[var(--accent-teal)] text-[var(--accent-teal)] bg-[var(--teal-faint)]'
+                    : 'border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--teal-dim)]'
+                }`}
+              >
+                {f.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <DataTable

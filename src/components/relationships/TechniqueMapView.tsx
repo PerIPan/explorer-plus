@@ -128,7 +128,7 @@ interface TechniqueMapViewProps {
 }
 
 /** VT section with modal support */
-function VtSection({ iocs, loading }: { iocs: Array<{ id: string; type: string; value: string; confidence: string | null; malware_family: string | null; first_seen_at: string | null; vt_malicious: number | null; vt_total: number | null; vt_verdict: string | null }>; loading: boolean }) {
+function VtSection({ iocs, loading }: { iocs: Array<{ id: string; type: string; value: string; source: string | null; confidence: string | null; malware_family: string | null; first_seen_at: string | null; vt_malicious: number | null; vt_total: number | null; vt_verdict: string | null }>; loading: boolean }) {
   const [vtHash, setVtHash] = useState<string | null>(null);
   const vtIocs = iocs.filter((ioc) => ioc.confidence === 'sandbox_verified' || ioc.vt_verdict).slice(0, 5);
 
@@ -136,7 +136,7 @@ function VtSection({ iocs, loading }: { iocs: Array<{ id: string; type: string; 
 
   return (
     <>
-      <MapCard label={`VirusTotal Sandboxing Report${vtIocs.length >= 5 ? ' (last 5)' : ''}`} icon={IconVt} count={vtIocs.length}>
+      <MapCard label="VirusTotal Sandboxing Report" icon={IconVt} count={vtIocs.length}>
         {vtIocs.length > 0 ? (
           <div className="space-y-1.5">
             {vtIocs.map((ioc) => (
@@ -166,6 +166,8 @@ function VtSection({ iocs, loading }: { iocs: Array<{ id: string; type: string; 
                 {ioc.malware_family && (
                   <span className="text-[10px] text-[var(--accent-orange)] shrink-0">{ioc.malware_family}</span>
                 )}
+                {/* Source */}
+                <Badge label={ioc.source ?? 'unknown'} variant="neutral" />
                 {/* Hash (truncated) */}
                 <span className="font-mono text-[10px] text-[var(--text-secondary)] truncate flex-1" title={ioc.value}>
                   {ioc.value.slice(0, 12)}...{ioc.value.slice(-6)}
@@ -246,10 +248,8 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
   const mitigations = technique.mitigations ?? [];
   const dataComponents = technique.dataComponents ?? [];
 
-  // Visible group slice (show up to 6, then "+N more")
-  
-  const visibleGroups = groups;
-  
+
+
 
   return (
     <div className="space-y-3">
@@ -273,7 +273,7 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
       {(() => {
         const reports = intel?.reports ?? [];
         return (
-          <MapCard label={`Threat Reports${reports.length >= 5 ? ' (last 5)' : ''}`} icon={IconResponse} count={reports.length}>
+          <MapCard label="Threat Reports" icon={IconResponse} count={reports.length}>
             {reports.length > 0 ? (
               <div className="space-y-1.5">
                 {reports.slice(0, 5).map((r) => (
@@ -293,6 +293,11 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
                     )}
                   </a>
                 ))}
+                {reports.length > 5 && (
+                  <Link to="/cti/reports" className="text-[10px] text-[var(--accent-teal)] hover:underline px-3">
+                    +{reports.length - 5} more reports
+                  </Link>
+                )}
               </div>
             ) : (
               intelLoading ? (
@@ -314,7 +319,7 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
         {groups.length > 0 ? (
           <MapRow prefix="Groups">
             <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto">
-              {visibleGroups.map((g) => (
+              {groups.map((g) => (
                 <EntityLink key={g.attackId} type="group" attackId={g.attackId} name={g.name} />
               ))}
             </div>

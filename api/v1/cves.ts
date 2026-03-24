@@ -9,6 +9,7 @@ const querySchema = paginationSchema.extend({
   source: z.string().optional(),
   q: z.string().min(1).max(200).optional(),
   sector: z.string().max(50).optional(),
+  since: z.string().optional(),
 });
 
 async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
@@ -18,7 +19,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     return;
   }
 
-  const { page, limit, severity, source, q, order, sector } = parsed.data;
+  const { page, limit, severity, source, q, order, sector, since } = parsed.data;
   const offset = (page - 1) * limit;
 
   // Build base query: distinct CVE IDs from ioc_entries joined with cve_details
@@ -54,6 +55,14 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     conditions.push(
       `(i.value ILIKE $${params.length} OR cd.description ILIKE $${params.length} OR cd.cwe_id ILIKE $${params.length})`,
     );
+  }
+
+  if (since) {
+    const d = new Date(since);
+    if (!isNaN(d.getTime())) {
+      params.push(d.toISOString());
+      conditions.push(`cd.published_at >= $${params.length}`);
+    }
   }
 
   const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';

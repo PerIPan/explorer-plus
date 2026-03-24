@@ -110,7 +110,7 @@ function FeedCard({ feed, syncing, onSync }: FeedCardProps) {
 const AUTO_ONLY_SOURCES = new Set(['nvd', 'virustotal']);
 
 /** Placeholder card for sources not yet in the DB log */
-function EmptyFeedCard({ source, syncing, onSync }: { source: string; syncing: boolean; onSync: (s: string) => void }) {
+function EmptyFeedCard({ source }: { source: string }) {
   return (
     <div className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg p-5 space-y-3">
       <div className="flex items-start justify-between gap-2">
@@ -205,8 +205,6 @@ export function FeedStatus() {
               <EmptyFeedCard
                 key={source}
                 source={source}
-                syncing={syncing}
-                onSync={handleSync}
               />
             );
           }
