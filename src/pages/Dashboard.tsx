@@ -501,7 +501,7 @@ export function Dashboard() {
       </div>
 
       {/* ── Charts row (bottom) ── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
         <div className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg p-5">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-semibold text-[var(--text-primary)]">Techniques per Tactic</h2>
