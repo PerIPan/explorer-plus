@@ -143,11 +143,11 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       aria-label="Main navigation"
     >
       {/* Logo / Title */}
-      <div className="px-3 py-4 border-b border-[var(--border-color)] flex items-center justify-between">
+      <div className="px-4 py-4 border-b border-[var(--border-color)] flex items-center justify-between">
         <Link to="/" className="group">
           <div className="flex items-baseline gap-1.5">
             <span className="text-[var(--accent-teal)] font-bold text-xs tracking-widest uppercase group-hover:text-[var(--accent-teal-light)] transition-colors">MITRE EXPLORER</span>
-            <span className="text-[var(--text-secondary)] text-sm font-light group-hover:text-[var(--text-primary)] transition-colors">Plus</span>
+            <span className="text-[var(--text-secondary)] text-[11px] font-semibold group-hover:text-[var(--text-primary)] transition-colors">Plus</span>
           </div>
         </Link>
         {/* Close button — visible only below lg */}
@@ -171,7 +171,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       </div>
 
       {/* Domain & Sector — directly under logo */}
-      <div className="px-3 py-2 border-b border-[var(--border-color)] space-y-1.5">
+      <div className="px-4 py-2 border-b border-[var(--border-color)] space-y-1.5">
         <DomainDropdown />
         <SectorDropdown />
       </div>
