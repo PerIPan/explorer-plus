@@ -60,7 +60,7 @@ export function TacticBarChart({ data, onBarClick }: TacticBarChartProps) {
         <YAxis
           type="category"
           dataKey="label"
-          width={160}
+          width={220}
           tick={{ fill: c.textPrimary, fontSize: 11 }}
           axisLine={false}
           tickLine={false}
