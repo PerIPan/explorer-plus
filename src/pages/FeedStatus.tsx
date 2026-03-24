@@ -9,6 +9,8 @@ const SOURCE_LABELS: Record<string, string> = {
   cisa_kev: 'CISA Known Exploited Vulnerabilities',
   rss: 'RSS Feeds (DFIR, Unit42, Microsoft, Talos)',
   d3fend: 'D3FEND Defensive Mappings',
+  nvd: 'NVD CVE Enrichment',
+  virustotal: 'VirusTotal Hash Enrichment',
 };
 
 function formatTimeAgo(iso: string): string {
@@ -123,7 +125,7 @@ function EmptyFeedCard({ source, syncing, onSync }: { source: string; syncing: b
   );
 }
 
-const ALL_SOURCES = ['otx', 'abuse_ch', 'cisa_kev', 'rss', 'd3fend'];
+const ALL_SOURCES = ['otx', 'abuse_ch', 'cisa_kev', 'rss', 'd3fend', 'nvd', 'virustotal'];
 
 export function FeedStatus() {
   const { data, refetch } = useFeedStatus();

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { NavLink, Link, useLocation } from 'react-router-dom';
 
 interface SidebarProps {
@@ -88,18 +88,23 @@ function NavItemLink({ path, label, tooltip, end }: NavItem & { end?: boolean })
   );
 }
 
-function FrameworksSection() {
+function CollapsibleNavSection({ label, items, defaultOpen = true, title }: { label: string; items: NavItem[]; defaultOpen?: boolean; title?: string }) {
   const location = useLocation();
-  const isFrameworkRoute = frameworksNav.some((item) => location.pathname.startsWith(item.path));
-  const [open, setOpen] = useState(isFrameworkRoute);
+  const isActiveRoute = items.some((item) => location.pathname.startsWith(item.path));
+  const [open, setOpen] = useState(defaultOpen || isActiveRoute);
+
+  // Auto-expand when navigating to a route inside this section
+  useEffect(() => {
+    if (isActiveRoute) setOpen(true);
+  }, [isActiveRoute]);
 
   return (
-    <div className="px-2 py-4">
+    <div>
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 w-full px-3 mb-2 ml-1 border-l-2 border-[var(--teal-muted)] pl-2 text-[11px] font-bold text-[var(--accent-teal)] uppercase tracking-widest hover:text-[var(--accent-teal-light)] transition-colors"
-        title="Not filtered by sector"
+        className="flex items-center gap-1.5 w-full px-3 mb-1.5 ml-1 border-l-2 border-[var(--teal-muted)] pl-2 text-[11px] font-bold text-[var(--accent-teal)] uppercase tracking-widest hover:text-[var(--accent-teal-light)] transition-colors"
+        title={title}
       >
         <svg
           className={`w-3 h-3 transition-transform duration-200 ${open ? 'rotate-90' : ''}`}
@@ -111,11 +116,11 @@ function FrameworksSection() {
         >
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
         </svg>
-        Frameworks
+        {label}
       </button>
       {open && (
         <div className="space-y-0.5">
-          {frameworksNav.map((item) => (
+          {items.map((item) => (
             <NavItemLink key={item.path} path={item.path} label={item.label} tooltip={item.tooltip} />
           ))}
         </div>
@@ -171,14 +176,13 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       >
         {mainSections.map((section, si) => (
           <div key={si} className={si > 0 ? 'mt-3 pt-3 border-t border-[var(--border-faint)]' : ''}>
-            {section.label && (
-              <div className="px-3 mb-1.5 ml-1 border-l-2 border-[var(--teal-muted)] pl-2 text-[11px] font-bold text-[var(--accent-teal)] uppercase tracking-widest">
-                {section.label}
-              </div>
+            {section.label ? (
+              <CollapsibleNavSection label={section.label} items={section.items} />
+            ) : (
+              section.items.map((item) => (
+                <NavItemLink key={item.path} path={item.path} label={item.label} tooltip={item.tooltip} end={item.path === '/'} />
+              ))
             )}
-            {section.items.map((item) => (
-              <NavItemLink key={item.path} path={item.path} label={item.label} tooltip={item.tooltip} end={item.path === '/'} />
-            ))}
           </div>
         ))}
       </nav>
@@ -202,7 +206,9 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       <div className="mx-4 border-t border-[var(--border-color)]" />
 
       {/* Frameworks Section (collapsible) */}
-      <FrameworksSection />
+      <div className="px-2 py-4">
+        <CollapsibleNavSection label="Frameworks" items={frameworksNav} defaultOpen={false} title="Not filtered by sector" />
+      </div>
 
       {/* Separator */}
       <div className="mx-4 border-t border-[var(--border-color)]" />

@@ -4,6 +4,7 @@ import { useTechnique, useFrameworks, useIntelligence } from '../../hooks/useApi
 import { useSector } from '../../contexts/SectorContext';
 import { EntityLink } from '../shared/EntityLink';
 import { Badge } from '../shared/Badge';
+import { VtLookupModal, VtButton } from '../shared/VtLookupModal';
 
 // ── Level badge (reused pattern from TechniqueDetail) ─────────────────────────
 
@@ -124,6 +125,69 @@ const IconVt = (
 
 interface TechniqueMapViewProps {
   attackId: string;
+}
+
+/** VT section with modal support */
+function VtSection({ iocs, loading }: { iocs: Array<{ id: string; type: string; value: string; confidence: string | null; malware_family: string | null; vt_malicious: number | null; vt_total: number | null; vt_verdict: string | null }>; loading: boolean }) {
+  const [vtHash, setVtHash] = useState<string | null>(null);
+  const vtIocs = iocs.filter((ioc) => ioc.confidence === 'sandbox_verified' || ioc.vt_verdict);
+
+  if (vtIocs.length === 0 && !loading) return null;
+
+  return (
+    <>
+      <MapCard label="VirusTotal" icon={IconVt} count={vtIocs.length}>
+        {vtIocs.length > 0 ? (
+          <div className="space-y-1.5">
+            {vtIocs.map((ioc) => (
+              <div
+                key={ioc.id}
+                className="flex items-center gap-2 py-1.5 px-3 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)]"
+              >
+                {/* Verdict badge */}
+                {ioc.vt_verdict === 'malicious' && ioc.vt_malicious != null && ioc.vt_total != null ? (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full border bg-[var(--pink-faint)] text-[var(--accent-pink)] border-[var(--pink-dim)] shrink-0 font-medium">
+                    {ioc.vt_malicious}/{ioc.vt_total}
+                  </span>
+                ) : ioc.vt_verdict === 'clean' ? (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full border bg-[var(--green-faint)] text-[var(--accent-green)] border-[var(--green-dim)] shrink-0 font-medium">
+                    clean
+                  </span>
+                ) : (
+                  <Badge label="sandbox" variant="blue" />
+                )}
+                {/* Confidence */}
+                {ioc.confidence === 'sandbox_verified' && (
+                  <span className="text-[9px] px-1.5 py-0.5 rounded-full border bg-[var(--blue-faint)] text-[var(--accent-blue)] border-[var(--blue-dim)] shrink-0">
+                    sandbox
+                  </span>
+                )}
+                {/* Malware family */}
+                {ioc.malware_family && (
+                  <span className="text-[10px] text-[var(--accent-orange)] shrink-0">{ioc.malware_family}</span>
+                )}
+                {/* Hash (truncated) */}
+                <span className="font-mono text-[10px] text-[var(--text-secondary)] truncate flex-1" title={ioc.value}>
+                  {ioc.value.slice(0, 12)}...{ioc.value.slice(-6)}
+                </span>
+                {/* VT lookup button */}
+                {ioc.type === 'hash' && (
+                  <VtButton hash={ioc.value} onClick={() => setVtHash(ioc.value)} />
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          loading ? (
+            <MapRow prefix="Hashes">
+              <span className="text-xs text-[var(--text-secondary)] italic">Loading...</span>
+            </MapRow>
+          ) : null
+        )}
+      </MapCard>
+      {vtHash && <VtLookupModal hash={vtHash} onClose={() => setVtHash(null)} />}
+    </>
+  );
 }
 
 /**
@@ -453,44 +517,7 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
       </MapCard>
 
       {/* VIRUSTOTAL INTELLIGENCE */}
-      {(() => {
-        const vtIocs = (intel?.iocs ?? []).filter((ioc) => ioc.confidence === 'sandbox_verified' || ioc.vt_verdict);
-        if (vtIocs.length === 0 && !intelLoading) return null;
-        return (
-          <MapCard label="VirusTotal" icon={IconVt} count={vtIocs.length}>
-            {vtIocs.length > 0 ? (
-              <div className="space-y-1.5">
-                {vtIocs.map((ioc) => (
-                  <div
-                    key={ioc.id}
-                    className="flex items-center gap-2 py-1.5 px-3 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)]"
-                  >
-                    {ioc.vt_verdict === 'malicious' && ioc.vt_malicious != null && ioc.vt_total != null ? (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded-full border bg-[var(--pink-faint)] text-[var(--accent-pink)] border-[var(--pink-dim)] shrink-0 font-medium">
-                        {ioc.vt_malicious}/{ioc.vt_total}
-                      </span>
-                    ) : ioc.vt_verdict === 'clean' ? (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded-full border bg-[var(--green-faint)] text-[var(--accent-green)] border-[var(--green-dim)] shrink-0 font-medium">
-                        clean
-                      </span>
-                    ) : (
-                      <Badge label={ioc.confidence ?? 'sandbox'} variant="blue" />
-                    )}
-                    <span className="font-mono text-[11px] text-[var(--text-primary)] truncate flex-1">{ioc.value}</span>
-                    <Badge label={ioc.type} variant="purple" />
-                  </div>
-                ))}
-              </div>
-            ) : (
-              intelLoading ? (
-                <MapRow prefix="Hashes">
-                  <span className="text-xs text-[var(--text-secondary)] italic">Loading...</span>
-                </MapRow>
-              ) : null
-            )}
-          </MapCard>
-        );
-      })()}
+      <VtSection iocs={intel?.iocs ?? []} loading={intelLoading} />
 
     </div>
   );
