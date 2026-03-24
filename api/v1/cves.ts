@@ -112,7 +112,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
        GROUP BY i.value
      ) i_agg
      LEFT JOIN cve_details cd ON cd.cve_id = i_agg.cve_id
-     ORDER BY cd.cvss_score ${sortDir} NULLS LAST, i_agg.cve_id ASC
+     ORDER BY cd.published_at ${sortDir} NULLS LAST, i_agg.cve_id DESC
      LIMIT $${params.length - 1} OFFSET $${params.length}`,
     params,
   );
