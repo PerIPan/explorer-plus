@@ -52,7 +52,7 @@ export function TacticsList() {
     <div className="space-y-4">
       <PageHeader
         title="Tactics"
-        subtitle={`${sorted.length} MITRE ATT&CK tactics in kill chain order`}
+        subtitle={isLoading ? 'Loading tactics...' : `${sorted.length} MITRE ATT&CK tactics in kill chain order`}
       />
 
       <DataTable

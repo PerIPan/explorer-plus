@@ -9,6 +9,7 @@ import { DomainProvider } from './contexts/DomainContext';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { RelationshipModel } from './components/relationships/RelationshipModel';
 import { ErrorBoundary } from './components/shared/ErrorBoundary';
+import { Analytics } from '@vercel/analytics/react';
 
 // Lazy-loaded pages
 const Dashboard       = lazy(() => import('./pages/Dashboard').then((m) => ({ default: m.Dashboard })));
@@ -152,6 +153,7 @@ function Layout() {
           </ErrorBoundary>
         </main>
       </div>
+      <Analytics />
 
       <RelationshipModel open={modelOpen} onClose={() => setModelOpen(false)} />
 
@@ -173,7 +175,7 @@ function Layout() {
             <div className="px-6 py-5 space-y-4 text-sm text-[var(--text-primary)] leading-relaxed">
               <p>
                 <strong>MITRE Explorer Plus</strong> — a multi-domain threat intelligence platform on{' '}
-                <em>MITRE ATT&CK</em>. One interface for adversary behavior, detection, and compliance enriched with CTI reports.
+                <em>MITRE ATT&CK</em>. Single interface for adversary behavior, detection and compliance, enriched with CTI reports.
               </p>
               <ul className="space-y-2 pl-4 list-disc marker:text-[var(--accent-teal)]">
                 <li><strong>16 data sources</strong> — techniques, groups, campaigns, software, mitigations, data sources, tactics, sectors + live feeds from AlienVault OTX, RSS, CISA KEV, NVD, VirusTotal, Sigma, Atomic Red Team, D3FEND</li>

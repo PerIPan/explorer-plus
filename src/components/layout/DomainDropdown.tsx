@@ -1,6 +1,4 @@
-import { useDomain } from '../../contexts/DomainContext';
-
-const DEFAULT_DOMAIN = 'enterprise-attack';
+import { useDomain, DEFAULT_DOMAIN } from '../../contexts/DomainContext';
 
 export function DomainDropdown() {
   const { domain, setDomain, domains } = useDomain();

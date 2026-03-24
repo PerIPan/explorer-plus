@@ -18,7 +18,7 @@ from mitreattack.stix20 import MitreAttackData
 
 # Sort order keyed on x_mitre_shortname (kill-chain phase name).
 _TACTIC_SORT_ORDER: dict[str, int] = {
-    # Enterprise (14)
+    # Enterprise (1-14)
     'reconnaissance': 1,
     'resource-development': 2,
     'initial-access': 3,
@@ -33,13 +33,13 @@ _TACTIC_SORT_ORDER: dict[str, int] = {
     'command-and-control': 12,
     'exfiltration': 13,
     'impact': 14,
-    # ICS (unique tactics)
-    'evasion': 7,
-    'inhibit-response-function': 13,
-    'impair-process-control': 14,
-    # Mobile (unique tactics)
-    'network-effects': 13,
-    'remote-service-effects': 14,
+    # ICS unique tactics (101-112 range to avoid collisions)
+    'evasion': 107,
+    'inhibit-response-function': 111,
+    'impair-process-control': 112,
+    # Mobile unique tactics (201-214 range)
+    'network-effects': 213,
+    'remote-service-effects': 214,
 }
 
 # Fallback DC-name → DS-name lookup for components whose names are not a

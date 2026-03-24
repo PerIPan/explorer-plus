@@ -499,16 +499,16 @@ def _insert_group_sectors(
 def _write_seed_metadata(
     cur: psycopg.Cursor,
     attack_version: str,
-    stix_hash: str,
+    stix_hashes: dict[str, str],
     entity_counts: dict[str, int],
     duration_ms: int,
 ) -> None:
-    """Write a row to seed_metadata.
+    """Write one row per seeded domain to seed_metadata.
 
     Args:
         cur: Active database cursor.
         attack_version: ATT&CK version string.
-        stix_hash: SHA-256 hex digest of the STIX file.
+        stix_hashes: Dict of domain -> SHA-256 hex digest.
         entity_counts: Dict of table -> row count.
         duration_ms: Total seed duration in milliseconds.
     """
@@ -518,15 +518,16 @@ def _write_seed_metadata(
              entity_counts, seed_duration_ms, seeded_by)
         VALUES (%s, %s, %s, %s, %s, %s, %s)
     """
-    cur.execute(sql, [  # type: ignore[arg-type]
-        attack_version,
-        'enterprise-attack',
-        stix_hash,
-        _STIX_URL,
-        json.dumps(entity_counts),
-        duration_ms,
-        'seed.py',
-    ])
+    for domain_key, hash_val in stix_hashes.items():
+        cur.execute(sql, [  # type: ignore[arg-type]
+            attack_version,
+            domain_key,
+            hash_val,
+            _STIX_DOMAINS[domain_key]['url'],
+            json.dumps(entity_counts),
+            duration_ms,
+            'seed.py',
+        ])
 
 
 # ---------------------------------------------------------------------------
@@ -599,7 +600,9 @@ def main() -> None:
             stix_hashes[domain_key] = _hash_file(stix_path)
             print(f'Using existing {domain_key} STIX  sha256={stix_hashes[domain_key][:16]}...')
 
-    attack_version = _extract_attack_version(_STIX_DOMAINS['enterprise-attack']['path'])
+    # Extract version from first available domain (all share the same ATT&CK release)
+    first_domain = next(iter(stix_hashes))
+    attack_version = _extract_attack_version(_STIX_DOMAINS[first_domain]['path'])
     print(f'ATT&CK version: {attack_version}')
 
     # Extract and merge data from all available domains
@@ -881,7 +884,7 @@ def main() -> None:
             }
 
             _write_seed_metadata(
-                cur, attack_version, stix_hashes.get('enterprise-attack', ''), entity_counts, duration_ms,
+                cur, attack_version, stix_hashes, entity_counts, duration_ms,
             )
 
             conn.commit()

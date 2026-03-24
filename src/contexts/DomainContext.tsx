@@ -13,7 +13,7 @@ const DOMAINS: DomainOption[] = [
   { value: 'ics-attack',        label: 'ICS',         short: 'ICS'        },
 ];
 
-const DEFAULT_DOMAIN = 'enterprise-attack';
+export const DEFAULT_DOMAIN = 'enterprise-attack';
 const STORAGE_KEY = 'mitre-domain';
 
 interface DomainContextValue {

@@ -291,11 +291,17 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
       );
     })(),
 
-    // ── ATT&CK version — always global ────────────────────────────────────────
-    query<{ attackVersion: string; domain: string; seededAt: string }>(
-      `SELECT attack_version AS "attackVersion", domain, seeded_at AS "seededAt"
-       FROM seed_metadata ORDER BY id DESC LIMIT 1`,
-    ),
+    // ── ATT&CK version — filtered by domain when provided ──────────────────────
+    domain
+      ? query<{ attackVersion: string; domain: string; seededAt: string }>(
+          `SELECT attack_version AS "attackVersion", domain, seeded_at AS "seededAt"
+           FROM seed_metadata WHERE domain = $1 ORDER BY id DESC LIMIT 1`,
+          [domain],
+        )
+      : query<{ attackVersion: string; domain: string; seededAt: string }>(
+          `SELECT attack_version AS "attackVersion", domain, seeded_at AS "seededAt"
+           FROM seed_metadata ORDER BY id DESC LIMIT 1`,
+        ),
   ]);
 
   const raw = statsResult.rows[0];
