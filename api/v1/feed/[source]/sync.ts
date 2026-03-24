@@ -6,6 +6,8 @@ import abuseCh from '../../../cron/ingest-abuse-ch.js';
 import cisaKev from '../../../cron/ingest-cisa-kev.js';
 import rss from '../../../cron/ingest-rss.js';
 import d3fend from '../../../cron/sync-d3fend.js';
+import nvd from '../../../cron/enrich-nvd.js';
+import vt from '../../../cron/enrich-vt.js';
 
 const HANDLERS: Record<string, (req: VercelRequest, res: VercelResponse) => Promise<void>> = {
   otx: otxHandler,
@@ -13,6 +15,8 @@ const HANDLERS: Record<string, (req: VercelRequest, res: VercelResponse) => Prom
   cisa_kev: cisaKev,
   rss: rss,
   d3fend: d3fend,
+  nvd: nvd,
+  virustotal: vt,
 };
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
