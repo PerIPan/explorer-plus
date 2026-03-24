@@ -156,7 +156,7 @@ function Layout() {
             onClick={e => e.stopPropagation()}
           >
             <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border-color)]">
-              <h2 className="text-lg font-semibold text-[var(--text-primary)]">About MITRE Explorer Plus (CLA)</h2>
+              <h2 className="text-lg font-semibold text-[var(--text-primary)]">about MITRE Explorer Plus (CLA)</h2>
               <button onClick={() => setHelpOpen(false)} className="p-2 rounded-md text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--hover-overlay)]">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -179,8 +179,8 @@ function Layout() {
                 <li><strong>Auto-updating</strong> — scheduled feeds keep data current; ATT&CK re-seeded on new MITRE releases</li>
               </ul>
               <p className="text-[var(--text-secondary)] text-xs pt-2 border-t border-[var(--border-color)]">
-                Built with React, TypeScript, PostgreSQL, and Vercel. ATT&CK data version shown in the Overview page.
-                Not affiliated with or endorsed by MITRE Corporation.
+                <span className="text-[var(--accent-teal)]">contact @ mitre-explorer.org</span>
+                {' — '}Not affiliated with or endorsed by MITRE Corporation.
               </p>
             </div>
           </div>

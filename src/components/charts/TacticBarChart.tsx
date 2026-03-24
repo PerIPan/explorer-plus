@@ -25,7 +25,7 @@ export function TacticBarChart({ data, onBarClick }: TacticBarChartProps) {
   const c = useThemeColors();
 
   return (
-    <ResponsiveContainer width="100%" height={320}>
+    <ResponsiveContainer width="100%" height={Math.max(320, data.length * 40)}>
       <BarChart
         layout="vertical"
         data={data}
