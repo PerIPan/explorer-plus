@@ -70,7 +70,20 @@ export function MatrixGrid({ data, filterText = '', actorOverlay }: MatrixGridPr
             role="grid"
             aria-label="ATT&CK Matrix"
           >
-            {data.map((col) => (
+            {data.map((col) => {
+              // Hide entire column when all techniques are filtered out
+              if (overlayMap || normalizedFilter) {
+                const hasVisible = col.techniques.some((tech) => {
+                  const co = overlayMap?.get(tech.attackId);
+                  if (co?.mode === 'hidden') return false;
+                  if (normalizedFilter) {
+                    return tech.name.toLowerCase().includes(normalizedFilter) || tech.attackId.toLowerCase().includes(normalizedFilter);
+                  }
+                  return true;
+                });
+                if (!hasVisible) return null;
+              }
+              return (
               <div
                 key={col.tactic.attackId}
                 className="w-[140px] flex-shrink-0"
@@ -115,11 +128,7 @@ export function MatrixGrid({ data, filterText = '', actorOverlay }: MatrixGridPr
                     });
 
                     if (visibleCells.length === 0 && (overlayMap || normalizedFilter)) {
-                      return (
-                        <div className="text-[10px] text-[var(--text-secondary)] text-center py-4 opacity-50">
-                          No matches
-                        </div>
-                      );
+                      return null;
                     }
 
                     return visibleCells.map((tech) => {
@@ -145,7 +154,8 @@ export function MatrixGrid({ data, filterText = '', actorOverlay }: MatrixGridPr
                   })()}
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useGroup, useCampaign, useExternalActorByGroup, useExternalActorByName } from '../../hooks/useApi';
 import { useDomain } from '../../contexts/DomainContext';
+import { useSector } from '../../contexts/SectorContext';
 import { EntityLink } from '../shared/EntityLink';
 import { Badge } from '../shared/Badge';
 import { sanitize, sanitizeMarkdown } from '../../lib/sanitize';
@@ -256,8 +257,12 @@ interface ActorProfileViewProps {
  * for a threat group or campaign entity.
  */
 export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps) {
-  const { domainParam } = useDomain();
-  const groupResult = useGroup(entityType === 'group' ? attackId : '', domainParam);
+  const { domain, domainParam } = useDomain();
+  const { sector } = useSector();
+  const [showAllDomains, setShowAllDomains] = useState(false);
+  const activeParams = showAllDomains ? {} : domainParam;
+  const groupResult = useGroup(entityType === 'group' ? attackId : '', activeParams as Record<string, string>);
+  const allDomainsResult = useGroup(entityType === 'group' ? attackId : '', {});
   const campaignResult = useCampaign(entityType === 'campaign' ? attackId : '');
   const thaiCertResult = useExternalActorByGroup(entityType === 'group' ? attackId : '');
   const externalActorResult = useExternalActorByName(entityType === 'external_actor' ? attackId : '');
@@ -403,6 +408,13 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
     const campaigns: GroupCampaign[] = (group.campaigns as GroupCampaign[] | undefined) ?? [];
     const sectors: GroupSector[] = (group.sectors as GroupSector[] | undefined) ?? [];
 
+    // All-domain counts for the "show all" indicator
+    const allTechniques: GroupTechnique[] = (allDomainsResult.data?.techniques as GroupTechnique[] | undefined) ?? [];
+    const allSoftware: GroupSoftware[] = (allDomainsResult.data?.software as GroupSoftware[] | undefined) ?? [];
+    const allCampaigns: GroupCampaign[] = (allDomainsResult.data?.campaigns as GroupCampaign[] | undefined) ?? [];
+    const isDomainFiltered = domain !== 'all' && !showAllDomains;
+    const hasMoreInOtherDomains = allTechniques.length > techniques.length || allSoftware.length > software.length || allCampaigns.length > campaigns.length;
+
     return (
       <div className="space-y-3">
         {/* Header */}
@@ -423,6 +435,46 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
             </div>
           </div>
         </div>
+
+        {/* Domain filter indicator */}
+        {isDomainFiltered && hasMoreInOtherDomains && (
+          <div className="flex items-center gap-2 text-xs text-[var(--text-secondary)] bg-[var(--surface-alt)] border border-[var(--border-color)] rounded-md px-3 py-2">
+            <span>
+              Showing <strong className="text-[var(--accent-teal)]">{domain.replace('-attack', '')}</strong> —{' '}
+              {techniques.length} techniques, {software.length} software, {campaigns.length} campaigns
+              {' '}({allTechniques.length} total across all domains)
+            </span>
+            <button
+              type="button"
+              onClick={() => setShowAllDomains(true)}
+              className="text-[var(--accent-teal)] hover:underline font-medium shrink-0"
+            >
+              show all domains
+            </button>
+          </div>
+        )}
+        {showAllDomains && (
+          <div className="flex items-center gap-2 text-xs text-[var(--text-secondary)] bg-[var(--teal-ghost)] border border-[var(--teal-dim)] rounded-md px-3 py-2">
+            <span>
+              Showing <strong className="text-[var(--accent-teal)]">all domains</strong> —{' '}
+              {techniques.length} techniques, {software.length} software, {campaigns.length} campaigns
+            </span>
+            <button
+              type="button"
+              onClick={() => setShowAllDomains(false)}
+              className="text-[var(--accent-teal)] hover:underline font-medium shrink-0"
+            >
+              filter by {domain.replace('-attack', '')}
+            </button>
+          </div>
+        )}
+
+        {/* Sector mismatch warning */}
+        {sector && sectors.length > 0 && !sectors.some((s) => s.slug === sector) && (
+          <div className="text-xs text-[var(--accent-orange)] bg-[var(--orange-faint)] border border-[var(--orange-dim)] rounded-md px-3 py-2">
+            This actor is not associated with the selected sector. Known sectors: {sectors.map((s) => s.name).join(', ')}
+          </div>
+        )}
 
         {/* Description */}
         {group.description && (
