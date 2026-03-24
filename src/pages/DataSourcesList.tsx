@@ -75,10 +75,11 @@ export function DataSourcesList() {
     {
       key: 'domain',
       header: 'Domain',
-      width: '80px',
+      width: '70px',
+      align: 'center',
       render: (row) =>
         row.domain ? (
-          <span className="text-[10px] text-[var(--text-secondary)] uppercase">{row.domain.replace('-attack', '')}</span>
+          <span className="text-[10px] text-[var(--text-secondary)] uppercase block text-center">{row.domain.replace('-attack', '')}</span>
         ) : null,
     },
   ];
