@@ -2,17 +2,17 @@ import { useDomain, DEFAULT_DOMAIN } from '../../contexts/DomainContext';
 
 export function DomainDropdown() {
   const { domain, setDomain, domains } = useDomain();
-  const isNonDefault = domain !== DEFAULT_DOMAIN;
+  const isNonDefault = domain !== DEFAULT_DOMAIN && domain !== 'all';
 
   return (
     <div className="flex items-center gap-2">
-      <span className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider w-12 shrink-0">Domain</span>
+      <span className="text-[10px] font-semibold text-[var(--accent-teal)] uppercase tracking-wider w-12 shrink-0">Domain</span>
       <div className="relative flex-1">
         <select
           value={domain}
           onChange={(e) => setDomain(e.target.value)}
           className={`
-            w-full appearance-none pl-2 pr-5 py-1 rounded text-[11px] cursor-pointer
+            w-full appearance-none pl-2 pr-5 py-0.5 rounded text-[11px] cursor-pointer
             border transition-colors focus:outline-none focus:ring-1 focus:ring-[var(--accent-teal)]
             ${isNonDefault
               ? 'border-[var(--accent-teal)] text-[var(--accent-teal)] bg-[var(--teal-ghost)] font-medium'

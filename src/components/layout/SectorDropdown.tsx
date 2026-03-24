@@ -8,6 +8,14 @@ interface SectorOption {
   groupCount: number;
 }
 
+/** Shorten long sector names for the compact sidebar dropdown */
+function shortName(name: string): string {
+  const map: Record<string, string> = {
+    'Telecommunications': 'Telco',
+  };
+  return map[name] ?? name;
+}
+
 export function SectorDropdown() {
   const { sector, setSector } = useSector();
 
@@ -21,13 +29,13 @@ export function SectorDropdown() {
 
   return (
     <div className="flex items-center gap-2">
-      <span className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider w-12 shrink-0">Sector</span>
+      <span className="text-[10px] font-semibold text-[var(--accent-teal)] uppercase tracking-wider w-12 shrink-0">Sector</span>
       <div className="relative flex-1">
         <select
           value={sector ?? ''}
           onChange={(e) => setSector(e.target.value || null)}
           className={`
-            w-full appearance-none pl-2 pr-5 py-1 rounded text-[11px] cursor-pointer
+            w-full appearance-none pl-2 pr-5 py-0.5 rounded text-[11px] cursor-pointer
             border transition-colors focus:outline-none focus:ring-1 focus:ring-[var(--accent-teal)]
             ${sector
               ? 'border-[var(--accent-teal)] text-[var(--accent-teal)] bg-[var(--teal-ghost)] font-medium'
@@ -42,7 +50,7 @@ export function SectorDropdown() {
               value={s.slug ?? ''}
               className="bg-[var(--surface-deep)] text-[var(--text-primary)]"
             >
-              {s.name}
+              {shortName(s.name)}
             </option>
           ))}
         </select>

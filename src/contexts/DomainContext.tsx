@@ -39,8 +39,8 @@ export function DomainProvider({ children }: { children: ReactNode }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const urlDomain = searchParams.get('domain') ?? null;
 
-  // Read sessionStorage only once on mount
-  const [storedDomain] = useState<string | null>(() =>
+  // Track stored domain in state — updated when setDomain is called or URL changes
+  const [storedDomain, setStoredDomain] = useState<string | null>(() =>
     typeof window !== 'undefined' ? sessionStorage.getItem(STORAGE_KEY) : null
   );
 
@@ -50,6 +50,7 @@ export function DomainProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (urlDomain) {
       sessionStorage.setItem(STORAGE_KEY, urlDomain);
+      setStoredDomain(urlDomain);
     }
   }, [urlDomain]);
 
@@ -67,6 +68,7 @@ export function DomainProvider({ children }: { children: ReactNode }) {
   const setDomain = useCallback(
     (slug: string) => {
       sessionStorage.setItem(STORAGE_KEY, slug);
+      setStoredDomain(slug);
       setSearchParams((prev) => {
         const next = new URLSearchParams(prev);
         if (slug === DEFAULT_DOMAIN) {
