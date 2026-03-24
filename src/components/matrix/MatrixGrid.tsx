@@ -2,20 +2,50 @@ import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import type { MatrixData } from '../../lib/types';
 import { MatrixCell } from './MatrixCell';
+import type { CellOverlay } from './MatrixCell';
 import { MatrixLegend } from './MatrixLegend';
+
+export interface ActorOverlay {
+  /** CSS color values for each actor slot */
+  colors: string[];
+  /** parentAttackId → set of actor slot indices (0, 1, 2) */
+  lookup: Map<string, Set<number>>;
+}
 
 interface MatrixGridProps {
   data: MatrixData;
   /** Live filter text — dims non-matching cells, highlights matches */
   filterText?: string;
+  /** Actor comparison overlay */
+  actorOverlay?: ActorOverlay;
 }
 
 /**
  * Full ATT&CK matrix — tactics as columns, techniques as cells.
  * groupUsageCount uses subTechniques.length as a proxy for cell "richness".
  */
-export function MatrixGrid({ data, filterText = '' }: MatrixGridProps) {
+export function MatrixGrid({ data, filterText = '', actorOverlay }: MatrixGridProps) {
   const normalizedFilter = filterText.trim().toLowerCase();
+
+  /** Pre-compute overlay per cell */
+  const overlayMap = useMemo(() => {
+    if (!actorOverlay) return null;
+    const map = new Map<string, CellOverlay>();
+    data.forEach((col) =>
+      col.techniques.forEach((tech) => {
+        const actors = actorOverlay.lookup.get(tech.attackId);
+        if (!actors || actors.size === 0) {
+          map.set(tech.attackId, { color: null, mode: 'hidden' });
+        } else if (actors.size === 1) {
+          const slotIdx = actors.values().next().value!;
+          map.set(tech.attackId, { color: actorOverlay.colors[slotIdx], mode: 'single' });
+        } else {
+          map.set(tech.attackId, { color: null, mode: 'shared' });
+        }
+      })
+    );
+    return map;
+  }, [data, actorOverlay]);
 
   /** Compute max sub-technique count for color scaling */
   const maxUsage = useMemo(() => {
@@ -44,7 +74,8 @@ export function MatrixGrid({ data, filterText = '' }: MatrixGridProps) {
               <div
                 key={col.tactic.attackId}
                 className="w-[140px] flex-shrink-0"
-                role="columnheader"
+                role="group"
+                aria-label={col.tactic.name}
               >
                 {/* Tactic header — sticky within scrollable container */}
                 <Link
@@ -63,29 +94,46 @@ export function MatrixGrid({ data, filterText = '' }: MatrixGridProps) {
 
                 {/* Technique cells */}
                 <div className="flex flex-col gap-0.5">
-                  {col.techniques.map((tech) => {
-                    const isMatch =
-                      normalizedFilter === '' ||
-                      tech.name.toLowerCase().includes(normalizedFilter) ||
-                      tech.attackId.toLowerCase().includes(normalizedFilter);
+                  {(() => {
+                    const visibleCells = col.techniques.filter((tech) => {
+                      const co = overlayMap?.get(tech.attackId);
+                      if (co?.mode === 'hidden') return false;
+                      if (normalizedFilter) {
+                        const isMatch = tech.name.toLowerCase().includes(normalizedFilter) || tech.attackId.toLowerCase().includes(normalizedFilter);
+                        if (!isMatch) return false;
+                      }
+                      return true;
+                    });
 
-                    return (
-                      <div
-                        key={tech.attackId}
-                        className={[
-                          'transition-opacity duration-150',
-                          normalizedFilter && !isMatch ? 'opacity-20' : '',
-                          normalizedFilter && isMatch ? 'ring-1 ring-[var(--accent-teal)] rounded' : '',
-                        ].join(' ')}
-                      >
-                        <MatrixCell
-                          technique={tech}
-                          groupUsageCount={tech.subTechniques.length}
-                          maxUsage={maxUsage}
-                        />
-                      </div>
-                    );
-                  })}
+                    if (visibleCells.length === 0 && (overlayMap || normalizedFilter)) {
+                      return (
+                        <div className="text-[10px] text-[var(--text-secondary)] text-center py-4 opacity-50">
+                          No matches
+                        </div>
+                      );
+                    }
+
+                    return visibleCells.map((tech) => {
+                      const cellOverlay = overlayMap?.get(tech.attackId);
+                      const isMatch = normalizedFilter && (tech.name.toLowerCase().includes(normalizedFilter) || tech.attackId.toLowerCase().includes(normalizedFilter));
+                      return (
+                        <div
+                          key={tech.attackId}
+                          className={[
+                            'transition-opacity duration-150',
+                            isMatch ? 'ring-1 ring-[var(--accent-teal)] rounded' : '',
+                          ].join(' ')}
+                        >
+                          <MatrixCell
+                            technique={tech}
+                            groupUsageCount={tech.subTechniques.length}
+                            maxUsage={maxUsage}
+                            overlay={cellOverlay}
+                          />
+                        </div>
+                      );
+                    });
+                  })()}
                 </div>
               </div>
             ))}

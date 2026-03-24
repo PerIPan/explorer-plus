@@ -87,13 +87,14 @@ function FeedCard({ feed, syncing, onSync }: FeedCardProps) {
             {SOURCE_LABELS[feed.source] ?? feed.source}
           </h3>
         </div>
+        {!AUTO_ONLY_SOURCES.has(feed.source) && (
+          <SyncButton source={feed.source} disabled={syncing} onSync={onSync} />
+        )}
       </div>
 
       {/* Stats row */}
       <div className="flex items-center gap-4 text-xs text-[var(--text-secondary)]">
         <span>Last sync: <span className="text-[var(--text-primary)]">{formatTimeAgo(feed.lastSync)}</span></span>
-        <span>Inserted: <span className="text-[var(--accent-teal)]">{feed.recordsInserted.toLocaleString()}</span></span>
-        <span>Skipped: <span className="text-[var(--text-primary)]">{feed.recordsSkipped.toLocaleString()}</span></span>
         <StatusBadge status={feed.status} />
       </div>
 
@@ -123,8 +124,6 @@ function EmptyFeedCard({ source }: { source: string }) {
       </div>
       <div className="flex items-center gap-4 text-xs text-[var(--text-secondary)]">
         <span>Last sync: <span className="text-[var(--text-primary)]">—</span></span>
-        <span>Inserted: <span className="text-[var(--text-primary)]">—</span></span>
-        <span>Skipped: <span className="text-[var(--text-primary)]">—</span></span>
         <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border bg-[var(--hover-overlay)] text-[var(--text-secondary)] border-[var(--border-color)]">
           {AUTO_ONLY_SOURCES.has(source) ? 'scheduled' : 'pending'}
         </span>
