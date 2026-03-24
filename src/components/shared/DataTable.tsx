@@ -5,6 +5,8 @@ import { Pagination } from './Pagination';
 export interface ColumnDef<T> {
   key: string;
   header: string;
+  /** Tooltip shown on hover over the column header */
+  tooltip?: string;
   /** Render function; receives the row, returns a ReactNode */
   render?: (row: T) => ReactNode;
   /** If provided, column is sortable and this key is used in the sort callback */
@@ -77,6 +79,7 @@ export function DataTable<T extends Record<string, any>>({
                     ${alignClass[col.align ?? 'left']}
                     ${col.sortKey ? 'cursor-pointer select-none hover:text-[var(--text-primary)] transition-colors duration-150' : ''}
                   `}
+                  title={col.tooltip}
                   onClick={col.sortKey && onSort ? () => onSort(col.sortKey!) : undefined}
                   aria-sort={
                     col.sortKey && sortBy === col.sortKey

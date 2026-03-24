@@ -122,12 +122,14 @@ const columns: ColumnDef<CveEntry>[] = [
   {
     key: 'cvssSeverity',
     header: 'Severity',
+    tooltip: 'CVSS v3.1 severity rating from NVD',
     width: '100px',
     render: (row) => <SeverityBadge severity={row.cvssSeverity} />,
   },
   {
     key: 'cveId',
     header: 'CVE ID',
+    tooltip: 'Common Vulnerabilities and Exposures identifier',
     render: (row) => (
       <div className="flex items-center gap-0.5">
         <Link
@@ -143,6 +145,7 @@ const columns: ColumnDef<CveEntry>[] = [
   {
     key: 'description',
     header: 'Description',
+    tooltip: 'Vulnerability description from NVD',
     render: (row) =>
       row.description ? (
         <span
@@ -158,6 +161,7 @@ const columns: ColumnDef<CveEntry>[] = [
   {
     key: 'cvssScore',
     header: 'CVSS',
+    tooltip: 'Common Vulnerability Scoring System v3.1 base score (0–10)',
     width: '70px',
     render: (row) => (
       <span className="text-xs text-[var(--text-primary)] font-mono">
@@ -168,6 +172,7 @@ const columns: ColumnDef<CveEntry>[] = [
   {
     key: 'cweId',
     header: 'CWE',
+    tooltip: 'Common Weakness Enumeration — vulnerability category',
     width: '90px',
     render: (row) =>
       row.cweId ? (
@@ -179,6 +184,7 @@ const columns: ColumnDef<CveEntry>[] = [
   {
     key: 'sources',
     header: 'Sources',
+    tooltip: 'Feed sources that reported this CVE (OTX, CISA KEV)',
     width: '140px',
     render: (row) => (
       <div className="flex flex-wrap gap-1">
@@ -191,6 +197,7 @@ const columns: ColumnDef<CveEntry>[] = [
   {
     key: 'techniqueCount',
     header: 'Techniques',
+    tooltip: 'ATT&CK techniques linked via OTX threat intelligence',
     width: '100px',
     align: 'center',
     render: (row) =>
