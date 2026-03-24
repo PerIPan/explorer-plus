@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useGroup, useCampaign, useExternalActorByGroup, useExternalActorByName } from '../../hooks/useApi';
 import { useDomain } from '../../contexts/DomainContext';
 import { useSector } from '../../contexts/SectorContext';
@@ -260,6 +260,8 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
   const { domain, domainParam } = useDomain();
   const { sector } = useSector();
   const [showAllDomains, setShowAllDomains] = useState(false);
+  // Reset toggle when actor changes
+  useEffect(() => setShowAllDomains(false), [attackId]);
   const activeParams = showAllDomains ? {} : domainParam;
   const groupResult = useGroup(entityType === 'group' ? attackId : '', activeParams as Record<string, string>);
   const allDomainsResult = useGroup(entityType === 'group' ? attackId : '', {});
