@@ -4,9 +4,7 @@
   "outputDirectory": "dist",
   "functions": {
     "api/**/*.ts": {
-      "includeFiles": "api/**"
-    },
-    "api/cron/*.ts": {
+      "includeFiles": "api/**",
       "maxDuration": 300
     }
   },
