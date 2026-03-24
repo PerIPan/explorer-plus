@@ -107,6 +107,8 @@ function FeedCard({ feed, syncing, onSync }: FeedCardProps) {
   );
 }
 
+const AUTO_ONLY_SOURCES = new Set(['nvd', 'virustotal']);
+
 /** Placeholder card for sources not yet in the DB log */
 function EmptyFeedCard({ source, syncing, onSync }: { source: string; syncing: boolean; onSync: (s: string) => void }) {
   return (
@@ -118,9 +120,13 @@ function EmptyFeedCard({ source, syncing, onSync }: { source: string; syncing: b
             {SOURCE_LABELS[source] ?? source}
           </h3>
         </div>
-        <SyncButton source={source} disabled={syncing} onSync={onSync} />
+        {!AUTO_ONLY_SOURCES.has(source) && (
+          <SyncButton source={source} disabled={syncing} onSync={onSync} />
+        )}
       </div>
-      <p className="text-xs text-[var(--text-secondary)]">Never synced</p>
+      <p className="text-xs text-[var(--text-secondary)]">
+        {AUTO_ONLY_SOURCES.has(source) ? 'Runs automatically via cron' : 'Never synced'}
+      </p>
     </div>
   );
 }
