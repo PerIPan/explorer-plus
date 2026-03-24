@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import Fuse from 'fuse.js';
 import { useRelationships } from '../hooks/useApi';
 import { apiFetch } from '../lib/api';
+import { useDomain } from '../contexts/DomainContext';
 import { PageHeader } from '../components/layout/PageHeader';
 import { ForceGraph, type ForceGraphHandle } from '../components/graph/ForceGraph';
 import { Badge } from '../components/shared/Badge';
@@ -127,10 +128,12 @@ export function Relationships() {
 
   const { data: graphData, isLoading, error } = useRelationships(selectedId);
 
+  const { domain } = useDomain();
+
   /** Load all entity names once for Fuse.js fuzzy search */
   const { data: allEntities } = useQuery({
-    queryKey: ['entities-all'],
-    queryFn: () => apiFetch<{ data: EntityEntry[] }>('/entities').then(r => r.data),
+    queryKey: ['entities-all', domain],
+    queryFn: () => apiFetch<{ data: EntityEntry[] }>('/entities', { domain }).then(r => r.data),
     staleTime: 60 * 60 * 1000, // 1 hour
     gcTime: 60 * 60 * 1000,
   });

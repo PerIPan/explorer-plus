@@ -61,7 +61,7 @@ export function TechniquesList() {
   if (sortDir) params.order = sortDir;
 
   const { data, isLoading } = useTechniques(params);
-  const { data: tacticsData } = useTactics({ limit: '100' });
+  const { data: tacticsData } = useTactics({ limit: '100', ...domainParam });
 
   const allItems = data?.data ?? [];
   const filtered = useFuseFilter(allItems, FUSE_KEYS, search);
@@ -213,7 +213,7 @@ export function TechniquesList() {
           className="min-w-[140px] px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-teal)]"
         >
           <option value="">All Platforms</option>
-          {['Windows', 'Linux', 'macOS', 'Cloud', 'Azure', 'Google Workspace', 'SaaS'].map((p) => (
+          {Array.from(new Set((allItems).flatMap((t) => t.platforms ?? []))).sort().map((p) => (
             <option key={p} value={p}>{p}</option>
           ))}
         </select>

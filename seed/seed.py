@@ -620,7 +620,10 @@ def main() -> None:
                 seen_stix_ids[key] = set()
             # Deduplicate entities that span domains (groups, software, campaigns)
             # by stix_id — keep the first occurrence
+            # Skip entities with empty attack_id (deprecated objects without external IDs)
             for entity in entities:
+                if 'attack_id' in entity and not entity['attack_id']:
+                    continue
                 sid = entity.get('stix_id')
                 if sid and sid in seen_stix_ids[key]:
                     continue
@@ -878,7 +881,7 @@ def main() -> None:
             }
 
             _write_seed_metadata(
-                cur, attack_version, stix_hash, entity_counts, duration_ms,
+                cur, attack_version, stix_hashes.get('enterprise-attack', ''), entity_counts, duration_ms,
             )
 
             conn.commit()
