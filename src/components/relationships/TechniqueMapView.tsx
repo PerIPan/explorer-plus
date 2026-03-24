@@ -114,6 +114,12 @@ const IconTest = (
   </svg>
 );
 
+const IconVt = (
+  <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
+  </svg>
+);
+
 // ── Main component ─────────────────────────────────────────────────────────────
 
 interface TechniqueMapViewProps {
@@ -445,6 +451,46 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
           )
         )}
       </MapCard>
+
+      {/* VIRUSTOTAL INTELLIGENCE */}
+      {(() => {
+        const vtIocs = (intel?.iocs ?? []).filter((ioc) => ioc.confidence === 'sandbox_verified' || ioc.vt_verdict);
+        if (vtIocs.length === 0 && !intelLoading) return null;
+        return (
+          <MapCard label="VirusTotal" icon={IconVt} count={vtIocs.length}>
+            {vtIocs.length > 0 ? (
+              <div className="space-y-1.5">
+                {vtIocs.map((ioc) => (
+                  <div
+                    key={ioc.id}
+                    className="flex items-center gap-2 py-1.5 px-3 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)]"
+                  >
+                    {ioc.vt_verdict === 'malicious' && ioc.vt_malicious != null && ioc.vt_total != null ? (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full border bg-[var(--pink-faint)] text-[var(--accent-pink)] border-[var(--pink-dim)] shrink-0 font-medium">
+                        {ioc.vt_malicious}/{ioc.vt_total}
+                      </span>
+                    ) : ioc.vt_verdict === 'clean' ? (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full border bg-[var(--green-faint)] text-[var(--accent-green)] border-[var(--green-dim)] shrink-0 font-medium">
+                        clean
+                      </span>
+                    ) : (
+                      <Badge label={ioc.confidence ?? 'sandbox'} variant="blue" />
+                    )}
+                    <span className="font-mono text-[11px] text-[var(--text-primary)] truncate flex-1">{ioc.value}</span>
+                    <Badge label={ioc.type} variant="purple" />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              intelLoading ? (
+                <MapRow prefix="Hashes">
+                  <span className="text-xs text-[var(--text-secondary)] italic">Loading...</span>
+                </MapRow>
+              ) : null
+            )}
+          </MapCard>
+        );
+      })()}
 
     </div>
   );

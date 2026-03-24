@@ -456,6 +456,9 @@ export interface TechniqueIntelligence {
     description: string | null;
     first_seen_at: string | null;
     confidence: string | null;
+    vt_malicious: number | null;
+    vt_total: number | null;
+    vt_verdict: string | null;
   }>;
 }
 

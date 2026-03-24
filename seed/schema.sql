@@ -298,9 +298,16 @@ CREATE TABLE IF NOT EXISTS ioc_entries (
   tags            TEXT[],
   source_ref      TEXT,
   description     TEXT,
+  vt_malicious    INTEGER,
+  vt_total        INTEGER,
+  vt_verdict      VARCHAR(20),
+  vt_enriched_at  TIMESTAMPTZ,
   created_at      TIMESTAMPTZ  NOT NULL DEFAULT now(),
   UNIQUE (type, value, source)
 );
+
+-- Partial index for hashes needing VT enrichment
+CREATE INDEX IF NOT EXISTS idx_ioc_entries_hash_vt ON ioc_entries(id) WHERE type = 'hash' AND vt_enriched_at IS NULL;
 
 -- Partial index for CVE sector filter performance
 CREATE INDEX IF NOT EXISTS idx_ioc_entries_cve_value ON ioc_entries(value) WHERE type = 'cve';
