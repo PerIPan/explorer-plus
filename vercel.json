@@ -14,7 +14,7 @@
     { "path": "/api/cron/ingest-rss", "schedule": "0 */6 * * *" },
     { "path": "/api/cron/sync-d3fend", "schedule": "0 6 1 * *" },
     { "path": "/api/cron/enrich-nvd", "schedule": "0 */4 * * *" },
-    { "path": "/api/cron/enrich-vt", "schedule": "30 */4 * * *" }
+    { "path": "/api/cron/enrich-vt", "schedule": "30 */8 * * *" }
   ],
   "rewrites": [
     { "source": "/((?!api/).*)", "destination": "/index.html" }

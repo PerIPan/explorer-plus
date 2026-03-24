@@ -121,9 +121,14 @@ function EmptyFeedCard({ source, syncing, onSync }: { source: string; syncing: b
           </h3>
         </div>
       </div>
-      <p className="text-xs text-[var(--text-secondary)]">
-        {AUTO_ONLY_SOURCES.has(source) ? 'Runs automatically via cron' : 'Never synced'}
-      </p>
+      <div className="flex items-center gap-4 text-xs text-[var(--text-secondary)]">
+        <span>Last sync: <span className="text-[var(--text-primary)]">—</span></span>
+        <span>Inserted: <span className="text-[var(--text-primary)]">—</span></span>
+        <span>Skipped: <span className="text-[var(--text-primary)]">—</span></span>
+        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border bg-[var(--hover-overlay)] text-[var(--text-secondary)] border-[var(--border-color)]">
+          {AUTO_ONLY_SOURCES.has(source) ? 'scheduled' : 'pending'}
+        </span>
+      </div>
     </div>
   );
 }
