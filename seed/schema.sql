@@ -301,6 +301,7 @@ CREATE TABLE IF NOT EXISTS ioc_entries (
   vt_malicious    INTEGER,
   vt_total        INTEGER,
   vt_verdict      VARCHAR(20),
+  vt_file_type    VARCHAR(100),
   vt_enriched_at  TIMESTAMPTZ,
   created_at      TIMESTAMPTZ  NOT NULL DEFAULT now(),
   UNIQUE (type, value, source)

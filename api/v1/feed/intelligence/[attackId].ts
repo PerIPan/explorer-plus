@@ -108,10 +108,11 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
         vt_malicious: number | null;
         vt_total: number | null;
         vt_verdict: string | null;
+        vt_file_type: string | null;
       }>(
         `SELECT
            i.id, i.type, i.value, i.source, i.malware_family, i.first_seen,
-           i.description, ti.confidence, i.vt_malicious, i.vt_total, i.vt_verdict
+           i.description, ti.confidence, i.vt_malicious, i.vt_total, i.vt_verdict, i.vt_file_type
          FROM ioc_entries i
          JOIN technique_iocs ti ON ti.ioc_id = i.id
          WHERE ti.technique_id = $1

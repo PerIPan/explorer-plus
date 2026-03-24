@@ -77,13 +77,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const malicious = stats.malicious ?? 0;
         const total = Object.values(stats).reduce((a: number, b) => a + (b as number), 0);
         const verdict = malicious > 0 ? 'malicious' : 'clean';
+        const fileType = attrs.type_description ?? null;
 
         // Update ioc_entries with VT verdict
         await query(
           `UPDATE ioc_entries
-           SET vt_malicious = $1, vt_total = $2, vt_verdict = $3, vt_enriched_at = NOW()
-           WHERE id = $4`,
-          [malicious, total, verdict, row.id],
+           SET vt_malicious = $1, vt_total = $2, vt_verdict = $3, vt_file_type = $4, vt_enriched_at = NOW()
+           WHERE id = $5`,
+          [malicious, total, verdict, fileType, row.id],
         );
 
         await sleep(15000); // 4 req/min → 15s between requests

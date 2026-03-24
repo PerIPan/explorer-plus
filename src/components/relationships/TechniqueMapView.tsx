@@ -128,7 +128,7 @@ interface TechniqueMapViewProps {
 }
 
 /** VT section with modal support */
-function VtSection({ iocs, loading }: { iocs: Array<{ id: string; type: string; value: string; source: string | null; confidence: string | null; malware_family: string | null; first_seen_at: string | null; vt_malicious: number | null; vt_total: number | null; vt_verdict: string | null }>; loading: boolean }) {
+function VtSection({ iocs, loading }: { iocs: Array<{ id: string; type: string; value: string; source: string | null; confidence: string | null; malware_family: string | null; first_seen_at: string | null; vt_malicious: number | null; vt_total: number | null; vt_verdict: string | null; vt_file_type: string | null }>; loading: boolean }) {
   const [vtHash, setVtHash] = useState<string | null>(null);
   const vtIocs = iocs.filter((ioc) => ioc.confidence === 'sandbox_verified' || ioc.vt_verdict).slice(0, 5);
 
@@ -166,8 +166,12 @@ function VtSection({ iocs, loading }: { iocs: Array<{ id: string; type: string; 
                 {ioc.malware_family && (
                   <span className="text-[10px] text-[var(--accent-orange)] shrink-0">{ioc.malware_family}</span>
                 )}
-                {/* Source */}
-                <Badge label={ioc.source ?? 'unknown'} variant="neutral" />
+                {/* File type */}
+                {ioc.vt_file_type && (
+                  <span className="text-[9px] px-1.5 py-0.5 rounded border bg-[var(--hover-overlay)] text-[var(--text-secondary)] border-[var(--border-color)] shrink-0 truncate max-w-[80px]" title={ioc.vt_file_type}>
+                    {ioc.vt_file_type}
+                  </span>
+                )}
                 {/* Hash (truncated) */}
                 <span className="font-mono text-[10px] text-[var(--text-secondary)] truncate flex-1" title={ioc.value}>
                   {ioc.value.slice(0, 12)}...{ioc.value.slice(-6)}

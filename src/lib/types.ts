@@ -459,6 +459,7 @@ export interface TechniqueIntelligence {
     vt_malicious: number | null;
     vt_total: number | null;
     vt_verdict: string | null;
+    vt_file_type: string | null;
   }>;
 }
 
