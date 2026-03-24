@@ -136,7 +136,7 @@ function VtSection({ iocs, loading }: { iocs: Array<{ id: string; type: string; 
 
   return (
     <>
-      <MapCard label="VirusTotal" icon={IconVt} count={vtIocs.length}>
+      <MapCard label="VirusTotal Sandboxing Report" icon={IconVt} count={vtIocs.length}>
         {vtIocs.length > 0 ? (
           <div className="space-y-1.5">
             {vtIocs.map((ioc) => (
