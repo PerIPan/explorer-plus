@@ -374,19 +374,21 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
             </MapRow>
             <div className="mt-1 space-y-1">
               {sigmaRules.slice(0, 5).map((rule) => (
-                <Link
+                <a
                   key={rule.sigma_id ?? rule.id}
-                  to="/cti/sigma"
+                  href={`/cti/sigma?technique=${attackId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="flex items-center gap-2 py-1 px-3 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)] hover:border-[var(--teal-dim)] transition-colors group"
                 >
                   <LevelBadge level={rule.level} />
                   <span className="text-[11px] text-[var(--text-primary)] group-hover:text-[var(--accent-teal)] truncate flex-1">{rule.title}</span>
-                </Link>
+                </a>
               ))}
               {sigmaRules.length > 5 && (
-                <Link to="/cti/sigma" className="text-[10px] text-[var(--accent-teal)] hover:underline px-3">
+                <a href={`/cti/sigma?technique=${attackId}`} target="_blank" rel="noopener noreferrer" className="text-[10px] text-[var(--accent-teal)] hover:underline px-3">
                   +{sigmaRules.length - 5} more rules
-                </Link>
+                </a>
               )}
             </div>
           </>
@@ -436,7 +438,7 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
               {nistControls.map((ctrl) => (
                 <a
                   key={ctrl.controlId}
-                  href={`https://csf.tools/reference/nist-sp-800-53/r5/${ctrl.controlId.split('-')[0].toLowerCase()}/${ctrl.controlId.toLowerCase()}/`}
+                  href={`https://csf.tools/reference/nist-sp-800-53/r5/${ctrl.controlId.split('-')[0].toLowerCase()}/${ctrl.controlId.replace(/-0+/g, '-').toLowerCase()}/`}
                   target="_blank"
                   rel="noopener noreferrer"
                   title={ctrl.controlName ?? ctrl.controlId}
