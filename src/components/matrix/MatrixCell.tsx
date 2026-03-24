@@ -1,5 +1,4 @@
 import { memo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import type { MatrixTechniqueCell } from '../../lib/types';
 import { useTheme } from '../../contexts/ThemeContext';
 
@@ -23,7 +22,6 @@ interface MatrixCellProps {
  * When overlay is provided, actor colors override the default heatmap.
  */
 export const MatrixCell = memo(function MatrixCell({ technique, groupUsageCount, maxUsage, overlay }: MatrixCellProps) {
-  const navigate = useNavigate();
   const { theme } = useTheme();
   const ratio = maxUsage > 0 ? groupUsageCount / maxUsage : 0;
 
@@ -50,7 +48,7 @@ export const MatrixCell = memo(function MatrixCell({ technique, groupUsageCount,
     <button
       type="button"
       title={`${technique.attackId} — ${technique.name}${groupUsageCount > 0 ? ` (${groupUsageCount} sub-techniques)` : ''}`}
-      onClick={() => navigate(`/techniques/${technique.attackId}`)}
+      onClick={() => window.open(`/techniques/${technique.attackId}`, '_blank')}
       className="
         w-full text-left px-1.5 py-1 rounded text-[11px] leading-tight
         border border-[var(--border-color)] transition-all duration-150
@@ -75,7 +73,7 @@ export const MatrixCell = memo(function MatrixCell({ technique, groupUsageCount,
       </div>
       {technique.subTechniques.length > 0 && (
         <div
-          onClick={(e) => { e.stopPropagation(); navigate(`/techniques/${technique.attackId}?tab=subtechniques`); }}
+          onClick={(e) => { e.stopPropagation(); window.open(`/techniques/${technique.attackId}?tab=subtechniques`, '_blank'); }}
           className="text-[10px] text-[var(--text-secondary)] font-medium mt-0.5 cursor-pointer"
         >
           ▸ {technique.subTechniques.length} sub

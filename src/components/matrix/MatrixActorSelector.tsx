@@ -70,23 +70,6 @@ export function MatrixActorSelector({ groups, selected, onSelect, onRemove, maxA
   return (
     <div ref={dropdownRef} className="relative">
       <div className="flex items-center gap-1.5 flex-wrap">
-        {selected.map((actor, i) => (
-          <span
-            key={actor.attackId}
-            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border border-[var(--border-color)] bg-[var(--surface-card)]"
-          >
-            <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: ACTOR_COLORS[actor.colorIndex].css }} />
-            <span className="text-[var(--text-primary)] max-w-[120px] truncate">{actor.name}</span>
-            <button
-              type="button"
-              onClick={() => onRemove(actor.attackId)}
-              className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] ml-0.5"
-              aria-label={`Remove ${actor.name}`}
-            >
-              ×
-            </button>
-          </span>
-        ))}
         <input
           ref={inputRef}
           type="text"
@@ -103,6 +86,23 @@ export function MatrixActorSelector({ groups, selected, onSelect, onRemove, maxA
           aria-activedescendant={open && filtered[highlightIdx] ? `actor-option-${filtered[highlightIdx].attackId}` : undefined}
           className="w-[200px] px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent-teal)] transition-colors disabled:opacity-50"
         />
+        {selected.map((actor) => (
+          <span
+            key={actor.attackId}
+            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border border-[var(--border-color)] bg-[var(--surface-card)]"
+          >
+            <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: ACTOR_COLORS[actor.colorIndex].css }} />
+            <span className="text-[var(--text-primary)] max-w-[120px] truncate">{actor.name}</span>
+            <button
+              type="button"
+              onClick={() => onRemove(actor.attackId)}
+              className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] ml-0.5"
+              aria-label={`Remove ${actor.name}`}
+            >
+              ×
+            </button>
+          </span>
+        ))}
       </div>
 
       {open && filtered.length > 0 && (
