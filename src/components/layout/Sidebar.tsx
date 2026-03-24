@@ -143,12 +143,12 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       aria-label="Main navigation"
     >
       {/* Logo / Title */}
-      <div className="px-4 py-5 border-b border-[var(--border-color)] flex items-center justify-between">
+      <div className="px-3 py-4 border-b border-[var(--border-color)] flex items-center justify-between">
         <Link to="/" className="group">
-          <div className="text-[var(--accent-teal)] font-bold text-base tracking-widest uppercase group-hover:text-[var(--accent-teal-light)] transition-colors">
-            MITRE EXPLORER
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-[var(--accent-teal)] font-bold text-xs tracking-widest uppercase group-hover:text-[var(--accent-teal-light)] transition-colors">MITRE EXPLORER</span>
+            <span className="text-[var(--text-secondary)] text-sm font-light group-hover:text-[var(--text-primary)] transition-colors">Plus</span>
           </div>
-          <div className="text-[var(--text-secondary)] text-[10px] mt-0.5 group-hover:text-[var(--text-primary)] transition-colors">Plus</div>
         </Link>
         {/* Close button — visible only below lg */}
         <button
