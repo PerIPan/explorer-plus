@@ -5,6 +5,7 @@ import { attackIdSchema } from '../lib/validate.js';
 import { z } from 'zod';
 
 const optionalSector = z.string().max(50).optional();
+const optionalDomain = z.enum(['enterprise-attack', 'mobile-attack', 'ics-attack']).optional();
 
 async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   const parsed = attackIdSchema.safeParse(req.query.attackId);
@@ -15,8 +16,13 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   const attackId = parsed.data;
   const sectorParsed = optionalSector.safeParse(req.query.sector);
   const sector = sectorParsed.success ? sectorParsed.data ?? null : null;
+  const domainParsed = optionalDomain.safeParse(req.query.domain);
+  const domain = domainParsed.success ? domainParsed.data ?? null : null;
 
-  // Fetch main technique
+  // Fetch main technique (optionally scoped by domain)
+  const techParams: unknown[] = [attackId];
+  const domainFilter = domain ? (() => { techParams.push(domain); return `AND domain = $${techParams.length}`; })() : '';
+
   const techResult = await query<{
     id: string; attackId: string; stixId: string | null; name: string;
     description: string | null; url: string | null; platforms: string[] | null;
@@ -29,8 +35,8 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
        platforms, is_subtechnique AS "isSubtechnique", detection,
        is_revoked AS "isRevoked", is_deprecated AS "isDeprecated", domain,
        stix_created AS "stixCreated", stix_modified AS "stixModified"
-     FROM techniques WHERE attack_id = $1`,
-    [attackId],
+     FROM techniques WHERE attack_id = $1 ${domainFilter}`,
+    techParams,
   );
 
   if (techResult.rows.length === 0) {

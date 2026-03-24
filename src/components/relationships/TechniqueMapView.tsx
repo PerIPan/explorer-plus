@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTechnique, useFrameworks, useIntelligence } from '../../hooks/useApi';
 import { useSector } from '../../contexts/SectorContext';
+import { useDomain } from '../../contexts/DomainContext';
 import { EntityLink } from '../shared/EntityLink';
 import { Badge } from '../shared/Badge';
 import { VtLookupModal, VtButton } from '../shared/VtLookupModal';
@@ -209,7 +210,8 @@ function VtSection({ iocs, loading }: { iocs: Array<{ id: string; type: string; 
  */
 export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
   const { sectorParam } = useSector();
-  const { data: technique, isLoading: techLoading, error: techError } = useTechnique(attackId, sectorParam);
+  const { domainParam } = useDomain();
+  const { data: technique, isLoading: techLoading, error: techError } = useTechnique(attackId, { ...sectorParam, ...domainParam });
   const { data: frameworks, isLoading: fwLoading } = useFrameworks(attackId);
   const { data: intel, isLoading: intelLoading } = useIntelligence(attackId);
 
@@ -224,8 +226,8 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
 
   if (techError || !technique) {
     return (
-      <div className="text-[var(--accent-orange)] text-sm py-8 text-center">
-        Failed to load technique data.
+      <div className="text-[var(--text-secondary)] text-sm py-8 text-center">
+        Technique <span className="font-mono text-[var(--accent-teal)]">{attackId}</span> not found in the selected domain.
       </div>
     );
   }
