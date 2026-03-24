@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useGroup, useCampaign, useExternalActorByGroup, useExternalActorByName } from '../../hooks/useApi';
 import { EntityLink } from '../shared/EntityLink';
 import { Badge } from '../shared/Badge';
+import { sanitize, sanitizeMarkdown } from '../../lib/sanitize';
 import type { GroupTechnique, GroupSoftware, GroupCampaign, GroupSector, ExternalActor } from '../../lib/types';
 
 // ── Tactic ordering ────────────────────────────────────────────────────────────
@@ -471,6 +472,16 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
             </div>
           </div>
         </div>
+
+        {/* Description */}
+        {group.description && (
+          <div className="bg-[var(--surface-deep)] border border-[var(--border-color)] rounded-lg p-4">
+            <p
+              className="text-sm text-[var(--text-secondary)] leading-relaxed whitespace-pre-wrap"
+              dangerouslySetInnerHTML={{ __html: sanitize(sanitizeMarkdown(group.description)) }}
+            />
+          </div>
+        )}
 
         {/* Targeted Sectors — first */}
         {sectors.length > 0 && (

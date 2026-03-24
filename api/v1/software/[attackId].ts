@@ -35,7 +35,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   const software = softwareResult.rows[0];
   const softwareId = software.id;
 
-  const [techniquesResult, groupsResult] = await Promise.all([
+  const [techniquesResult, groupsResult, campaignsResult] = await Promise.all([
     query<{ attackId: string; name: string; procedure: string | null; platforms: string[] | null }>(
       `SELECT t.attack_id AS "attackId", t.name, st.description AS procedure, t.platforms
        FROM software_techniques st
@@ -52,12 +52,21 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
        ORDER BY tg.name ASC`,
       [softwareId],
     ),
+    query<{ attackId: string; name: string; description: string | null }>(
+      `SELECT c.attack_id AS "attackId", c.name, cs.description
+       FROM campaign_software cs
+       JOIN campaigns c ON c.id = cs.campaign_id
+       WHERE cs.software_id = $1
+       ORDER BY c.name ASC`,
+      [softwareId],
+    ),
   ]);
 
   res.status(200).json({
     ...software,
     techniques: techniquesResult.rows,
     groups: groupsResult.rows,
+    campaigns: campaignsResult.rows,
   });
 }
 

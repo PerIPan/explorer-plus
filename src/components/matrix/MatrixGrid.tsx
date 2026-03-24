@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import type { MatrixData } from '../../lib/types';
 import { MatrixCell } from './MatrixCell';
 import { MatrixLegend } from './MatrixLegend';
@@ -46,18 +47,19 @@ export function MatrixGrid({ data, filterText = '' }: MatrixGridProps) {
                 role="columnheader"
               >
                 {/* Tactic header — sticky within scrollable container */}
-                <div
+                <Link
+                  to={`/relationships?entity=${col.tactic.attackId}&tab=tactic-map`}
                   className="
-                    bg-[var(--surface-deep)] border border-[var(--border-color)] rounded-t px-2 py-2 mb-1
+                    block bg-[var(--surface-deep)] border border-[var(--border-color)] rounded-t px-2 py-2 mb-1
                     text-center text-[11px] font-semibold text-[var(--accent-yellow)] uppercase tracking-wide
-                    sticky top-0 z-10
+                    sticky top-0 z-10 hover:border-[var(--yellow-dim)] hover:bg-[var(--yellow-faint)] transition-colors
                   "
                 >
                   <div>{col.tactic.name}</div>
                   <div className="text-[9px] text-[var(--text-secondary)] font-normal font-mono mt-0.5">
                     {col.tactic.attackId}
                   </div>
-                </div>
+                </Link>
 
                 {/* Technique cells */}
                 <div className="flex flex-col gap-0.5">

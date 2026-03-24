@@ -5,6 +5,7 @@ import { useSector } from '../../contexts/SectorContext';
 import { EntityLink } from '../shared/EntityLink';
 import { Badge } from '../shared/Badge';
 import { VtLookupModal, VtButton } from '../shared/VtLookupModal';
+import { sanitize, sanitizeMarkdown } from '../../lib/sanitize';
 
 // ── Level badge (reused pattern from TechniqueDetail) ─────────────────────────
 
@@ -272,6 +273,16 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
           ))}
         </div>
       </div>
+
+      {/* Description */}
+      {technique.description && (
+        <div className="bg-[var(--surface-deep)] border border-[var(--border-color)] rounded-lg p-4">
+          <p
+            className="text-sm text-[var(--text-secondary)] leading-relaxed whitespace-pre-wrap"
+            dangerouslySetInnerHTML={{ __html: sanitize(sanitizeMarkdown(technique.description)) }}
+          />
+        </div>
+      )}
 
       {/* THREAT REPORTS — first */}
       {(() => {

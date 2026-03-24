@@ -20,7 +20,7 @@ interface NavSection {
 const mainSections: NavSection[] = [
   {
     items: [
-      { path: '/', label: 'Relationships', tooltip: 'explore entity connections — graph, actor profiles, technique maps' },
+      { path: '/', label: 'Relationships', tooltip: 'explore entity connections — graph and dedicated map views for every entity type' },
       { path: '/matrix', label: 'Matrix', tooltip: 'att&ck technique matrix heatmap — tactics vs techniques' },
       { path: '/dashboard', label: 'Overview', tooltip: 'summary stats, charts, and top threat groups' },
     ],

@@ -68,6 +68,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
   if (!verifyCronAuth(req, res)) return;
 
+  // Clean up stale "running" entries (timed-out previous runs)
+  await query(
+    `UPDATE feed_sync_log
+     SET status = 'error', completed_at = NOW(), error_message = 'Timed out (auto-cleaned)'
+     WHERE source = 'rss' AND status = 'running' AND started_at < NOW() - INTERVAL '15 minutes'`,
+  );
+
   const logResult = await query<{ id: string }>(
     `INSERT INTO feed_sync_log (source, status, started_at)
      VALUES ('rss', 'running', NOW())

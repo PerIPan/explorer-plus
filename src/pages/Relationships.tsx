@@ -9,6 +9,10 @@ import { ForceGraph, type ForceGraphHandle } from '../components/graph/ForceGrap
 import { Badge } from '../components/shared/Badge';
 import { ActorProfileView } from '../components/relationships/ActorProfileView';
 import { TechniqueMapView } from '../components/relationships/TechniqueMapView';
+import { SoftwareMapView } from '../components/relationships/SoftwareMapView';
+import { MitigationMapView } from '../components/relationships/MitigationMapView';
+import { DataSourceMapView } from '../components/relationships/DataSourceMapView';
+import { TacticMapView } from '../components/relationships/TacticMapView';
 import type { GraphNode } from '../lib/types';
 
 interface EntityEntry {
@@ -42,7 +46,7 @@ function typeLabel(type: string): string {
 
 // ── Tab definitions ────────────────────────────────────────────────────────────
 
-type TabId = 'graph' | 'actor' | 'technique-map';
+type TabId = 'graph' | 'actor' | 'technique-map' | 'software-map' | 'mitigation-map' | 'data-source-map' | 'tactic-map';
 
 interface TabDef {
   id: TabId;
@@ -54,8 +58,22 @@ interface TabDef {
 const TABS: TabDef[] = [
   { id: 'actor', label: 'Threat Actor Profile', forTypes: ['group', 'campaign', 'external_actor'] },
   { id: 'technique-map', label: 'Technique Map', forTypes: ['technique'] },
+  { id: 'software-map', label: 'Software Map', forTypes: ['software'] },
+  { id: 'mitigation-map', label: 'Mitigation Map', forTypes: ['mitigation'] },
+  { id: 'data-source-map', label: 'Data Source Map', forTypes: ['data_source'] },
+  { id: 'tactic-map', label: 'Tactic Map', forTypes: ['tactic'] },
   { id: 'graph', label: 'Graph' },
 ];
+
+/** Map entity type → best default tab */
+const TAB_FOR_TYPE: Record<string, TabId> = {
+  group: 'actor', campaign: 'actor', external_actor: 'actor',
+  technique: 'technique-map',
+  software: 'software-map',
+  mitigation: 'mitigation-map',
+  data_source: 'data-source-map',
+  tactic: 'tactic-map',
+};
 
 /** Derive the entity type from the graph center node or from search suggestions */
 function inferEntityType(
@@ -156,11 +174,7 @@ export function Relationships() {
       setShowSuggestions(false);
 
       // Immediately pick the best tab based on known type
-      const bestTab: TabId = knownType === 'group' || knownType === 'campaign' || knownType === 'external_actor'
-        ? 'actor'
-        : knownType === 'technique'
-          ? 'technique-map'
-          : 'graph';
+      const bestTab: TabId = (knownType && TAB_FOR_TYPE[knownType]) || 'graph';
       setActiveTab(bestTab);
 
       setSearchParams((prev) => {
@@ -193,7 +207,7 @@ export function Relationships() {
     <div className="space-y-4">
       <PageHeader
         title="Relationships Explorer"
-        subtitle="Graph, Actor Profile, and Technique Map views — select an entity to start"
+        subtitle="Graph and map views for every entity type — select an entity to start"
         actions={
           selectedId ? (
             <button
@@ -309,8 +323,8 @@ export function Relationships() {
               Select an entity
             </div>
             <p className="text-sm text-[var(--text-secondary)] max-w-sm">
-              Search for any technique, group, software, or campaign to explore
-              its relationships across graph, actor profile, and technique map views.
+              Search for any technique, group, software, mitigation, data source, or tactic to explore
+              its relationships across dedicated map views and the graph.
             </p>
           </div>
         </div>
@@ -411,6 +425,26 @@ export function Relationships() {
           {/* Technique Map tab */}
           {activeTab === 'technique-map' && entityType === 'technique' && (
             <TechniqueMapView attackId={selectedId} />
+          )}
+
+          {/* Software Map tab */}
+          {activeTab === 'software-map' && entityType === 'software' && (
+            <SoftwareMapView attackId={selectedId} />
+          )}
+
+          {/* Mitigation Map tab */}
+          {activeTab === 'mitigation-map' && entityType === 'mitigation' && (
+            <MitigationMapView attackId={selectedId} />
+          )}
+
+          {/* Data Source Map tab */}
+          {activeTab === 'data-source-map' && entityType === 'data_source' && (
+            <DataSourceMapView attackId={selectedId} />
+          )}
+
+          {/* Tactic Map tab */}
+          {activeTab === 'tactic-map' && entityType === 'tactic' && (
+            <TacticMapView attackId={selectedId} />
           )}
         </div>
       )}
