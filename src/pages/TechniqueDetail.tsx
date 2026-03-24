@@ -339,11 +339,14 @@ function FrameworksTab({ attackId }: { attackId: string }) {
           </h3>
           <div className="space-y-2">
             {data.nist.map((ctrl) => (
-              <div
+              <a
                 key={ctrl.controlId}
-                className="flex items-start gap-3 py-2 px-3 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)]"
+                href={`https://csf.tools/reference/nist-sp-800-53/r5/${ctrl.controlId.split('-')[0].toLowerCase()}/${ctrl.controlId.replace(/-0+/g, '-').toLowerCase()}/`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-start gap-3 py-2 px-3 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)] hover:border-[var(--teal-dim)] transition-colors group"
               >
-                <span className="font-mono text-xs text-[var(--accent-teal)] mt-0.5 shrink-0 w-14">
+                <span className="font-mono text-xs text-[var(--accent-teal)] mt-0.5 shrink-0 w-14 group-hover:underline">
                   {ctrl.controlId}
                 </span>
                 <div className="flex-1 min-w-0">
@@ -364,7 +367,7 @@ function FrameworksTab({ attackId }: { attackId: string }) {
                     <span className="text-[var(--text-secondary)] text-xs">{ctrl.mappingType}</span>
                   )}
                 </div>
-              </div>
+              </a>
             ))}
           </div>
           <div className="pt-2">

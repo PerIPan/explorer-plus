@@ -12,6 +12,8 @@ interface ModelNode {
   path: string;
   description: string;
   category: 'core' | 'defensive' | 'intelligence' | 'compliance';
+  /** Visual scale factor — defaults to 1. Technique uses 1.8 as the central hub. */
+  scale?: number;
 }
 
 interface ModelEdge {
@@ -24,12 +26,12 @@ interface ModelEdge {
 function makeNodes(c: ReturnType<typeof useThemeColors>): ModelNode[] {
   const alpha = (hex: string, a: string) => `${hex}${a}`;
   return [
-    { id: 'technique', label: 'Technique', x: 550, y: 330, color: c.accentTeal, bg: alpha(c.accentTeal, '18'), path: '/techniques', description: 'Attack methods and sub-techniques used by adversaries', category: 'core' },
+    { id: 'technique', label: 'Technique', x: 550, y: 330, color: c.accentTeal, bg: alpha(c.accentTeal, '18'), path: '/techniques', description: 'Attack methods and sub-techniques used by adversaries', category: 'core', scale: 1.8 },
     { id: 'tactic', label: 'Tactic', x: 550, y: 120, color: c.accentYellow, bg: alpha(c.accentYellow, '18'), path: '/tactics', description: 'Kill chain phases: Reconnaissance to Impact', category: 'core' },
     { id: 'group', label: 'Threat Group', x: 160, y: 200, color: c.accentOrange, bg: alpha(c.accentOrange, '18'), path: '/groups', description: 'Tracked adversary groups (APT29, Lazarus, etc.)', category: 'core' },
-    { id: 'software', label: 'Software', x: 160, y: 380, color: c.accentPurple, bg: alpha(c.accentPurple, '18'), path: '/software', description: 'Malware and tools used in attacks', category: 'core' },
+    { id: 'software', label: 'Software', x: 160, y: 400, color: c.accentPurple, bg: alpha(c.accentPurple, '18'), path: '/software', description: 'Malware and tools used in attacks', category: 'core' },
     { id: 'campaign', label: 'Campaign', x: 340, y: 120, color: c.accentBlue, bg: alpha(c.accentBlue, '18'), path: '/campaigns', description: 'Named intrusion operations with timelines', category: 'core' },
-    { id: 'sector', label: 'Sector', x: 50, y: 60, color: c.accentPink, bg: alpha(c.accentPink, '18'), path: '/sectors', description: 'Industries targeted by threat groups', category: 'core' },
+    { id: 'sector', label: 'Sector', x: 50, y: 100, color: c.accentPink, bg: alpha(c.accentPink, '18'), path: '/sectors', description: 'Industries targeted by threat groups', category: 'core' },
     { id: 'mitigation', label: 'Mitigation', x: 850, y: 160, color: c.accentGreen, bg: alpha(c.accentGreen, '18'), path: '/mitigations', description: 'Countermeasures to prevent techniques', category: 'defensive' },
     { id: 'sigma', label: 'Sigma Rules', x: 850, y: 370, color: '#c084fc', bg: '#c084fc18', path: '/cti/sigma', description: 'Detection signatures from SigmaHQ mapped to techniques', category: 'defensive' },
     { id: 'nist', label: 'NIST 800-53', x: 1050, y: 160, color: '#38bdf8', bg: '#38bdf818', path: '/frameworks/nist', description: 'Federal security controls mapped to ATT&CK techniques', category: 'compliance' },
@@ -42,7 +44,7 @@ function makeNodes(c: ReturnType<typeof useThemeColors>): ModelNode[] {
     { id: 'virustotal', label: 'VirusTotal', x: 680, y: 555, color: '#3b82f6', bg: '#3b82f618', path: '/cti/iocs', description: 'Sandbox verdicts and ATT&CK techniques for file hashes', category: 'intelligence' },
     { id: 'atomic', label: 'Atomic Tests', x: 750, y: 490, color: '#ef4444', bg: '#ef444418', path: '/techniques', description: 'Red team test procedures from Atomic Red Team per technique', category: 'intelligence' },
     { id: 'd3fend', label: 'D3FEND', x: 900, y: 500, color: c.accentGreen, bg: alpha(c.accentGreen, '18'), path: '/techniques', description: 'Defensive countermeasures from MITRE D3FEND', category: 'intelligence' },
-    { id: 'thaicert', label: 'ETDA Actors', x: 160, y: 60, color: c.accentNeutral, bg: alpha(c.accentNeutral, '18'), path: '/external-actors', description: '500+ extended threat actors from ThaiCERT encyclopedia', category: 'intelligence' },
+    { id: 'thaicert', label: 'ETDA Actors', x: 50, y: 260, color: c.accentNeutral, bg: alpha(c.accentNeutral, '18'), path: '/external-actors', description: '500+ extended threat actors from ThaiCERT encyclopedia', category: 'intelligence' },
   ];
 }
 
@@ -74,11 +76,13 @@ function getEdgePath(from: ModelNode, to: ModelNode): { path: string; midX: numb
   const dx = to.x - from.x;
   const dy = to.y - from.y;
   const len = Math.sqrt(dx * dx + dy * dy);
-  const r = 45;
-  const sx = from.x + (dx / len) * r;
-  const sy = from.y + (dy / len) * r;
-  const ex = to.x - (dx / len) * r;
-  const ey = to.y - (dy / len) * r;
+  // Scale-aware radii — larger nodes push edge endpoints further out
+  const rFrom = 45 * (from.scale ?? 1);
+  const rTo = 45 * (to.scale ?? 1);
+  const sx = from.x + (dx / len) * rFrom;
+  const sy = from.y + (dy / len) * rFrom;
+  const ex = to.x - (dx / len) * rTo;
+  const ey = to.y - (dy / len) * rTo;
   const cx = (sx + ex) / 2 + (dy / len) * 15;
   const cy = (sy + ey) / 2 - (dx / len) * 15;
   const midX = (sx + ex) / 2;
@@ -211,8 +215,10 @@ export function RelationshipModel({ open, onClose }: Props) {
                   onClick={() => { navigate(node.path); onClose(); }}
                 >
                   {(() => {
-                    const rx = Math.max(48, node.label.length * 5.5 + 10);
-                    const ry = 26;
+                    const s = node.scale ?? 1;
+                    const rx = Math.max(48, node.label.length * 5.5 + 10) * s;
+                    const ry = 26 * s;
+                    const fontSize = Math.round(11 * s);
                     return (
                       <>
                       {isHovered && (
@@ -230,16 +236,16 @@ export function RelationshipModel({ open, onClose }: Props) {
                     rx={rx} ry={ry}
                     fill={isHovered ? node.bg.replace('18', '30') : node.bg}
                     stroke={node.color}
-                    strokeWidth={isHovered ? 2 : 1}
-                    opacity={isHovered ? 1 : 0.85}
+                    strokeWidth={isHovered ? 2 : (s > 1 ? 2 : 1)}
+                    opacity={isHovered ? 1 : (s > 1 ? 1 : 0.85)}
                     className="transition-all duration-200"
                   />
                   <text
                     x={node.x} y={node.y + 1}
                     textAnchor="middle"
                     dominantBaseline="central"
-                    fontSize={11}
-                    fontWeight={600}
+                    fontSize={fontSize}
+                    fontWeight={s > 1 ? 700 : 600}
                     fill={isHovered ? node.color : c.textPrimary}
                     className="transition-colors duration-200 select-none pointer-events-none"
                   >
