@@ -1,0 +1,1755 @@
+- generic [ref=e3]:
+  - complementary "Main navigation" [ref=e4]:
+    - link "MITRE ATT&CK Explorer Plus" [ref=e6] [cursor=pointer]:
+      - /url: /
+      - generic [ref=e7]: MITRE ATT&CK
+      - generic [ref=e8]: Explorer Plus
+    - navigation [ref=e9]:
+      - generic [ref=e10]:
+        - link "Relationships" [ref=e11] [cursor=pointer]:
+          - /url: /
+        - link "Matrix" [ref=e12] [cursor=pointer]:
+          - /url: /matrix
+        - link "Overview" [ref=e13] [cursor=pointer]:
+          - /url: /dashboard
+      - generic [ref=e14]:
+        - generic [ref=e15]: Threat Actors
+        - link "Groups" [ref=e16] [cursor=pointer]:
+          - /url: /groups
+        - link "Campaigns" [ref=e17] [cursor=pointer]:
+          - /url: /campaigns
+        - link "Sectors" [ref=e18] [cursor=pointer]:
+          - /url: /sectors
+      - generic [ref=e19]:
+        - generic [ref=e20]: Offensive
+        - link "Tactics" [ref=e21] [cursor=pointer]:
+          - /url: /tactics
+        - link "Techniques" [ref=e22] [cursor=pointer]:
+          - /url: /techniques
+        - link "Software" [ref=e23] [cursor=pointer]:
+          - /url: /software
+      - generic [ref=e24]:
+        - generic [ref=e25]: Defensive
+        - link "Mitigations" [ref=e26] [cursor=pointer]:
+          - /url: /mitigations
+        - link "Data Sources" [ref=e27] [cursor=pointer]:
+          - /url: /data-sources
+    - generic [ref=e29]:
+      - generic [ref=e30]: CTI
+      - generic [ref=e31]:
+        - link "Reports" [ref=e32] [cursor=pointer]:
+          - /url: /cti/reports
+        - link "CVEs" [ref=e33] [cursor=pointer]:
+          - /url: /cti/cves
+        - link "IOCs" [ref=e34] [cursor=pointer]:
+          - /url: /cti/iocs
+        - link "Feed Status" [ref=e35] [cursor=pointer]:
+          - /url: /cti/feed-status
+    - button "Frameworks" [ref=e38]:
+      - img [ref=e39]
+      - text: Frameworks
+    - generic [ref=e42]:
+      - generic [ref=e43]: Extended Intel
+      - link "Non-MITRE Actors" [ref=e45] [cursor=pointer]:
+        - /url: /external-actors
+  - generic [ref=e46]:
+    - banner [ref=e47]:
+      - search [ref=e48]:
+        - generic:
+          - img
+        - searchbox "Search MITRE ATT&CK entities" [ref=e49]
+        - generic [ref=e50]: /
+      - generic [ref=e51]:
+        - img [ref=e52]
+        - combobox "Filter by industry sector" [ref=e54] [cursor=pointer]:
+          - option "All Sectors" [selected]
+          - option "Defense (44)"
+          - option "Education (37)"
+          - option "Energy (15)"
+          - option "Financial (43)"
+          - option "Government (78)"
+          - option "Healthcare (23)"
+          - option "Manufacturing (26)"
+          - option "Media (14)"
+          - option "Retail (6)"
+          - option "Technology (76)"
+          - option "Telecommunications (23)"
+          - option "Transportation (5)"
+      - button "Data Model" [ref=e55]
+      - button "Switch to dark theme" [ref=e56]:
+        - img [ref=e57]
+      - button "?" [ref=e59]
+    - main [ref=e60]:
+      - generic [ref=e63]:
+        - generic [ref=e66]:
+          - heading "Vulnerabilities" [level=1] [ref=e67]
+          - paragraph [ref=e68]: Known CVEs from OTX and CISA KEV, enriched with NVD metadata
+        - generic [ref=e69]:
+          - searchbox "Search CVEs..." [ref=e70]
+          - combobox [ref=e71]:
+            - option "All Severities" [selected]
+            - option "CRITICAL"
+            - option "HIGH"
+            - option "MEDIUM"
+            - option "LOW"
+          - combobox [ref=e72]:
+            - option "All Sources" [selected]
+            - option "otx"
+            - option "cisa_kev"
+        - generic [ref=e73]:
+          - table [ref=e75]:
+            - rowgroup [ref=e76]:
+              - row "Severity CVE ID Description CVSS CWE Sources Techniques" [ref=e77]:
+                - columnheader "Severity" [ref=e78]
+                - columnheader "CVE ID" [ref=e79]
+                - columnheader "Description" [ref=e80]
+                - columnheader "CVSS" [ref=e81]
+                - columnheader "CWE" [ref=e82]
+                - columnheader "Sources" [ref=e83]
+                - columnheader "Techniques" [ref=e84]
+            - rowgroup [ref=e85]:
+              - row "CRITICAL CVE-2010-5326 Copy value The Invoker Servlet on SAP NetWeaver Application Server Java platforms, possibly before 7.3, does not require authentication, which allows remote attackers to execute arbitrary code via an HTTP or HTTPS request, as exploited in the wild in 2013 through 2016, aka a \"Detour\" attack. 10.0 — cisa_kev —" [ref=e86]:
+                - cell "CRITICAL" [ref=e87]:
+                  - generic [ref=e88]: CRITICAL
+                - cell "CVE-2010-5326 Copy value" [ref=e89]:
+                  - generic [ref=e90]:
+                    - link "CVE-2010-5326" [ref=e91] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2010-5326
+                    - button "Copy value" [ref=e92]:
+                      - img [ref=e93]
+                - cell "The Invoker Servlet on SAP NetWeaver Application Server Java platforms, possibly before 7.3, does not require authentication, which allows remote attackers to execute arbitrary code via an HTTP or HTTPS request, as exploited in the wild in 2013 through 2016, aka a \"Detour\" attack." [ref=e95]:
+                  - generic "The Invoker Servlet on SAP NetWeaver Application Server Java platforms, possibly before 7.3, does not require authentication, which allows remote attackers to execute arbitrary code via an HTTP or HTTPS request, as exploited in the wild in 2013 through 2016, aka a \"Detour\" attack." [ref=e96]
+                - cell "10.0" [ref=e97]
+                - cell "—" [ref=e98]
+                - cell "cisa_kev" [ref=e99]:
+                  - generic [ref=e101]: cisa_kev
+                - cell "—" [ref=e102]
+              - row "CRITICAL CVE-2019-11510 Copy value In Pulse Secure Pulse Connect Secure (PCS) 8.2 before 8.2R12.1, 8.3 before 8.3R7.1, and 9.0 before 9.0R3.4, an unauthenticated remote attacker can send a specially crafted URI to perform an arbitrary file reading vulnerability . 10.0 CWE-22 cisa_kev —" [ref=e103]:
+                - cell "CRITICAL" [ref=e104]:
+                  - generic [ref=e105]: CRITICAL
+                - cell "CVE-2019-11510 Copy value" [ref=e106]:
+                  - generic [ref=e107]:
+                    - link "CVE-2019-11510" [ref=e108] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2019-11510
+                    - button "Copy value" [ref=e109]:
+                      - img [ref=e110]
+                - cell "In Pulse Secure Pulse Connect Secure (PCS) 8.2 before 8.2R12.1, 8.3 before 8.3R7.1, and 9.0 before 9.0R3.4, an unauthenticated remote attacker can send a specially crafted URI to perform an arbitrary file reading vulnerability ." [ref=e112]:
+                  - generic "In Pulse Secure Pulse Connect Secure (PCS) 8.2 before 8.2R12.1, 8.3 before 8.3R7.1, and 9.0 before 9.0R3.4, an unauthenticated remote attacker can send a specially crafted URI to perform an arbitrary file reading vulnerability ." [ref=e113]
+                - cell "10.0" [ref=e114]
+                - cell "CWE-22" [ref=e115]
+                - cell "cisa_kev" [ref=e116]:
+                  - generic [ref=e118]: cisa_kev
+                - cell "—" [ref=e119]
+              - row "CRITICAL CVE-2019-11708 Copy value Insufficient vetting of parameters passed with the Prompt:Open IPC message between child and parent processes can result in the non-sandboxed parent process opening web content chosen by a compromised child process. When combined with additional vulnerabilities this could result in executing arbitrary code on the user's computer. This vulnerability affects Firefox ESR < 60.7.2, Firefox < 67.0.4, and Thunderbird < 60.7.2. 10.0 CWE-20 cisa_kev —" [ref=e120]:
+                - cell "CRITICAL" [ref=e121]:
+                  - generic [ref=e122]: CRITICAL
+                - cell "CVE-2019-11708 Copy value" [ref=e123]:
+                  - generic [ref=e124]:
+                    - link "CVE-2019-11708" [ref=e125] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2019-11708
+                    - button "Copy value" [ref=e126]:
+                      - img [ref=e127]
+                - cell "Insufficient vetting of parameters passed with the Prompt:Open IPC message between child and parent processes can result in the non-sandboxed parent process opening web content chosen by a compromised child process. When combined with additional vulnerabilities this could result in executing arbitrary code on the user's computer. This vulnerability affects Firefox ESR < 60.7.2, Firefox < 67.0.4, and Thunderbird < 60.7.2." [ref=e129]:
+                  - generic "Insufficient vetting of parameters passed with the Prompt:Open IPC message between child and parent processes can result in the non-sandboxed parent process opening web content chosen by a compromised child process. When combined with additional vulnerabilities this could result in executing arbitrary code on the user's computer. This vulnerability affects Firefox ESR < 60.7.2, Firefox < 67.0.4, and Thunderbird < 60.7.2." [ref=e130]
+                - cell "10.0" [ref=e131]
+                - cell "CWE-20" [ref=e132]
+                - cell "cisa_kev" [ref=e133]:
+                  - generic [ref=e135]: cisa_kev
+                - cell "—" [ref=e136]
+              - row "CRITICAL CVE-2019-7609 Copy value Kibana versions before 5.6.15 and 6.6.1 contain an arbitrary code execution flaw in the Timelion visualizer. An attacker with access to the Timelion application could send a request that will attempt to execute javascript code. This could possibly lead to an attacker executing arbitrary commands with permissions of the Kibana process on the host system. 10.0 CWE-94 cisa_kev —" [ref=e137]:
+                - cell "CRITICAL" [ref=e138]:
+                  - generic [ref=e139]: CRITICAL
+                - cell "CVE-2019-7609 Copy value" [ref=e140]:
+                  - generic [ref=e141]:
+                    - link "CVE-2019-7609" [ref=e142] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2019-7609
+                    - button "Copy value" [ref=e143]:
+                      - img [ref=e144]
+                - cell "Kibana versions before 5.6.15 and 6.6.1 contain an arbitrary code execution flaw in the Timelion visualizer. An attacker with access to the Timelion application could send a request that will attempt to execute javascript code. This could possibly lead to an attacker executing arbitrary commands with permissions of the Kibana process on the host system." [ref=e146]:
+                  - generic "Kibana versions before 5.6.15 and 6.6.1 contain an arbitrary code execution flaw in the Timelion visualizer. An attacker with access to the Timelion application could send a request that will attempt to execute javascript code. This could possibly lead to an attacker executing arbitrary commands with permissions of the Kibana process on the host system." [ref=e147]
+                - cell "10.0" [ref=e148]
+                - cell "CWE-94" [ref=e149]
+                - cell "cisa_kev" [ref=e150]:
+                  - generic [ref=e152]: cisa_kev
+                - cell "—" [ref=e153]
+              - row "CRITICAL CVE-2020-0796 Copy value A remote code execution vulnerability exists in the way that the Microsoft Server Message Block 3.1.1 (SMBv3) protocol handles certain requests, aka 'Windows SMBv3 Client/Server Remote Code Execution Vulnerability'. 10.0 CWE-119 cisa_kev —" [ref=e154]:
+                - cell "CRITICAL" [ref=e155]:
+                  - generic [ref=e156]: CRITICAL
+                - cell "CVE-2020-0796 Copy value" [ref=e157]:
+                  - generic [ref=e158]:
+                    - link "CVE-2020-0796" [ref=e159] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2020-0796
+                    - button "Copy value" [ref=e160]:
+                      - img [ref=e161]
+                - cell "A remote code execution vulnerability exists in the way that the Microsoft Server Message Block 3.1.1 (SMBv3) protocol handles certain requests, aka 'Windows SMBv3 Client/Server Remote Code Execution Vulnerability'." [ref=e163]:
+                  - generic "A remote code execution vulnerability exists in the way that the Microsoft Server Message Block 3.1.1 (SMBv3) protocol handles certain requests, aka 'Windows SMBv3 Client/Server Remote Code Execution Vulnerability'." [ref=e164]
+                - cell "10.0" [ref=e165]
+                - cell "CWE-119" [ref=e166]
+                - cell "cisa_kev" [ref=e167]:
+                  - generic [ref=e169]: cisa_kev
+                - cell "—" [ref=e170]
+              - row "CRITICAL CVE-2020-1350 Copy value A remote code execution vulnerability exists in Windows Domain Name System servers when they fail to properly handle requests, aka 'Windows DNS Server Remote Code Execution Vulnerability'. 10.0 — cisa_kev —" [ref=e171]:
+                - cell "CRITICAL" [ref=e172]:
+                  - generic [ref=e173]: CRITICAL
+                - cell "CVE-2020-1350 Copy value" [ref=e174]:
+                  - generic [ref=e175]:
+                    - link "CVE-2020-1350" [ref=e176] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2020-1350
+                    - button "Copy value" [ref=e177]:
+                      - img [ref=e178]
+                - cell "A remote code execution vulnerability exists in Windows Domain Name System servers when they fail to properly handle requests, aka 'Windows DNS Server Remote Code Execution Vulnerability'." [ref=e180]:
+                  - generic "A remote code execution vulnerability exists in Windows Domain Name System servers when they fail to properly handle requests, aka 'Windows DNS Server Remote Code Execution Vulnerability'." [ref=e181]
+                - cell "10.0" [ref=e182]
+                - cell "—" [ref=e183]
+                - cell "cisa_kev" [ref=e184]:
+                  - generic [ref=e186]: cisa_kev
+                - cell "—" [ref=e187]
+              - 'row "CRITICAL CVE-2020-14871 Copy value Vulnerability in the Oracle Solaris product of Oracle Systems (component: Pluggable authentication module). Supported versions that are affected are 10 and 11. Easily exploitable vulnerability allows unauthenticated attacker with network access via multiple protocols to compromise Oracle Solaris. While the vulnerability is in Oracle Solaris, attacks may significantly impact additional products. Successful attacks of this vulnerability can result in takeover of Oracle Solaris. Note: This CVE is not exploitable for Solaris 11.1 and later releases, and ZFSSA 8.7 and later releases, thus the CVSS Base Score is 0.0. CVSS 3.1 Base Score 10.0 (Confidentiality, Integrity and Availability impacts). CVSS Vector: (CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H). 10.0 CWE-787 cisa_kev —" [ref=e188]':
+                - cell "CRITICAL" [ref=e189]:
+                  - generic [ref=e190]: CRITICAL
+                - cell "CVE-2020-14871 Copy value" [ref=e191]:
+                  - generic [ref=e192]:
+                    - link "CVE-2020-14871" [ref=e193] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2020-14871
+                    - button "Copy value" [ref=e194]:
+                      - img [ref=e195]
+                - 'cell "Vulnerability in the Oracle Solaris product of Oracle Systems (component: Pluggable authentication module). Supported versions that are affected are 10 and 11. Easily exploitable vulnerability allows unauthenticated attacker with network access via multiple protocols to compromise Oracle Solaris. While the vulnerability is in Oracle Solaris, attacks may significantly impact additional products. Successful attacks of this vulnerability can result in takeover of Oracle Solaris. Note: This CVE is not exploitable for Solaris 11.1 and later releases, and ZFSSA 8.7 and later releases, thus the CVSS Base Score is 0.0. CVSS 3.1 Base Score 10.0 (Confidentiality, Integrity and Availability impacts). CVSS Vector: (CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H)." [ref=e197]':
+                  - 'generic "Vulnerability in the Oracle Solaris product of Oracle Systems (component: Pluggable authentication module). Supported versions that are affected are 10 and 11. Easily exploitable vulnerability allows unauthenticated attacker with network access via multiple protocols to compromise Oracle Solaris. While the vulnerability is in Oracle Solaris, attacks may significantly impact additional products. Successful attacks of this vulnerability can result in takeover of Oracle Solaris. Note: This CVE is not exploitable for Solaris 11.1 and later releases, and ZFSSA 8.7 and later releases, thus the CVSS Base Score is 0.0. CVSS 3.1 Base Score 10.0 (Confidentiality, Integrity and Availability impacts). CVSS Vector: (CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H)." [ref=e198]'
+                - cell "10.0" [ref=e199]
+                - cell "CWE-787" [ref=e200]
+                - cell "cisa_kev" [ref=e201]:
+                  - generic [ref=e203]: cisa_kev
+                - cell "—" [ref=e204]
+              - row [ref=e205]:
+                - cell "CRITICAL" [ref=e206]:
+                  - generic [ref=e207]: CRITICAL
+                - cell "CVE-2020-2021 Copy value" [ref=e208]:
+                  - generic [ref=e209]:
+                    - link "CVE-2020-2021" [ref=e210] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2020-2021
+                    - button "Copy value" [ref=e211]:
+                      - img [ref=e212]
+                - cell [ref=e214]:
+                  - generic [ref=e215]
+                - cell "10.0" [ref=e216]
+                - cell "CWE-347" [ref=e217]
+                - cell "cisa_kev" [ref=e218]:
+                  - generic [ref=e220]: cisa_kev
+                - cell "—" [ref=e221]
+              - row "CRITICAL CVE-2020-6287 Copy value SAP NetWeaver AS JAVA (LM Configuration Wizard), versions - 7.30, 7.31, 7.40, 7.50, does not perform an authentication check which allows an attacker without prior authentication to execute configuration tasks to perform critical actions against the SAP Java system, including the ability to create an administrative user, and therefore compromising Confidentiality, Integrity and Availability of the system, leading to Missing Authentication Check. 10.0 CWE-306 cisa_kev —" [ref=e222]:
+                - cell "CRITICAL" [ref=e223]:
+                  - generic [ref=e224]: CRITICAL
+                - cell "CVE-2020-6287 Copy value" [ref=e225]:
+                  - generic [ref=e226]:
+                    - link "CVE-2020-6287" [ref=e227] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2020-6287
+                    - button "Copy value" [ref=e228]:
+                      - img [ref=e229]
+                - cell "SAP NetWeaver AS JAVA (LM Configuration Wizard), versions - 7.30, 7.31, 7.40, 7.50, does not perform an authentication check which allows an attacker without prior authentication to execute configuration tasks to perform critical actions against the SAP Java system, including the ability to create an administrative user, and therefore compromising Confidentiality, Integrity and Availability of the system, leading to Missing Authentication Check." [ref=e231]:
+                  - generic "SAP NetWeaver AS JAVA (LM Configuration Wizard), versions - 7.30, 7.31, 7.40, 7.50, does not perform an authentication check which allows an attacker without prior authentication to execute configuration tasks to perform critical actions against the SAP Java system, including the ability to create an administrative user, and therefore compromising Confidentiality, Integrity and Availability of the system, leading to Missing Authentication Check." [ref=e232]
+                - cell "10.0" [ref=e233]
+                - cell "CWE-306" [ref=e234]
+                - cell "cisa_kev" [ref=e235]:
+                  - generic [ref=e237]: cisa_kev
+                - cell "—" [ref=e238]
+              - row "CRITICAL CVE-2021-22205 Copy value An issue has been discovered in GitLab CE/EE affecting all versions starting from 11.9. GitLab was not properly validating image files that were passed to a file parser which resulted in a remote command execution. 10.0 CWE-94 cisa_kev —" [ref=e239]:
+                - cell "CRITICAL" [ref=e240]:
+                  - generic [ref=e241]: CRITICAL
+                - cell "CVE-2021-22205 Copy value" [ref=e242]:
+                  - generic [ref=e243]:
+                    - link "CVE-2021-22205" [ref=e244] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2021-22205
+                    - button "Copy value" [ref=e245]:
+                      - img [ref=e246]
+                - cell "An issue has been discovered in GitLab CE/EE affecting all versions starting from 11.9. GitLab was not properly validating image files that were passed to a file parser which resulted in a remote command execution." [ref=e248]:
+                  - generic "An issue has been discovered in GitLab CE/EE affecting all versions starting from 11.9. GitLab was not properly validating image files that were passed to a file parser which resulted in a remote command execution." [ref=e249]
+                - cell "10.0" [ref=e250]
+                - cell "CWE-94" [ref=e251]
+                - cell "cisa_kev" [ref=e252]:
+                  - generic [ref=e254]: cisa_kev
+                - cell "—" [ref=e255]
+              - row "CRITICAL CVE-2021-22893 Copy value Pulse Connect Secure 9.0R3/9.1R1 and higher is vulnerable to an authentication bypass vulnerability exposed by the Windows File Share Browser and Pulse Secure Collaboration features of Pulse Connect Secure that can allow an unauthenticated user to perform remote arbitrary code execution on the Pulse Connect Secure gateway. This vulnerability has been exploited in the wild. 10.0 CWE-416 cisa_kev —" [ref=e256]:
+                - cell "CRITICAL" [ref=e257]:
+                  - generic [ref=e258]: CRITICAL
+                - cell "CVE-2021-22893 Copy value" [ref=e259]:
+                  - generic [ref=e260]:
+                    - link "CVE-2021-22893" [ref=e261] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2021-22893
+                    - button "Copy value" [ref=e262]:
+                      - img [ref=e263]
+                - cell "Pulse Connect Secure 9.0R3/9.1R1 and higher is vulnerable to an authentication bypass vulnerability exposed by the Windows File Share Browser and Pulse Secure Collaboration features of Pulse Connect Secure that can allow an unauthenticated user to perform remote arbitrary code execution on the Pulse Connect Secure gateway. This vulnerability has been exploited in the wild." [ref=e265]:
+                  - generic "Pulse Connect Secure 9.0R3/9.1R1 and higher is vulnerable to an authentication bypass vulnerability exposed by the Windows File Share Browser and Pulse Secure Collaboration features of Pulse Connect Secure that can allow an unauthenticated user to perform remote arbitrary code execution on the Pulse Connect Secure gateway. This vulnerability has been exploited in the wild." [ref=e266]
+                - cell "10.0" [ref=e267]
+                - cell "CWE-416" [ref=e268]
+                - cell "cisa_kev" [ref=e269]:
+                  - generic [ref=e271]: cisa_kev
+                - cell "—" [ref=e272]
+              - row "CRITICAL CVE-2021-35211 Copy value Microsoft discovered a remote code execution (RCE) vulnerability in the SolarWinds Serv-U product utilizing a Remote Memory Escape Vulnerability. If exploited, a threat actor may be able to gain privileged access to the machine hosting Serv-U Only. SolarWinds Serv-U Managed File Transfer and Serv-U Secure FTP for Windows before 15.2.3 HF2 are affected by this vulnerability. 10.0 CWE-787 cisa_kev —" [ref=e273]:
+                - cell "CRITICAL" [ref=e274]:
+                  - generic [ref=e275]: CRITICAL
+                - cell "CVE-2021-35211 Copy value" [ref=e276]:
+                  - generic [ref=e277]:
+                    - link "CVE-2021-35211" [ref=e278] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2021-35211
+                    - button "Copy value" [ref=e279]:
+                      - img [ref=e280]
+                - cell "Microsoft discovered a remote code execution (RCE) vulnerability in the SolarWinds Serv-U product utilizing a Remote Memory Escape Vulnerability. If exploited, a threat actor may be able to gain privileged access to the machine hosting Serv-U Only. SolarWinds Serv-U Managed File Transfer and Serv-U Secure FTP for Windows before 15.2.3 HF2 are affected by this vulnerability." [ref=e282]:
+                  - generic "Microsoft discovered a remote code execution (RCE) vulnerability in the SolarWinds Serv-U product utilizing a Remote Memory Escape Vulnerability. If exploited, a threat actor may be able to gain privileged access to the machine hosting Serv-U Only. SolarWinds Serv-U Managed File Transfer and Serv-U Secure FTP for Windows before 15.2.3 HF2 are affected by this vulnerability." [ref=e283]
+                - cell "10.0" [ref=e284]
+                - cell "CWE-787" [ref=e285]
+                - cell "cisa_kev" [ref=e286]:
+                  - generic [ref=e288]: cisa_kev
+                - cell "—" [ref=e289]
+              - row "CRITICAL CVE-2021-44228 Copy value Apache Log4j2 2.0-beta9 through 2.15.0 (excluding security releases 2.12.2, 2.12.3, and 2.3.1) JNDI features used in configuration, log messages, and parameters do not protect against attacker controlled LDAP and other JNDI related endpoints. An attacker who can control log messages or log message parameters can execute arbitrary code loaded from LDAP servers when message lookup substitution is enabled. From log4j 2.15.0, this behavior has been disabled by default. From version 2.16.0 (along with 2.12.2, 2.12.3, and 2.3.1), this functionality has been completely removed. Note that this vulnerability is specific to log4j-core and does not affect log4net, log4cxx, or other Apache Logging Services projects. 10.0 CWE-20 cisa_kev —" [ref=e290]:
+                - cell "CRITICAL" [ref=e291]:
+                  - generic [ref=e292]: CRITICAL
+                - cell "CVE-2021-44228 Copy value" [ref=e293]:
+                  - generic [ref=e294]:
+                    - link "CVE-2021-44228" [ref=e295] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2021-44228
+                    - button "Copy value" [ref=e296]:
+                      - img [ref=e297]
+                - cell "Apache Log4j2 2.0-beta9 through 2.15.0 (excluding security releases 2.12.2, 2.12.3, and 2.3.1) JNDI features used in configuration, log messages, and parameters do not protect against attacker controlled LDAP and other JNDI related endpoints. An attacker who can control log messages or log message parameters can execute arbitrary code loaded from LDAP servers when message lookup substitution is enabled. From log4j 2.15.0, this behavior has been disabled by default. From version 2.16.0 (along with 2.12.2, 2.12.3, and 2.3.1), this functionality has been completely removed. Note that this vulnerability is specific to log4j-core and does not affect log4net, log4cxx, or other Apache Logging Services projects." [ref=e299]:
+                  - generic "Apache Log4j2 2.0-beta9 through 2.15.0 (excluding security releases 2.12.2, 2.12.3, and 2.3.1) JNDI features used in configuration, log messages, and parameters do not protect against attacker controlled LDAP and other JNDI related endpoints. An attacker who can control log messages or log message parameters can execute arbitrary code loaded from LDAP servers when message lookup substitution is enabled. From log4j 2.15.0, this behavior has been disabled by default. From version 2.16.0 (along with 2.12.2, 2.12.3, and 2.3.1), this functionality has been completely removed. Note that this vulnerability is specific to log4j-core and does not affect log4net, log4cxx, or other Apache Logging Services projects." [ref=e300]
+                - cell "10.0" [ref=e301]
+                - cell "CWE-20" [ref=e302]
+                - cell "cisa_kev" [ref=e303]:
+                  - generic [ref=e305]: cisa_kev
+                - cell "—" [ref=e306]
+              - row "CRITICAL CVE-2022-0543 Copy value It was discovered, that redis, a persistent key-value database, due to a packaging issue, is prone to a (Debian-specific) Lua sandbox escape, which could result in remote code execution. 10.0 CWE-862 cisa_kev —" [ref=e307]:
+                - cell "CRITICAL" [ref=e308]:
+                  - generic [ref=e309]: CRITICAL
+                - cell "CVE-2022-0543 Copy value" [ref=e310]:
+                  - generic [ref=e311]:
+                    - link "CVE-2022-0543" [ref=e312] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2022-0543
+                    - button "Copy value" [ref=e313]:
+                      - img [ref=e314]
+                - cell "It was discovered, that redis, a persistent key-value database, due to a packaging issue, is prone to a (Debian-specific) Lua sandbox escape, which could result in remote code execution." [ref=e316]:
+                  - generic "It was discovered, that redis, a persistent key-value database, due to a packaging issue, is prone to a (Debian-specific) Lua sandbox escape, which could result in remote code execution." [ref=e317]
+                - cell "10.0" [ref=e318]
+                - cell "CWE-862" [ref=e319]
+                - cell "cisa_kev" [ref=e320]:
+                  - generic [ref=e322]: cisa_kev
+                - cell "—" [ref=e323]
+              - row "CRITICAL CVE-2022-22536 Copy value SAP NetWeaver Application Server ABAP, SAP NetWeaver Application Server Java, ABAP Platform, SAP Content Server 7.53 and SAP Web Dispatcher are vulnerable for request smuggling and request concatenation. An unauthenticated attacker can prepend a victim's request with arbitrary data. This way, the attacker can execute functions impersonating the victim or poison intermediary Web caches. A successful attack could result in complete compromise of Confidentiality, Integrity and Availability of the system. 10.0 CWE-444 cisa_kev —" [ref=e324]:
+                - cell "CRITICAL" [ref=e325]:
+                  - generic [ref=e326]: CRITICAL
+                - cell "CVE-2022-22536 Copy value" [ref=e327]:
+                  - generic [ref=e328]:
+                    - link "CVE-2022-22536" [ref=e329] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2022-22536
+                    - button "Copy value" [ref=e330]:
+                      - img [ref=e331]
+                - cell "SAP NetWeaver Application Server ABAP, SAP NetWeaver Application Server Java, ABAP Platform, SAP Content Server 7.53 and SAP Web Dispatcher are vulnerable for request smuggling and request concatenation. An unauthenticated attacker can prepend a victim's request with arbitrary data. This way, the attacker can execute functions impersonating the victim or poison intermediary Web caches. A successful attack could result in complete compromise of Confidentiality, Integrity and Availability of the system." [ref=e333]:
+                  - generic "SAP NetWeaver Application Server ABAP, SAP NetWeaver Application Server Java, ABAP Platform, SAP Content Server 7.53 and SAP Web Dispatcher are vulnerable for request smuggling and request concatenation. An unauthenticated attacker can prepend a victim's request with arbitrary data. This way, the attacker can execute functions impersonating the victim or poison intermediary Web caches. A successful attack could result in complete compromise of Confidentiality, Integrity and Availability of the system." [ref=e334]
+                - cell "10.0" [ref=e335]
+                - cell "CWE-444" [ref=e336]
+                - cell "cisa_kev" [ref=e337]:
+                  - generic [ref=e339]: cisa_kev
+                - cell "—" [ref=e340]
+              - row "CRITICAL CVE-2022-22947 Copy value In spring cloud gateway versions prior to 3.1.1+ and 3.0.7+ , applications are vulnerable to a code injection attack when the Gateway Actuator endpoint is enabled, exposed and unsecured. A remote attacker could make a maliciously crafted request that could allow arbitrary remote execution on the remote host. 10.0 CWE-917 cisa_kev otx 20" [ref=e341]:
+                - cell "CRITICAL" [ref=e342]:
+                  - generic [ref=e343]: CRITICAL
+                - cell "CVE-2022-22947 Copy value" [ref=e344]:
+                  - generic [ref=e345]:
+                    - link "CVE-2022-22947" [ref=e346] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2022-22947
+                    - button "Copy value" [ref=e347]:
+                      - img [ref=e348]
+                - cell "In spring cloud gateway versions prior to 3.1.1+ and 3.0.7+ , applications are vulnerable to a code injection attack when the Gateway Actuator endpoint is enabled, exposed and unsecured. A remote attacker could make a maliciously crafted request that could allow arbitrary remote execution on the remote host." [ref=e350]:
+                  - generic "In spring cloud gateway versions prior to 3.1.1+ and 3.0.7+ , applications are vulnerable to a code injection attack when the Gateway Actuator endpoint is enabled, exposed and unsecured. A remote attacker could make a maliciously crafted request that could allow arbitrary remote execution on the remote host." [ref=e351]
+                - cell "10.0" [ref=e352]
+                - cell "CWE-917" [ref=e353]
+                - cell "cisa_kev otx" [ref=e354]:
+                  - generic [ref=e355]:
+                    - generic [ref=e356]: cisa_kev
+                    - generic [ref=e357]: otx
+                - cell "20" [ref=e358]:
+                  - button "20" [ref=e360] [cursor=pointer]:
+                    - generic [ref=e361]: "20"
+              - row "CRITICAL CVE-2022-24816 Copy value JAI-EXT is an open-source project which aims to extend the Java Advanced Imaging (JAI) API. Programs allowing Jiffle script to be provided via network request can lead to a Remote Code Execution as the Jiffle script is compiled into Java code via Janino, and executed. In particular, this affects the downstream GeoServer project. Version 1.2.22 will contain a patch that disables the ability to inject malicious code into the resulting script. Users unable to upgrade may negate the ability to compile Jiffle scripts from the final application, by removing janino-x.y.z.jar from the classpath. 10.0 CWE-94 cisa_kev —" [ref=e362]:
+                - cell "CRITICAL" [ref=e363]:
+                  - generic [ref=e364]: CRITICAL
+                - cell "CVE-2022-24816 Copy value" [ref=e365]:
+                  - generic [ref=e366]:
+                    - link "CVE-2022-24816" [ref=e367] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2022-24816
+                    - button "Copy value" [ref=e368]:
+                      - img [ref=e369]
+                - cell "JAI-EXT is an open-source project which aims to extend the Java Advanced Imaging (JAI) API. Programs allowing Jiffle script to be provided via network request can lead to a Remote Code Execution as the Jiffle script is compiled into Java code via Janino, and executed. In particular, this affects the downstream GeoServer project. Version 1.2.22 will contain a patch that disables the ability to inject malicious code into the resulting script. Users unable to upgrade may negate the ability to compile Jiffle scripts from the final application, by removing janino-x.y.z.jar from the classpath." [ref=e371]:
+                  - generic "JAI-EXT is an open-source project which aims to extend the Java Advanced Imaging (JAI) API. Programs allowing Jiffle script to be provided via network request can lead to a Remote Code Execution as the Jiffle script is compiled into Java code via Janino, and executed. In particular, this affects the downstream GeoServer project. Version 1.2.22 will contain a patch that disables the ability to inject malicious code into the resulting script. Users unable to upgrade may negate the ability to compile Jiffle scripts from the final application, by removing janino-x.y.z.jar from the classpath." [ref=e372]
+                - cell "10.0" [ref=e373]
+                - cell "CWE-94" [ref=e374]
+                - cell "cisa_kev" [ref=e375]:
+                  - generic [ref=e377]: cisa_kev
+                - cell "—" [ref=e378]
+              - row [ref=e379]:
+                - cell "CRITICAL" [ref=e380]:
+                  - generic [ref=e381]: CRITICAL
+                - cell "CVE-2023-20198 Copy value" [ref=e382]:
+                  - generic [ref=e383]:
+                    - link "CVE-2023-20198" [ref=e384] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2023-20198
+                    - button "Copy value" [ref=e385]:
+                      - img [ref=e386]
+                - cell "Cisco is providing an update for the ongoing investigation into observed exploitation of the web UI feature in Cisco IOS XE Software. We are updating the list of fixed releases and adding the Software Checker. Our investigation has determined that the actors exploited two previously unknown issues. The attacker first exploited CVE-2023-20198 to gain initial access and issued a privilege 15 command to create a local user and password combination. This allowed the user to log in with normal user access. The attacker then exploited another component of the web UI feature, leveraging the new local user to elevate privilege to root and write the implant to the file system. Cisco has assigned CVE-2023-20273 to this issue. CVE-2023-20198 has been assigned a CVSS Score of 10.0. CVE-2023-20273 has been assigned a CVSS Score of 7.2. Both of these CVEs are being tracked by CSCwh87343." [ref=e388]:
+                  - generic "Cisco is providing an update for the ongoing investigation into observed exploitation of the web UI feature in Cisco IOS XE Software. We are updating the list of fixed releases and adding the Software Checker. Our investigation has determined that the actors exploited two previously unknown issues. The attacker first exploited CVE-2023-20198 to gain initial access and issued a privilege 15 command to create a local user and password combination. This allowed the user to log in with normal user access. The attacker then exploited another component of the web UI feature, leveraging the new local user to elevate privilege to root and write the implant to the file system. Cisco has assigned CVE-2023-20273 to this issue. CVE-2023-20198 has been assigned a CVSS Score of 10.0. CVE-2023-20273 has been assigned a CVSS Score of 7.2. Both of these CVEs are being tracked by CSCwh87343." [ref=e389]
+                - cell "10.0" [ref=e390]
+                - cell "—" [ref=e391]
+                - cell "cisa_kev" [ref=e392]:
+                  - generic [ref=e394]: cisa_kev
+                - cell "—" [ref=e395]
+              - row "CRITICAL CVE-2024-1709 Copy value ConnectWise ScreenConnect 23.9.7 and prior are affected by an Authentication Bypass Using an Alternate Path or Channel vulnerability, which may allow an attacker direct access to confidential information or critical systems. 10.0 — cisa_kev —" [ref=e396]:
+                - cell "CRITICAL" [ref=e397]:
+                  - generic [ref=e398]: CRITICAL
+                - cell "CVE-2024-1709 Copy value" [ref=e399]:
+                  - generic [ref=e400]:
+                    - link "CVE-2024-1709" [ref=e401] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2024-1709
+                    - button "Copy value" [ref=e402]:
+                      - img [ref=e403]
+                - cell "ConnectWise ScreenConnect 23.9.7 and prior are affected by an Authentication Bypass Using an Alternate Path or Channel vulnerability, which may allow an attacker direct access to confidential information or critical systems." [ref=e405]:
+                  - generic "ConnectWise ScreenConnect 23.9.7 and prior are affected by an Authentication Bypass Using an Alternate Path or Channel vulnerability, which may allow an attacker direct access to confidential information or critical systems." [ref=e406]
+                - cell "10.0" [ref=e407]
+                - cell "—" [ref=e408]
+                - cell "cisa_kev" [ref=e409]:
+                  - generic [ref=e411]: cisa_kev
+                - cell "—" [ref=e412]
+              - row "CRITICAL CVE-2024-3400 Copy value A command injection as a result of arbitrary file creation vulnerability in the GlobalProtect feature of Palo Alto Networks PAN-OS software for specific PAN-OS versions and distinct feature configurations may enable an unauthenticated attacker to execute arbitrary code with root privileges on the firewall. Cloud NGFW, Panorama appliances, and Prisma Access are not impacted by this vulnerability. 10.0 CWE-77 cisa_kev otx —" [ref=e413]:
+                - cell "CRITICAL" [ref=e414]:
+                  - generic [ref=e415]: CRITICAL
+                - cell "CVE-2024-3400 Copy value" [ref=e416]:
+                  - generic [ref=e417]:
+                    - link "CVE-2024-3400" [ref=e418] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2024-3400
+                    - button "Copy value" [ref=e419]:
+                      - img [ref=e420]
+                - cell "A command injection as a result of arbitrary file creation vulnerability in the GlobalProtect feature of Palo Alto Networks PAN-OS software for specific PAN-OS versions and distinct feature configurations may enable an unauthenticated attacker to execute arbitrary code with root privileges on the firewall. Cloud NGFW, Panorama appliances, and Prisma Access are not impacted by this vulnerability." [ref=e422]:
+                  - generic "A command injection as a result of arbitrary file creation vulnerability in the GlobalProtect feature of Palo Alto Networks PAN-OS software for specific PAN-OS versions and distinct feature configurations may enable an unauthenticated attacker to execute arbitrary code with root privileges on the firewall. Cloud NGFW, Panorama appliances, and Prisma Access are not impacted by this vulnerability." [ref=e423]
+                - cell "10.0" [ref=e424]
+                - cell "CWE-77" [ref=e425]
+                - cell "cisa_kev otx" [ref=e426]:
+                  - generic [ref=e427]:
+                    - generic [ref=e428]: cisa_kev
+                    - generic [ref=e429]: otx
+                - cell "—" [ref=e430]
+              - row "CRITICAL CVE-2024-4040 Copy value A server side template injection vulnerability in CrushFTP in all versions before 10.7.1 and 11.1.0 on all platforms allows unauthenticated remote attackers to read files from the filesystem outside of the VFS Sandbox, bypass authentication to gain administrative access, and perform remote code execution on the server. 10.0 CWE-94 cisa_kev —" [ref=e431]:
+                - cell "CRITICAL" [ref=e432]:
+                  - generic [ref=e433]: CRITICAL
+                - cell "CVE-2024-4040 Copy value" [ref=e434]:
+                  - generic [ref=e435]:
+                    - link "CVE-2024-4040" [ref=e436] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2024-4040
+                    - button "Copy value" [ref=e437]:
+                      - img [ref=e438]
+                - cell "A server side template injection vulnerability in CrushFTP in all versions before 10.7.1 and 11.1.0 on all platforms allows unauthenticated remote attackers to read files from the filesystem outside of the VFS Sandbox, bypass authentication to gain administrative access, and perform remote code execution on the server." [ref=e440]:
+                  - generic "A server side template injection vulnerability in CrushFTP in all versions before 10.7.1 and 11.1.0 on all platforms allows unauthenticated remote attackers to read files from the filesystem outside of the VFS Sandbox, bypass authentication to gain administrative access, and perform remote code execution on the server." [ref=e441]
+                - cell "10.0" [ref=e442]
+                - cell "CWE-94" [ref=e443]
+                - cell "cisa_kev" [ref=e444]:
+                  - generic [ref=e446]: cisa_kev
+                - cell "—" [ref=e447]
+              - row "CRITICAL CVE-2025-20281 Copy value A vulnerability in a specific API of Cisco ISE and Cisco ISE-PIC could allow an unauthenticated, remote attacker to execute arbitrary code on the underlying operating system as root. The attacker does not require any valid credentials to exploit this vulnerability. This vulnerability is due to insufficient validation of user-supplied input. An attacker could exploit this vulnerability by submitting a crafted API request. A successful exploit could allow the attacker to obtain root privileges on an affected device. 10.0 CWE-74 cisa_kev otx 16" [ref=e448]:
+                - cell "CRITICAL" [ref=e449]:
+                  - generic [ref=e450]: CRITICAL
+                - cell "CVE-2025-20281 Copy value" [ref=e451]:
+                  - generic [ref=e452]:
+                    - link "CVE-2025-20281" [ref=e453] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2025-20281
+                    - button "Copy value" [ref=e454]:
+                      - img [ref=e455]
+                - cell "A vulnerability in a specific API of Cisco ISE and Cisco ISE-PIC could allow an unauthenticated, remote attacker to execute arbitrary code on the underlying operating system as root. The attacker does not require any valid credentials to exploit this vulnerability. This vulnerability is due to insufficient validation of user-supplied input. An attacker could exploit this vulnerability by submitting a crafted API request. A successful exploit could allow the attacker to obtain root privileges on an affected device." [ref=e457]:
+                  - generic "A vulnerability in a specific API of Cisco ISE and Cisco ISE-PIC could allow an unauthenticated, remote attacker to execute arbitrary code on the underlying operating system as root. The attacker does not require any valid credentials to exploit this vulnerability. This vulnerability is due to insufficient validation of user-supplied input. An attacker could exploit this vulnerability by submitting a crafted API request. A successful exploit could allow the attacker to obtain root privileges on an affected device." [ref=e458]
+                - cell "10.0" [ref=e459]
+                - cell "CWE-74" [ref=e460]
+                - cell "cisa_kev otx" [ref=e461]:
+                  - generic [ref=e462]:
+                    - generic [ref=e463]: cisa_kev
+                    - generic [ref=e464]: otx
+                - cell "16" [ref=e465]:
+                  - button "16" [ref=e467] [cursor=pointer]:
+                    - generic [ref=e468]: "16"
+              - row "CRITICAL CVE-2025-20337 Copy value A vulnerability in a specific API of Cisco ISE and Cisco ISE-PIC could allow an unauthenticated, remote attacker to execute arbitrary code on the underlying operating system as root. The attacker does not require any valid credentials to exploit this vulnerability. This vulnerability is due to insufficient validation of user-supplied input. An attacker could exploit this vulnerability by submitting a crafted API request. A successful exploit could allow the attacker to obtain root privileges on an affected device. 10.0 CWE-74 cisa_kev —" [ref=e469]:
+                - cell "CRITICAL" [ref=e470]:
+                  - generic [ref=e471]: CRITICAL
+                - cell "CVE-2025-20337 Copy value" [ref=e472]:
+                  - generic [ref=e473]:
+                    - link "CVE-2025-20337" [ref=e474] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2025-20337
+                    - button "Copy value" [ref=e475]:
+                      - img [ref=e476]
+                - cell "A vulnerability in a specific API of Cisco ISE and Cisco ISE-PIC could allow an unauthenticated, remote attacker to execute arbitrary code on the underlying operating system as root. The attacker does not require any valid credentials to exploit this vulnerability. This vulnerability is due to insufficient validation of user-supplied input. An attacker could exploit this vulnerability by submitting a crafted API request. A successful exploit could allow the attacker to obtain root privileges on an affected device." [ref=e478]:
+                  - generic "A vulnerability in a specific API of Cisco ISE and Cisco ISE-PIC could allow an unauthenticated, remote attacker to execute arbitrary code on the underlying operating system as root. The attacker does not require any valid credentials to exploit this vulnerability. This vulnerability is due to insufficient validation of user-supplied input. An attacker could exploit this vulnerability by submitting a crafted API request. A successful exploit could allow the attacker to obtain root privileges on an affected device." [ref=e479]
+                - cell "10.0" [ref=e480]
+                - cell "CWE-74" [ref=e481]
+                - cell "cisa_kev" [ref=e482]:
+                  - generic [ref=e484]: cisa_kev
+                - cell "—" [ref=e485]
+              - row "CRITICAL CVE-2025-20393 Copy value A vulnerability in the Spam Quarantine feature of Cisco AsyncOS Software for Cisco Secure Email Gateway and Cisco Secure Email and Web Manager could allow an unauthenticated, remote attacker to execute arbitrary system commands on an affected device with root privileges. This vulnerability is due to insufficient validation of HTTP requests by the Spam Quarantine feature. An attacker could exploit this vulnerability by sending a crafted HTTP request to the affected device. A successful exploit could allow the attacker to execute arbitrary commands on the underlying operating system with&nbsp;root privileges. 10.0 CWE-20 cisa_kev —" [ref=e486]:
+                - cell "CRITICAL" [ref=e487]:
+                  - generic [ref=e488]: CRITICAL
+                - cell "CVE-2025-20393 Copy value" [ref=e489]:
+                  - generic [ref=e490]:
+                    - link "CVE-2025-20393" [ref=e491] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2025-20393
+                    - button "Copy value" [ref=e492]:
+                      - img [ref=e493]
+                - cell "A vulnerability in the Spam Quarantine feature of Cisco AsyncOS Software for Cisco Secure Email Gateway and Cisco Secure Email and Web Manager could allow an unauthenticated, remote attacker to execute arbitrary system commands on an affected device with root privileges. This vulnerability is due to insufficient validation of HTTP requests by the Spam Quarantine feature. An attacker could exploit this vulnerability by sending a crafted HTTP request to the affected device. A successful exploit could allow the attacker to execute arbitrary commands on the underlying operating system with&nbsp;root privileges." [ref=e495]:
+                  - generic "A vulnerability in the Spam Quarantine feature of Cisco AsyncOS Software for Cisco Secure Email Gateway and Cisco Secure Email and Web Manager could allow an unauthenticated, remote attacker to execute arbitrary system commands on an affected device with root privileges. This vulnerability is due to insufficient validation of HTTP requests by the Spam Quarantine feature. An attacker could exploit this vulnerability by sending a crafted HTTP request to the affected device. A successful exploit could allow the attacker to execute arbitrary commands on the underlying operating system with&nbsp;root privileges." [ref=e496]
+                - cell "10.0" [ref=e497]
+                - cell "CWE-20" [ref=e498]
+                - cell "cisa_kev" [ref=e499]:
+                  - generic [ref=e501]: cisa_kev
+                - cell "—" [ref=e502]
+              - row "CRITICAL CVE-2025-24085 Copy value A use after free issue was addressed with improved memory management. This issue is fixed in visionOS 2.3, iOS 18.3 and iPadOS 18.3, macOS Sequoia 15.3, watchOS 11.3, tvOS 18.3. A malicious application may be able to elevate privileges. Apple is aware of a report that this issue may have been actively exploited against versions of iOS before iOS 17.2. 10.0 CWE-416 cisa_kev —" [ref=e503]:
+                - cell "CRITICAL" [ref=e504]:
+                  - generic [ref=e505]: CRITICAL
+                - cell "CVE-2025-24085 Copy value" [ref=e506]:
+                  - generic [ref=e507]:
+                    - link "CVE-2025-24085" [ref=e508] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2025-24085
+                    - button "Copy value" [ref=e509]:
+                      - img [ref=e510]
+                - cell "A use after free issue was addressed with improved memory management. This issue is fixed in visionOS 2.3, iOS 18.3 and iPadOS 18.3, macOS Sequoia 15.3, watchOS 11.3, tvOS 18.3. A malicious application may be able to elevate privileges. Apple is aware of a report that this issue may have been actively exploited against versions of iOS before iOS 17.2." [ref=e512]:
+                  - generic "A use after free issue was addressed with improved memory management. This issue is fixed in visionOS 2.3, iOS 18.3 and iPadOS 18.3, macOS Sequoia 15.3, watchOS 11.3, tvOS 18.3. A malicious application may be able to elevate privileges. Apple is aware of a report that this issue may have been actively exploited against versions of iOS before iOS 17.2." [ref=e513]
+                - cell "10.0" [ref=e514]
+                - cell "CWE-416" [ref=e515]
+                - cell "cisa_kev" [ref=e516]:
+                  - generic [ref=e518]: cisa_kev
+                - cell "—" [ref=e519]
+              - row "CRITICAL CVE-2025-24201 Copy value An out-of-bounds write issue was addressed with improved checks to prevent unauthorized actions. This issue is fixed in visionOS 2.3.2, iOS 18.3.2 and iPadOS 18.3.2, macOS Sequoia 15.3.2, Safari 18.3.1, watchOS 11.4, iPadOS 17.7.6, iOS 16.7.11 and iPadOS 16.7.11, iOS 15.8.4 and iPadOS 15.8.4. Maliciously crafted web content may be able to break out of Web Content sandbox. This is a supplementary fix for an attack that was blocked in iOS 17.2. (Apple is aware of a report that this issue may have been exploited in an extremely sophisticated attack against specific targeted individuals on versions of iOS before iOS 17.2.). 10.0 CWE-787 cisa_kev —" [ref=e520]:
+                - cell "CRITICAL" [ref=e521]:
+                  - generic [ref=e522]: CRITICAL
+                - cell "CVE-2025-24201 Copy value" [ref=e523]:
+                  - generic [ref=e524]:
+                    - link "CVE-2025-24201" [ref=e525] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2025-24201
+                    - button "Copy value" [ref=e526]:
+                      - img [ref=e527]
+                - cell "An out-of-bounds write issue was addressed with improved checks to prevent unauthorized actions. This issue is fixed in visionOS 2.3.2, iOS 18.3.2 and iPadOS 18.3.2, macOS Sequoia 15.3.2, Safari 18.3.1, watchOS 11.4, iPadOS 17.7.6, iOS 16.7.11 and iPadOS 16.7.11, iOS 15.8.4 and iPadOS 15.8.4. Maliciously crafted web content may be able to break out of Web Content sandbox. This is a supplementary fix for an attack that was blocked in iOS 17.2. (Apple is aware of a report that this issue may have been exploited in an extremely sophisticated attack against specific targeted individuals on versions of iOS before iOS 17.2.)." [ref=e529]:
+                  - generic "An out-of-bounds write issue was addressed with improved checks to prevent unauthorized actions. This issue is fixed in visionOS 2.3.2, iOS 18.3.2 and iPadOS 18.3.2, macOS Sequoia 15.3.2, Safari 18.3.1, watchOS 11.4, iPadOS 17.7.6, iOS 16.7.11 and iPadOS 16.7.11, iOS 15.8.4 and iPadOS 15.8.4. Maliciously crafted web content may be able to break out of Web Content sandbox. This is a supplementary fix for an attack that was blocked in iOS 17.2. (Apple is aware of a report that this issue may have been exploited in an extremely sophisticated attack against specific targeted individuals on versions of iOS before iOS 17.2.)." [ref=e530]
+                - cell "10.0" [ref=e531]
+                - cell "CWE-787" [ref=e532]
+                - cell "cisa_kev" [ref=e533]:
+                  - generic [ref=e535]: cisa_kev
+                - cell "—" [ref=e536]
+              - row "CRITICAL CVE-2025-32432 Copy value Craft is a flexible, user-friendly CMS for creating custom digital experiences on the web and beyond. Starting from version 3.0.0-RC1 to before 3.9.15, 4.0.0-RC1 to before 4.14.15, and 5.0.0-RC1 to before 5.6.17, Craft is vulnerable to remote code execution. This is a high-impact, low-complexity attack vector. This issue has been patched in versions 3.9.15, 4.14.15, and 5.6.17, and is an additional fix for CVE-2023-41892. 10.0 — cisa_kev —" [ref=e537]:
+                - cell "CRITICAL" [ref=e538]:
+                  - generic [ref=e539]: CRITICAL
+                - cell "CVE-2025-32432 Copy value" [ref=e540]:
+                  - generic [ref=e541]:
+                    - link "CVE-2025-32432" [ref=e542] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2025-32432
+                    - button "Copy value" [ref=e543]:
+                      - img [ref=e544]
+                - cell "Craft is a flexible, user-friendly CMS for creating custom digital experiences on the web and beyond. Starting from version 3.0.0-RC1 to before 3.9.15, 4.0.0-RC1 to before 4.14.15, and 5.0.0-RC1 to before 5.6.17, Craft is vulnerable to remote code execution. This is a high-impact, low-complexity attack vector. This issue has been patched in versions 3.9.15, 4.14.15, and 5.6.17, and is an additional fix for CVE-2023-41892." [ref=e546]:
+                  - generic "Craft is a flexible, user-friendly CMS for creating custom digital experiences on the web and beyond. Starting from version 3.0.0-RC1 to before 3.9.15, 4.0.0-RC1 to before 4.14.15, and 5.0.0-RC1 to before 5.6.17, Craft is vulnerable to remote code execution. This is a high-impact, low-complexity attack vector. This issue has been patched in versions 3.9.15, 4.14.15, and 5.6.17, and is an additional fix for CVE-2023-41892." [ref=e547]
+                - cell "10.0" [ref=e548]
+                - cell "—" [ref=e549]
+                - cell "cisa_kev" [ref=e550]:
+                  - generic [ref=e552]: cisa_kev
+                - cell "—" [ref=e553]
+              - row "CRITICAL CVE-2025-32433 Copy value Erlang/OTP is a set of libraries for the Erlang programming language. Prior to versions OTP-27.3.3, OTP-26.2.5.11, and OTP-25.3.2.20, a SSH server may allow an attacker to perform unauthenticated remote code execution (RCE). By exploiting a flaw in SSH protocol message handling, a malicious actor could gain unauthorized access to affected systems and execute arbitrary commands without valid credentials. This issue is patched in versions OTP-27.3.3, OTP-26.2.5.11, and OTP-25.3.2.20. A temporary workaround involves disabling the SSH server or to prevent access via firewall rules. 10.0 CWE-306 cisa_kev —" [ref=e554]:
+                - cell "CRITICAL" [ref=e555]:
+                  - generic [ref=e556]: CRITICAL
+                - cell "CVE-2025-32433 Copy value" [ref=e557]:
+                  - generic [ref=e558]:
+                    - link "CVE-2025-32433" [ref=e559] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2025-32433
+                    - button "Copy value" [ref=e560]:
+                      - img [ref=e561]
+                - cell "Erlang/OTP is a set of libraries for the Erlang programming language. Prior to versions OTP-27.3.3, OTP-26.2.5.11, and OTP-25.3.2.20, a SSH server may allow an attacker to perform unauthenticated remote code execution (RCE). By exploiting a flaw in SSH protocol message handling, a malicious actor could gain unauthorized access to affected systems and execute arbitrary commands without valid credentials. This issue is patched in versions OTP-27.3.3, OTP-26.2.5.11, and OTP-25.3.2.20. A temporary workaround involves disabling the SSH server or to prevent access via firewall rules." [ref=e563]:
+                  - generic "Erlang/OTP is a set of libraries for the Erlang programming language. Prior to versions OTP-27.3.3, OTP-26.2.5.11, and OTP-25.3.2.20, a SSH server may allow an attacker to perform unauthenticated remote code execution (RCE). By exploiting a flaw in SSH protocol message handling, a malicious actor could gain unauthorized access to affected systems and execute arbitrary commands without valid credentials. This issue is patched in versions OTP-27.3.3, OTP-26.2.5.11, and OTP-25.3.2.20. A temporary workaround involves disabling the SSH server or to prevent access via firewall rules." [ref=e564]
+                - cell "10.0" [ref=e565]
+                - cell "CWE-306" [ref=e566]
+                - cell "cisa_kev" [ref=e567]:
+                  - generic [ref=e569]: cisa_kev
+                - cell "—" [ref=e570]
+              - 'row "CRITICAL CVE-2025-34028 Copy value The Commvault Command Center Innovation Release allows an unauthenticated actor to upload ZIP files that represent install packages that, when expanded by the target server, are vulnerable to path traversal vulnerability that can result in Remote Code Execution via malicious JSP. This issue affects Command Center Innovation Release: 11.38.0 to 11.38.20. The vulnerability is fixed in 11.38.20 with SP38-CU20-433 and SP38-CU20-436 and also fixed in 11.38.25 with SP38-CU25-434 and SP38-CU25-438. 10.0 CWE-22 cisa_kev —" [ref=e571]':
+                - cell "CRITICAL" [ref=e572]:
+                  - generic [ref=e573]: CRITICAL
+                - cell "CVE-2025-34028 Copy value" [ref=e574]:
+                  - generic [ref=e575]:
+                    - link "CVE-2025-34028" [ref=e576] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2025-34028
+                    - button "Copy value" [ref=e577]:
+                      - img [ref=e578]
+                - 'cell "The Commvault Command Center Innovation Release allows an unauthenticated actor to upload ZIP files that represent install packages that, when expanded by the target server, are vulnerable to path traversal vulnerability that can result in Remote Code Execution via malicious JSP. This issue affects Command Center Innovation Release: 11.38.0 to 11.38.20. The vulnerability is fixed in 11.38.20 with SP38-CU20-433 and SP38-CU20-436 and also fixed in 11.38.25 with SP38-CU25-434 and SP38-CU25-438." [ref=e580]':
+                  - 'generic "The Commvault Command Center Innovation Release allows an unauthenticated actor to upload ZIP files that represent install packages that, when expanded by the target server, are vulnerable to path traversal vulnerability that can result in Remote Code Execution via malicious JSP. This issue affects Command Center Innovation Release: 11.38.0 to 11.38.20. The vulnerability is fixed in 11.38.20 with SP38-CU20-433 and SP38-CU20-436 and also fixed in 11.38.25 with SP38-CU25-434 and SP38-CU25-438." [ref=e581]'
+                - cell "10.0" [ref=e582]
+                - cell "CWE-22" [ref=e583]
+                - cell "cisa_kev" [ref=e584]:
+                  - generic [ref=e586]: cisa_kev
+                - cell "—" [ref=e587]
+              - row "CRITICAL CVE-2025-43300 Copy value An out-of-bounds write issue was addressed with improved bounds checking. This issue is fixed in iOS 15.8.5 and iPadOS 15.8.5, iOS 16.7.12 and iPadOS 16.7.12. Processing a malicious image file may result in memory corruption. Apple is aware of a report that this issue may have been exploited in an extremely sophisticated attack against specific targeted individuals. 10.0 CWE-787 cisa_kev —" [ref=e588]:
+                - cell "CRITICAL" [ref=e589]:
+                  - generic [ref=e590]: CRITICAL
+                - cell "CVE-2025-43300 Copy value" [ref=e591]:
+                  - generic [ref=e592]:
+                    - link "CVE-2025-43300" [ref=e593] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2025-43300
+                    - button "Copy value" [ref=e594]:
+                      - img [ref=e595]
+                - cell "An out-of-bounds write issue was addressed with improved bounds checking. This issue is fixed in iOS 15.8.5 and iPadOS 15.8.5, iOS 16.7.12 and iPadOS 16.7.12. Processing a malicious image file may result in memory corruption. Apple is aware of a report that this issue may have been exploited in an extremely sophisticated attack against specific targeted individuals." [ref=e597]:
+                  - generic "An out-of-bounds write issue was addressed with improved bounds checking. This issue is fixed in iOS 15.8.5 and iPadOS 15.8.5, iOS 16.7.12 and iPadOS 16.7.12. Processing a malicious image file may result in memory corruption. Apple is aware of a report that this issue may have been exploited in an extremely sophisticated attack against specific targeted individuals." [ref=e598]
+                - cell "10.0" [ref=e599]
+                - cell "CWE-787" [ref=e600]
+                - cell "cisa_kev" [ref=e601]:
+                  - generic [ref=e603]: cisa_kev
+                - cell "—" [ref=e604]
+              - row "CRITICAL CVE-2025-47812 Copy value In Wing FTP Server before 7.4.4. the user and admin web interfaces mishandle '\\0' bytes, ultimately allowing injection of arbitrary Lua code into user session files. This can be used to execute arbitrary system commands with the privileges of the FTP service (root or SYSTEM by default). This is thus a remote code execution vulnerability that guarantees a total server compromise. This is also exploitable via anonymous FTP accounts. 10.0 CWE-158 cisa_kev otx 16" [ref=e605]:
+                - cell "CRITICAL" [ref=e606]:
+                  - generic [ref=e607]: CRITICAL
+                - cell "CVE-2025-47812 Copy value" [ref=e608]:
+                  - generic [ref=e609]:
+                    - link "CVE-2025-47812" [ref=e610] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2025-47812
+                    - button "Copy value" [ref=e611]:
+                      - img [ref=e612]
+                - cell "In Wing FTP Server before 7.4.4. the user and admin web interfaces mishandle '\\0' bytes, ultimately allowing injection of arbitrary Lua code into user session files. This can be used to execute arbitrary system commands with the privileges of the FTP service (root or SYSTEM by default). This is thus a remote code execution vulnerability that guarantees a total server compromise. This is also exploitable via anonymous FTP accounts." [ref=e614]:
+                  - generic "In Wing FTP Server before 7.4.4. the user and admin web interfaces mishandle '\\0' bytes, ultimately allowing injection of arbitrary Lua code into user session files. This can be used to execute arbitrary system commands with the privileges of the FTP service (root or SYSTEM by default). This is thus a remote code execution vulnerability that guarantees a total server compromise. This is also exploitable via anonymous FTP accounts." [ref=e615]
+                - cell "10.0" [ref=e616]
+                - cell "CWE-158" [ref=e617]
+                - cell "cisa_kev otx" [ref=e618]:
+                  - generic [ref=e619]:
+                    - generic [ref=e620]: cisa_kev
+                    - generic [ref=e621]: otx
+                - cell "16" [ref=e622]:
+                  - button "16" [ref=e624] [cursor=pointer]:
+                    - generic [ref=e625]: "16"
+              - row "CRITICAL CVE-2025-52691 Copy value Successful exploitation of the vulnerability could allow an unauthenticated attacker to upload arbitrary files to any location on the mail server, potentially enabling remote code execution. 10.0 CWE-434 cisa_kev otx —" [ref=e626]:
+                - cell "CRITICAL" [ref=e627]:
+                  - generic [ref=e628]: CRITICAL
+                - cell "CVE-2025-52691 Copy value" [ref=e629]:
+                  - generic [ref=e630]:
+                    - link "CVE-2025-52691" [ref=e631] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2025-52691
+                    - button "Copy value" [ref=e632]:
+                      - img [ref=e633]
+                - cell "Successful exploitation of the vulnerability could allow an unauthenticated attacker to upload arbitrary files to any location on the mail server, potentially enabling remote code execution." [ref=e635]:
+                  - generic "Successful exploitation of the vulnerability could allow an unauthenticated attacker to upload arbitrary files to any location on the mail server, potentially enabling remote code execution." [ref=e636]
+                - cell "10.0" [ref=e637]
+                - cell "CWE-434" [ref=e638]
+                - cell "cisa_kev otx" [ref=e639]:
+                  - generic [ref=e640]:
+                    - generic [ref=e641]: cisa_kev
+                    - generic [ref=e642]: otx
+                - cell "—" [ref=e643]
+              - row "CRITICAL CVE-2025-54253 Copy value Adobe Experience Manager versions 6.5.23 and earlier are affected by a Misconfiguration vulnerability that could result in arbitrary code execution. An attacker could leverage this vulnerability to bypass security mechanisms and execute code. Exploitation of this issue does not require user interaction and scope is changed. 10.0 CWE-863 cisa_kev —" [ref=e644]:
+                - cell "CRITICAL" [ref=e645]:
+                  - generic [ref=e646]: CRITICAL
+                - cell "CVE-2025-54253 Copy value" [ref=e647]:
+                  - generic [ref=e648]:
+                    - link "CVE-2025-54253" [ref=e649] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2025-54253
+                    - button "Copy value" [ref=e650]:
+                      - img [ref=e651]
+                - cell "Adobe Experience Manager versions 6.5.23 and earlier are affected by a Misconfiguration vulnerability that could result in arbitrary code execution. An attacker could leverage this vulnerability to bypass security mechanisms and execute code. Exploitation of this issue does not require user interaction and scope is changed." [ref=e653]:
+                  - generic "Adobe Experience Manager versions 6.5.23 and earlier are affected by a Misconfiguration vulnerability that could result in arbitrary code execution. An attacker could leverage this vulnerability to bypass security mechanisms and execute code. Exploitation of this issue does not require user interaction and scope is changed." [ref=e654]
+                - cell "10.0" [ref=e655]
+                - cell "CWE-863" [ref=e656]
+                - cell "cisa_kev" [ref=e657]:
+                  - generic [ref=e659]: cisa_kev
+                - cell "—" [ref=e660]
+              - 'row "CRITICAL CVE-2025-55182 Copy value A pre-authentication remote code execution vulnerability exists in React Server Components versions 19.0.0, 19.1.0, 19.1.1, and 19.2.0 including the following packages: react-server-dom-parcel, react-server-dom-turbopack, and react-server-dom-webpack. The vulnerable code unsafely deserializes payloads from HTTP requests to Server Function endpoints. 10.0 CWE-502 cisa_kev otx 64" [ref=e661]':
+                - cell "CRITICAL" [ref=e662]:
+                  - generic [ref=e663]: CRITICAL
+                - cell "CVE-2025-55182 Copy value" [ref=e664]:
+                  - generic [ref=e665]:
+                    - link "CVE-2025-55182" [ref=e666] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2025-55182
+                    - button "Copy value" [ref=e667]:
+                      - img [ref=e668]
+                - 'cell "A pre-authentication remote code execution vulnerability exists in React Server Components versions 19.0.0, 19.1.0, 19.1.1, and 19.2.0 including the following packages: react-server-dom-parcel, react-server-dom-turbopack, and react-server-dom-webpack. The vulnerable code unsafely deserializes payloads from HTTP requests to Server Function endpoints." [ref=e670]':
+                  - 'generic "A pre-authentication remote code execution vulnerability exists in React Server Components versions 19.0.0, 19.1.0, 19.1.1, and 19.2.0 including the following packages: react-server-dom-parcel, react-server-dom-turbopack, and react-server-dom-webpack. The vulnerable code unsafely deserializes payloads from HTTP requests to Server Function endpoints." [ref=e671]'
+                - cell "10.0" [ref=e672]
+                - cell "CWE-502" [ref=e673]
+                - cell "cisa_kev otx" [ref=e674]:
+                  - generic [ref=e675]:
+                    - generic [ref=e676]: cisa_kev
+                    - generic [ref=e677]: otx
+                - cell "64" [ref=e678]:
+                  - button "64" [ref=e680] [cursor=pointer]:
+                    - generic [ref=e681]: "64"
+              - row "CRITICAL CVE-2026-20127 Copy value A vulnerability in the peering authentication in Cisco Catalyst SD-WAN Controller, formerly SD-WAN vSmart, and Cisco Catalyst SD-WAN Manager, formerly SD-WAN vManage, could allow an unauthenticated, remote attacker to bypass authentication and obtain administrative privileges on an affected system. This vulnerability exists because the peering authentication mechanism in an affected system is not working properly. An attacker could exploit this vulnerability by sending crafted requests to an affected system. A successful exploit could allow the attacker to log in to an affected Cisco Catalyst SD-WAN Controller as an internal, high-privileged, non-root&nbsp;user account. Using this account, the attacker could access NETCONF, which would then allow the attacker to manipulate network configuration for the SD-WAN fabric.&nbsp; 10.0 CWE-287 cisa_kev otx 7" [ref=e682]:
+                - cell "CRITICAL" [ref=e683]:
+                  - generic [ref=e684]: CRITICAL
+                - cell "CVE-2026-20127 Copy value" [ref=e685]:
+                  - generic [ref=e686]:
+                    - link "CVE-2026-20127" [ref=e687] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2026-20127
+                    - button "Copy value" [ref=e688]:
+                      - img [ref=e689]
+                - cell "A vulnerability in the peering authentication in Cisco Catalyst SD-WAN Controller, formerly SD-WAN vSmart, and Cisco Catalyst SD-WAN Manager, formerly SD-WAN vManage, could allow an unauthenticated, remote attacker to bypass authentication and obtain administrative privileges on an affected system. This vulnerability exists because the peering authentication mechanism in an affected system is not working properly. An attacker could exploit this vulnerability by sending crafted requests to an affected system. A successful exploit could allow the attacker to log in to an affected Cisco Catalyst SD-WAN Controller as an internal, high-privileged, non-root&nbsp;user account. Using this account, the attacker could access NETCONF, which would then allow the attacker to manipulate network configuration for the SD-WAN fabric.&nbsp;" [ref=e691]:
+                  - generic "A vulnerability in the peering authentication in Cisco Catalyst SD-WAN Controller, formerly SD-WAN vSmart, and Cisco Catalyst SD-WAN Manager, formerly SD-WAN vManage, could allow an unauthenticated, remote attacker to bypass authentication and obtain administrative privileges on an affected system. This vulnerability exists because the peering authentication mechanism in an affected system is not working properly. An attacker could exploit this vulnerability by sending crafted requests to an affected system. A successful exploit could allow the attacker to log in to an affected Cisco Catalyst SD-WAN Controller as an internal, high-privileged, non-root&nbsp;user account. Using this account, the attacker could access NETCONF, which would then allow the attacker to manipulate network configuration for the SD-WAN fabric.&nbsp;" [ref=e692]
+                - cell "10.0" [ref=e693]
+                - cell "CWE-287" [ref=e694]
+                - cell "cisa_kev otx" [ref=e695]:
+                  - generic [ref=e696]:
+                    - generic [ref=e697]: cisa_kev
+                    - generic [ref=e698]: otx
+                - cell "7" [ref=e699]:
+                  - button "7" [ref=e701] [cursor=pointer]:
+                    - generic [ref=e702]: "7"
+              - 'row "CRITICAL CVE-2026-20131 Copy value A vulnerability in the web-based management interface of Cisco Secure Firewall Management Center (FMC) Software could allow an unauthenticated, remote attacker to execute arbitrary Java code as root on an affected device. This vulnerability is due to insecure deserialization of a user-supplied Java byte stream. An attacker could exploit this vulnerability by sending a crafted serialized Java object to the web-based management interface of an affected device. A successful exploit could allow the attacker to execute arbitrary code on the device and elevate privileges to root. Note: If the FMC management interface does not have public internet access, the attack surface that is associated with this vulnerability is reduced. 10.0 CWE-502 cisa_kev —" [ref=e703]':
+                - cell "CRITICAL" [ref=e704]:
+                  - generic [ref=e705]: CRITICAL
+                - cell "CVE-2026-20131 Copy value" [ref=e706]:
+                  - generic [ref=e707]:
+                    - link "CVE-2026-20131" [ref=e708] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2026-20131
+                    - button "Copy value" [ref=e709]:
+                      - img [ref=e710]
+                - 'cell "A vulnerability in the web-based management interface of Cisco Secure Firewall Management Center (FMC) Software could allow an unauthenticated, remote attacker to execute arbitrary Java code as root on an affected device. This vulnerability is due to insecure deserialization of a user-supplied Java byte stream. An attacker could exploit this vulnerability by sending a crafted serialized Java object to the web-based management interface of an affected device. A successful exploit could allow the attacker to execute arbitrary code on the device and elevate privileges to root. Note: If the FMC management interface does not have public internet access, the attack surface that is associated with this vulnerability is reduced." [ref=e712]':
+                  - 'generic "A vulnerability in the web-based management interface of Cisco Secure Firewall Management Center (FMC) Software could allow an unauthenticated, remote attacker to execute arbitrary Java code as root on an affected device. This vulnerability is due to insecure deserialization of a user-supplied Java byte stream. An attacker could exploit this vulnerability by sending a crafted serialized Java object to the web-based management interface of an affected device. A successful exploit could allow the attacker to execute arbitrary code on the device and elevate privileges to root. Note: If the FMC management interface does not have public internet access, the attack surface that is associated with this vulnerability is reduced." [ref=e713]'
+                - cell "10.0" [ref=e714]
+                - cell "CWE-502" [ref=e715]
+                - cell "cisa_kev" [ref=e716]:
+                  - generic [ref=e718]: cisa_kev
+                - cell "—" [ref=e719]
+              - row "CRITICAL CVE-2026-22769 Copy value Dell RecoverPoint for Virtual Machines, versions prior to 6.0.3.1 HF1, contain a hardcoded credential vulnerability. This is considered critical as an unauthenticated remote attacker with knowledge of the hardcoded credential could potentially exploit this vulnerability leading to unauthorized access to the underlying operating system and root-level persistence. Dell recommends that customers upgrade or apply one of the remediations as soon as possible. 10.0 CWE-798 cisa_kev otx 26" [ref=e720]:
+                - cell "CRITICAL" [ref=e721]:
+                  - generic [ref=e722]: CRITICAL
+                - cell "CVE-2026-22769 Copy value" [ref=e723]:
+                  - generic [ref=e724]:
+                    - link "CVE-2026-22769" [ref=e725] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2026-22769
+                    - button "Copy value" [ref=e726]:
+                      - img [ref=e727]
+                - cell "Dell RecoverPoint for Virtual Machines, versions prior to 6.0.3.1 HF1, contain a hardcoded credential vulnerability. This is considered critical as an unauthenticated remote attacker with knowledge of the hardcoded credential could potentially exploit this vulnerability leading to unauthorized access to the underlying operating system and root-level persistence. Dell recommends that customers upgrade or apply one of the remediations as soon as possible." [ref=e729]:
+                  - generic "Dell RecoverPoint for Virtual Machines, versions prior to 6.0.3.1 HF1, contain a hardcoded credential vulnerability. This is considered critical as an unauthenticated remote attacker with knowledge of the hardcoded credential could potentially exploit this vulnerability leading to unauthorized access to the underlying operating system and root-level persistence. Dell recommends that customers upgrade or apply one of the remediations as soon as possible." [ref=e730]
+                - cell "10.0" [ref=e731]
+                - cell "CWE-798" [ref=e732]
+                - cell "cisa_kev otx" [ref=e733]:
+                  - generic [ref=e734]:
+                    - generic [ref=e735]: cisa_kev
+                    - generic [ref=e736]: otx
+                - cell "26" [ref=e737]:
+                  - button "26" [ref=e739] [cursor=pointer]:
+                    - generic [ref=e740]: "26"
+              - row "CRITICAL CVE-2019-1003029 Copy value A sandbox bypass vulnerability exists in Jenkins Script Security Plugin 1.53 and earlier in src/main/java/org/jenkinsci/plugins/scriptsecurity/sandbox/groovy/GroovySandbox.java, src/main/java/org/jenkinsci/plugins/scriptsecurity/sandbox/groovy/SecureGroovyScript.java that allows attackers with Overall/Read permission to execute arbitrary code on the Jenkins master JVM. 9.9 — cisa_kev —" [ref=e741]:
+                - cell "CRITICAL" [ref=e742]:
+                  - generic [ref=e743]: CRITICAL
+                - cell "CVE-2019-1003029 Copy value" [ref=e744]:
+                  - generic [ref=e745]:
+                    - link "CVE-2019-1003029" [ref=e746] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2019-1003029
+                    - button "Copy value" [ref=e747]:
+                      - img [ref=e748]
+                - cell "A sandbox bypass vulnerability exists in Jenkins Script Security Plugin 1.53 and earlier in src/main/java/org/jenkinsci/plugins/scriptsecurity/sandbox/groovy/GroovySandbox.java, src/main/java/org/jenkinsci/plugins/scriptsecurity/sandbox/groovy/SecureGroovyScript.java that allows attackers with Overall/Read permission to execute arbitrary code on the Jenkins master JVM." [ref=e750]:
+                  - generic "A sandbox bypass vulnerability exists in Jenkins Script Security Plugin 1.53 and earlier in src/main/java/org/jenkinsci/plugins/scriptsecurity/sandbox/groovy/GroovySandbox.java, src/main/java/org/jenkinsci/plugins/scriptsecurity/sandbox/groovy/SecureGroovyScript.java that allows attackers with Overall/Read permission to execute arbitrary code on the Jenkins master JVM." [ref=e751]
+                - cell "9.9" [ref=e752]
+                - cell "—" [ref=e753]
+                - cell "cisa_kev" [ref=e754]:
+                  - generic [ref=e756]: cisa_kev
+                - cell "—" [ref=e757]
+              - 'row "CRITICAL CVE-2019-1003030 Copy value A sandbox bypass vulnerability exists in Jenkins Pipeline: Groovy Plugin 2.63 and earlier in pom.xml, src/main/java/org/jenkinsci/plugins/workflow/cps/CpsGroovyShell.java that allows attackers able to control pipeline scripts to execute arbitrary code on the Jenkins master JVM. 9.9 — cisa_kev —" [ref=e758]':
+                - cell "CRITICAL" [ref=e759]:
+                  - generic [ref=e760]: CRITICAL
+                - cell "CVE-2019-1003030 Copy value" [ref=e761]:
+                  - generic [ref=e762]:
+                    - link "CVE-2019-1003030" [ref=e763] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2019-1003030
+                    - button "Copy value" [ref=e764]:
+                      - img [ref=e765]
+                - 'cell "A sandbox bypass vulnerability exists in Jenkins Pipeline: Groovy Plugin 2.63 and earlier in pom.xml, src/main/java/org/jenkinsci/plugins/workflow/cps/CpsGroovyShell.java that allows attackers able to control pipeline scripts to execute arbitrary code on the Jenkins master JVM." [ref=e767]':
+                  - 'generic "A sandbox bypass vulnerability exists in Jenkins Pipeline: Groovy Plugin 2.63 and earlier in pom.xml, src/main/java/org/jenkinsci/plugins/workflow/cps/CpsGroovyShell.java that allows attackers able to control pipeline scripts to execute arbitrary code on the Jenkins master JVM." [ref=e768]'
+                - cell "9.9" [ref=e769]
+                - cell "—" [ref=e770]
+                - cell "cisa_kev" [ref=e771]:
+                  - generic [ref=e773]: cisa_kev
+                - cell "—" [ref=e774]
+              - 'row "CRITICAL CVE-2019-10758 Copy value mongo-express before 0.54.0 is vulnerable to Remote Code Execution via endpoints that uses the `toBSON` method. A misuse of the `vm` dependency to perform `exec` commands in a non-safe environment. 9.9 — cisa_kev —" [ref=e775]':
+                - cell "CRITICAL" [ref=e776]:
+                  - generic [ref=e777]: CRITICAL
+                - cell "CVE-2019-10758 Copy value" [ref=e778]:
+                  - generic [ref=e779]:
+                    - link "CVE-2019-10758" [ref=e780] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2019-10758
+                    - button "Copy value" [ref=e781]:
+                      - img [ref=e782]
+                - 'cell "mongo-express before 0.54.0 is vulnerable to Remote Code Execution via endpoints that uses the `toBSON` method. A misuse of the `vm` dependency to perform `exec` commands in a non-safe environment." [ref=e784]':
+                  - 'generic "mongo-express before 0.54.0 is vulnerable to Remote Code Execution via endpoints that uses the `toBSON` method. A misuse of the `vm` dependency to perform `exec` commands in a non-safe environment." [ref=e785]'
+                - cell "9.9" [ref=e786]
+                - cell "—" [ref=e787]
+                - cell "cisa_kev" [ref=e788]:
+                  - generic [ref=e790]: cisa_kev
+                - cell "—" [ref=e791]
+              - row "CRITICAL CVE-2023-41265 Copy value An HTTP Request Tunneling vulnerability found in Qlik Sense Enterprise for Windows for versions May 2023 Patch 3 and earlier, February 2023 Patch 7 and earlier, November 2022 Patch 10 and earlier, and August 2022 Patch 12 and earlier allows a remote attacker to elevate their privilege by tunneling HTTP requests in the raw HTTP request. This allows them to send requests that get executed by the backend server hosting the repository application. This is fixed in August 2023 IR, May 2023 Patch 4, February 2023 Patch 8, November 2022 Patch 11, and August 2022 Patch 13. 9.9 CWE-444 cisa_kev —" [ref=e792]:
+                - cell "CRITICAL" [ref=e793]:
+                  - generic [ref=e794]: CRITICAL
+                - cell "CVE-2023-41265 Copy value" [ref=e795]:
+                  - generic [ref=e796]:
+                    - link "CVE-2023-41265" [ref=e797] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2023-41265
+                    - button "Copy value" [ref=e798]:
+                      - img [ref=e799]
+                - cell "An HTTP Request Tunneling vulnerability found in Qlik Sense Enterprise for Windows for versions May 2023 Patch 3 and earlier, February 2023 Patch 7 and earlier, November 2022 Patch 10 and earlier, and August 2022 Patch 12 and earlier allows a remote attacker to elevate their privilege by tunneling HTTP requests in the raw HTTP request. This allows them to send requests that get executed by the backend server hosting the repository application. This is fixed in August 2023 IR, May 2023 Patch 4, February 2023 Patch 8, November 2022 Patch 11, and August 2022 Patch 13." [ref=e801]:
+                  - generic "An HTTP Request Tunneling vulnerability found in Qlik Sense Enterprise for Windows for versions May 2023 Patch 3 and earlier, February 2023 Patch 7 and earlier, November 2022 Patch 10 and earlier, and August 2022 Patch 12 and earlier allows a remote attacker to elevate their privilege by tunneling HTTP requests in the raw HTTP request. This allows them to send requests that get executed by the backend server hosting the repository application. This is fixed in August 2023 IR, May 2023 Patch 4, February 2023 Patch 8, November 2022 Patch 11, and August 2022 Patch 13." [ref=e802]
+                - cell "9.9" [ref=e803]
+                - cell "CWE-444" [ref=e804]
+                - cell "cisa_kev" [ref=e805]:
+                  - generic [ref=e807]: cisa_kev
+                - cell "—" [ref=e808]
+              - 'row "CRITICAL CVE-2023-48365 Copy value Qlik Sense Enterprise for Windows before August 2023 Patch 2 allows unauthenticated remote code execution, aka QB-21683. Due to improper validation of HTTP headers, a remote attacker is able to elevate their privilege by tunneling HTTP requests, allowing them to execute HTTP requests on the backend server that hosts the repository application. The fixed versions are August 2023 Patch 2, May 2023 Patch 6, February 2023 Patch 10, November 2022 Patch 12, August 2022 Patch 14, May 2022 Patch 16, February 2022 Patch 15, and November 2021 Patch 17. NOTE: this issue exists because of an incomplete fix for CVE-2023-41265. 9.9 CWE-444 cisa_kev —" [ref=e809]':
+                - cell "CRITICAL" [ref=e810]:
+                  - generic [ref=e811]: CRITICAL
+                - cell "CVE-2023-48365 Copy value" [ref=e812]:
+                  - generic [ref=e813]:
+                    - link "CVE-2023-48365" [ref=e814] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2023-48365
+                    - button "Copy value" [ref=e815]:
+                      - img [ref=e816]
+                - 'cell "Qlik Sense Enterprise for Windows before August 2023 Patch 2 allows unauthenticated remote code execution, aka QB-21683. Due to improper validation of HTTP headers, a remote attacker is able to elevate their privilege by tunneling HTTP requests, allowing them to execute HTTP requests on the backend server that hosts the repository application. The fixed versions are August 2023 Patch 2, May 2023 Patch 6, February 2023 Patch 10, November 2022 Patch 12, August 2022 Patch 14, May 2022 Patch 16, February 2022 Patch 15, and November 2021 Patch 17. NOTE: this issue exists because of an incomplete fix for CVE-2023-41265." [ref=e818]':
+                  - 'generic "Qlik Sense Enterprise for Windows before August 2023 Patch 2 allows unauthenticated remote code execution, aka QB-21683. Due to improper validation of HTTP headers, a remote attacker is able to elevate their privilege by tunneling HTTP requests, allowing them to execute HTTP requests on the backend server that hosts the repository application. The fixed versions are August 2023 Patch 2, May 2023 Patch 6, February 2023 Patch 10, November 2022 Patch 12, August 2022 Patch 14, May 2022 Patch 16, February 2022 Patch 15, and November 2021 Patch 17. NOTE: this issue exists because of an incomplete fix for CVE-2023-41265." [ref=e819]'
+                - cell "9.9" [ref=e820]
+                - cell "CWE-444" [ref=e821]
+                - cell "cisa_kev" [ref=e822]:
+                  - generic [ref=e824]: cisa_kev
+                - cell "—" [ref=e825]
+              - row "CRITICAL CVE-2025-20333 Copy value A vulnerability in the VPN web server of Cisco Secure Firewall Adaptive Security Appliance (ASA) Software and Cisco Secure Firewall Threat Defense (FTD) Software could allow an authenticated, remote attacker to execute arbitrary code on an affected device. This vulnerability is due to improper validation of user-supplied input in HTTP(S) requests. An attacker with valid VPN user credentials could exploit this vulnerability by sending crafted HTTP requests to an affected device. A successful exploit could allow the attacker to execute arbitrary code as root, possibly resulting in the complete compromise of the affected device. 9.9 CWE-120 cisa_kev —" [ref=e826]:
+                - cell "CRITICAL" [ref=e827]:
+                  - generic [ref=e828]: CRITICAL
+                - cell "CVE-2025-20333 Copy value" [ref=e829]:
+                  - generic [ref=e830]:
+                    - link "CVE-2025-20333" [ref=e831] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2025-20333
+                    - button "Copy value" [ref=e832]:
+                      - img [ref=e833]
+                - cell "A vulnerability in the VPN web server of Cisco Secure Firewall Adaptive Security Appliance (ASA) Software and Cisco Secure Firewall Threat Defense (FTD) Software could allow an authenticated, remote attacker to execute arbitrary code on an affected device. This vulnerability is due to improper validation of user-supplied input in HTTP(S) requests. An attacker with valid VPN user credentials could exploit this vulnerability by sending crafted HTTP requests to an affected device. A successful exploit could allow the attacker to execute arbitrary code as root, possibly resulting in the complete compromise of the affected device." [ref=e835]:
+                  - generic "A vulnerability in the VPN web server of Cisco Secure Firewall Adaptive Security Appliance (ASA) Software and Cisco Secure Firewall Threat Defense (FTD) Software could allow an authenticated, remote attacker to execute arbitrary code on an affected device. This vulnerability is due to improper validation of user-supplied input in HTTP(S) requests. An attacker with valid VPN user credentials could exploit this vulnerability by sending crafted HTTP requests to an affected device. A successful exploit could allow the attacker to execute arbitrary code as root, possibly resulting in the complete compromise of the affected device." [ref=e836]
+                - cell "9.9" [ref=e837]
+                - cell "CWE-120" [ref=e838]
+                - cell "cisa_kev" [ref=e839]:
+                  - generic [ref=e841]: cisa_kev
+                - cell "—" [ref=e842]
+              - 'row "CRITICAL CVE-2025-24016 Copy value Wazuh is a free and open source platform used for threat prevention, detection, and response. Starting in version 4.4.0 and prior to version 4.9.1, an unsafe deserialization vulnerability allows for remote code execution on Wazuh servers. DistributedAPI parameters are a serialized as JSON and deserialized using `as_wazuh_object` (in `framework/wazuh/core/cluster/common.py`). If an attacker manages to inject an unsanitized dictionary in DAPI request/response, they can forge an unhandled exception (`__unhandled_exc__`) to evaluate arbitrary python code. The vulnerability can be triggered by anybody with API access (compromised dashboard or Wazuh servers in the cluster) or, in certain configurations, even by a compromised agent. Version 4.9.1 contains a fix. 9.9 CWE-502 cisa_kev otx 16" [ref=e843]':
+                - cell "CRITICAL" [ref=e844]:
+                  - generic [ref=e845]: CRITICAL
+                - cell "CVE-2025-24016 Copy value" [ref=e846]:
+                  - generic [ref=e847]:
+                    - link "CVE-2025-24016" [ref=e848] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2025-24016
+                    - button "Copy value" [ref=e849]:
+                      - img [ref=e850]
+                - 'cell "Wazuh is a free and open source platform used for threat prevention, detection, and response. Starting in version 4.4.0 and prior to version 4.9.1, an unsafe deserialization vulnerability allows for remote code execution on Wazuh servers. DistributedAPI parameters are a serialized as JSON and deserialized using `as_wazuh_object` (in `framework/wazuh/core/cluster/common.py`). If an attacker manages to inject an unsanitized dictionary in DAPI request/response, they can forge an unhandled exception (`__unhandled_exc__`) to evaluate arbitrary python code. The vulnerability can be triggered by anybody with API access (compromised dashboard or Wazuh servers in the cluster) or, in certain configurations, even by a compromised agent. Version 4.9.1 contains a fix." [ref=e852]':
+                  - 'generic "Wazuh is a free and open source platform used for threat prevention, detection, and response. Starting in version 4.4.0 and prior to version 4.9.1, an unsafe deserialization vulnerability allows for remote code execution on Wazuh servers. DistributedAPI parameters are a serialized as JSON and deserialized using `as_wazuh_object` (in `framework/wazuh/core/cluster/common.py`). If an attacker manages to inject an unsanitized dictionary in DAPI request/response, they can forge an unhandled exception (`__unhandled_exc__`) to evaluate arbitrary python code. The vulnerability can be triggered by anybody with API access (compromised dashboard or Wazuh servers in the cluster) or, in certain configurations, even by a compromised agent. Version 4.9.1 contains a fix." [ref=e853]'
+                - cell "9.9" [ref=e854]
+                - cell "CWE-502" [ref=e855]
+                - cell "cisa_kev otx" [ref=e856]:
+                  - generic [ref=e857]:
+                    - generic [ref=e858]: cisa_kev
+                    - generic [ref=e859]: otx
+                - cell "16" [ref=e860]:
+                  - button "16" [ref=e862] [cursor=pointer]:
+                    - generic [ref=e863]: "16"
+              - row "CRITICAL CVE-2005-2773 Copy value HP OpenView Network Node Manager 6.2 through 7.50 allows remote attackers to execute arbitrary commands via shell metacharacters in the (1) node parameter to connectedNodes.ovpl, (2) cdpView.ovpl, (3) freeIPaddrs.ovpl, and (4) ecscmg.ovpl. 9.8 — cisa_kev —" [ref=e864]:
+                - cell "CRITICAL" [ref=e865]:
+                  - generic [ref=e866]: CRITICAL
+                - cell "CVE-2005-2773 Copy value" [ref=e867]:
+                  - generic [ref=e868]:
+                    - link "CVE-2005-2773" [ref=e869] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2005-2773
+                    - button "Copy value" [ref=e870]:
+                      - img [ref=e871]
+                - cell "HP OpenView Network Node Manager 6.2 through 7.50 allows remote attackers to execute arbitrary commands via shell metacharacters in the (1) node parameter to connectedNodes.ovpl, (2) cdpView.ovpl, (3) freeIPaddrs.ovpl, and (4) ecscmg.ovpl." [ref=e873]:
+                  - generic "HP OpenView Network Node Manager 6.2 through 7.50 allows remote attackers to execute arbitrary commands via shell metacharacters in the (1) node parameter to connectedNodes.ovpl, (2) cdpView.ovpl, (3) freeIPaddrs.ovpl, and (4) ecscmg.ovpl." [ref=e874]
+                - cell "9.8" [ref=e875]
+                - cell "—" [ref=e876]
+                - cell "cisa_kev" [ref=e877]:
+                  - generic [ref=e879]: cisa_kev
+                - cell "—" [ref=e880]
+              - row "CRITICAL CVE-2007-3010 Copy value masterCGI in the Unified Maintenance Tool in Alcatel OmniPCX Enterprise Communication Server R7.1 and earlier allows remote attackers to execute arbitrary commands via shell metacharacters in the user parameter during a ping action. 9.8 — cisa_kev —" [ref=e881]:
+                - cell "CRITICAL" [ref=e882]:
+                  - generic [ref=e883]: CRITICAL
+                - cell "CVE-2007-3010 Copy value" [ref=e884]:
+                  - generic [ref=e885]:
+                    - link "CVE-2007-3010" [ref=e886] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2007-3010
+                    - button "Copy value" [ref=e887]:
+                      - img [ref=e888]
+                - cell "masterCGI in the Unified Maintenance Tool in Alcatel OmniPCX Enterprise Communication Server R7.1 and earlier allows remote attackers to execute arbitrary commands via shell metacharacters in the user parameter during a ping action." [ref=e890]:
+                  - generic "masterCGI in the Unified Maintenance Tool in Alcatel OmniPCX Enterprise Communication Server R7.1 and earlier allows remote attackers to execute arbitrary commands via shell metacharacters in the user parameter during a ping action." [ref=e891]
+                - cell "9.8" [ref=e892]
+                - cell "—" [ref=e893]
+                - cell "cisa_kev" [ref=e894]:
+                  - generic [ref=e896]: cisa_kev
+                - cell "—" [ref=e897]
+              - row "CRITICAL CVE-2008-0655 Copy value Multiple unspecified vulnerabilities in Adobe Reader and Acrobat before 8.1.2 have unknown impact and attack vectors. 9.8 — cisa_kev —" [ref=e898]:
+                - cell "CRITICAL" [ref=e899]:
+                  - generic [ref=e900]: CRITICAL
+                - cell "CVE-2008-0655 Copy value" [ref=e901]:
+                  - generic [ref=e902]:
+                    - link "CVE-2008-0655" [ref=e903] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2008-0655
+                    - button "Copy value" [ref=e904]:
+                      - img [ref=e905]
+                - cell "Multiple unspecified vulnerabilities in Adobe Reader and Acrobat before 8.1.2 have unknown impact and attack vectors." [ref=e907]:
+                  - generic "Multiple unspecified vulnerabilities in Adobe Reader and Acrobat before 8.1.2 have unknown impact and attack vectors." [ref=e908]
+                - cell "9.8" [ref=e909]
+                - cell "—" [ref=e910]
+                - cell "cisa_kev" [ref=e911]:
+                  - generic [ref=e913]: cisa_kev
+                - cell "—" [ref=e914]
+              - row "CRITICAL CVE-2009-1151 Copy value Static code injection vulnerability in setup.php in phpMyAdmin 2.11.x before 2.11.9.5 and 3.x before 3.1.3.1 allows remote attackers to inject arbitrary PHP code into a configuration file via the save action. 9.8 CWE-94 cisa_kev —" [ref=e915]:
+                - cell "CRITICAL" [ref=e916]:
+                  - generic [ref=e917]: CRITICAL
+                - cell "CVE-2009-1151 Copy value" [ref=e918]:
+                  - generic [ref=e919]:
+                    - link "CVE-2009-1151" [ref=e920] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2009-1151
+                    - button "Copy value" [ref=e921]:
+                      - img [ref=e922]
+                - cell "Static code injection vulnerability in setup.php in phpMyAdmin 2.11.x before 2.11.9.5 and 3.x before 3.1.3.1 allows remote attackers to inject arbitrary PHP code into a configuration file via the save action." [ref=e924]:
+                  - generic "Static code injection vulnerability in setup.php in phpMyAdmin 2.11.x before 2.11.9.5 and 3.x before 3.1.3.1 allows remote attackers to inject arbitrary PHP code into a configuration file via the save action." [ref=e925]
+                - cell "9.8" [ref=e926]
+                - cell "CWE-94" [ref=e927]
+                - cell "cisa_kev" [ref=e928]:
+                  - generic [ref=e930]: cisa_kev
+                - cell "—" [ref=e931]
+              - 'row "CRITICAL CVE-2010-0840 Copy value Unspecified vulnerability in the Java Runtime Environment component in Oracle Java SE and Java for Business 6 Update 18, 5.0 Update 23, and 1.4.2_25 allows remote attackers to affect confidentiality, integrity, and availability via unknown vectors. NOTE: the previous information was obtained from the March 2010 CPU. Oracle has not commented on claims from a reliable researcher that this is related to improper checks when executing privileged methods in the Java Runtime Environment (JRE), which allows attackers to execute arbitrary code via (1) an untrusted object that extends the trusted class but has not modified a certain method, or (2) \"a similar trust issue with interfaces,\" aka \"Trusted Methods Chaining Remote Code Execution Vulnerability.\" 9.8 — cisa_kev —" [ref=e932]':
+                - cell "CRITICAL" [ref=e933]:
+                  - generic [ref=e934]: CRITICAL
+                - cell "CVE-2010-0840 Copy value" [ref=e935]:
+                  - generic [ref=e936]:
+                    - link "CVE-2010-0840" [ref=e937] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2010-0840
+                    - button "Copy value" [ref=e938]:
+                      - img [ref=e939]
+                - 'cell "Unspecified vulnerability in the Java Runtime Environment component in Oracle Java SE and Java for Business 6 Update 18, 5.0 Update 23, and 1.4.2_25 allows remote attackers to affect confidentiality, integrity, and availability via unknown vectors. NOTE: the previous information was obtained from the March 2010 CPU. Oracle has not commented on claims from a reliable researcher that this is related to improper checks when executing privileged methods in the Java Runtime Environment (JRE), which allows attackers to execute arbitrary code via (1) an untrusted object that extends the trusted class but has not modified a certain method, or (2) \"a similar trust issue with interfaces,\" aka \"Trusted Methods Chaining Remote Code Execution Vulnerability.\"" [ref=e941]':
+                  - 'generic "Unspecified vulnerability in the Java Runtime Environment component in Oracle Java SE and Java for Business 6 Update 18, 5.0 Update 23, and 1.4.2_25 allows remote attackers to affect confidentiality, integrity, and availability via unknown vectors. NOTE: the previous information was obtained from the March 2010 CPU. Oracle has not commented on claims from a reliable researcher that this is related to improper checks when executing privileged methods in the Java Runtime Environment (JRE), which allows attackers to execute arbitrary code via (1) an untrusted object that extends the trusted class but has not modified a certain method, or (2) \"a similar trust issue with interfaces,\" aka \"Trusted Methods Chaining Remote Code Execution Vulnerability.\"" [ref=e942]'
+                - cell "9.8" [ref=e943]
+                - cell "—" [ref=e944]
+                - cell "cisa_kev" [ref=e945]:
+                  - generic [ref=e947]: cisa_kev
+                - cell "—" [ref=e948]
+              - row "CRITICAL CVE-2010-2861 Copy value Multiple directory traversal vulnerabilities in the administrator console in Adobe ColdFusion 9.0.1 and earlier allow remote attackers to read arbitrary files via the locale parameter to (1) CFIDE/administrator/settings/mappings.cfm, (2) logging/settings.cfm, (3) datasources/index.cfm, (4) j2eepackaging/editarchive.cfm, and (5) enter.cfm in CFIDE/administrator/. 9.8 CWE-22 cisa_kev —" [ref=e949]:
+                - cell "CRITICAL" [ref=e950]:
+                  - generic [ref=e951]: CRITICAL
+                - cell "CVE-2010-2861 Copy value" [ref=e952]:
+                  - generic [ref=e953]:
+                    - link "CVE-2010-2861" [ref=e954] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2010-2861
+                    - button "Copy value" [ref=e955]:
+                      - img [ref=e956]
+                - cell "Multiple directory traversal vulnerabilities in the administrator console in Adobe ColdFusion 9.0.1 and earlier allow remote attackers to read arbitrary files via the locale parameter to (1) CFIDE/administrator/settings/mappings.cfm, (2) logging/settings.cfm, (3) datasources/index.cfm, (4) j2eepackaging/editarchive.cfm, and (5) enter.cfm in CFIDE/administrator/." [ref=e958]:
+                  - generic "Multiple directory traversal vulnerabilities in the administrator console in Adobe ColdFusion 9.0.1 and earlier allow remote attackers to read arbitrary files via the locale parameter to (1) CFIDE/administrator/settings/mappings.cfm, (2) logging/settings.cfm, (3) datasources/index.cfm, (4) j2eepackaging/editarchive.cfm, and (5) enter.cfm in CFIDE/administrator/." [ref=e959]
+                - cell "9.8" [ref=e960]
+                - cell "CWE-22" [ref=e961]
+                - cell "cisa_kev" [ref=e962]:
+                  - generic [ref=e964]: cisa_kev
+                - cell "—" [ref=e965]
+              - row "CRITICAL CVE-2010-3765 Copy value Mozilla Firefox 3.5.x through 3.5.14 and 3.6.x through 3.6.11, Thunderbird 3.1.6 before 3.1.6 and 3.0.x before 3.0.10, and SeaMonkey 2.x before 2.0.10, when JavaScript is enabled, allows remote attackers to execute arbitrary code via vectors related to nsCSSFrameConstructor::ContentAppended, the appendChild method, incorrect index tracking, and the creation of multiple frames, which triggers memory corruption, as exploited in the wild in October 2010 by the Belmoo malware. 9.8 CWE-119 cisa_kev —" [ref=e966]:
+                - cell "CRITICAL" [ref=e967]:
+                  - generic [ref=e968]: CRITICAL
+                - cell "CVE-2010-3765 Copy value" [ref=e969]:
+                  - generic [ref=e970]:
+                    - link "CVE-2010-3765" [ref=e971] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2010-3765
+                    - button "Copy value" [ref=e972]:
+                      - img [ref=e973]
+                - cell "Mozilla Firefox 3.5.x through 3.5.14 and 3.6.x through 3.6.11, Thunderbird 3.1.6 before 3.1.6 and 3.0.x before 3.0.10, and SeaMonkey 2.x before 2.0.10, when JavaScript is enabled, allows remote attackers to execute arbitrary code via vectors related to nsCSSFrameConstructor::ContentAppended, the appendChild method, incorrect index tracking, and the creation of multiple frames, which triggers memory corruption, as exploited in the wild in October 2010 by the Belmoo malware." [ref=e975]:
+                  - generic "Mozilla Firefox 3.5.x through 3.5.14 and 3.6.x through 3.6.11, Thunderbird 3.1.6 before 3.1.6 and 3.0.x before 3.0.10, and SeaMonkey 2.x before 2.0.10, when JavaScript is enabled, allows remote attackers to execute arbitrary code via vectors related to nsCSSFrameConstructor::ContentAppended, the appendChild method, incorrect index tracking, and the creation of multiple frames, which triggers memory corruption, as exploited in the wild in October 2010 by the Belmoo malware." [ref=e976]
+                - cell "9.8" [ref=e977]
+                - cell "CWE-119" [ref=e978]
+                - cell "cisa_kev" [ref=e979]:
+                  - generic [ref=e981]: cisa_kev
+                - cell "—" [ref=e982]
+              - row "CRITICAL CVE-2010-4344 Copy value Heap-based buffer overflow in the string_vformat function in string.c in Exim before 4.70 allows remote attackers to execute arbitrary code via an SMTP session that includes two MAIL commands in conjunction with a large message containing crafted headers, leading to improper rejection logging. 9.8 CWE-787 cisa_kev —" [ref=e983]:
+                - cell "CRITICAL" [ref=e984]:
+                  - generic [ref=e985]: CRITICAL
+                - cell "CVE-2010-4344 Copy value" [ref=e986]:
+                  - generic [ref=e987]:
+                    - link "CVE-2010-4344" [ref=e988] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2010-4344
+                    - button "Copy value" [ref=e989]:
+                      - img [ref=e990]
+                - cell "Heap-based buffer overflow in the string_vformat function in string.c in Exim before 4.70 allows remote attackers to execute arbitrary code via an SMTP session that includes two MAIL commands in conjunction with a large message containing crafted headers, leading to improper rejection logging." [ref=e992]:
+                  - generic "Heap-based buffer overflow in the string_vformat function in string.c in Exim before 4.70 allows remote attackers to execute arbitrary code via an SMTP session that includes two MAIL commands in conjunction with a large message containing crafted headers, leading to improper rejection logging." [ref=e993]
+                - cell "9.8" [ref=e994]
+                - cell "CWE-787" [ref=e995]
+                - cell "cisa_kev" [ref=e996]:
+                  - generic [ref=e998]: cisa_kev
+                - cell "—" [ref=e999]
+              - row "CRITICAL CVE-2010-5330 Copy value On certain Ubiquiti devices, Command Injection exists via a GET request to stainfo.cgi (aka Show AP info) because the ifname variable is not sanitized, as demonstrated by shell metacharacters. The fixed version is v4.0.1 for 802.11 ISP products, v5.3.5 for AirMax ISP products, and v5.4.5 for AirSync firmware. For example, Nanostation5 (Air OS) is affected. 9.8 CWE-77 cisa_kev —" [ref=e1000]:
+                - cell "CRITICAL" [ref=e1001]:
+                  - generic [ref=e1002]: CRITICAL
+                - cell "CVE-2010-5330 Copy value" [ref=e1003]:
+                  - generic [ref=e1004]:
+                    - link "CVE-2010-5330" [ref=e1005] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2010-5330
+                    - button "Copy value" [ref=e1006]:
+                      - img [ref=e1007]
+                - cell "On certain Ubiquiti devices, Command Injection exists via a GET request to stainfo.cgi (aka Show AP info) because the ifname variable is not sanitized, as demonstrated by shell metacharacters. The fixed version is v4.0.1 for 802.11 ISP products, v5.3.5 for AirMax ISP products, and v5.4.5 for AirSync firmware. For example, Nanostation5 (Air OS) is affected." [ref=e1009]:
+                  - generic "On certain Ubiquiti devices, Command Injection exists via a GET request to stainfo.cgi (aka Show AP info) because the ifname variable is not sanitized, as demonstrated by shell metacharacters. The fixed version is v4.0.1 for 802.11 ISP products, v5.3.5 for AirMax ISP products, and v5.4.5 for AirSync firmware. For example, Nanostation5 (Air OS) is affected." [ref=e1010]
+                - cell "9.8" [ref=e1011]
+                - cell "CWE-77" [ref=e1012]
+                - cell "cisa_kev" [ref=e1013]:
+                  - generic [ref=e1015]: cisa_kev
+                - cell "—" [ref=e1016]
+              - row "CRITICAL CVE-2011-1889 Copy value The NSPLookupServiceNext function in the client in Microsoft Forefront Threat Management Gateway (TMG) 2010 allows remote attackers to execute arbitrary code via vectors involving unspecified requests, aka \"TMG Firewall Client Memory Corruption Vulnerability.\" 9.8 CWE-119 cisa_kev —" [ref=e1017]:
+                - cell "CRITICAL" [ref=e1018]:
+                  - generic [ref=e1019]: CRITICAL
+                - cell "CVE-2011-1889 Copy value" [ref=e1020]:
+                  - generic [ref=e1021]:
+                    - link "CVE-2011-1889" [ref=e1022] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2011-1889
+                    - button "Copy value" [ref=e1023]:
+                      - img [ref=e1024]
+                - cell "The NSPLookupServiceNext function in the client in Microsoft Forefront Threat Management Gateway (TMG) 2010 allows remote attackers to execute arbitrary code via vectors involving unspecified requests, aka \"TMG Firewall Client Memory Corruption Vulnerability.\"" [ref=e1026]:
+                  - generic "The NSPLookupServiceNext function in the client in Microsoft Forefront Threat Management Gateway (TMG) 2010 allows remote attackers to execute arbitrary code via vectors involving unspecified requests, aka \"TMG Firewall Client Memory Corruption Vulnerability.\"" [ref=e1027]
+                - cell "9.8" [ref=e1028]
+                - cell "CWE-119" [ref=e1029]
+                - cell "cisa_kev" [ref=e1030]:
+                  - generic [ref=e1032]: cisa_kev
+                - cell "—" [ref=e1033]
+              - row "CRITICAL CVE-2011-2462 Copy value Unspecified vulnerability in the U3D component in Adobe Reader and Acrobat 10.1.1 and earlier on Windows and Mac OS X, and Adobe Reader 9.x through 9.4.6 on UNIX, allows remote attackers to execute arbitrary code or cause a denial of service (memory corruption) via unknown vectors, as exploited in the wild in December 2011. 9.8 CWE-787 cisa_kev —" [ref=e1034]:
+                - cell "CRITICAL" [ref=e1035]:
+                  - generic [ref=e1036]: CRITICAL
+                - cell "CVE-2011-2462 Copy value" [ref=e1037]:
+                  - generic [ref=e1038]:
+                    - link "CVE-2011-2462" [ref=e1039] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2011-2462
+                    - button "Copy value" [ref=e1040]:
+                      - img [ref=e1041]
+                - cell "Unspecified vulnerability in the U3D component in Adobe Reader and Acrobat 10.1.1 and earlier on Windows and Mac OS X, and Adobe Reader 9.x through 9.4.6 on UNIX, allows remote attackers to execute arbitrary code or cause a denial of service (memory corruption) via unknown vectors, as exploited in the wild in December 2011." [ref=e1043]:
+                  - generic "Unspecified vulnerability in the U3D component in Adobe Reader and Acrobat 10.1.1 and earlier on Windows and Mac OS X, and Adobe Reader 9.x through 9.4.6 on UNIX, allows remote attackers to execute arbitrary code or cause a denial of service (memory corruption) via unknown vectors, as exploited in the wild in December 2011." [ref=e1044]
+                - cell "9.8" [ref=e1045]
+                - cell "CWE-787" [ref=e1046]
+                - cell "cisa_kev" [ref=e1047]:
+                  - generic [ref=e1049]: cisa_kev
+                - cell "—" [ref=e1050]
+              - row "CRITICAL CVE-2011-3544 Copy value Unspecified vulnerability in the Java Runtime Environment component in Oracle Java SE JDK and JRE 7 and 6 Update 27 and earlier allows remote untrusted Java Web Start applications and untrusted Java applets to affect confidentiality, integrity, and availability via unknown vectors related to Scripting. 9.8 — cisa_kev —" [ref=e1051]:
+                - cell "CRITICAL" [ref=e1052]:
+                  - generic [ref=e1053]: CRITICAL
+                - cell "CVE-2011-3544 Copy value" [ref=e1054]:
+                  - generic [ref=e1055]:
+                    - link "CVE-2011-3544" [ref=e1056] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2011-3544
+                    - button "Copy value" [ref=e1057]:
+                      - img [ref=e1058]
+                - cell "Unspecified vulnerability in the Java Runtime Environment component in Oracle Java SE JDK and JRE 7 and 6 Update 27 and earlier allows remote untrusted Java Web Start applications and untrusted Java applets to affect confidentiality, integrity, and availability via unknown vectors related to Scripting." [ref=e1060]:
+                  - generic "Unspecified vulnerability in the Java Runtime Environment component in Oracle Java SE JDK and JRE 7 and 6 Update 27 and earlier allows remote untrusted Java Web Start applications and untrusted Java applets to affect confidentiality, integrity, and availability via unknown vectors related to Scripting." [ref=e1061]
+                - cell "9.8" [ref=e1062]
+                - cell "—" [ref=e1063]
+                - cell "cisa_kev" [ref=e1064]:
+                  - generic [ref=e1066]: cisa_kev
+                - cell "—" [ref=e1067]
+              - row "CRITICAL CVE-2012-0391 Copy value The ExceptionDelegator component in Apache Struts before 2.2.3.1 interprets parameter values as OGNL expressions during certain exception handling for mismatched data types of properties, which allows remote attackers to execute arbitrary Java code via a crafted parameter. 9.8 CWE-20 cisa_kev —" [ref=e1068]:
+                - cell "CRITICAL" [ref=e1069]:
+                  - generic [ref=e1070]: CRITICAL
+                - cell "CVE-2012-0391 Copy value" [ref=e1071]:
+                  - generic [ref=e1072]:
+                    - link "CVE-2012-0391" [ref=e1073] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2012-0391
+                    - button "Copy value" [ref=e1074]:
+                      - img [ref=e1075]
+                - cell "The ExceptionDelegator component in Apache Struts before 2.2.3.1 interprets parameter values as OGNL expressions during certain exception handling for mismatched data types of properties, which allows remote attackers to execute arbitrary Java code via a crafted parameter." [ref=e1077]:
+                  - generic "The ExceptionDelegator component in Apache Struts before 2.2.3.1 interprets parameter values as OGNL expressions during certain exception handling for mismatched data types of properties, which allows remote attackers to execute arbitrary Java code via a crafted parameter." [ref=e1078]
+                - cell "9.8" [ref=e1079]
+                - cell "CWE-20" [ref=e1080]
+                - cell "cisa_kev" [ref=e1081]:
+                  - generic [ref=e1083]: cisa_kev
+                - cell "—" [ref=e1084]
+              - 'row "CRITICAL CVE-2012-0507 Copy value Unspecified vulnerability in the Java Runtime Environment (JRE) component in Oracle Java SE 7 Update 2 and earlier, 6 Update 30 and earlier, and 5.0 Update 33 and earlier allows remote attackers to affect confidentiality, integrity, and availability via unknown vectors related to Concurrency. NOTE: the previous information was obtained from the February 2012 Oracle CPU. Oracle has not commented on claims from a downstream vendor and third party researchers that this issue occurs because the AtomicReferenceArray class implementation does not ensure that the array is of the Object[] type, which allows attackers to cause a denial of service (JVM crash) or bypass Java sandbox restrictions. NOTE: this issue was originally mapped to CVE-2011-3571, but that identifier was already assigned to a different issue. 9.8 — cisa_kev —" [ref=e1085]':
+                - cell "CRITICAL" [ref=e1086]:
+                  - generic [ref=e1087]: CRITICAL
+                - cell "CVE-2012-0507 Copy value" [ref=e1088]:
+                  - generic [ref=e1089]:
+                    - link "CVE-2012-0507" [ref=e1090] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2012-0507
+                    - button "Copy value" [ref=e1091]:
+                      - img [ref=e1092]
+                - 'cell "Unspecified vulnerability in the Java Runtime Environment (JRE) component in Oracle Java SE 7 Update 2 and earlier, 6 Update 30 and earlier, and 5.0 Update 33 and earlier allows remote attackers to affect confidentiality, integrity, and availability via unknown vectors related to Concurrency. NOTE: the previous information was obtained from the February 2012 Oracle CPU. Oracle has not commented on claims from a downstream vendor and third party researchers that this issue occurs because the AtomicReferenceArray class implementation does not ensure that the array is of the Object[] type, which allows attackers to cause a denial of service (JVM crash) or bypass Java sandbox restrictions. NOTE: this issue was originally mapped to CVE-2011-3571, but that identifier was already assigned to a different issue." [ref=e1094]':
+                  - 'generic "Unspecified vulnerability in the Java Runtime Environment (JRE) component in Oracle Java SE 7 Update 2 and earlier, 6 Update 30 and earlier, and 5.0 Update 33 and earlier allows remote attackers to affect confidentiality, integrity, and availability via unknown vectors related to Concurrency. NOTE: the previous information was obtained from the February 2012 Oracle CPU. Oracle has not commented on claims from a downstream vendor and third party researchers that this issue occurs because the AtomicReferenceArray class implementation does not ensure that the array is of the Object[] type, which allows attackers to cause a denial of service (JVM crash) or bypass Java sandbox restrictions. NOTE: this issue was originally mapped to CVE-2011-3571, but that identifier was already assigned to a different issue." [ref=e1095]'
+                - cell "9.8" [ref=e1096]
+                - cell "—" [ref=e1097]
+                - cell "cisa_kev" [ref=e1098]:
+                  - generic [ref=e1100]: cisa_kev
+                - cell "—" [ref=e1101]
+              - row "CRITICAL CVE-2012-1710 Copy value Unspecified vulnerability in the Oracle WebCenter Forms Recognition component in Oracle Fusion Middleware 10.1.3.5 allows remote attackers to affect confidentiality, integrity, and availability via unknown vectors related to Designer, a different vulnerability than CVE-2012-1709. 9.8 — cisa_kev —" [ref=e1102]:
+                - cell "CRITICAL" [ref=e1103]:
+                  - generic [ref=e1104]: CRITICAL
+                - cell "CVE-2012-1710 Copy value" [ref=e1105]:
+                  - generic [ref=e1106]:
+                    - link "CVE-2012-1710" [ref=e1107] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2012-1710
+                    - button "Copy value" [ref=e1108]:
+                      - img [ref=e1109]
+                - cell "Unspecified vulnerability in the Oracle WebCenter Forms Recognition component in Oracle Fusion Middleware 10.1.3.5 allows remote attackers to affect confidentiality, integrity, and availability via unknown vectors related to Designer, a different vulnerability than CVE-2012-1709." [ref=e1111]:
+                  - generic "Unspecified vulnerability in the Oracle WebCenter Forms Recognition component in Oracle Fusion Middleware 10.1.3.5 allows remote attackers to affect confidentiality, integrity, and availability via unknown vectors related to Designer, a different vulnerability than CVE-2012-1709." [ref=e1112]
+                - cell "9.8" [ref=e1113]
+                - cell "—" [ref=e1114]
+                - cell "cisa_kev" [ref=e1115]:
+                  - generic [ref=e1117]: cisa_kev
+                - cell "—" [ref=e1118]
+              - row "CRITICAL CVE-2012-1723 Copy value Unspecified vulnerability in the Java Runtime Environment (JRE) component in Oracle Java SE 7 update 4 and earlier, 6 update 32 and earlier, 5 update 35 and earlier, and 1.4.2_37 and earlier allows remote attackers to affect confidentiality, integrity, and availability via unknown vectors related to Hotspot. 9.8 — cisa_kev —" [ref=e1119]:
+                - cell "CRITICAL" [ref=e1120]:
+                  - generic [ref=e1121]: CRITICAL
+                - cell "CVE-2012-1723 Copy value" [ref=e1122]:
+                  - generic [ref=e1123]:
+                    - link "CVE-2012-1723" [ref=e1124] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2012-1723
+                    - button "Copy value" [ref=e1125]:
+                      - img [ref=e1126]
+                - cell "Unspecified vulnerability in the Java Runtime Environment (JRE) component in Oracle Java SE 7 update 4 and earlier, 6 update 32 and earlier, 5 update 35 and earlier, and 1.4.2_37 and earlier allows remote attackers to affect confidentiality, integrity, and availability via unknown vectors related to Hotspot." [ref=e1128]:
+                  - generic "Unspecified vulnerability in the Java Runtime Environment (JRE) component in Oracle Java SE 7 update 4 and earlier, 6 update 32 and earlier, 5 update 35 and earlier, and 1.4.2_37 and earlier allows remote attackers to affect confidentiality, integrity, and availability via unknown vectors related to Hotspot." [ref=e1129]
+                - cell "9.8" [ref=e1130]
+                - cell "—" [ref=e1131]
+                - cell "cisa_kev" [ref=e1132]:
+                  - generic [ref=e1134]: cisa_kev
+                - cell "—" [ref=e1135]
+              - row "CRITICAL CVE-2012-1823 Copy value sapi/cgi/cgi_main.c in PHP before 5.3.12 and 5.4.x before 5.4.2, when configured as a CGI script (aka php-cgi), does not properly handle query strings that lack an = (equals sign) character, which allows remote attackers to execute arbitrary code by placing command-line options in the query string, related to lack of skipping a certain php_getopt for the 'd' case. 9.8 CWE-77 cisa_kev —" [ref=e1136]:
+                - cell "CRITICAL" [ref=e1137]:
+                  - generic [ref=e1138]: CRITICAL
+                - cell "CVE-2012-1823 Copy value" [ref=e1139]:
+                  - generic [ref=e1140]:
+                    - link "CVE-2012-1823" [ref=e1141] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2012-1823
+                    - button "Copy value" [ref=e1142]:
+                      - img [ref=e1143]
+                - cell "sapi/cgi/cgi_main.c in PHP before 5.3.12 and 5.4.x before 5.4.2, when configured as a CGI script (aka php-cgi), does not properly handle query strings that lack an = (equals sign) character, which allows remote attackers to execute arbitrary code by placing command-line options in the query string, related to lack of skipping a certain php_getopt for the 'd' case." [ref=e1145]:
+                  - generic "sapi/cgi/cgi_main.c in PHP before 5.3.12 and 5.4.x before 5.4.2, when configured as a CGI script (aka php-cgi), does not properly handle query strings that lack an = (equals sign) character, which allows remote attackers to execute arbitrary code by placing command-line options in the query string, related to lack of skipping a certain php_getopt for the 'd' case." [ref=e1146]
+                - cell "9.8" [ref=e1147]
+                - cell "CWE-77" [ref=e1148]
+                - cell "cisa_kev" [ref=e1149]:
+                  - generic [ref=e1151]: cisa_kev
+                - cell "—" [ref=e1152]
+              - row "CRITICAL CVE-2012-4681 Copy value Multiple vulnerabilities in the Java Runtime Environment (JRE) component in Oracle Java SE 7 Update 6 and earlier allow remote attackers to execute arbitrary code via a crafted applet that bypasses SecurityManager restrictions by (1) using com.sun.beans.finder.ClassFinder.findClass and leveraging an exception with the forName method to access restricted classes from arbitrary packages such as sun.awt.SunToolkit, then (2) using \"reflection with a trusted immediate caller\" to leverage the getField method to access and modify private fields, as exploited in the wild in August 2012 using Gondzz.class and Gondvv.class. 9.8 — cisa_kev —" [ref=e1153]:
+                - cell "CRITICAL" [ref=e1154]:
+                  - generic [ref=e1155]: CRITICAL
+                - cell "CVE-2012-4681 Copy value" [ref=e1156]:
+                  - generic [ref=e1157]:
+                    - link "CVE-2012-4681" [ref=e1158] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2012-4681
+                    - button "Copy value" [ref=e1159]:
+                      - img [ref=e1160]
+                - cell "Multiple vulnerabilities in the Java Runtime Environment (JRE) component in Oracle Java SE 7 Update 6 and earlier allow remote attackers to execute arbitrary code via a crafted applet that bypasses SecurityManager restrictions by (1) using com.sun.beans.finder.ClassFinder.findClass and leveraging an exception with the forName method to access restricted classes from arbitrary packages such as sun.awt.SunToolkit, then (2) using \"reflection with a trusted immediate caller\" to leverage the getField method to access and modify private fields, as exploited in the wild in August 2012 using Gondzz.class and Gondvv.class." [ref=e1162]:
+                  - generic "Multiple vulnerabilities in the Java Runtime Environment (JRE) component in Oracle Java SE 7 Update 6 and earlier allow remote attackers to execute arbitrary code via a crafted applet that bypasses SecurityManager restrictions by (1) using com.sun.beans.finder.ClassFinder.findClass and leveraging an exception with the forName method to access restricted classes from arbitrary packages such as sun.awt.SunToolkit, then (2) using \"reflection with a trusted immediate caller\" to leverage the getField method to access and modify private fields, as exploited in the wild in August 2012 using Gondzz.class and Gondvv.class." [ref=e1163]
+                - cell "9.8" [ref=e1164]
+                - cell "—" [ref=e1165]
+                - cell "cisa_kev" [ref=e1166]:
+                  - generic [ref=e1168]: cisa_kev
+                - cell "—" [ref=e1169]
+              - row "CRITICAL CVE-2012-5076 Copy value Unspecified vulnerability in the Java Runtime Environment (JRE) component in Oracle Java SE 7 Update 7 and earlier allows remote attackers to affect confidentiality, integrity, and availability, related to JAX-WS. 9.8 — cisa_kev —" [ref=e1170]:
+                - cell "CRITICAL" [ref=e1171]:
+                  - generic [ref=e1172]: CRITICAL
+                - cell "CVE-2012-5076 Copy value" [ref=e1173]:
+                  - generic [ref=e1174]:
+                    - link "CVE-2012-5076" [ref=e1175] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2012-5076
+                    - button "Copy value" [ref=e1176]:
+                      - img [ref=e1177]
+                - cell "Unspecified vulnerability in the Java Runtime Environment (JRE) component in Oracle Java SE 7 Update 7 and earlier allows remote attackers to affect confidentiality, integrity, and availability, related to JAX-WS." [ref=e1179]:
+                  - generic "Unspecified vulnerability in the Java Runtime Environment (JRE) component in Oracle Java SE 7 Update 7 and earlier allows remote attackers to affect confidentiality, integrity, and availability, related to JAX-WS." [ref=e1180]
+                - cell "9.8" [ref=e1181]
+                - cell "—" [ref=e1182]
+                - cell "cisa_kev" [ref=e1183]:
+                  - generic [ref=e1185]: cisa_kev
+                - cell "—" [ref=e1186]
+              - row [ref=e1187]:
+                - cell "CRITICAL" [ref=e1188]:
+                  - generic [ref=e1189]: CRITICAL
+                - cell "CVE-2013-0422 Copy value" [ref=e1190]:
+                  - generic [ref=e1191]:
+                    - link "CVE-2013-0422" [ref=e1192] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2013-0422
+                    - button "Copy value" [ref=e1193]:
+                      - img [ref=e1194]
+                - cell [ref=e1196]:
+                  - generic [ref=e1197]
+                - cell "9.8" [ref=e1198]
+                - cell "CWE-264" [ref=e1199]
+                - cell "cisa_kev" [ref=e1200]:
+                  - generic [ref=e1202]: cisa_kev
+                - cell "—" [ref=e1203]
+              - row "CRITICAL CVE-2013-0625 Copy value Adobe ColdFusion 9.0, 9.0.1, and 9.0.2, when a password is not configured, allows remote attackers to bypass authentication and possibly execute arbitrary code via unspecified vectors, as exploited in the wild in January 2013. 9.8 CWE-287 cisa_kev —" [ref=e1204]:
+                - cell "CRITICAL" [ref=e1205]:
+                  - generic [ref=e1206]: CRITICAL
+                - cell "CVE-2013-0625 Copy value" [ref=e1207]:
+                  - generic [ref=e1208]:
+                    - link "CVE-2013-0625" [ref=e1209] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2013-0625
+                    - button "Copy value" [ref=e1210]:
+                      - img [ref=e1211]
+                - cell "Adobe ColdFusion 9.0, 9.0.1, and 9.0.2, when a password is not configured, allows remote attackers to bypass authentication and possibly execute arbitrary code via unspecified vectors, as exploited in the wild in January 2013." [ref=e1213]:
+                  - generic "Adobe ColdFusion 9.0, 9.0.1, and 9.0.2, when a password is not configured, allows remote attackers to bypass authentication and possibly execute arbitrary code via unspecified vectors, as exploited in the wild in January 2013." [ref=e1214]
+                - cell "9.8" [ref=e1215]
+                - cell "CWE-287" [ref=e1216]
+                - cell "cisa_kev" [ref=e1217]:
+                  - generic [ref=e1219]: cisa_kev
+                - cell "—" [ref=e1220]
+              - row "CRITICAL CVE-2013-0632 Copy value administrator.cfc in Adobe ColdFusion 9.0, 9.0.1, 9.0.2, and 10 allows remote attackers to bypass authentication and possibly execute arbitrary code by logging in to the RDS component using the default empty password and leveraging this session to access the administrative web interface, as exploited in the wild in January 2013. 9.8 CWE-276 cisa_kev —" [ref=e1221]:
+                - cell "CRITICAL" [ref=e1222]:
+                  - generic [ref=e1223]: CRITICAL
+                - cell "CVE-2013-0632 Copy value" [ref=e1224]:
+                  - generic [ref=e1225]:
+                    - link "CVE-2013-0632" [ref=e1226] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2013-0632
+                    - button "Copy value" [ref=e1227]:
+                      - img [ref=e1228]
+                - cell "administrator.cfc in Adobe ColdFusion 9.0, 9.0.1, 9.0.2, and 10 allows remote attackers to bypass authentication and possibly execute arbitrary code by logging in to the RDS component using the default empty password and leveraging this session to access the administrative web interface, as exploited in the wild in January 2013." [ref=e1230]:
+                  - generic "administrator.cfc in Adobe ColdFusion 9.0, 9.0.1, 9.0.2, and 10 allows remote attackers to bypass authentication and possibly execute arbitrary code by logging in to the RDS component using the default empty password and leveraging this session to access the administrative web interface, as exploited in the wild in January 2013." [ref=e1231]
+                - cell "9.8" [ref=e1232]
+                - cell "CWE-276" [ref=e1233]
+                - cell "cisa_kev" [ref=e1234]:
+                  - generic [ref=e1236]: cisa_kev
+                - cell "—" [ref=e1237]
+              - 'row "CRITICAL CVE-2013-2251 Copy value Apache Struts 2.0.0 through 2.3.15 allows remote attackers to execute arbitrary OGNL expressions via a parameter with a crafted (1) action:, (2) redirect:, or (3) redirectAction: prefix. 9.8 CWE-74 cisa_kev —" [ref=e1238]':
+                - cell "CRITICAL" [ref=e1239]:
+                  - generic [ref=e1240]: CRITICAL
+                - cell "CVE-2013-2251 Copy value" [ref=e1241]:
+                  - generic [ref=e1242]:
+                    - link "CVE-2013-2251" [ref=e1243] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2013-2251
+                    - button "Copy value" [ref=e1244]:
+                      - img [ref=e1245]
+                - 'cell "Apache Struts 2.0.0 through 2.3.15 allows remote attackers to execute arbitrary OGNL expressions via a parameter with a crafted (1) action:, (2) redirect:, or (3) redirectAction: prefix." [ref=e1247]':
+                  - 'generic "Apache Struts 2.0.0 through 2.3.15 allows remote attackers to execute arbitrary OGNL expressions via a parameter with a crafted (1) action:, (2) redirect:, or (3) redirectAction: prefix." [ref=e1248]'
+                - cell "9.8" [ref=e1249]
+                - cell "CWE-74" [ref=e1250]
+                - cell "cisa_kev" [ref=e1251]:
+                  - generic [ref=e1253]: cisa_kev
+                - cell "—" [ref=e1254]
+              - 'row "CRITICAL CVE-2013-2465 Copy value Unspecified vulnerability in the Java Runtime Environment (JRE) component in Oracle Java SE 7 Update 21 and earlier, 6 Update 45 and earlier, and 5.0 Update 45 and earlier, and OpenJDK 7, allows remote attackers to affect confidentiality, integrity, and availability via unknown vectors related to 2D. NOTE: the previous information is from the June 2013 CPU. Oracle has not commented on claims from another vendor that this issue allows remote attackers to bypass the Java sandbox via vectors related to \"Incorrect image channel verification\" in 2D. 9.8 — cisa_kev —" [ref=e1255]':
+                - cell "CRITICAL" [ref=e1256]:
+                  - generic [ref=e1257]: CRITICAL
+                - cell "CVE-2013-2465 Copy value" [ref=e1258]:
+                  - generic [ref=e1259]:
+                    - link "CVE-2013-2465" [ref=e1260] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2013-2465
+                    - button "Copy value" [ref=e1261]:
+                      - img [ref=e1262]
+                - 'cell "Unspecified vulnerability in the Java Runtime Environment (JRE) component in Oracle Java SE 7 Update 21 and earlier, 6 Update 45 and earlier, and 5.0 Update 45 and earlier, and OpenJDK 7, allows remote attackers to affect confidentiality, integrity, and availability via unknown vectors related to 2D. NOTE: the previous information is from the June 2013 CPU. Oracle has not commented on claims from another vendor that this issue allows remote attackers to bypass the Java sandbox via vectors related to \"Incorrect image channel verification\" in 2D." [ref=e1264]':
+                  - 'generic "Unspecified vulnerability in the Java Runtime Environment (JRE) component in Oracle Java SE 7 Update 21 and earlier, 6 Update 45 and earlier, and 5.0 Update 45 and earlier, and OpenJDK 7, allows remote attackers to affect confidentiality, integrity, and availability via unknown vectors related to 2D. NOTE: the previous information is from the June 2013 CPU. Oracle has not commented on claims from another vendor that this issue allows remote attackers to bypass the Java sandbox via vectors related to \"Incorrect image channel verification\" in 2D." [ref=e1265]'
+                - cell "9.8" [ref=e1266]
+                - cell "—" [ref=e1267]
+                - cell "cisa_kev" [ref=e1268]:
+                  - generic [ref=e1270]: cisa_kev
+                - cell "—" [ref=e1271]
+              - row "CRITICAL CVE-2013-2729 Copy value Integer overflow in Adobe Reader and Acrobat 9.x before 9.5.5, 10.x before 10.1.7, and 11.x before 11.0.03 allows attackers to execute arbitrary code via unspecified vectors, a different vulnerability than CVE-2013-2727. 9.8 CWE-190 cisa_kev —" [ref=e1272]:
+                - cell "CRITICAL" [ref=e1273]:
+                  - generic [ref=e1274]: CRITICAL
+                - cell "CVE-2013-2729 Copy value" [ref=e1275]:
+                  - generic [ref=e1276]:
+                    - link "CVE-2013-2729" [ref=e1277] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2013-2729
+                    - button "Copy value" [ref=e1278]:
+                      - img [ref=e1279]
+                - cell "Integer overflow in Adobe Reader and Acrobat 9.x before 9.5.5, 10.x before 10.1.7, and 11.x before 11.0.03 allows attackers to execute arbitrary code via unspecified vectors, a different vulnerability than CVE-2013-2727." [ref=e1281]:
+                  - generic "Integer overflow in Adobe Reader and Acrobat 9.x before 9.5.5, 10.x before 10.1.7, and 11.x before 11.0.03 allows attackers to execute arbitrary code via unspecified vectors, a different vulnerability than CVE-2013-2727." [ref=e1282]
+                - cell "9.8" [ref=e1283]
+                - cell "CWE-190" [ref=e1284]
+                - cell "cisa_kev" [ref=e1285]:
+                  - generic [ref=e1287]: cisa_kev
+                - cell "—" [ref=e1288]
+              - row "CRITICAL CVE-2013-3346 Copy value Adobe Reader and Acrobat 9.x before 9.5.5, 10.x before 10.1.7, and 11.x before 11.0.03 allow attackers to execute arbitrary code or cause a denial of service (memory corruption) via unspecified vectors, a different vulnerability than CVE-2013-2718, CVE-2013-2719, CVE-2013-2720, CVE-2013-2721, CVE-2013-2722, CVE-2013-2723, CVE-2013-2725, CVE-2013-2726, CVE-2013-2731, CVE-2013-2732, CVE-2013-2734, CVE-2013-2735, CVE-2013-2736, CVE-2013-3337, CVE-2013-3338, CVE-2013-3339, CVE-2013-3340, and CVE-2013-3341. 9.8 CWE-787 cisa_kev —" [ref=e1289]:
+                - cell "CRITICAL" [ref=e1290]:
+                  - generic [ref=e1291]: CRITICAL
+                - cell "CVE-2013-3346 Copy value" [ref=e1292]:
+                  - generic [ref=e1293]:
+                    - link "CVE-2013-3346" [ref=e1294] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2013-3346
+                    - button "Copy value" [ref=e1295]:
+                      - img [ref=e1296]
+                - cell "Adobe Reader and Acrobat 9.x before 9.5.5, 10.x before 10.1.7, and 11.x before 11.0.03 allow attackers to execute arbitrary code or cause a denial of service (memory corruption) via unspecified vectors, a different vulnerability than CVE-2013-2718, CVE-2013-2719, CVE-2013-2720, CVE-2013-2721, CVE-2013-2722, CVE-2013-2723, CVE-2013-2725, CVE-2013-2726, CVE-2013-2731, CVE-2013-2732, CVE-2013-2734, CVE-2013-2735, CVE-2013-2736, CVE-2013-3337, CVE-2013-3338, CVE-2013-3339, CVE-2013-3340, and CVE-2013-3341." [ref=e1298]:
+                  - generic "Adobe Reader and Acrobat 9.x before 9.5.5, 10.x before 10.1.7, and 11.x before 11.0.03 allow attackers to execute arbitrary code or cause a denial of service (memory corruption) via unspecified vectors, a different vulnerability than CVE-2013-2718, CVE-2013-2719, CVE-2013-2720, CVE-2013-2721, CVE-2013-2722, CVE-2013-2723, CVE-2013-2725, CVE-2013-2726, CVE-2013-2731, CVE-2013-2732, CVE-2013-2734, CVE-2013-2735, CVE-2013-2736, CVE-2013-3337, CVE-2013-3338, CVE-2013-3339, CVE-2013-3340, and CVE-2013-3341." [ref=e1299]
+                - cell "9.8" [ref=e1300]
+                - cell "CWE-787" [ref=e1301]
+                - cell "cisa_kev" [ref=e1302]:
+                  - generic [ref=e1304]: cisa_kev
+                - cell "—" [ref=e1305]
+              - 'row "CRITICAL CVE-2013-4810 Copy value HP ProCurve Manager (PCM) 3.20 and 4.0, PCM+ 3.20 and 4.0, Identity Driven Manager (IDM) 4.0, and Application Lifecycle Management allow remote attackers to execute arbitrary code via a marshalled object to (1) EJBInvokerServlet or (2) JMXInvokerServlet, aka ZDI-CAN-1760. NOTE: this is probably a duplicate of CVE-2007-1036, CVE-2010-0738, and/or CVE-2012-0874. 9.8 CWE-94 cisa_kev —" [ref=e1306]':
+                - cell "CRITICAL" [ref=e1307]:
+                  - generic [ref=e1308]: CRITICAL
+                - cell "CVE-2013-4810 Copy value" [ref=e1309]:
+                  - generic [ref=e1310]:
+                    - link "CVE-2013-4810" [ref=e1311] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2013-4810
+                    - button "Copy value" [ref=e1312]:
+                      - img [ref=e1313]
+                - 'cell "HP ProCurve Manager (PCM) 3.20 and 4.0, PCM+ 3.20 and 4.0, Identity Driven Manager (IDM) 4.0, and Application Lifecycle Management allow remote attackers to execute arbitrary code via a marshalled object to (1) EJBInvokerServlet or (2) JMXInvokerServlet, aka ZDI-CAN-1760. NOTE: this is probably a duplicate of CVE-2007-1036, CVE-2010-0738, and/or CVE-2012-0874." [ref=e1315]':
+                  - 'generic "HP ProCurve Manager (PCM) 3.20 and 4.0, PCM+ 3.20 and 4.0, Identity Driven Manager (IDM) 4.0, and Application Lifecycle Management allow remote attackers to execute arbitrary code via a marshalled object to (1) EJBInvokerServlet or (2) JMXInvokerServlet, aka ZDI-CAN-1760. NOTE: this is probably a duplicate of CVE-2007-1036, CVE-2010-0738, and/or CVE-2012-0874." [ref=e1316]'
+                - cell "9.8" [ref=e1317]
+                - cell "CWE-94" [ref=e1318]
+                - cell "cisa_kev" [ref=e1319]:
+                  - generic [ref=e1321]: cisa_kev
+                - cell "—" [ref=e1322]
+              - row "CRITICAL CVE-2014-0497 Copy value Integer underflow in Adobe Flash Player before 11.7.700.261 and 11.8.x through 12.0.x before 12.0.0.44 on Windows and Mac OS X, and before 11.2.202.336 on Linux, allows remote attackers to execute arbitrary code via unspecified vectors. 9.8 CWE-191 cisa_kev —" [ref=e1323]:
+                - cell "CRITICAL" [ref=e1324]:
+                  - generic [ref=e1325]: CRITICAL
+                - cell "CVE-2014-0497 Copy value" [ref=e1326]:
+                  - generic [ref=e1327]:
+                    - link "CVE-2014-0497" [ref=e1328] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2014-0497
+                    - button "Copy value" [ref=e1329]:
+                      - img [ref=e1330]
+                - cell "Integer underflow in Adobe Flash Player before 11.7.700.261 and 11.8.x through 12.0.x before 12.0.0.44 on Windows and Mac OS X, and before 11.2.202.336 on Linux, allows remote attackers to execute arbitrary code via unspecified vectors." [ref=e1332]:
+                  - generic "Integer underflow in Adobe Flash Player before 11.7.700.261 and 11.8.x through 12.0.x before 12.0.0.44 on Windows and Mac OS X, and before 11.2.202.336 on Linux, allows remote attackers to execute arbitrary code via unspecified vectors." [ref=e1333]
+                - cell "9.8" [ref=e1334]
+                - cell "CWE-191" [ref=e1335]
+                - cell "cisa_kev" [ref=e1336]:
+                  - generic [ref=e1338]: cisa_kev
+                - cell "—" [ref=e1339]
+              - row "CRITICAL CVE-2014-0546 Copy value Adobe Reader and Acrobat 10.x before 10.1.11 and 11.x before 11.0.08 on Windows allow attackers to bypass a sandbox protection mechanism, and consequently execute native code in a privileged context, via unspecified vectors. 9.8 — cisa_kev —" [ref=e1340]:
+                - cell "CRITICAL" [ref=e1341]:
+                  - generic [ref=e1342]: CRITICAL
+                - cell "CVE-2014-0546 Copy value" [ref=e1343]:
+                  - generic [ref=e1344]:
+                    - link "CVE-2014-0546" [ref=e1345] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2014-0546
+                    - button "Copy value" [ref=e1346]:
+                      - img [ref=e1347]
+                - cell "Adobe Reader and Acrobat 10.x before 10.1.11 and 11.x before 11.0.08 on Windows allow attackers to bypass a sandbox protection mechanism, and consequently execute native code in a privileged context, via unspecified vectors." [ref=e1349]:
+                  - generic "Adobe Reader and Acrobat 10.x before 10.1.11 and 11.x before 11.0.08 on Windows allow attackers to bypass a sandbox protection mechanism, and consequently execute native code in a privileged context, via unspecified vectors." [ref=e1350]
+                - cell "9.8" [ref=e1351]
+                - cell "—" [ref=e1352]
+                - cell "cisa_kev" [ref=e1353]:
+                  - generic [ref=e1355]: cisa_kev
+                - cell "—" [ref=e1356]
+              - row "CRITICAL CVE-2014-0780 Copy value Directory traversal vulnerability in NTWebServer in InduSoft Web Studio 7.1 before SP2 Patch 4 allows remote attackers to read administrative passwords in APP files, and consequently execute arbitrary code, via unspecified web requests. 9.8 CWE-22 cisa_kev —" [ref=e1357]:
+                - cell "CRITICAL" [ref=e1358]:
+                  - generic [ref=e1359]: CRITICAL
+                - cell "CVE-2014-0780 Copy value" [ref=e1360]:
+                  - generic [ref=e1361]:
+                    - link "CVE-2014-0780" [ref=e1362] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2014-0780
+                    - button "Copy value" [ref=e1363]:
+                      - img [ref=e1364]
+                - cell "Directory traversal vulnerability in NTWebServer in InduSoft Web Studio 7.1 before SP2 Patch 4 allows remote attackers to read administrative passwords in APP files, and consequently execute arbitrary code, via unspecified web requests." [ref=e1366]:
+                  - generic "Directory traversal vulnerability in NTWebServer in InduSoft Web Studio 7.1 before SP2 Patch 4 allows remote attackers to read administrative passwords in APP files, and consequently execute arbitrary code, via unspecified web requests." [ref=e1367]
+                - cell "9.8" [ref=e1368]
+                - cell "CWE-22" [ref=e1369]
+                - cell "cisa_kev" [ref=e1370]:
+                  - generic [ref=e1372]: cisa_kev
+                - cell "—" [ref=e1373]
+              - 'row "CRITICAL CVE-2014-1776 Copy value Use-after-free vulnerability in Microsoft Internet Explorer 6 through 11 allows remote attackers to execute arbitrary code or cause a denial of service (memory corruption) via vectors related to the CMarkup::IsConnectedToPrimaryMarkup function, as exploited in the wild in April 2014. NOTE: this issue originally emphasized VGX.DLL, but Microsoft clarified that \"VGX.DLL does not contain the vulnerable code leveraged in this exploit. Disabling VGX.DLL is an exploit-specific workaround that provides an immediate, effective workaround to help block known attacks.\" 9.8 CWE-416 cisa_kev —" [ref=e1374]':
+                - cell "CRITICAL" [ref=e1375]:
+                  - generic [ref=e1376]: CRITICAL
+                - cell "CVE-2014-1776 Copy value" [ref=e1377]:
+                  - generic [ref=e1378]:
+                    - link "CVE-2014-1776" [ref=e1379] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2014-1776
+                    - button "Copy value" [ref=e1380]:
+                      - img [ref=e1381]
+                - 'cell "Use-after-free vulnerability in Microsoft Internet Explorer 6 through 11 allows remote attackers to execute arbitrary code or cause a denial of service (memory corruption) via vectors related to the CMarkup::IsConnectedToPrimaryMarkup function, as exploited in the wild in April 2014. NOTE: this issue originally emphasized VGX.DLL, but Microsoft clarified that \"VGX.DLL does not contain the vulnerable code leveraged in this exploit. Disabling VGX.DLL is an exploit-specific workaround that provides an immediate, effective workaround to help block known attacks.\"" [ref=e1383]':
+                  - 'generic "Use-after-free vulnerability in Microsoft Internet Explorer 6 through 11 allows remote attackers to execute arbitrary code or cause a denial of service (memory corruption) via vectors related to the CMarkup::IsConnectedToPrimaryMarkup function, as exploited in the wild in April 2014. NOTE: this issue originally emphasized VGX.DLL, but Microsoft clarified that \"VGX.DLL does not contain the vulnerable code leveraged in this exploit. Disabling VGX.DLL is an exploit-specific workaround that provides an immediate, effective workaround to help block known attacks.\"" [ref=e1384]'
+                - cell "9.8" [ref=e1385]
+                - cell "CWE-416" [ref=e1386]
+                - cell "cisa_kev" [ref=e1387]:
+                  - generic [ref=e1389]: cisa_kev
+                - cell "—" [ref=e1390]
+              - row "CRITICAL CVE-2014-3931 Copy value fastping.c in MRLG (aka Multi-Router Looking Glass) before 5.5.0 allows remote attackers to cause an arbitrary memory write and memory corruption. 9.8 CWE-119 cisa_kev —" [ref=e1391]:
+                - cell "CRITICAL" [ref=e1392]:
+                  - generic [ref=e1393]: CRITICAL
+                - cell "CVE-2014-3931 Copy value" [ref=e1394]:
+                  - generic [ref=e1395]:
+                    - link "CVE-2014-3931" [ref=e1396] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2014-3931
+                    - button "Copy value" [ref=e1397]:
+                      - img [ref=e1398]
+                - cell "fastping.c in MRLG (aka Multi-Router Looking Glass) before 5.5.0 allows remote attackers to cause an arbitrary memory write and memory corruption." [ref=e1400]:
+                  - generic "fastping.c in MRLG (aka Multi-Router Looking Glass) before 5.5.0 allows remote attackers to cause an arbitrary memory write and memory corruption." [ref=e1401]
+                - cell "9.8" [ref=e1402]
+                - cell "CWE-119" [ref=e1403]
+                - cell "cisa_kev" [ref=e1404]:
+                  - generic [ref=e1406]: cisa_kev
+                - cell "—" [ref=e1407]
+              - 'row "CRITICAL CVE-2014-6271 Copy value GNU Bash through 4.3 processes trailing strings after function definitions in the values of environment variables, which allows remote attackers to execute arbitrary code via a crafted environment, as demonstrated by vectors involving the ForceCommand feature in OpenSSH sshd, the mod_cgi and mod_cgid modules in the Apache HTTP Server, scripts executed by unspecified DHCP clients, and other situations in which setting the environment occurs across a privilege boundary from Bash execution, aka \"ShellShock.\" NOTE: the original fix for this issue was incorrect; CVE-2014-7169 has been assigned to cover the vulnerability that is still present after the incorrect fix. 9.8 CWE-78 cisa_kev —" [ref=e1408]':
+                - cell "CRITICAL" [ref=e1409]:
+                  - generic [ref=e1410]: CRITICAL
+                - cell "CVE-2014-6271 Copy value" [ref=e1411]:
+                  - generic [ref=e1412]:
+                    - link "CVE-2014-6271" [ref=e1413] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2014-6271
+                    - button "Copy value" [ref=e1414]:
+                      - img [ref=e1415]
+                - 'cell "GNU Bash through 4.3 processes trailing strings after function definitions in the values of environment variables, which allows remote attackers to execute arbitrary code via a crafted environment, as demonstrated by vectors involving the ForceCommand feature in OpenSSH sshd, the mod_cgi and mod_cgid modules in the Apache HTTP Server, scripts executed by unspecified DHCP clients, and other situations in which setting the environment occurs across a privilege boundary from Bash execution, aka \"ShellShock.\" NOTE: the original fix for this issue was incorrect; CVE-2014-7169 has been assigned to cover the vulnerability that is still present after the incorrect fix." [ref=e1417]':
+                  - 'generic "GNU Bash through 4.3 processes trailing strings after function definitions in the values of environment variables, which allows remote attackers to execute arbitrary code via a crafted environment, as demonstrated by vectors involving the ForceCommand feature in OpenSSH sshd, the mod_cgi and mod_cgid modules in the Apache HTTP Server, scripts executed by unspecified DHCP clients, and other situations in which setting the environment occurs across a privilege boundary from Bash execution, aka \"ShellShock.\" NOTE: the original fix for this issue was incorrect; CVE-2014-7169 has been assigned to cover the vulnerability that is still present after the incorrect fix." [ref=e1418]'
+                - cell "9.8" [ref=e1419]
+                - cell "CWE-78" [ref=e1420]
+                - cell "cisa_kev" [ref=e1421]:
+                  - generic [ref=e1423]: cisa_kev
+                - cell "—" [ref=e1424]
+              - row "CRITICAL CVE-2014-6287 Copy value The findMacroMarker function in parserLib.pas in Rejetto HTTP File Server (aks HFS or HttpFileServer) 2.3x before 2.3c allows remote attackers to execute arbitrary programs via a %00 sequence in a search action. 9.8 CWE-94 cisa_kev —" [ref=e1425]:
+                - cell "CRITICAL" [ref=e1426]:
+                  - generic [ref=e1427]: CRITICAL
+                - cell "CVE-2014-6287 Copy value" [ref=e1428]:
+                  - generic [ref=e1429]:
+                    - link "CVE-2014-6287" [ref=e1430] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2014-6287
+                    - button "Copy value" [ref=e1431]:
+                      - img [ref=e1432]
+                - cell "The findMacroMarker function in parserLib.pas in Rejetto HTTP File Server (aks HFS or HttpFileServer) 2.3x before 2.3c allows remote attackers to execute arbitrary programs via a %00 sequence in a search action." [ref=e1434]:
+                  - generic "The findMacroMarker function in parserLib.pas in Rejetto HTTP File Server (aks HFS or HttpFileServer) 2.3x before 2.3c allows remote attackers to execute arbitrary programs via a %00 sequence in a search action." [ref=e1435]
+                - cell "9.8" [ref=e1436]
+                - cell "CWE-94" [ref=e1437]
+                - cell "cisa_kev" [ref=e1438]:
+                  - generic [ref=e1440]: cisa_kev
+                - cell "—" [ref=e1441]
+              - 'row "CRITICAL CVE-2014-7169 Copy value GNU Bash through 4.3 bash43-025 processes trailing strings after certain malformed function definitions in the values of environment variables, which allows remote attackers to write to files or possibly have unknown other impact via a crafted environment, as demonstrated by vectors involving the ForceCommand feature in OpenSSH sshd, the mod_cgi and mod_cgid modules in the Apache HTTP Server, scripts executed by unspecified DHCP clients, and other situations in which setting the environment occurs across a privilege boundary from Bash execution. NOTE: this vulnerability exists because of an incomplete fix for CVE-2014-6271. 9.8 CWE-78 cisa_kev —" [ref=e1442]':
+                - cell "CRITICAL" [ref=e1443]:
+                  - generic [ref=e1444]: CRITICAL
+                - cell "CVE-2014-7169 Copy value" [ref=e1445]:
+                  - generic [ref=e1446]:
+                    - link "CVE-2014-7169" [ref=e1447] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2014-7169
+                    - button "Copy value" [ref=e1448]:
+                      - img [ref=e1449]
+                - 'cell "GNU Bash through 4.3 bash43-025 processes trailing strings after certain malformed function definitions in the values of environment variables, which allows remote attackers to write to files or possibly have unknown other impact via a crafted environment, as demonstrated by vectors involving the ForceCommand feature in OpenSSH sshd, the mod_cgi and mod_cgid modules in the Apache HTTP Server, scripts executed by unspecified DHCP clients, and other situations in which setting the environment occurs across a privilege boundary from Bash execution. NOTE: this vulnerability exists because of an incomplete fix for CVE-2014-6271." [ref=e1451]':
+                  - 'generic "GNU Bash through 4.3 bash43-025 processes trailing strings after certain malformed function definitions in the values of environment variables, which allows remote attackers to write to files or possibly have unknown other impact via a crafted environment, as demonstrated by vectors involving the ForceCommand feature in OpenSSH sshd, the mod_cgi and mod_cgid modules in the Apache HTTP Server, scripts executed by unspecified DHCP clients, and other situations in which setting the environment occurs across a privilege boundary from Bash execution. NOTE: this vulnerability exists because of an incomplete fix for CVE-2014-6271." [ref=e1452]'
+                - cell "9.8" [ref=e1453]
+                - cell "CWE-78" [ref=e1454]
+                - cell "cisa_kev" [ref=e1455]:
+                  - generic [ref=e1457]: cisa_kev
+                - cell "—" [ref=e1458]
+              - row "CRITICAL CVE-2014-8361 Copy value The miniigd SOAP service in Realtek SDK allows remote attackers to execute arbitrary code via a crafted NewInternalClient request, as exploited in the wild through 2023. 9.8 — cisa_kev —" [ref=e1459]:
+                - cell "CRITICAL" [ref=e1460]:
+                  - generic [ref=e1461]: CRITICAL
+                - cell "CVE-2014-8361 Copy value" [ref=e1462]:
+                  - generic [ref=e1463]:
+                    - link "CVE-2014-8361" [ref=e1464] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2014-8361
+                    - button "Copy value" [ref=e1465]:
+                      - img [ref=e1466]
+                - cell "The miniigd SOAP service in Realtek SDK allows remote attackers to execute arbitrary code via a crafted NewInternalClient request, as exploited in the wild through 2023." [ref=e1468]:
+                  - generic "The miniigd SOAP service in Realtek SDK allows remote attackers to execute arbitrary code via a crafted NewInternalClient request, as exploited in the wild through 2023." [ref=e1469]
+                - cell "9.8" [ref=e1470]
+                - cell "—" [ref=e1471]
+                - cell "cisa_kev" [ref=e1472]:
+                  - generic [ref=e1474]: cisa_kev
+                - cell "—" [ref=e1475]
+              - row "CRITICAL CVE-2015-0311 Copy value Unspecified vulnerability in Adobe Flash Player through 13.0.0.262 and 14.x, 15.x, and 16.x through 16.0.0.287 on Windows and OS X and through 11.2.202.438 on Linux allows remote attackers to execute arbitrary code via unknown vectors, as exploited in the wild in January 2015. 9.8 — cisa_kev —" [ref=e1476]:
+                - cell "CRITICAL" [ref=e1477]:
+                  - generic [ref=e1478]: CRITICAL
+                - cell "CVE-2015-0311 Copy value" [ref=e1479]:
+                  - generic [ref=e1480]:
+                    - link "CVE-2015-0311" [ref=e1481] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2015-0311
+                    - button "Copy value" [ref=e1482]:
+                      - img [ref=e1483]
+                - cell "Unspecified vulnerability in Adobe Flash Player through 13.0.0.262 and 14.x, 15.x, and 16.x through 16.0.0.287 on Windows and OS X and through 11.2.202.438 on Linux allows remote attackers to execute arbitrary code via unknown vectors, as exploited in the wild in January 2015." [ref=e1485]:
+                  - generic "Unspecified vulnerability in Adobe Flash Player through 13.0.0.262 and 14.x, 15.x, and 16.x through 16.0.0.287 on Windows and OS X and through 11.2.202.438 on Linux allows remote attackers to execute arbitrary code via unknown vectors, as exploited in the wild in January 2015." [ref=e1486]
+                - cell "9.8" [ref=e1487]
+                - cell "—" [ref=e1488]
+                - cell "cisa_kev" [ref=e1489]:
+                  - generic [ref=e1491]: cisa_kev
+                - cell "—" [ref=e1492]
+              - row "CRITICAL CVE-2015-0313 Copy value Use-after-free vulnerability in Adobe Flash Player before 13.0.0.269 and 14.x through 16.x before 16.0.0.305 on Windows and OS X and before 11.2.202.442 on Linux allows remote attackers to execute arbitrary code via unspecified vectors, as exploited in the wild in February 2015, a different vulnerability than CVE-2015-0315, CVE-2015-0320, and CVE-2015-0322. 9.8 CWE-416 cisa_kev —" [ref=e1493]:
+                - cell "CRITICAL" [ref=e1494]:
+                  - generic [ref=e1495]: CRITICAL
+                - cell "CVE-2015-0313 Copy value" [ref=e1496]:
+                  - generic [ref=e1497]:
+                    - link "CVE-2015-0313" [ref=e1498] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2015-0313
+                    - button "Copy value" [ref=e1499]:
+                      - img [ref=e1500]
+                - cell "Use-after-free vulnerability in Adobe Flash Player before 13.0.0.269 and 14.x through 16.x before 16.0.0.305 on Windows and OS X and before 11.2.202.442 on Linux allows remote attackers to execute arbitrary code via unspecified vectors, as exploited in the wild in February 2015, a different vulnerability than CVE-2015-0315, CVE-2015-0320, and CVE-2015-0322." [ref=e1502]:
+                  - generic "Use-after-free vulnerability in Adobe Flash Player before 13.0.0.269 and 14.x through 16.x before 16.0.0.305 on Windows and OS X and before 11.2.202.442 on Linux allows remote attackers to execute arbitrary code via unspecified vectors, as exploited in the wild in February 2015, a different vulnerability than CVE-2015-0315, CVE-2015-0320, and CVE-2015-0322." [ref=e1503]
+                - cell "9.8" [ref=e1504]
+                - cell "CWE-416" [ref=e1505]
+                - cell "cisa_kev" [ref=e1506]:
+                  - generic [ref=e1508]: cisa_kev
+                - cell "—" [ref=e1509]
+              - row "CRITICAL CVE-2015-1187 Copy value The ping tool in multiple D-Link and TRENDnet devices allow remote attackers to execute arbitrary code via the ping_addr parameter to ping.ccp. 9.8 CWE-287 cisa_kev —" [ref=e1510]:
+                - cell "CRITICAL" [ref=e1511]:
+                  - generic [ref=e1512]: CRITICAL
+                - cell "CVE-2015-1187 Copy value" [ref=e1513]:
+                  - generic [ref=e1514]:
+                    - link "CVE-2015-1187" [ref=e1515] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2015-1187
+                    - button "Copy value" [ref=e1516]:
+                      - img [ref=e1517]
+                - cell "The ping tool in multiple D-Link and TRENDnet devices allow remote attackers to execute arbitrary code via the ping_addr parameter to ping.ccp." [ref=e1519]:
+                  - generic "The ping tool in multiple D-Link and TRENDnet devices allow remote attackers to execute arbitrary code via the ping_addr parameter to ping.ccp." [ref=e1520]
+                - cell "9.8" [ref=e1521]
+                - cell "CWE-287" [ref=e1522]
+                - cell "cisa_kev" [ref=e1523]:
+                  - generic [ref=e1525]: cisa_kev
+                - cell "—" [ref=e1526]
+              - row "CRITICAL CVE-2015-1427 Copy value The Groovy scripting engine in Elasticsearch before 1.3.8 and 1.4.x before 1.4.3 allows remote attackers to bypass the sandbox protection mechanism and execute arbitrary shell commands via a crafted script. 9.8 — cisa_kev —" [ref=e1527]:
+                - cell "CRITICAL" [ref=e1528]:
+                  - generic [ref=e1529]: CRITICAL
+                - cell "CVE-2015-1427 Copy value" [ref=e1530]:
+                  - generic [ref=e1531]:
+                    - link "CVE-2015-1427" [ref=e1532] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2015-1427
+                    - button "Copy value" [ref=e1533]:
+                      - img [ref=e1534]
+                - cell "The Groovy scripting engine in Elasticsearch before 1.3.8 and 1.4.x before 1.4.3 allows remote attackers to bypass the sandbox protection mechanism and execute arbitrary shell commands via a crafted script." [ref=e1536]:
+                  - generic "The Groovy scripting engine in Elasticsearch before 1.3.8 and 1.4.x before 1.4.3 allows remote attackers to bypass the sandbox protection mechanism and execute arbitrary shell commands via a crafted script." [ref=e1537]
+                - cell "9.8" [ref=e1538]
+                - cell "—" [ref=e1539]
+                - cell "cisa_kev" [ref=e1540]:
+                  - generic [ref=e1542]: cisa_kev
+                - cell "—" [ref=e1543]
+              - row "CRITICAL CVE-2015-1635 Copy value HTTP.sys in Microsoft Windows 7 SP1, Windows Server 2008 R2 SP1, Windows 8, Windows 8.1, and Windows Server 2012 Gold and R2 allows remote attackers to execute arbitrary code via crafted HTTP requests, aka \"HTTP.sys Remote Code Execution Vulnerability.\" 9.8 CWE-94 cisa_kev —" [ref=e1544]:
+                - cell "CRITICAL" [ref=e1545]:
+                  - generic [ref=e1546]: CRITICAL
+                - cell "CVE-2015-1635 Copy value" [ref=e1547]:
+                  - generic [ref=e1548]:
+                    - link "CVE-2015-1635" [ref=e1549] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2015-1635
+                    - button "Copy value" [ref=e1550]:
+                      - img [ref=e1551]
+                - cell "HTTP.sys in Microsoft Windows 7 SP1, Windows Server 2008 R2 SP1, Windows 8, Windows 8.1, and Windows Server 2012 Gold and R2 allows remote attackers to execute arbitrary code via crafted HTTP requests, aka \"HTTP.sys Remote Code Execution Vulnerability.\"" [ref=e1553]:
+                  - generic "HTTP.sys in Microsoft Windows 7 SP1, Windows Server 2008 R2 SP1, Windows 8, Windows 8.1, and Windows Server 2012 Gold and R2 allows remote attackers to execute arbitrary code via crafted HTTP requests, aka \"HTTP.sys Remote Code Execution Vulnerability.\"" [ref=e1554]
+                - cell "9.8" [ref=e1555]
+                - cell "CWE-94" [ref=e1556]
+                - cell "cisa_kev" [ref=e1557]:
+                  - generic [ref=e1559]: cisa_kev
+                - cell "—" [ref=e1560]
+              - row "CRITICAL CVE-2015-2051 Copy value The D-Link DIR-645 Wired/Wireless Router Rev. Ax with firmware 1.04b12 and earlier allows remote attackers to execute arbitrary commands via a GetDeviceSettings action to the HNAP interface. 9.8 CWE-77 cisa_kev —" [ref=e1561]:
+                - cell "CRITICAL" [ref=e1562]:
+                  - generic [ref=e1563]: CRITICAL
+                - cell "CVE-2015-2051 Copy value" [ref=e1564]:
+                  - generic [ref=e1565]:
+                    - link "CVE-2015-2051" [ref=e1566] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2015-2051
+                    - button "Copy value" [ref=e1567]:
+                      - img [ref=e1568]
+                - cell "The D-Link DIR-645 Wired/Wireless Router Rev. Ax with firmware 1.04b12 and earlier allows remote attackers to execute arbitrary commands via a GetDeviceSettings action to the HNAP interface." [ref=e1570]:
+                  - generic "The D-Link DIR-645 Wired/Wireless Router Rev. Ax with firmware 1.04b12 and earlier allows remote attackers to execute arbitrary commands via a GetDeviceSettings action to the HNAP interface." [ref=e1571]
+                - cell "9.8" [ref=e1572]
+                - cell "CWE-77" [ref=e1573]
+                - cell "cisa_kev" [ref=e1574]:
+                  - generic [ref=e1576]: cisa_kev
+                - cell "—" [ref=e1577]
+              - row "CRITICAL CVE-2015-2590 Copy value Unspecified vulnerability in Oracle Java SE 6u95, 7u80, and 8u45, and Java SE Embedded 7u75 and 8u33 allows remote attackers to affect confidentiality, integrity, and availability via unknown vectors related to Libraries, a different vulnerability than CVE-2015-4732. 9.8 — cisa_kev —" [ref=e1578]:
+                - cell "CRITICAL" [ref=e1579]:
+                  - generic [ref=e1580]: CRITICAL
+                - cell "CVE-2015-2590 Copy value" [ref=e1581]:
+                  - generic [ref=e1582]:
+                    - link "CVE-2015-2590" [ref=e1583] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2015-2590
+                    - button "Copy value" [ref=e1584]:
+                      - img [ref=e1585]
+                - cell "Unspecified vulnerability in Oracle Java SE 6u95, 7u80, and 8u45, and Java SE Embedded 7u75 and 8u33 allows remote attackers to affect confidentiality, integrity, and availability via unknown vectors related to Libraries, a different vulnerability than CVE-2015-4732." [ref=e1587]:
+                  - generic "Unspecified vulnerability in Oracle Java SE 6u95, 7u80, and 8u45, and Java SE Embedded 7u75 and 8u33 allows remote attackers to affect confidentiality, integrity, and availability via unknown vectors related to Libraries, a different vulnerability than CVE-2015-4732." [ref=e1588]
+                - cell "9.8" [ref=e1589]
+                - cell "—" [ref=e1590]
+                - cell "cisa_kev" [ref=e1591]:
+                  - generic [ref=e1593]: cisa_kev
+                - cell "—" [ref=e1594]
+              - row "CRITICAL CVE-2015-3043 Copy value Adobe Flash Player before 13.0.0.281 and 14.x through 17.x before 17.0.0.169 on Windows and OS X and before 11.2.202.457 on Linux allows attackers to execute arbitrary code or cause a denial of service (memory corruption) via unspecified vectors, as exploited in the wild in April 2015, a different vulnerability than CVE-2015-0347, CVE-2015-0350, CVE-2015-0352, CVE-2015-0353, CVE-2015-0354, CVE-2015-0355, CVE-2015-0360, CVE-2015-3038, CVE-2015-3041, and CVE-2015-3042. 9.8 CWE-787 cisa_kev —" [ref=e1595]:
+                - cell "CRITICAL" [ref=e1596]:
+                  - generic [ref=e1597]: CRITICAL
+                - cell "CVE-2015-3043 Copy value" [ref=e1598]:
+                  - generic [ref=e1599]:
+                    - link "CVE-2015-3043" [ref=e1600] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2015-3043
+                    - button "Copy value" [ref=e1601]:
+                      - img [ref=e1602]
+                - cell "Adobe Flash Player before 13.0.0.281 and 14.x through 17.x before 17.0.0.169 on Windows and OS X and before 11.2.202.457 on Linux allows attackers to execute arbitrary code or cause a denial of service (memory corruption) via unspecified vectors, as exploited in the wild in April 2015, a different vulnerability than CVE-2015-0347, CVE-2015-0350, CVE-2015-0352, CVE-2015-0353, CVE-2015-0354, CVE-2015-0355, CVE-2015-0360, CVE-2015-3038, CVE-2015-3041, and CVE-2015-3042." [ref=e1604]:
+                  - generic "Adobe Flash Player before 13.0.0.281 and 14.x through 17.x before 17.0.0.169 on Windows and OS X and before 11.2.202.457 on Linux allows attackers to execute arbitrary code or cause a denial of service (memory corruption) via unspecified vectors, as exploited in the wild in April 2015, a different vulnerability than CVE-2015-0347, CVE-2015-0350, CVE-2015-0352, CVE-2015-0353, CVE-2015-0354, CVE-2015-0355, CVE-2015-0360, CVE-2015-3038, CVE-2015-3041, and CVE-2015-3042." [ref=e1605]
+                - cell "9.8" [ref=e1606]
+                - cell "CWE-787" [ref=e1607]
+                - cell "cisa_kev" [ref=e1608]:
+                  - generic [ref=e1610]: cisa_kev
+                - cell "—" [ref=e1611]
+              - row "CRITICAL CVE-2015-3113 Copy value Heap-based buffer overflow in Adobe Flash Player before 13.0.0.296 and 14.x through 18.x before 18.0.0.194 on Windows and OS X and before 11.2.202.468 on Linux allows remote attackers to execute arbitrary code via unspecified vectors, as exploited in the wild in June 2015. 9.8 CWE-787 cisa_kev —" [ref=e1612]:
+                - cell "CRITICAL" [ref=e1613]:
+                  - generic [ref=e1614]: CRITICAL
+                - cell "CVE-2015-3113 Copy value" [ref=e1615]:
+                  - generic [ref=e1616]:
+                    - link "CVE-2015-3113" [ref=e1617] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2015-3113
+                    - button "Copy value" [ref=e1618]:
+                      - img [ref=e1619]
+                - cell "Heap-based buffer overflow in Adobe Flash Player before 13.0.0.296 and 14.x through 18.x before 18.0.0.194 on Windows and OS X and before 11.2.202.468 on Linux allows remote attackers to execute arbitrary code via unspecified vectors, as exploited in the wild in June 2015." [ref=e1621]:
+                  - generic "Heap-based buffer overflow in Adobe Flash Player before 13.0.0.296 and 14.x through 18.x before 18.0.0.194 on Windows and OS X and before 11.2.202.468 on Linux allows remote attackers to execute arbitrary code via unspecified vectors, as exploited in the wild in June 2015." [ref=e1622]
+                - cell "9.8" [ref=e1623]
+                - cell "CWE-787" [ref=e1624]
+                - cell "cisa_kev" [ref=e1625]:
+                  - generic [ref=e1627]: cisa_kev
+                - cell "—" [ref=e1628]
+              - 'row "CRITICAL CVE-2015-4852 Copy value The WLS Security component in Oracle WebLogic Server 10.3.6.0, 12.1.2.0, 12.1.3.0, and 12.2.1.0 allows remote attackers to execute arbitrary commands via a crafted serialized Java object in T3 protocol traffic to TCP port 7001, related to oracle_common/modules/com.bea.core.apache.commons.collections.jar. NOTE: the scope of this CVE is limited to the WebLogic Server product. 9.8 CWE-502 cisa_kev —" [ref=e1629]':
+                - cell "CRITICAL" [ref=e1630]:
+                  - generic [ref=e1631]: CRITICAL
+                - cell "CVE-2015-4852 Copy value" [ref=e1632]:
+                  - generic [ref=e1633]:
+                    - link "CVE-2015-4852" [ref=e1634] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2015-4852
+                    - button "Copy value" [ref=e1635]:
+                      - img [ref=e1636]
+                - 'cell "The WLS Security component in Oracle WebLogic Server 10.3.6.0, 12.1.2.0, 12.1.3.0, and 12.2.1.0 allows remote attackers to execute arbitrary commands via a crafted serialized Java object in T3 protocol traffic to TCP port 7001, related to oracle_common/modules/com.bea.core.apache.commons.collections.jar. NOTE: the scope of this CVE is limited to the WebLogic Server product." [ref=e1638]':
+                  - 'generic "The WLS Security component in Oracle WebLogic Server 10.3.6.0, 12.1.2.0, 12.1.3.0, and 12.2.1.0 allows remote attackers to execute arbitrary commands via a crafted serialized Java object in T3 protocol traffic to TCP port 7001, related to oracle_common/modules/com.bea.core.apache.commons.collections.jar. NOTE: the scope of this CVE is limited to the WebLogic Server product." [ref=e1639]'
+                - cell "9.8" [ref=e1640]
+                - cell "CWE-502" [ref=e1641]
+                - cell "cisa_kev" [ref=e1642]:
+                  - generic [ref=e1644]: cisa_kev
+                - cell "—" [ref=e1645]
+              - row "CRITICAL CVE-2015-5119 Copy value Use-after-free vulnerability in the ByteArray class in the ActionScript 3 (AS3) implementation in Adobe Flash Player 13.x through 13.0.0.296 and 14.x through 18.0.0.194 on Windows and OS X and 11.x through 11.2.202.468 on Linux allows remote attackers to execute arbitrary code or cause a denial of service (memory corruption) via crafted Flash content that overrides a valueOf function, as exploited in the wild in July 2015. 9.8 CWE-416 cisa_kev —" [ref=e1646]:
+                - cell "CRITICAL" [ref=e1647]:
+                  - generic [ref=e1648]: CRITICAL
+                - cell "CVE-2015-5119 Copy value" [ref=e1649]:
+                  - generic [ref=e1650]:
+                    - link "CVE-2015-5119" [ref=e1651] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2015-5119
+                    - button "Copy value" [ref=e1652]:
+                      - img [ref=e1653]
+                - cell "Use-after-free vulnerability in the ByteArray class in the ActionScript 3 (AS3) implementation in Adobe Flash Player 13.x through 13.0.0.296 and 14.x through 18.0.0.194 on Windows and OS X and 11.x through 11.2.202.468 on Linux allows remote attackers to execute arbitrary code or cause a denial of service (memory corruption) via crafted Flash content that overrides a valueOf function, as exploited in the wild in July 2015." [ref=e1655]:
+                  - generic "Use-after-free vulnerability in the ByteArray class in the ActionScript 3 (AS3) implementation in Adobe Flash Player 13.x through 13.0.0.296 and 14.x through 18.0.0.194 on Windows and OS X and 11.x through 11.2.202.468 on Linux allows remote attackers to execute arbitrary code or cause a denial of service (memory corruption) via crafted Flash content that overrides a valueOf function, as exploited in the wild in July 2015." [ref=e1656]
+                - cell "9.8" [ref=e1657]
+                - cell "CWE-416" [ref=e1658]
+                - cell "cisa_kev" [ref=e1659]:
+                  - generic [ref=e1661]: cisa_kev
+                - cell "—" [ref=e1662]
+              - row "CRITICAL CVE-2015-5122 Copy value Use-after-free vulnerability in the DisplayObject class in the ActionScript 3 (AS3) implementation in Adobe Flash Player 13.x through 13.0.0.302 on Windows and OS X, 14.x through 18.0.0.203 on Windows and OS X, 11.x through 11.2.202.481 on Linux, and 12.x through 18.0.0.204 on Linux Chrome installations allows remote attackers to execute arbitrary code or cause a denial of service (memory corruption) via crafted Flash content that leverages improper handling of the opaqueBackground property, as exploited in the wild in July 2015. 9.8 CWE-416 cisa_kev —" [ref=e1663]:
+                - cell "CRITICAL" [ref=e1664]:
+                  - generic [ref=e1665]: CRITICAL
+                - cell "CVE-2015-5122 Copy value" [ref=e1666]:
+                  - generic [ref=e1667]:
+                    - link "CVE-2015-5122" [ref=e1668] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2015-5122
+                    - button "Copy value" [ref=e1669]:
+                      - img [ref=e1670]
+                - cell "Use-after-free vulnerability in the DisplayObject class in the ActionScript 3 (AS3) implementation in Adobe Flash Player 13.x through 13.0.0.302 on Windows and OS X, 14.x through 18.0.0.203 on Windows and OS X, 11.x through 11.2.202.481 on Linux, and 12.x through 18.0.0.204 on Linux Chrome installations allows remote attackers to execute arbitrary code or cause a denial of service (memory corruption) via crafted Flash content that leverages improper handling of the opaqueBackground property, as exploited in the wild in July 2015." [ref=e1672]:
+                  - generic "Use-after-free vulnerability in the DisplayObject class in the ActionScript 3 (AS3) implementation in Adobe Flash Player 13.x through 13.0.0.302 on Windows and OS X, 14.x through 18.0.0.203 on Windows and OS X, 11.x through 11.2.202.481 on Linux, and 12.x through 18.0.0.204 on Linux Chrome installations allows remote attackers to execute arbitrary code or cause a denial of service (memory corruption) via crafted Flash content that leverages improper handling of the opaqueBackground property, as exploited in the wild in July 2015." [ref=e1673]
+                - cell "9.8" [ref=e1674]
+                - cell "CWE-416" [ref=e1675]
+                - cell "cisa_kev" [ref=e1676]:
+                  - generic [ref=e1678]: cisa_kev
+                - cell "—" [ref=e1679]
+              - row "CRITICAL CVE-2015-5123 Copy value Use-after-free vulnerability in the BitmapData class in the ActionScript 3 (AS3) implementation in Adobe Flash Player 13.x through 13.0.0.302 on Windows and OS X, 14.x through 18.0.0.203 on Windows and OS X, 11.x through 11.2.202.481 on Linux, and 12.x through 18.0.0.204 on Linux Chrome installations allows remote attackers to execute arbitrary code or cause a denial of service (memory corruption) via crafted Flash content that overrides a valueOf function, as exploited in the wild in July 2015. 9.8 CWE-416 cisa_kev —" [ref=e1680]:
+                - cell "CRITICAL" [ref=e1681]:
+                  - generic [ref=e1682]: CRITICAL
+                - cell "CVE-2015-5123 Copy value" [ref=e1683]:
+                  - generic [ref=e1684]:
+                    - link "CVE-2015-5123" [ref=e1685] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2015-5123
+                    - button "Copy value" [ref=e1686]:
+                      - img [ref=e1687]
+                - cell "Use-after-free vulnerability in the BitmapData class in the ActionScript 3 (AS3) implementation in Adobe Flash Player 13.x through 13.0.0.302 on Windows and OS X, 14.x through 18.0.0.203 on Windows and OS X, 11.x through 11.2.202.481 on Linux, and 12.x through 18.0.0.204 on Linux Chrome installations allows remote attackers to execute arbitrary code or cause a denial of service (memory corruption) via crafted Flash content that overrides a valueOf function, as exploited in the wild in July 2015." [ref=e1689]:
+                  - generic "Use-after-free vulnerability in the BitmapData class in the ActionScript 3 (AS3) implementation in Adobe Flash Player 13.x through 13.0.0.302 on Windows and OS X, 14.x through 18.0.0.203 on Windows and OS X, 11.x through 11.2.202.481 on Linux, and 12.x through 18.0.0.204 on Linux Chrome installations allows remote attackers to execute arbitrary code or cause a denial of service (memory corruption) via crafted Flash content that overrides a valueOf function, as exploited in the wild in July 2015." [ref=e1690]
+                - cell "9.8" [ref=e1691]
+                - cell "CWE-416" [ref=e1692]
+                - cell "cisa_kev" [ref=e1693]:
+                  - generic [ref=e1695]: cisa_kev
+                - cell "—" [ref=e1696]
+              - row "CRITICAL CVE-2015-7450 Copy value Serialized-object interfaces in certain IBM analytics, business solutions, cognitive, IT infrastructure, and mobile and social products allow remote attackers to execute arbitrary commands via a crafted serialized Java object, related to the InvokerTransformer class in the Apache Commons Collections library. 9.8 CWE-502 cisa_kev —" [ref=e1697]:
+                - cell "CRITICAL" [ref=e1698]:
+                  - generic [ref=e1699]: CRITICAL
+                - cell "CVE-2015-7450 Copy value" [ref=e1700]:
+                  - generic [ref=e1701]:
+                    - link "CVE-2015-7450" [ref=e1702] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2015-7450
+                    - button "Copy value" [ref=e1703]:
+                      - img [ref=e1704]
+                - cell "Serialized-object interfaces in certain IBM analytics, business solutions, cognitive, IT infrastructure, and mobile and social products allow remote attackers to execute arbitrary commands via a crafted serialized Java object, related to the InvokerTransformer class in the Apache Commons Collections library." [ref=e1706]:
+                  - generic "Serialized-object interfaces in certain IBM analytics, business solutions, cognitive, IT infrastructure, and mobile and social products allow remote attackers to execute arbitrary commands via a crafted serialized Java object, related to the InvokerTransformer class in the Apache Commons Collections library." [ref=e1707]
+                - cell "9.8" [ref=e1708]
+                - cell "CWE-502" [ref=e1709]
+                - cell "cisa_kev" [ref=e1710]:
+                  - generic [ref=e1712]: cisa_kev
+                - cell "—" [ref=e1713]
+              - row "CRITICAL CVE-2015-7755 Copy value Juniper ScreenOS 6.2.0r15 through 6.2.0r18, 6.3.0r12 before 6.3.0r12b, 6.3.0r13 before 6.3.0r13b, 6.3.0r14 before 6.3.0r14b, 6.3.0r15 before 6.3.0r15b, 6.3.0r16 before 6.3.0r16b, 6.3.0r17 before 6.3.0r17b, 6.3.0r18 before 6.3.0r18b, 6.3.0r19 before 6.3.0r19b, and 6.3.0r20 before 6.3.0r21 allows remote attackers to obtain administrative access by entering an unspecified password during a (1) SSH or (2) TELNET session. 9.8 CWE-287 cisa_kev —" [ref=e1714]:
+                - cell "CRITICAL" [ref=e1715]:
+                  - generic [ref=e1716]: CRITICAL
+                - cell "CVE-2015-7755 Copy value" [ref=e1717]:
+                  - generic [ref=e1718]:
+                    - link "CVE-2015-7755" [ref=e1719] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2015-7755
+                    - button "Copy value" [ref=e1720]:
+                      - img [ref=e1721]
+                - cell "Juniper ScreenOS 6.2.0r15 through 6.2.0r18, 6.3.0r12 before 6.3.0r12b, 6.3.0r13 before 6.3.0r13b, 6.3.0r14 before 6.3.0r14b, 6.3.0r15 before 6.3.0r15b, 6.3.0r16 before 6.3.0r16b, 6.3.0r17 before 6.3.0r17b, 6.3.0r18 before 6.3.0r18b, 6.3.0r19 before 6.3.0r19b, and 6.3.0r20 before 6.3.0r21 allows remote attackers to obtain administrative access by entering an unspecified password during a (1) SSH or (2) TELNET session." [ref=e1723]:
+                  - generic "Juniper ScreenOS 6.2.0r15 through 6.2.0r18, 6.3.0r12 before 6.3.0r12b, 6.3.0r13 before 6.3.0r13b, 6.3.0r14 before 6.3.0r14b, 6.3.0r15 before 6.3.0r15b, 6.3.0r16 before 6.3.0r16b, 6.3.0r17 before 6.3.0r17b, 6.3.0r18 before 6.3.0r18b, 6.3.0r19 before 6.3.0r19b, and 6.3.0r20 before 6.3.0r21 allows remote attackers to obtain administrative access by entering an unspecified password during a (1) SSH or (2) TELNET session." [ref=e1724]
+                - cell "9.8" [ref=e1725]
+                - cell "CWE-287" [ref=e1726]
+                - cell "cisa_kev" [ref=e1727]:
+                  - generic [ref=e1729]: cisa_kev
+                - cell "—" [ref=e1730]
+              - row "CRITICAL CVE-2016-10033 Copy value The mailSend function in the isMail transport in PHPMailer before 5.2.18 might allow remote attackers to pass extra parameters to the mail command and consequently execute arbitrary code via a \\\" (backslash double quote) in a crafted Sender property. 9.8 CWE-88 cisa_kev —" [ref=e1731]:
+                - cell "CRITICAL" [ref=e1732]:
+                  - generic [ref=e1733]: CRITICAL
+                - cell "CVE-2016-10033 Copy value" [ref=e1734]:
+                  - generic [ref=e1735]:
+                    - link "CVE-2016-10033" [ref=e1736] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2016-10033
+                    - button "Copy value" [ref=e1737]:
+                      - img [ref=e1738]
+                - cell "The mailSend function in the isMail transport in PHPMailer before 5.2.18 might allow remote attackers to pass extra parameters to the mail command and consequently execute arbitrary code via a \\\" (backslash double quote) in a crafted Sender property." [ref=e1740]:
+                  - generic "The mailSend function in the isMail transport in PHPMailer before 5.2.18 might allow remote attackers to pass extra parameters to the mail command and consequently execute arbitrary code via a \\\" (backslash double quote) in a crafted Sender property." [ref=e1741]
+                - cell "9.8" [ref=e1742]
+                - cell "CWE-88" [ref=e1743]
+                - cell "cisa_kev" [ref=e1744]:
+                  - generic [ref=e1746]: cisa_kev
+                - cell "—" [ref=e1747]
+              - row "CRITICAL CVE-2016-10174 Copy value The NETGEAR WNR2000v5 router contains a buffer overflow in the hidden_lang_avi parameter when invoking the URL /apply.cgi?/lang_check.html. This buffer overflow can be exploited by an unauthenticated attacker to achieve remote code execution. 9.8 CWE-120 cisa_kev —" [ref=e1748]:
+                - cell "CRITICAL" [ref=e1749]:
+                  - generic [ref=e1750]: CRITICAL
+                - cell "CVE-2016-10174 Copy value" [ref=e1751]:
+                  - generic [ref=e1752]:
+                    - link "CVE-2016-10174" [ref=e1753] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2016-10174
+                    - button "Copy value" [ref=e1754]:
+                      - img [ref=e1755]
+                - cell "The NETGEAR WNR2000v5 router contains a buffer overflow in the hidden_lang_avi parameter when invoking the URL /apply.cgi?/lang_check.html. This buffer overflow can be exploited by an unauthenticated attacker to achieve remote code execution." [ref=e1757]:
+                  - generic "The NETGEAR WNR2000v5 router contains a buffer overflow in the hidden_lang_avi parameter when invoking the URL /apply.cgi?/lang_check.html. This buffer overflow can be exploited by an unauthenticated attacker to achieve remote code execution." [ref=e1758]
+                - cell "9.8" [ref=e1759]
+                - cell "CWE-120" [ref=e1760]
+                - cell "cisa_kev" [ref=e1761]:
+                  - generic [ref=e1763]: cisa_kev
+                - cell "—" [ref=e1764]
+              - row "CRITICAL CVE-2016-1019 Copy value Adobe Flash Player 21.0.0.197 and earlier allows remote attackers to cause a denial of service (application crash) or possibly execute arbitrary code via unspecified vectors, as exploited in the wild in April 2016. 9.8 — cisa_kev —" [ref=e1765]:
+                - cell "CRITICAL" [ref=e1766]:
+                  - generic [ref=e1767]: CRITICAL
+                - cell "CVE-2016-1019 Copy value" [ref=e1768]:
+                  - generic [ref=e1769]:
+                    - link "CVE-2016-1019" [ref=e1770] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2016-1019
+                    - button "Copy value" [ref=e1771]:
+                      - img [ref=e1772]
+                - cell "Adobe Flash Player 21.0.0.197 and earlier allows remote attackers to cause a denial of service (application crash) or possibly execute arbitrary code via unspecified vectors, as exploited in the wild in April 2016." [ref=e1774]:
+                  - generic "Adobe Flash Player 21.0.0.197 and earlier allows remote attackers to cause a denial of service (application crash) or possibly execute arbitrary code via unspecified vectors, as exploited in the wild in April 2016." [ref=e1775]
+                - cell "9.8" [ref=e1776]
+                - cell "—" [ref=e1777]
+                - cell "cisa_kev" [ref=e1778]:
+                  - generic [ref=e1780]: cisa_kev
+                - cell "—" [ref=e1781]
+              - row "CRITICAL CVE-2016-1555 Copy value (1) boardData102.php, (2) boardData103.php, (3) boardDataJP.php, (4) boardDataNA.php, and (5) boardDataWW.php in Netgear WN604 before 3.3.3 and WN802Tv2, WNAP210v2, WNAP320, WNDAP350, WNDAP360, and WNDAP660 before 3.5.5.0 allow remote attackers to execute arbitrary commands. 9.8 CWE-77 cisa_kev —" [ref=e1782]:
+                - cell "CRITICAL" [ref=e1783]:
+                  - generic [ref=e1784]: CRITICAL
+                - cell "CVE-2016-1555 Copy value" [ref=e1785]:
+                  - generic [ref=e1786]:
+                    - link "CVE-2016-1555" [ref=e1787] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2016-1555
+                    - button "Copy value" [ref=e1788]:
+                      - img [ref=e1789]
+                - cell "(1) boardData102.php, (2) boardData103.php, (3) boardDataJP.php, (4) boardDataNA.php, and (5) boardDataWW.php in Netgear WN604 before 3.3.3 and WN802Tv2, WNAP210v2, WNAP320, WNDAP350, WNDAP360, and WNDAP660 before 3.5.5.0 allow remote attackers to execute arbitrary commands." [ref=e1791]:
+                  - generic "(1) boardData102.php, (2) boardData103.php, (3) boardDataJP.php, (4) boardDataNA.php, and (5) boardDataWW.php in Netgear WN604 before 3.3.3 and WN802Tv2, WNAP210v2, WNAP320, WNDAP350, WNDAP360, and WNDAP660 before 3.5.5.0 allow remote attackers to execute arbitrary commands." [ref=e1792]
+                - cell "9.8" [ref=e1793]
+                - cell "CWE-77" [ref=e1794]
+                - cell "cisa_kev" [ref=e1795]:
+                  - generic [ref=e1797]: cisa_kev
+                - cell "—" [ref=e1798]
+              - row "CRITICAL CVE-2016-20017 Copy value D-Link DSL-2750B devices before 1.05 allow remote unauthenticated command injection via the login.cgi cli parameter, as exploited in the wild in 2016 through 2022. 9.8 CWE-77 cisa_kev —" [ref=e1799]:
+                - cell "CRITICAL" [ref=e1800]:
+                  - generic [ref=e1801]: CRITICAL
+                - cell "CVE-2016-20017 Copy value" [ref=e1802]:
+                  - generic [ref=e1803]:
+                    - link "CVE-2016-20017" [ref=e1804] [cursor=pointer]:
+                      - /url: /cti/cves/CVE-2016-20017
+                    - button "Copy value" [ref=e1805]:
+                      - img [ref=e1806]
+                - cell "D-Link DSL-2750B devices before 1.05 allow remote unauthenticated command injection via the login.cgi cli parameter, as exploited in the wild in 2016 through 2022." [ref=e1808]:
+                  - generic "D-Link DSL-2750B devices before 1.05 allow remote unauthenticated command injection via the login.cgi cli parameter, as exploited in the wild in 2016 through 2022." [ref=e1809]
+                - cell "9.8" [ref=e1810]
+                - cell "CWE-77" [ref=e1811]
+                - cell "cisa_kev" [ref=e1812]:
+                  - generic [ref=e1814]: cisa_kev
+                - cell "—" [ref=e1815]
+          - generic [ref=e1816]:
+            - generic [ref=e1817]: 1–100 of 1,589
+            - generic [ref=e1818]:
+              - button "Previous page" [disabled] [ref=e1819]:
+                - img [ref=e1820]
+                - text: Prev
+              - button "Page 1" [ref=e1822]: "1"
+              - button "Page 2" [ref=e1823]: "2"
+              - generic [ref=e1824]: …
+              - button "Page 16" [ref=e1825]: "16"
+              - button "Next page" [ref=e1826]:
+                - text: Next
+                - img [ref=e1827]

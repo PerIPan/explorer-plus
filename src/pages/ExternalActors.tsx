@@ -146,32 +146,9 @@ function ActorDetailModal({ actor, onClose }: { actor: ExternalActor; onClose: (
   );
 }
 
-/** Expandable row showing description and reference links. */
-function ExpandedRow({ actor }: { actor: ExternalActor }) {
-  return (
-    <tr className="bg-[var(--surface-alt)] border-b border-[var(--border-color)]">
-      <td colSpan={7} className="px-6 py-4">
-        <div className="space-y-3">
-          {actor.description && (
-            <p className="text-sm text-[var(--text-secondary)] leading-relaxed max-w-4xl">
-              {actor.description}
-            </p>
-          )}
-          {actor.refs && actor.refs.length > 0 && (
-            <RefsChevron refs={actor.refs} />
-          )}
-          {!actor.description && (!actor.refs || actor.refs.length === 0) && (
-            <span className="text-xs text-[var(--text-secondary)]">No additional details available.</span>
-          )}
-        </div>
-      </td>
-    </tr>
-  );
-}
 
 export function ExternalActors() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [modalActor, setModalActor] = useState<ExternalActor | null>(null);
   const [search, setSearch] = useState('');
 
@@ -212,10 +189,6 @@ export function ExternalActors() {
     });
   }
 
-  function toggleExpand(id: string) {
-    setExpandedId((prev) => (prev === id ? null : id));
-  }
-
   // Unique country options from all loaded data for the dropdown
   const countryOptions = Array.from(
     new Set((data?.data ?? []).map((a) => a.country).filter(Boolean) as string[]),
@@ -241,30 +214,6 @@ export function ExternalActors() {
   };
 
   const columns: ColumnDef<ExternalActor>[] = [
-    {
-      key: 'expand',
-      header: '',
-      width: '40px',
-      render: (row) => (
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); toggleExpand(row.id); }}
-          aria-label={expandedId === row.id ? 'Collapse row' : 'Expand row'}
-          className="text-[var(--text-secondary)] hover:text-[var(--accent-teal)] transition-colors"
-        >
-          <svg
-            className={`w-3.5 h-3.5 transition-transform duration-150 ${expandedId === row.id ? 'rotate-90' : ''}`}
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2}
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
-      ),
-    },
     {
       key: 'name',
       header: 'Name',
@@ -440,19 +389,17 @@ export function ExternalActors() {
 
               {!isLoading &&
                 filteredData.map((row, rowIndex) => (
-                  <React.Fragment key={row.id}>
-                    <tr
-                      key={row.id}
-                      className={`border-b border-[var(--border-color)] ${rowIndex % 2 === 0 ? 'bg-[var(--surface-card)]' : 'bg-[var(--surface-base)]'} hover:bg-[var(--teal-ghost)] transition-colors duration-100`}
-                    >
-                      {columns.map((col) => (
-                        <td key={col.key} className="px-4 py-3 text-[var(--text-primary)]">
-                          {col.render ? col.render(row) : String((row as unknown as Record<string, unknown>)[col.key] ?? '')}
-                        </td>
-                      ))}
-                    </tr>
-                    {expandedId === row.id && <ExpandedRow key={`${row.id}-exp`} actor={row} />}
-                  </React.Fragment>
+                  <tr
+                    key={row.id}
+                    onClick={() => setModalActor(row)}
+                    className={`border-b border-[var(--border-color)] cursor-pointer ${rowIndex % 2 === 0 ? 'bg-[var(--surface-card)]' : 'bg-[var(--surface-base)]'} hover:bg-[var(--teal-ghost)] transition-colors duration-100`}
+                  >
+                    {columns.map((col) => (
+                      <td key={col.key} className="px-4 py-3 text-[var(--text-primary)]">
+                        {col.render ? col.render(row) : String((row as unknown as Record<string, unknown>)[col.key] ?? '')}
+                      </td>
+                    ))}
+                  </tr>
                 ))}
             </tbody>
           </table>
