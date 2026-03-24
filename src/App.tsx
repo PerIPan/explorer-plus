@@ -156,7 +156,7 @@ function Layout() {
             onClick={e => e.stopPropagation()}
           >
             <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border-color)]">
-              <h2 className="text-lg font-semibold text-[var(--text-primary)]">About ATT&CK Explorer Plus (CLA)</h2>
+              <h2 className="text-lg font-semibold text-[var(--text-primary)]">About MITRE Explorer Plus</h2>
               <button onClick={() => setHelpOpen(false)} className="p-2 rounded-md text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--hover-overlay)]">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -165,7 +165,7 @@ function Layout() {
             </div>
             <div className="px-6 py-5 space-y-4 text-sm text-[var(--text-primary)] leading-relaxed">
               <p>
-                <strong>ATT&CK Explorer Plus</strong> — a threat intelligence platform on{' '}
+                <strong>MITRE Explorer Plus</strong> — a threat intelligence platform on{' '}
                 <em>MITRE ATT&CK</em>. One interface for adversary behavior, detection, and compliance.
               </p>
               <ul className="space-y-2 pl-4 list-disc marker:text-[var(--accent-teal)]">
