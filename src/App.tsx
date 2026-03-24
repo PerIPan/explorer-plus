@@ -100,7 +100,7 @@ function Layout() {
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       {/* Main area pushed right of the fixed sidebar on lg+ */}
-      <div className="flex-1 flex flex-col lg:ml-60 min-h-screen">
+      <div className="flex-1 flex flex-col lg:ml-52 min-h-screen">
         {/* Top header bar */}
         <header className="sticky top-0 z-30 flex items-center gap-4 px-6 py-3 bg-[var(--surface-card)] shadow-sm border-b border-[var(--border-color)]">
           {/* Hamburger — visible only below lg */}

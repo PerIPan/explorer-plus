@@ -136,7 +136,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   return (
     <aside
       className={[
-        'fixed top-0 left-0 h-screen w-60 bg-[var(--surface-card)] border-r border-[var(--border-color)] flex flex-col z-50 overflow-y-auto',
+        'fixed top-0 left-0 h-screen w-52 bg-[var(--surface-card)] border-r border-[var(--border-color)] flex flex-col z-50 overflow-y-auto',
         'transition-transform duration-200 ease-in-out',
         open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
       ].join(' ')}
@@ -146,9 +146,9 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       <div className="px-4 py-5 border-b border-[var(--border-color)] flex items-center justify-between">
         <Link to="/" className="group">
           <div className="text-[var(--accent-teal)] font-bold text-base tracking-widest uppercase group-hover:text-[var(--accent-teal-light)] transition-colors">
-            MITRE ATT&amp;CK
+            MITRE EXPLORER
           </div>
-          <div className="text-[var(--text-secondary)] text-xs mt-0.5 group-hover:text-[var(--text-primary)] transition-colors">Explorer Plus</div>
+          <div className="text-[var(--text-secondary)] text-[10px] mt-0.5 group-hover:text-[var(--text-primary)] transition-colors">Plus</div>
         </Link>
         {/* Close button — visible only below lg */}
         <button

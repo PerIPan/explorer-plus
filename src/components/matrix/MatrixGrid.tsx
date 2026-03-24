@@ -88,9 +88,11 @@ export function MatrixGrid({ data, filterText = '', actorOverlay }: MatrixGridPr
                     sticky top-0 z-10 hover:border-[var(--yellow-dim)] hover:bg-[var(--yellow-faint)] transition-colors
                   "
                 >
-                  {col.tactic.domain && col.tactic.domain !== 'enterprise-attack' && (
-                    <div className="text-[8px] font-medium text-[var(--accent-orange)] mb-0.5 uppercase tracking-widest">
-                      {col.tactic.domain.replace('-attack', '')}
+                  {col.tactic.domain && (
+                    <div className={`text-[8px] font-medium mb-0.5 uppercase tracking-widest ${
+                      col.tactic.domain === 'enterprise-attack' ? 'text-[var(--text-secondary)]' : 'text-[var(--accent-orange)]'
+                    }`}>
+                      {col.tactic.domain.replace('-attack', '').replace('enterprise', 'ent')}
                     </div>
                   )}
                   <div>{col.tactic.name}</div>

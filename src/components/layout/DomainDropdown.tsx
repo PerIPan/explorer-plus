@@ -2,7 +2,7 @@ import { useDomain, DEFAULT_DOMAIN } from '../../contexts/DomainContext';
 
 export function DomainDropdown() {
   const { domain, setDomain, domains } = useDomain();
-  const isNonDefault = domain !== DEFAULT_DOMAIN && domain !== 'all';
+  const isNonDefault = domain !== DEFAULT_DOMAIN;
 
   return (
     <div className="flex items-center gap-2">
