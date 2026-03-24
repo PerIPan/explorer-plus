@@ -180,6 +180,15 @@ export function TechniquesList() {
           <span className="text-[var(--text-secondary)] text-xs">—</span>
         ),
     },
+    {
+      key: 'domain',
+      header: 'Domain',
+      width: '80px',
+      render: (row) =>
+        row.domain ? (
+          <span className="text-[10px] text-[var(--text-secondary)] uppercase">{row.domain.replace('-attack', '')}</span>
+        ) : null,
+    },
   ];
 
   return (

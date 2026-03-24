@@ -50,7 +50,7 @@ export function SectorDropdown() {
               value={s.slug ?? ''}
               className="bg-[var(--surface-deep)] text-[var(--text-primary)]"
             >
-              {shortName(s.name)}
+              {shortName(s.name)} ({s.groupCount})
             </option>
           ))}
         </select>

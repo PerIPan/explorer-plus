@@ -510,6 +510,12 @@ export function TechniqueDetail() {
 
       {/* Metadata strip */}
       <div className="flex flex-wrap gap-4 text-sm bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg px-4 py-3">
+        {data.domain && (
+          <div className="flex items-center gap-2">
+            <span className="text-[var(--text-secondary)]">Domain:</span>
+            <Badge label={data.domain.replace('-attack', '')} variant="neutral" />
+          </div>
+        )}
         {data.tactics && data.tactics.length > 0 && (
           <div className="flex items-center gap-2">
             <span className="text-[var(--text-secondary)]">Tactic:</span>
