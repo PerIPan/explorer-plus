@@ -27,8 +27,8 @@ export function TacticBarChart({ data, onBarClick }: TacticBarChartProps) {
   // Add domain prefix for non-enterprise tactics (visible in "All Domains" mode)
   const chartData = data.map((d) => ({
     ...d,
-    label: d.domain && d.domain !== 'enterprise-attack'
-      ? `[${d.domain.replace('-attack', '').toUpperCase()}] ${d.tacticName}`
+    label: d.domain
+      ? `[${d.domain.replace('-attack', '').replace('enterprise', 'ENT').toUpperCase()}] ${d.tacticName}`
       : d.tacticName,
   }));
 
