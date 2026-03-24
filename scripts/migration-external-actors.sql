@@ -9,6 +9,12 @@ CREATE TABLE IF NOT EXISTS external_actors (
   refs TEXT[],
   mitre_group_id VARCHAR(20),
   uuid VARCHAR(100) UNIQUE,
+  motivation TEXT,
+  first_seen VARCHAR(50),
+  suspected_victims TEXT[],
+  target_categories TEXT[],
+  suspected_state_sponsor VARCHAR(100),
+  attribution_confidence VARCHAR(50),
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now()
 );

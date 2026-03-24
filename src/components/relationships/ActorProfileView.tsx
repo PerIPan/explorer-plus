@@ -3,45 +3,8 @@ import { useGroup, useCampaign, useExternalActorByGroup, useExternalActorByName 
 import { EntityLink } from '../shared/EntityLink';
 import { Badge } from '../shared/Badge';
 import { sanitize, sanitizeMarkdown } from '../../lib/sanitize';
+import { RefsChevron } from '../shared/RefsChevron';
 import type { GroupTechnique, GroupSoftware, GroupCampaign, GroupSector, ExternalActor } from '../../lib/types';
-
-// ── Tactic ordering ────────────────────────────────────────────────────────────
-
-const TACTIC_ORDER = [
-  'Reconnaissance',
-  'Resource Development',
-  'Initial Access',
-  'Execution',
-  'Persistence',
-  'Privilege Escalation',
-  'Defense Evasion',
-  'Credential Access',
-  'Discovery',
-  'Lateral Movement',
-  'Collection',
-  'Command and Control',
-  'Exfiltration',
-  'Impact',
-];
-
-/** Group techniques by their tactic prefix (heuristic: procedure context not available; use technique name patterns).
- *  The group detail API does NOT return tactic info per technique — we derive tactic from the procedure/name
- *  when the API enriches it. For now we show techniques grouped by platform as a fallback.
- *  To stay honest with real data, we parse the attackId parent prefix for sub-techniques.
- */
-function groupByTactic(techniques: GroupTechnique[]): Map<string, GroupTechnique[]> {
-  // The group detail endpoint does not include tactic names per technique.
-  // We bucket by "no tactic info" and expose the flat list to avoid inventing data.
-  const map = new Map<string, GroupTechnique[]>();
-  for (const t of techniques) {
-    // Sub-techniques share a parent prefix (e.g. T1059.001 → T1059)
-    const bucket = 'All Techniques';
-    const existing = map.get(bucket) ?? [];
-    existing.push(t);
-    map.set(bucket, existing);
-  }
-  return map;
-}
 
 // ── Collapsible section ────────────────────────────────────────────────────────
 
@@ -61,6 +24,7 @@ function CollapsibleSection({ title, count, badge, defaultOpen = false, children
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
         className="w-full flex items-center justify-between px-4 py-3 bg-[var(--surface-card)] hover:bg-[var(--surface-base)] transition-colors text-left gap-3"
       >
         <div className="flex items-center gap-2 min-w-0">
@@ -386,22 +350,7 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
               </div>
             )}
             {actor.refs && actor.refs.length > 0 && (
-              <div>
-                <span className="text-xs text-[var(--text-secondary)]">References:</span>
-                <div className="flex flex-wrap gap-2 mt-1">
-                  {actor.refs.map((ref, i) => (
-                    <a
-                      key={i}
-                      href={ref}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-[var(--accent-teal)] hover:underline break-all"
-                    >
-                      {ref}
-                    </a>
-                  ))}
-                </div>
-              </div>
+              <RefsChevron refs={actor.refs} />
             )}
             {actor.mitreGroupId && (
               <div className="flex items-center gap-2 pt-1">
@@ -552,9 +501,7 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
                     </div>
                   )}
                   {actor.refs && actor.refs.length > 0 && (
-                    <div>
-                      <span className="text-xs text-[var(--text-secondary)]">{actor.refs.length} references</span>
-                    </div>
+                    <RefsChevron refs={actor.refs} />
                   )}
                 </div>
               ))}

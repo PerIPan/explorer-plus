@@ -26,32 +26,32 @@ interface ModelEdge {
 function makeNodes(c: ReturnType<typeof useThemeColors>): ModelNode[] {
   const alpha = (hex: string, a: string) => `${hex}${a}`;
   return [
-    { id: 'technique', label: 'Technique', x: 550, y: 330, color: c.accentTeal, bg: alpha(c.accentTeal, '18'), path: '/techniques', description: 'Attack methods and sub-techniques used by adversaries', category: 'core', scale: 1.8 },
-    { id: 'tactic', label: 'Tactic', x: 550, y: 120, color: c.accentYellow, bg: alpha(c.accentYellow, '18'), path: '/tactics', description: 'Kill chain phases: Reconnaissance to Impact', category: 'core' },
-    { id: 'group', label: 'Threat Group', x: 160, y: 200, color: c.accentOrange, bg: alpha(c.accentOrange, '18'), path: '/groups', description: 'Tracked adversary groups (APT29, Lazarus, etc.)', category: 'core' },
-    { id: 'software', label: 'Software', x: 160, y: 400, color: c.accentPurple, bg: alpha(c.accentPurple, '18'), path: '/software', description: 'Malware and tools used in attacks', category: 'core' },
-    { id: 'campaign', label: 'Campaign', x: 340, y: 120, color: c.accentBlue, bg: alpha(c.accentBlue, '18'), path: '/campaigns', description: 'Named intrusion operations with timelines', category: 'core' },
-    { id: 'sector', label: 'Sector', x: 50, y: 100, color: c.accentPink, bg: alpha(c.accentPink, '18'), path: '/sectors', description: 'Industries targeted by threat groups', category: 'core' },
-    { id: 'mitigation', label: 'Mitigation', x: 850, y: 160, color: c.accentGreen, bg: alpha(c.accentGreen, '18'), path: '/mitigations', description: 'Countermeasures to prevent techniques', category: 'defensive' },
-    { id: 'sigma', label: 'Sigma Rules', x: 850, y: 370, color: '#c084fc', bg: '#c084fc18', path: '/cti/sigma', description: 'Detection signatures from SigmaHQ mapped to techniques', category: 'defensive' },
-    { id: 'nist', label: 'NIST 800-53', x: 1050, y: 160, color: '#38bdf8', bg: '#38bdf818', path: '/frameworks/nist', description: 'Federal security controls mapped to ATT&CK techniques', category: 'compliance' },
-    { id: 'engage', label: 'MITRE Engage', x: 1050, y: 330, color: '#fb923c', bg: '#fb923c18', path: '/frameworks/engage', description: 'Adversary deception & engagement activities per technique', category: 'compliance' },
-    { id: 'react', label: 'RE&CT', x: 1050, y: 500, color: '#4ade80', bg: '#4ade8018', path: '/frameworks/react', description: 'Incident response playbooks and actions per technique', category: 'compliance' },
-    { id: 'report', label: 'Threat Reports', x: 200, y: 490, color: c.accentOrange, bg: alpha(c.accentOrange, '18'), path: '/cti/reports', description: 'Live threat intelligence from OTX, RSS feeds', category: 'intelligence' },
-    { id: 'cve', label: 'CVEs', x: 380, y: 500, color: c.accentPink, bg: alpha(c.accentPink, '18'), path: '/cti/cves', description: 'Known vulnerabilities enriched with NVD metadata', category: 'intelligence' },
-    { id: 'nvd', label: 'NVD', x: 260, y: 555, color: '#38bdf8', bg: '#38bdf818', path: '/cti/cves', description: 'National Vulnerability Database — CVSS scores, CWE, descriptions', category: 'intelligence' },
-    { id: 'ioc', label: 'IOCs', x: 550, y: 500, color: '#fb923c', bg: '#fb923c18', path: '/cti/iocs', description: 'Hashes, domains, IPs from OTX, ThreatFox, MalwareBazaar', category: 'intelligence' },
-    { id: 'virustotal', label: 'VirusTotal', x: 680, y: 555, color: '#3b82f6', bg: '#3b82f618', path: '/cti/iocs', description: 'Sandbox verdicts and ATT&CK techniques for file hashes', category: 'intelligence' },
-    { id: 'atomic', label: 'Atomic Tests', x: 750, y: 490, color: '#ef4444', bg: '#ef444418', path: '/techniques', description: 'Red team test procedures from Atomic Red Team per technique', category: 'intelligence' },
-    { id: 'd3fend', label: 'D3FEND', x: 900, y: 500, color: c.accentGreen, bg: alpha(c.accentGreen, '18'), path: '/techniques', description: 'Defensive countermeasures from MITRE D3FEND', category: 'intelligence' },
-    { id: 'thaicert', label: 'ETDA Actors', x: 50, y: 260, color: c.accentNeutral, bg: alpha(c.accentNeutral, '18'), path: '/external-actors', description: '500+ extended threat actors from ThaiCERT encyclopedia', category: 'intelligence' },
+    { id: 'technique', label: 'Technique', x: 550, y: 280, color: c.accentTeal, bg: alpha(c.accentTeal, '18'), path: '/techniques', description: 'Attack methods and sub-techniques used by adversaries', category: 'core', scale: 1.4 },
+    { id: 'tactic', label: 'Tactic', x: 550, y: 80, color: c.accentYellow, bg: alpha(c.accentYellow, '18'), path: '/tactics', description: 'Kill chain phases: Reconnaissance to Impact', category: 'core' },
+    { id: 'group', label: 'Threat Group', x: 160, y: 160, color: c.accentOrange, bg: alpha(c.accentOrange, '18'), path: '/groups', description: 'Tracked adversary groups (APT29, Lazarus, etc.)', category: 'core' },
+    { id: 'software', label: 'Software', x: 160, y: 340, color: c.accentPurple, bg: alpha(c.accentPurple, '18'), path: '/software', description: 'Malware and tools used in attacks', category: 'core' },
+    { id: 'campaign', label: 'Campaign', x: 340, y: 80, color: c.accentBlue, bg: alpha(c.accentBlue, '18'), path: '/campaigns', description: 'Named intrusion operations with timelines', category: 'core' },
+    { id: 'sector', label: 'Sector', x: 60, y: 60, color: c.accentPink, bg: alpha(c.accentPink, '18'), path: '/sectors', description: 'Industries targeted by threat groups', category: 'core' },
+    { id: 'mitigation', label: 'Mitigation', x: 850, y: 120, color: c.accentGreen, bg: alpha(c.accentGreen, '18'), path: '/mitigations', description: 'Countermeasures to prevent techniques', category: 'defensive' },
+    { id: 'sigma', label: 'Sigma Rules', x: 850, y: 320, color: '#c084fc', bg: '#c084fc18', path: '/cti/sigma', description: 'Detection signatures from SigmaHQ mapped to techniques', category: 'defensive' },
+    { id: 'nist', label: 'NIST 800-53', x: 1050, y: 120, color: '#38bdf8', bg: '#38bdf818', path: '/frameworks/nist', description: 'Federal security controls mapped to ATT&CK techniques', category: 'compliance' },
+    { id: 'engage', label: 'MITRE Engage', x: 1050, y: 290, color: '#fb923c', bg: '#fb923c18', path: '/frameworks/engage', description: 'Adversary deception & engagement activities per technique', category: 'compliance' },
+    { id: 'react', label: 'RE&CT', x: 1050, y: 430, color: '#4ade80', bg: '#4ade8018', path: '/frameworks/react', description: 'Incident response playbooks and actions per technique', category: 'compliance' },
+    { id: 'report', label: 'Threat Reports', x: 200, y: 420, color: c.accentOrange, bg: alpha(c.accentOrange, '18'), path: '/cti/reports', description: 'Live threat intelligence from OTX, RSS feeds', category: 'intelligence' },
+    { id: 'cve', label: 'CVEs', x: 380, y: 430, color: c.accentPink, bg: alpha(c.accentPink, '18'), path: '/cti/cves', description: 'Known vulnerabilities enriched with NVD metadata', category: 'intelligence' },
+    { id: 'nvd', label: 'NVD', x: 260, y: 480, color: '#38bdf8', bg: '#38bdf818', path: '/cti/cves', description: 'National Vulnerability Database — CVSS scores, CWE, descriptions', category: 'intelligence' },
+    { id: 'ioc', label: 'IOCs', x: 550, y: 430, color: '#fb923c', bg: '#fb923c18', path: '/cti/iocs', description: 'Hashes, domains, IPs from OTX, ThreatFox, MalwareBazaar', category: 'intelligence' },
+    { id: 'virustotal', label: 'VirusTotal', x: 680, y: 480, color: '#3b82f6', bg: '#3b82f618', path: '/cti/iocs', description: 'Sandbox verdicts and ATT&CK techniques for file hashes', category: 'intelligence' },
+    { id: 'atomic', label: 'Atomic Tests', x: 750, y: 420, color: '#ef4444', bg: '#ef444418', path: '/techniques', description: 'Red team test procedures from Atomic Red Team per technique', category: 'intelligence' },
+    { id: 'd3fend', label: 'D3FEND', x: 900, y: 430, color: c.accentGreen, bg: alpha(c.accentGreen, '18'), path: '/techniques', description: 'Defensive countermeasures from MITRE D3FEND', category: 'intelligence' },
+    { id: 'thaicert', label: 'ETDA Actors', x: 85, y: 250, color: c.accentNeutral, bg: alpha(c.accentNeutral, '18'), path: '/external-actors', description: '500+ extended threat actors from ThaiCERT encyclopedia', category: 'intelligence' },
   ];
 }
 
 const EDGES: ModelEdge[] = [
   { from: 'group', to: 'technique', label: 'uses' },
   { from: 'group', to: 'software', label: 'uses' },
-  { from: 'group', to: 'campaign', label: 'attributed to' },
+  { from: 'campaign', to: 'group', label: 'attributed to' },
   { from: 'software', to: 'technique', label: 'implements' },
   { from: 'campaign', to: 'technique', label: 'uses' },
   { from: 'technique', to: 'tactic', label: 'accomplishes' },
@@ -75,20 +75,33 @@ const EDGES: ModelEdge[] = [
 function getEdgePath(from: ModelNode, to: ModelNode): { path: string; midX: number; midY: number; angle: number } {
   const dx = to.x - from.x;
   const dy = to.y - from.y;
+  const angle = Math.atan2(dy, dx);
+
+  // Calculate actual ellipse radii for each node
+  const fromScale = from.scale ?? 1;
+  const fromRx = Math.max(48, from.label.length * 5.5 + 10) * fromScale;
+  const fromRy = 26 * fromScale;
+
+  const toScale = to.scale ?? 1;
+  const toRx = Math.max(48, to.label.length * 5.5 + 10) * toScale;
+  const toRy = 26 * toScale;
+
+  // Ellipse boundary point: parametric form
+  const fromR = (fromRx * fromRy) / Math.sqrt((fromRy * Math.cos(angle)) ** 2 + (fromRx * Math.sin(angle)) ** 2);
+  const toR = (toRx * toRy) / Math.sqrt((toRy * Math.cos(angle + Math.PI)) ** 2 + (toRx * Math.sin(angle + Math.PI)) ** 2);
+
+  const sx = from.x + Math.cos(angle) * (fromR + 2);
+  const sy = from.y + Math.sin(angle) * (fromR + 2);
+  const ex = to.x - Math.cos(angle) * (toR + 2);
+  const ey = to.y - Math.sin(angle) * (toR + 2);
+
   const len = Math.sqrt(dx * dx + dy * dy);
-  // Scale-aware radii — larger nodes push edge endpoints further out
-  const rFrom = 45 * (from.scale ?? 1);
-  const rTo = 45 * (to.scale ?? 1);
-  const sx = from.x + (dx / len) * rFrom;
-  const sy = from.y + (dy / len) * rFrom;
-  const ex = to.x - (dx / len) * rTo;
-  const ey = to.y - (dy / len) * rTo;
   const cx = (sx + ex) / 2 + (dy / len) * 15;
   const cy = (sy + ey) / 2 - (dx / len) * 15;
   const midX = (sx + ex) / 2;
   const midY = (sy + ey) / 2;
-  const angle = Math.atan2(ey - sy, ex - sx) * (180 / Math.PI);
-  return { path: `M ${sx} ${sy} Q ${cx} ${cy} ${ex} ${ey}`, midX, midY, angle };
+  const angleDeg = Math.atan2(ey - sy, ex - sx) * (180 / Math.PI);
+  return { path: `M ${sx} ${sy} Q ${cx} ${cy} ${ex} ${ey}`, midX, midY, angle: angleDeg };
 }
 
 interface Props {
@@ -147,7 +160,7 @@ export function RelationshipModel({ open, onClose }: Props) {
 
         {/* Diagram */}
         <div className="flex-1 overflow-auto p-4">
-          <svg viewBox="0 0 1150 620" className="w-full h-auto min-h-[500px]">
+          <svg viewBox="0 0 1150 540" className="w-full h-auto min-h-[500px]">
             <defs>
               <marker id="arrow" viewBox="0 0 10 7" refX="10" refY="3.5" markerWidth="8" markerHeight="6" orient="auto-start-reverse">
                 <polygon points="0 0, 10 3.5, 0 7" fill={c.borderColor} />

@@ -82,6 +82,30 @@ function findMitreGroupId(name, synonyms, lookup) {
   return null;
 }
 
+/**
+ * Infer actor category from metadata when not explicitly provided.
+ * @param {Record<string, unknown>} meta
+ * @returns {string | null}
+ */
+function inferCategory(meta) {
+  const motivation = Array.isArray(meta.motivation)
+    ? meta.motivation.map((m) => String(m).toLowerCase())
+    : meta.motivation ? [String(meta.motivation).toLowerCase()] : [];
+  const sponsor = meta['cfr-suspected-state-sponsor'] ?? null;
+
+  // Nation-state: has a state sponsor or motivation indicates espionage
+  if (sponsor) return 'nation-state';
+  if (motivation.some((m) => m.includes('espionage') || m.includes('state') || m.includes('government'))) return 'nation-state';
+
+  // Criminal: financial motivation
+  if (motivation.some((m) => m.includes('financial') || m.includes('criminal') || m.includes('ransom'))) return 'criminal';
+
+  // Hacktivist
+  if (motivation.some((m) => m.includes('hacktivist') || m.includes('ideolog') || m.includes('disrupt'))) return 'hacktivist';
+
+  return null;
+}
+
 async function main() {
   console.log('Fetching ThaiCERT/ETDA threat actor data...');
   const data = await fetchJson(SOURCE_URL);
@@ -110,7 +134,7 @@ async function main() {
       const country = meta.country ?? null;
       const synonyms = Array.isArray(meta.synonyms) ? meta.synonyms.filter(Boolean) : null;
       const refs = Array.isArray(meta.refs) ? meta.refs.filter(Boolean) : null;
-      const category = meta.category ?? meta.type ?? null;
+      const category = meta.category ?? meta.type ?? inferCategory(meta);
       const uuid = entry.uuid ?? null;
       const motivation = Array.isArray(meta.motivation) ? meta.motivation.join(', ') : (meta.motivation ?? null);
       const firstSeen = meta.date ?? null;
