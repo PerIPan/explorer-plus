@@ -172,8 +172,8 @@ function Layout() {
             </div>
             <div className="px-6 py-5 space-y-4 text-sm text-[var(--text-primary)] leading-relaxed">
               <p>
-                <strong>MITRE Explorer Plus</strong> — a threat intelligence platform on{' '}
-                <em>MITRE ATT&CK</em>. One interface for adversary behavior, detection, and compliance.
+                <strong>MITRE Explorer Plus</strong> — a multi-domain threat intelligence platform on{' '}
+                <em>MITRE ATT&CK</em>. One interface for adversary behavior, detection, and compliance enriched with CTI reports.
               </p>
               <ul className="space-y-2 pl-4 list-disc marker:text-[var(--accent-teal)]">
                 <li><strong>16 data sources</strong> — techniques, groups, campaigns, software, mitigations, data sources, tactics, sectors + live feeds from AlienVault OTX, RSS, CISA KEV, NVD, VirusTotal, Sigma, Atomic Red Team, D3FEND</li>

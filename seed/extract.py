@@ -18,6 +18,7 @@ from mitreattack.stix20 import MitreAttackData
 
 # Sort order keyed on x_mitre_shortname (kill-chain phase name).
 _TACTIC_SORT_ORDER: dict[str, int] = {
+    # Enterprise (14)
     'reconnaissance': 1,
     'resource-development': 2,
     'initial-access': 3,
@@ -32,6 +33,13 @@ _TACTIC_SORT_ORDER: dict[str, int] = {
     'command-and-control': 12,
     'exfiltration': 13,
     'impact': 14,
+    # ICS (unique tactics)
+    'evasion': 7,
+    'inhibit-response-function': 13,
+    'impair-process-control': 14,
+    # Mobile (unique tactics)
+    'network-effects': 13,
+    'remote-service-effects': 14,
 }
 
 # Fallback DC-name → DS-name lookup for components whose names are not a
@@ -442,7 +450,7 @@ def _extract_technique_tactics(attack: MitreAttackData) -> list[dict[str, Any]]:
         for kc in tech.get('kill_chain_phases') or []:
             kc_name = kc.get('kill_chain_name') if isinstance(kc, dict) else getattr(kc, 'kill_chain_name', '')
             phase_name = kc.get('phase_name') if isinstance(kc, dict) else getattr(kc, 'phase_name', '')
-            if kc_name != 'mitre-attack':
+            if kc_name not in ('mitre-attack', 'mitre-ics-attack', 'mitre-mobile-attack'):
                 continue
             tactic_stix_id = tactic_by_shortname.get(phase_name)
             if tactic_stix_id:

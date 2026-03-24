@@ -68,6 +68,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
 
   // Sub-techniques — sector-filtered when active
   const subParams: unknown[] = [];
+  const subDomainFilter = domain ? (() => { subParams.push(domain); return `AND t.domain = $${subParams.length}`; })() : '';
   const subSectorFilter = sector
     ? (() => { subParams.push(sector); return `AND t.id IN (
         SELECT gt.technique_id FROM group_techniques gt
@@ -87,6 +88,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
      WHERE t.is_subtechnique = true
        AND t.is_revoked = false
        AND t.is_deprecated = false
+       ${subDomainFilter}
        ${subSectorFilter}
      ORDER BY t.attack_id ASC`,
     subParams,
