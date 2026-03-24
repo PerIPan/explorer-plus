@@ -128,15 +128,15 @@ interface TechniqueMapViewProps {
 }
 
 /** VT section with modal support */
-function VtSection({ iocs, loading }: { iocs: Array<{ id: string; type: string; value: string; confidence: string | null; malware_family: string | null; vt_malicious: number | null; vt_total: number | null; vt_verdict: string | null }>; loading: boolean }) {
+function VtSection({ iocs, loading }: { iocs: Array<{ id: string; type: string; value: string; confidence: string | null; malware_family: string | null; first_seen_at: string | null; vt_malicious: number | null; vt_total: number | null; vt_verdict: string | null }>; loading: boolean }) {
   const [vtHash, setVtHash] = useState<string | null>(null);
-  const vtIocs = iocs.filter((ioc) => ioc.confidence === 'sandbox_verified' || ioc.vt_verdict);
+  const vtIocs = iocs.filter((ioc) => ioc.confidence === 'sandbox_verified' || ioc.vt_verdict).slice(0, 5);
 
   if (vtIocs.length === 0 && !loading) return null;
 
   return (
     <>
-      <MapCard label="VirusTotal Sandboxing Report" icon={IconVt} count={vtIocs.length}>
+      <MapCard label={`VirusTotal Sandboxing Report${vtIocs.length > 0 ? ' (last 5)' : ''}`} icon={IconVt} count={vtIocs.length}>
         {vtIocs.length > 0 ? (
           <div className="space-y-1.5">
             {vtIocs.map((ioc) => (
@@ -170,6 +170,12 @@ function VtSection({ iocs, loading }: { iocs: Array<{ id: string; type: string; 
                 <span className="font-mono text-[10px] text-[var(--text-secondary)] truncate flex-1" title={ioc.value}>
                   {ioc.value.slice(0, 12)}...{ioc.value.slice(-6)}
                 </span>
+                {/* Date */}
+                {ioc.first_seen_at && (
+                  <span className="text-[10px] text-[var(--text-secondary)] shrink-0">
+                    {new Date(ioc.first_seen_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  </span>
+                )}
                 {/* VT lookup button */}
                 {ioc.type === 'hash' && (
                   <VtButton hash={ioc.value} onClick={() => setVtHash(ioc.value)} />
@@ -267,10 +273,10 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
       {(() => {
         const reports = intel?.reports ?? [];
         return (
-          <MapCard label="Threat Reports" icon={IconResponse} count={reports.length}>
+          <MapCard label={`Threat Reports${reports.length > 5 ? ' (last 5)' : ''}`} icon={IconResponse} count={reports.length}>
             {reports.length > 0 ? (
               <div className="space-y-1.5">
-                {reports.map((r) => (
+                {reports.slice(0, 5).map((r) => (
                   <a
                     key={r.id}
                     href={r.url}
@@ -345,17 +351,36 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
         ) : null}
 
         {sigmaRules.length > 0 ? (
-          <MapRow prefix="Sigma Rules">
-            <div className="flex flex-wrap gap-1.5">
-              <Badge label={`${sigmaRules.length} rules`} variant="teal" />
-              {Object.entries(sigmaByLevel).map(([lvl, count]) => (
-                <span key={lvl} className="flex items-center gap-1">
-                  <span className="text-xs text-[var(--text-primary)] font-mono">{count}</span>
-                  <LevelBadge level={lvl} />
-                </span>
+          <>
+            <MapRow prefix="Sigma Rules">
+              <div className="flex flex-wrap gap-1.5">
+                <Badge label={`${sigmaRules.length} rules`} variant="teal" />
+                {Object.entries(sigmaByLevel).map(([lvl, count]) => (
+                  <span key={lvl} className="flex items-center gap-1">
+                    <span className="text-xs text-[var(--text-primary)] font-mono">{count}</span>
+                    <LevelBadge level={lvl} />
+                  </span>
+                ))}
+              </div>
+            </MapRow>
+            <div className="mt-1 space-y-1">
+              {sigmaRules.slice(0, 5).map((rule) => (
+                <Link
+                  key={rule.sigma_id ?? rule.id}
+                  to="/cti/sigma"
+                  className="flex items-center gap-2 py-1 px-3 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)] hover:border-[var(--teal-dim)] transition-colors group"
+                >
+                  <LevelBadge level={rule.level} />
+                  <span className="text-[11px] text-[var(--text-primary)] group-hover:text-[var(--accent-teal)] truncate flex-1">{rule.title}</span>
+                </Link>
               ))}
+              {sigmaRules.length > 5 && (
+                <Link to="/cti/sigma" className="text-[10px] text-[var(--accent-teal)] hover:underline px-3">
+                  +{sigmaRules.length - 5} more rules
+                </Link>
+              )}
             </div>
-          </MapRow>
+          </>
         ) : (
           intelLoading ? (
             <MapRow prefix="Sigma Rules">
@@ -400,7 +425,16 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
           <MapRow prefix="NIST Controls">
             <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto">
               {nistControls.map((ctrl) => (
-                <Badge key={ctrl.controlId} label={ctrl.controlId} variant="blue" />
+                <a
+                  key={ctrl.controlId}
+                  href={`https://csf.tools/reference/nist-sp-800-53/r5/${ctrl.controlId.split('-')[0].toLowerCase()}/${ctrl.controlId.toLowerCase()}/`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={ctrl.controlName ?? ctrl.controlId}
+                  className="hover:opacity-80 transition-opacity"
+                >
+                  <Badge label={ctrl.controlId} variant="blue" />
+                </a>
               ))}
             </div>
           </MapRow>
