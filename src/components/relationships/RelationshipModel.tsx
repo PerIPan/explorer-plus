@@ -210,19 +210,24 @@ export function RelationshipModel({ open, onClose }: Props) {
                   onMouseLeave={() => setHoveredNode(null)}
                   onClick={() => { navigate(node.path); onClose(); }}
                 >
-                  {isHovered && (
-                    <ellipse
-                      cx={node.x} cy={node.y}
-                      rx={55} ry={32}
-                      fill="none"
-                      stroke={node.color}
-                      strokeWidth={1}
-                      opacity={0.3}
-                    />
-                  )}
+                  {(() => {
+                    const rx = Math.max(48, node.label.length * 5.5 + 10);
+                    const ry = 26;
+                    return (
+                      <>
+                      {isHovered && (
+                        <ellipse
+                          cx={node.x} cy={node.y}
+                          rx={rx + 7} ry={ry + 6}
+                          fill="none"
+                          stroke={node.color}
+                          strokeWidth={1}
+                          opacity={0.3}
+                        />
+                      )}
                   <ellipse
                     cx={node.x} cy={node.y}
-                    rx={48} ry={26}
+                    rx={rx} ry={ry}
                     fill={isHovered ? node.bg.replace('18', '30') : node.bg}
                     stroke={node.color}
                     strokeWidth={isHovered ? 2 : 1}
@@ -240,6 +245,9 @@ export function RelationshipModel({ open, onClose }: Props) {
                   >
                     {node.label}
                   </text>
+                      </>
+                    );
+                  })()}
                 </g>
               );
             })}

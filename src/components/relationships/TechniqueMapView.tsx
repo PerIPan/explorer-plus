@@ -136,7 +136,7 @@ function VtSection({ iocs, loading }: { iocs: Array<{ id: string; type: string; 
 
   return (
     <>
-      <MapCard label={`VirusTotal Sandboxing Report${vtIocs.length > 0 ? ' (last 5)' : ''}`} icon={IconVt} count={vtIocs.length}>
+      <MapCard label={`VirusTotal Sandboxing Report${vtIocs.length >= 5 ? ' (last 5)' : ''}`} icon={IconVt} count={vtIocs.length}>
         {vtIocs.length > 0 ? (
           <div className="space-y-1.5">
             {vtIocs.map((ioc) => (
@@ -273,7 +273,7 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
       {(() => {
         const reports = intel?.reports ?? [];
         return (
-          <MapCard label={`Threat Reports${reports.length > 5 ? ' (last 5)' : ''}`} icon={IconResponse} count={reports.length}>
+          <MapCard label={`Threat Reports${reports.length >= 5 ? ' (last 5)' : ''}`} icon={IconResponse} count={reports.length}>
             {reports.length > 0 ? (
               <div className="space-y-1.5">
                 {reports.slice(0, 5).map((r) => (
