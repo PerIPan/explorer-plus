@@ -6,6 +6,7 @@ import { z } from 'zod';
 
 const querySchema = z.object({
   search: z.string().min(3).max(200).optional(),
+  domain: z.enum(['enterprise-attack', 'mobile-attack', 'ics-attack']).optional(),
 });
 
 async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
@@ -15,7 +16,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     return;
   }
 
-  const { search } = parsed.data;
+  const { search, domain } = parsed.data;
   const params: unknown[] = [];
   // Data sources are all marked deprecated in ATT&CK v18+ (restructured) — show them anyway
   const conditions: string[] = ['ds.is_revoked = false'];
@@ -24,6 +25,11 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     params.push(search);
     const { clause } = buildSearchCondition(search);
     conditions.push(clause.replace('name', 'ds.name').replace('description', 'ds.description').replace('$PARAM', `$${params.length}`));
+  }
+
+  if (domain) {
+    params.push(domain);
+    conditions.push(`ds.domain = $${params.length}`);
   }
 
   const whereClause = `WHERE ${conditions.join(' AND ')}`;

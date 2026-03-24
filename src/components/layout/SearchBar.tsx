@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import Fuse from 'fuse.js';
 import { apiFetch } from '../../lib/api';
+import { useDomain } from '../../contexts/DomainContext';
 import { Badge } from '../shared/Badge';
 
 interface EntityEntry {
@@ -27,11 +28,12 @@ export function SearchBar() {
   const inputRef = useRef<HTMLInputElement>(null);
   const blurTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navigate = useNavigate();
+  const { domain } = useDomain();
 
-  /** Load all entities for Fuse.js */
+  /** Load all entities for Fuse.js — filtered by active domain */
   const { data: allEntities } = useQuery({
-    queryKey: ['entities-all'],
-    queryFn: () => apiFetch<{ data: EntityEntry[] }>('/entities').then(r => r.data),
+    queryKey: ['entities-all', domain],
+    queryFn: () => apiFetch<{ data: EntityEntry[] }>('/entities', { domain }).then(r => r.data),
     staleTime: 60 * 60 * 1000,
     gcTime: 60 * 60 * 1000,
   });

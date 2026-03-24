@@ -3,6 +3,7 @@ import { useQueries } from '@tanstack/react-query';
 import { useMatrix, useGroups } from '../hooks/useApi';
 import { apiFetch } from '../lib/api';
 import { useSector } from '../contexts/SectorContext';
+import { useDomain } from '../contexts/DomainContext';
 import { PageHeader } from '../components/layout/PageHeader';
 import { MatrixGrid } from '../components/matrix/MatrixGrid';
 import { MatrixActorSelector, ACTOR_COLORS } from '../components/matrix/MatrixActorSelector';
@@ -12,13 +13,14 @@ import type { Group } from '../lib/types';
 
 export function Matrix() {
   const { sectorParam } = useSector();
-  const { data, isLoading, error } = useMatrix(sectorParam);
+  const { domainParam } = useDomain();
+  const { data, isLoading, error } = useMatrix({ ...sectorParam, ...domainParam });
   const [inputValue, setInputValue] = useState('');
   const [filterText, setFilterText] = useState('');
   const [selectedActors, setSelectedActors] = useState<SelectedActor[]>([]);
 
   // Fetch all groups for the actor selector (respects sector filter)
-  const groupsParams = useMemo(() => ({ limit: '5000', ...sectorParam }), [sectorParam]);
+  const groupsParams = useMemo(() => ({ limit: '5000', ...sectorParam, ...domainParam }), [sectorParam, domainParam]);
   const { data: groupsData } = useGroups(groupsParams);
   const groups = useMemo<Group[]>(() => groupsData?.data ?? [], [groupsData]);
 

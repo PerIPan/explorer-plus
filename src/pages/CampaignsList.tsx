@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useCampaigns } from '../hooks/useApi';
 import { useSector } from '../contexts/SectorContext';
+import { useDomain } from '../contexts/DomainContext';
 import { useFuseFilter } from '../hooks/useFuseFilter';
 import { PageHeader } from '../components/layout/PageHeader';
 import { DataTable, type ColumnDef } from '../components/shared/DataTable';
@@ -23,13 +24,14 @@ export function CampaignsList() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { sectorParam } = useSector();
+  const { domainParam } = useDomain();
 
   const sort = searchParams.get('sort') ?? 'last_seen';
   const order = (searchParams.get('order') ?? 'desc') as 'asc' | 'desc';
 
   const [search, setSearch] = useState('');
 
-  const params: Record<string, string> = { limit: '5000', ...sectorParam };
+  const params: Record<string, string> = { limit: '5000', ...sectorParam, ...domainParam };
   if (sort) params.sort = sort;
   if (order) params.order = order;
 

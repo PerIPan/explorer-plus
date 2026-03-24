@@ -5,6 +5,7 @@ import { z } from 'zod';
 
 const querySchema = z.object({
   sector: z.string().max(50).optional(),
+  domain: z.enum(['enterprise-attack', 'mobile-attack', 'ics-attack']).optional(),
 });
 
 async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
@@ -14,7 +15,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     return;
   }
 
-  const { sector } = parsed.data;
+  const { sector, domain } = parsed.data;
   const params: unknown[] = [];
   const conditions: string[] = [];
 
@@ -36,6 +37,11 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
       JOIN sectors s ON s.id = gs.sector_id
       WHERE s.slug = $${params.length}
     )`;
+  }
+
+  if (domain) {
+    params.push(domain);
+    conditions.push(`ta.domain = $${params.length}`);
   }
 
   const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';

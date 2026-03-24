@@ -593,4 +593,13 @@ CREATE INDEX IF NOT EXISTS idx_engage_technique  ON engage_mappings(technique_id
 CREATE INDEX IF NOT EXISTS idx_engage_attack_id  ON engage_mappings(attack_technique_id);
 CREATE INDEX IF NOT EXISTS idx_react_stage       ON react_actions(stage);
 
+-- Domain indexes for multi-domain filtering (enterprise, ics, mobile)
+CREATE INDEX IF NOT EXISTS idx_techniques_domain   ON techniques(domain);
+CREATE INDEX IF NOT EXISTS idx_tactics_domain      ON tactics(domain);
+CREATE INDEX IF NOT EXISTS idx_groups_domain       ON threat_groups(domain);
+CREATE INDEX IF NOT EXISTS idx_software_domain     ON attack_software(domain);
+CREATE INDEX IF NOT EXISTS idx_mitigations_domain  ON mitigations(domain);
+CREATE INDEX IF NOT EXISTS idx_campaigns_domain    ON campaigns(domain);
+CREATE INDEX IF NOT EXISTS idx_datasources_domain  ON data_sources(domain);
+
 COMMIT;

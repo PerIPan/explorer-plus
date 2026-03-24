@@ -203,7 +203,7 @@ def _build_technique_dc_pairs(
 # Entity extractors
 # ---------------------------------------------------------------------------
 
-def _extract_tactics(attack: MitreAttackData) -> list[dict[str, Any]]:
+def _extract_tactics(attack: MitreAttackData, domain: str = 'enterprise-attack') -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for obj in attack.get_tactics():
         shortname: str = obj.get('x_mitre_shortname') or ''
@@ -214,14 +214,14 @@ def _extract_tactics(attack: MitreAttackData) -> list[dict[str, Any]]:
             'description': obj.get('description') or '',
             'url': _get_url(obj),
             'sort_order': _TACTIC_SORT_ORDER.get(shortname),
-            'domain': 'enterprise-attack',
+            'domain': domain,
             'stix_created': _ts(obj.get('created')),
             'stix_modified': _ts(obj.get('modified')),
         })
     return rows
 
 
-def _extract_techniques(attack: MitreAttackData) -> list[dict[str, Any]]:
+def _extract_techniques(attack: MitreAttackData, domain: str = 'enterprise-attack') -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for obj in attack.get_techniques(remove_revoked_deprecated=False):
         aid = _get_attack_id(obj)
@@ -242,14 +242,14 @@ def _extract_techniques(attack: MitreAttackData) -> list[dict[str, Any]]:
             'is_revoked': bool(obj.get('revoked', False)),
             'is_deprecated': bool(obj.get('x_mitre_deprecated', False)),
             'revoked_by_stix_id': None,
-            'domain': 'enterprise-attack',
+            'domain': domain,
             'stix_created': _ts(obj.get('created')),
             'stix_modified': _ts(obj.get('modified')),
         })
     return rows
 
 
-def _extract_groups(attack: MitreAttackData) -> list[dict[str, Any]]:
+def _extract_groups(attack: MitreAttackData, domain: str = 'enterprise-attack') -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for obj in attack.get_groups(remove_revoked_deprecated=False):
         rows.append({
@@ -261,14 +261,14 @@ def _extract_groups(attack: MitreAttackData) -> list[dict[str, Any]]:
             'aliases': list(obj.get('aliases') or []),
             'is_revoked': bool(obj.get('revoked', False)),
             'is_deprecated': bool(obj.get('x_mitre_deprecated', False)),
-            'domain': 'enterprise-attack',
+            'domain': domain,
             'stix_created': _ts(obj.get('created')),
             'stix_modified': _ts(obj.get('modified')),
         })
     return rows
 
 
-def _extract_software(attack: MitreAttackData) -> list[dict[str, Any]]:
+def _extract_software(attack: MitreAttackData, domain: str = 'enterprise-attack') -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for obj in attack.get_software(remove_revoked_deprecated=False):
         sw_type = 'malware' if getattr(obj, 'type', '') == 'malware' else 'tool'
@@ -288,14 +288,14 @@ def _extract_software(attack: MitreAttackData) -> list[dict[str, Any]]:
             'aliases': aliases,
             'is_revoked': bool(obj.get('revoked', False)),
             'is_deprecated': bool(obj.get('x_mitre_deprecated', False)),
-            'domain': 'enterprise-attack',
+            'domain': domain,
             'stix_created': _ts(obj.get('created')),
             'stix_modified': _ts(obj.get('modified')),
         })
     return rows
 
 
-def _extract_mitigations(attack: MitreAttackData) -> list[dict[str, Any]]:
+def _extract_mitigations(attack: MitreAttackData, domain: str = 'enterprise-attack') -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for obj in attack.get_mitigations(remove_revoked_deprecated=False):
         rows.append({
@@ -306,14 +306,14 @@ def _extract_mitigations(attack: MitreAttackData) -> list[dict[str, Any]]:
             'url': _get_url(obj),
             'is_revoked': bool(obj.get('revoked', False)),
             'is_deprecated': bool(obj.get('x_mitre_deprecated', False)),
-            'domain': 'enterprise-attack',
+            'domain': domain,
             'stix_created': _ts(obj.get('created')),
             'stix_modified': _ts(obj.get('modified')),
         })
     return rows
 
 
-def _extract_campaigns(attack: MitreAttackData) -> list[dict[str, Any]]:
+def _extract_campaigns(attack: MitreAttackData, domain: str = 'enterprise-attack') -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for obj in attack.get_campaigns(remove_revoked_deprecated=False):
         rows.append({
@@ -327,14 +327,14 @@ def _extract_campaigns(attack: MitreAttackData) -> list[dict[str, Any]]:
             'last_seen': _ts(obj.get('last_seen')),
             'is_revoked': bool(obj.get('revoked', False)),
             'is_deprecated': bool(obj.get('x_mitre_deprecated', False)),
-            'domain': 'enterprise-attack',
+            'domain': domain,
             'stix_created': _ts(obj.get('created')),
             'stix_modified': _ts(obj.get('modified')),
         })
     return rows
 
 
-def _extract_data_sources(attack: MitreAttackData) -> list[dict[str, Any]]:
+def _extract_data_sources(attack: MitreAttackData, domain: str = 'enterprise-attack') -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for obj in attack.get_datasources():
         rows.append({
@@ -345,7 +345,7 @@ def _extract_data_sources(attack: MitreAttackData) -> list[dict[str, Any]]:
             'url': _get_url(obj),
             'is_revoked': bool(obj.get('revoked', False)),
             'is_deprecated': bool(obj.get('x_mitre_deprecated', False)),
-            'domain': 'enterprise-attack',
+            'domain': domain,
             'stix_created': _ts(obj.get('created')),
             'stix_modified': _ts(obj.get('modified')),
         })
@@ -355,6 +355,7 @@ def _extract_data_sources(attack: MitreAttackData) -> list[dict[str, Any]]:
 def _extract_data_components(
     attack: MitreAttackData,
     dc_to_ds: dict[str, str],
+    domain: str = 'enterprise-attack',
 ) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for obj in attack.get_datacomponents():
@@ -365,7 +366,7 @@ def _extract_data_components(
             'data_source_stix_id': dc_to_ds.get(obj.id, ''),
             'is_revoked': bool(obj.get('revoked', False)),
             'is_deprecated': bool(obj.get('x_mitre_deprecated', False)),
-            'domain': 'enterprise-attack',
+            'domain': domain,
             'stix_created': _ts(obj.get('created')),
             'stix_modified': _ts(obj.get('modified')),
         })
@@ -512,11 +513,12 @@ def _extract_group_campaigns(attack: MitreAttackData) -> list[dict[str, Any]]:
 # Public API
 # ---------------------------------------------------------------------------
 
-def extract_all(stix_path: str = 'data/enterprise-attack.json') -> dict[str, list[dict[str, Any]]]:
+def extract_all(stix_path: str = 'data/enterprise-attack.json', domain: str = 'enterprise-attack') -> dict[str, list[dict[str, Any]]]:
     """Load a STIX bundle and return normalised dicts for all ATT&CK entity types.
 
     Args:
-        stix_path: Path to the enterprise-attack STIX 2.1 JSON file.
+        stix_path: Path to a STIX 2.1 JSON bundle file.
+        domain: ATT&CK domain identifier (enterprise-attack, ics-attack, mobile-attack).
 
     Returns:
         Dict with keys: tactics, techniques, threat_groups, attack_software,
@@ -534,14 +536,14 @@ def extract_all(stix_path: str = 'data/enterprise-attack.json') -> dict[str, lis
     tech_dc_pairs = _build_technique_dc_pairs(raw_objects)
 
     return {
-        'tactics': _extract_tactics(attack),
-        'techniques': _extract_techniques(attack),
-        'threat_groups': _extract_groups(attack),
-        'attack_software': _extract_software(attack),
-        'mitigations': _extract_mitigations(attack),
-        'campaigns': _extract_campaigns(attack),
-        'data_sources': _extract_data_sources(attack),
-        'data_components': _extract_data_components(attack, dc_to_ds),
+        'tactics': _extract_tactics(attack, domain),
+        'techniques': _extract_techniques(attack, domain),
+        'threat_groups': _extract_groups(attack, domain),
+        'attack_software': _extract_software(attack, domain),
+        'mitigations': _extract_mitigations(attack, domain),
+        'campaigns': _extract_campaigns(attack, domain),
+        'data_sources': _extract_data_sources(attack, domain),
+        'data_components': _extract_data_components(attack, dc_to_ds, domain),
         'group_techniques': _extract_group_techniques(attack),
         'group_software': _extract_group_software(attack),
         'software_techniques': _extract_software_techniques(attack),

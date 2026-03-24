@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTechniques, useTactics } from '../hooks/useApi';
 import { useFuseFilter } from '../hooks/useFuseFilter';
 import { useSector } from '../contexts/SectorContext';
+import { useDomain } from '../contexts/DomainContext';
 import { PageHeader } from '../components/layout/PageHeader';
 import { DataTable, type ColumnDef } from '../components/shared/DataTable';
 import { Badge } from '../components/shared/Badge';
@@ -43,6 +44,7 @@ export function TechniquesList() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { sectorParam } = useSector();
+  const { domainParam } = useDomain();
 
   const tactic = searchParams.get('tactic') ?? '';
   const platform = searchParams.get('platform') ?? '';
@@ -52,7 +54,7 @@ export function TechniquesList() {
   const [search, setSearch] = useState('');
   const [expandedParents, setExpandedParents] = useState<Set<string>>(new Set());
 
-  const params: Record<string, string> = { limit: '5000', ...sectorParam };
+  const params: Record<string, string> = { limit: '5000', ...sectorParam, ...domainParam };
   if (tactic) params.tactic = tactic;
   if (platform) params.platform = platform;
   if (sortBy) params.sort = sortBy;

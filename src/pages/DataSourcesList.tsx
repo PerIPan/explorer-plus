@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useDataSources } from '../hooks/useApi';
 import { useFuseFilter } from '../hooks/useFuseFilter';
+import { useDomain } from '../contexts/DomainContext';
 import { PageHeader } from '../components/layout/PageHeader';
 import { DataTable, type ColumnDef } from '../components/shared/DataTable';
 import { EntityLink } from '../components/shared/EntityLink';
@@ -17,7 +18,9 @@ export function DataSourcesList() {
   const sort = searchParams.get('sort') ?? 'attack_id';
   const order = (searchParams.get('order') ?? 'asc') as 'asc' | 'desc';
 
-  const params: Record<string, string> = { limit: '5000' };
+  const { domainParam } = useDomain();
+
+  const params: Record<string, string> = { limit: '5000', ...domainParam };
   if (sort) params.sort = sort;
   if (order) params.order = order;
 

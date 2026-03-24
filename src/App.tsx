@@ -3,7 +3,9 @@ import { Routes, Route, Outlet } from 'react-router-dom';
 import { Sidebar } from './components/layout/Sidebar';
 import { SearchBar } from './components/layout/SearchBar';
 import { SectorDropdown } from './components/layout/SectorDropdown';
+import { DomainDropdown } from './components/layout/DomainDropdown';
 import { SectorProvider } from './contexts/SectorContext';
+import { DomainProvider } from './contexts/DomainContext';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { RelationshipModel } from './components/relationships/RelationshipModel';
 import { ErrorBoundary } from './components/shared/ErrorBoundary';
@@ -84,6 +86,7 @@ function Layout() {
   const [helpOpen, setHelpOpen] = useState(false);
 
   return (
+    <DomainProvider>
     <SectorProvider>
     <div className="flex min-h-screen bg-[var(--surface-deep)]">
       {/* Mobile overlay */}
@@ -121,6 +124,7 @@ function Layout() {
           </button>
           <SearchBar />
           <SectorDropdown />
+          <DomainDropdown />
           <button
             type="button"
             onClick={() => setModelOpen(true)}
@@ -191,6 +195,7 @@ function Layout() {
       )}
     </div>
     </SectorProvider>
+    </DomainProvider>
   );
 }
 

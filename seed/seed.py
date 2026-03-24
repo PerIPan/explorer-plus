@@ -27,13 +27,26 @@ import requests
 # ---------------------------------------------------------------------------
 
 _REPO_ROOT = Path(__file__).parent.parent
-_STIX_PATH = str(_REPO_ROOT / 'data' / 'enterprise-attack.json')
 _SCHEMA_PATH = str(Path(__file__).parent / 'schema.sql')
-_STIX_URL = (
-    'https://raw.githubusercontent.com/mitre-attack/attack-stix-data'
-    '/master/enterprise-attack/enterprise-attack.json'
-)
 _DEFAULT_DB_URL = 'postgresql://postgres@localhost:5432/mitre_attack'
+
+_STIX_DOMAINS = {
+    'enterprise-attack': {
+        'url': 'https://raw.githubusercontent.com/mitre-attack/attack-stix-data/master/enterprise-attack/enterprise-attack.json',
+        'path': str(_REPO_ROOT / 'data' / 'enterprise-attack.json'),
+    },
+    'ics-attack': {
+        'url': 'https://raw.githubusercontent.com/mitre-attack/attack-stix-data/master/ics-attack/ics-attack.json',
+        'path': str(_REPO_ROOT / 'data' / 'ics-attack.json'),
+    },
+    'mobile-attack': {
+        'url': 'https://raw.githubusercontent.com/mitre-attack/attack-stix-data/master/mobile-attack/mobile-attack.json',
+        'path': str(_REPO_ROOT / 'data' / 'mobile-attack.json'),
+    },
+}
+# Backwards compat
+_STIX_PATH = _STIX_DOMAINS['enterprise-attack']['path']
+_STIX_URL = _STIX_DOMAINS['enterprise-attack']['url']
 
 
 # ---------------------------------------------------------------------------
@@ -93,17 +106,19 @@ def _safety_check(db_url: str, confirm_destructive: bool) -> None:
 # STIX download
 # ---------------------------------------------------------------------------
 
-def _download_stix(stix_path: str) -> str:
-    """Download the enterprise-attack STIX bundle and return its SHA-256 hash.
+def _download_stix(stix_path: str, url: str | None = None) -> str:
+    """Download a STIX bundle and return its SHA-256 hash.
 
     Args:
         stix_path: Destination file path.
+        url: URL to download from (defaults to enterprise-attack).
 
     Returns:
         Hex-encoded SHA-256 digest of the downloaded file.
     """
-    print(f'Downloading STIX bundle from {_STIX_URL} ...')
-    response = requests.get(_STIX_URL, timeout=120)
+    src = url or _STIX_URL
+    print(f'Downloading STIX bundle from {src} ...')
+    response = requests.get(src, timeout=120)
     response.raise_for_status()
     dest = Path(stix_path)
     dest.parent.mkdir(parents=True, exist_ok=True)
@@ -562,25 +577,6 @@ def main() -> None:
 
     _safety_check(db_url, args.confirm_destructive)
 
-    stix_path = _STIX_PATH
-
-    # Optionally download fresh STIX
-    if args.update:
-        stix_hash = _download_stix(stix_path)
-    else:
-        if not Path(stix_path).exists():
-            print(
-                f'ERROR: STIX file not found at {stix_path}.\n'
-                'Run with --update to download it.',
-                file=sys.stderr,
-            )
-            sys.exit(1)
-        stix_hash = _hash_file(stix_path)
-        print(f'Using existing STIX file  sha256={stix_hash[:16]}...')
-
-    attack_version = _extract_attack_version(stix_path)
-    print(f'ATT&CK version: {attack_version}')
-
     # Import extraction modules — support both `python seed/seed.py` (script)
     # and `python -m seed.seed` (module) invocations.
     _seed_dir = str(Path(__file__).parent)
@@ -590,9 +586,49 @@ def main() -> None:
     from extract import extract_all  # type: ignore[import-not-found]
     from sector_extractor import extract_sectors, get_sector_list  # type: ignore[import-not-found]
 
-    print('Extracting ATT&CK data ...')
+    # Download / verify STIX bundles for all domains
+    stix_hashes: dict[str, str] = {}
+    for domain_key, domain_cfg in _STIX_DOMAINS.items():
+        stix_path = domain_cfg['path']
+        if args.update:
+            stix_hashes[domain_key] = _download_stix(stix_path, domain_cfg['url'])
+        else:
+            if not Path(stix_path).exists():
+                print(f'WARNING: STIX file not found for {domain_key} at {stix_path}, skipping.')
+                continue
+            stix_hashes[domain_key] = _hash_file(stix_path)
+            print(f'Using existing {domain_key} STIX  sha256={stix_hashes[domain_key][:16]}...')
+
+    attack_version = _extract_attack_version(_STIX_DOMAINS['enterprise-attack']['path'])
+    print(f'ATT&CK version: {attack_version}')
+
+    # Extract and merge data from all available domains
+    print('Extracting ATT&CK data from all domains ...')
     t0 = time.monotonic()
-    data = extract_all(stix_path)
+
+    # Merge strategy: concatenate entity lists, deduplicate groups/software by stix_id
+    merged_data: dict[str, list[dict[str, Any]]] = {}
+    seen_stix_ids: dict[str, set[str]] = {}  # table -> set of stix_ids already seen
+
+    for domain_key in stix_hashes:
+        stix_path = _STIX_DOMAINS[domain_key]['path']
+        print(f'  Extracting {domain_key} ...')
+        data = extract_all(stix_path, domain=domain_key)
+        for key, entities in data.items():
+            if key not in merged_data:
+                merged_data[key] = []
+                seen_stix_ids[key] = set()
+            # Deduplicate entities that span domains (groups, software, campaigns)
+            # by stix_id — keep the first occurrence
+            for entity in entities:
+                sid = entity.get('stix_id')
+                if sid and sid in seen_stix_ids[key]:
+                    continue
+                if sid:
+                    seen_stix_ids[key].add(sid)
+                merged_data[key].append(entity)
+
+    data = merged_data
     sector_assignments = extract_sectors(
         data['threat_groups'],
         sectors_path=str(Path(__file__).parent / 'sectors.json'),

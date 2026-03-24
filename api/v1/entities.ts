@@ -1,42 +1,60 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { query } from './lib/db.js';
 import { withHandler } from './lib/middleware.js';
+import { z } from 'zod';
+
+const querySchema = z.object({
+  domain: z.enum(['enterprise-attack', 'mobile-attack', 'ics-attack']).optional(),
+});
 
 /**
  * Lightweight endpoint returning all entity names + IDs for client-side fuzzy search.
  * Cached aggressively — data only changes on re-seed.
  */
-async function handler(_req: VercelRequest, res: VercelResponse): Promise<void> {
+async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
+  const parsed = querySchema.safeParse(req.query);
+  const domain = parsed.success ? parsed.data.domain ?? null : null;
+
+  const domainWhere = domain ? ` AND domain = $1` : '';
+  const domainParams = domain ? [domain] : [];
+
   const [techniques, groups, software, campaigns, mitigations, tactics, externalActors] = await Promise.all([
-    query<{ attackId: string; name: string }>(`
-      SELECT attack_id AS "attackId", name FROM techniques
-      WHERE is_revoked = false AND is_deprecated = false AND is_subtechnique = false
-      ORDER BY name
-    `),
+    query<{ attackId: string; name: string }>(
+      `SELECT attack_id AS "attackId", name FROM techniques
+       WHERE is_revoked = false AND is_deprecated = false AND is_subtechnique = false${domainWhere}
+       ORDER BY name`,
+      domainParams,
+    ),
+    // Groups span domains — never filtered
     query<{ attackId: string; name: string }>(`
       SELECT attack_id AS "attackId", name FROM threat_groups
       WHERE is_revoked = false AND is_deprecated = false
       ORDER BY name
     `),
-    query<{ attackId: string; name: string }>(`
-      SELECT attack_id AS "attackId", name FROM attack_software
-      WHERE is_revoked = false AND is_deprecated = false
-      ORDER BY name
-    `),
-    query<{ attackId: string; name: string }>(`
-      SELECT attack_id AS "attackId", name FROM campaigns
-      WHERE is_revoked = false AND is_deprecated = false
-      ORDER BY name
-    `),
-    query<{ attackId: string; name: string }>(`
-      SELECT attack_id AS "attackId", name FROM mitigations
-      WHERE is_revoked = false AND is_deprecated = false
-      ORDER BY name
-    `),
-    query<{ attackId: string; name: string }>(`
-      SELECT attack_id AS "attackId", name FROM tactics
-      ORDER BY sort_order
-    `),
+    query<{ attackId: string; name: string }>(
+      `SELECT attack_id AS "attackId", name FROM attack_software
+       WHERE is_revoked = false AND is_deprecated = false${domainWhere}
+       ORDER BY name`,
+      domainParams,
+    ),
+    query<{ attackId: string; name: string }>(
+      `SELECT attack_id AS "attackId", name FROM campaigns
+       WHERE is_revoked = false AND is_deprecated = false${domainWhere}
+       ORDER BY name`,
+      domainParams,
+    ),
+    query<{ attackId: string; name: string }>(
+      `SELECT attack_id AS "attackId", name FROM mitigations
+       WHERE is_revoked = false AND is_deprecated = false${domainWhere}
+       ORDER BY name`,
+      domainParams,
+    ),
+    query<{ attackId: string; name: string }>(
+      `SELECT attack_id AS "attackId", name FROM tactics${domain ? ` WHERE domain = $1` : ''}
+       ORDER BY sort_order`,
+      domainParams,
+    ),
+    // External actors are not domain-scoped
     query<{ attackId: string; name: string }>(`
       SELECT name AS "attackId", name FROM external_actors ORDER BY name
     `),

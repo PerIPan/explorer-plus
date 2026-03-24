@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useMitigations } from '../hooks/useApi';
 import { useFuseFilter } from '../hooks/useFuseFilter';
+import { useDomain } from '../contexts/DomainContext';
 import { PageHeader } from '../components/layout/PageHeader';
 import { DataTable, type ColumnDef } from '../components/shared/DataTable';
 import { EntityLink } from '../components/shared/EntityLink';
@@ -18,8 +19,9 @@ export function MitigationsList() {
   const order = (searchParams.get('order') ?? 'asc') as 'asc' | 'desc';
 
   const [search, setSearch] = useState('');
+  const { domainParam } = useDomain();
 
-  const params: Record<string, string> = { limit: '5000' };
+  const params: Record<string, string> = { limit: '5000', ...domainParam };
   if (sort) params.sort = sort;
   if (order) params.order = order;
 

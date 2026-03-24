@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTactics } from '../hooks/useApi';
 import { useSector } from '../contexts/SectorContext';
+import { useDomain } from '../contexts/DomainContext';
 import { PageHeader } from '../components/layout/PageHeader';
 import { DataTable, type ColumnDef } from '../components/shared/DataTable';
 import { EntityLink } from '../components/shared/EntityLink';
@@ -10,7 +11,8 @@ import type { Tactic } from '../lib/types';
 export function TacticsList() {
   const navigate = useNavigate();
   const { sectorParam } = useSector();
-  const { data, isLoading } = useTactics({ limit: '100', ...sectorParam });
+  const { domainParam } = useDomain();
+  const { data, isLoading } = useTactics({ limit: '100', ...sectorParam, ...domainParam });
 
   /** Sort by kill chain order (sortOrder) */
   const sorted = useMemo(

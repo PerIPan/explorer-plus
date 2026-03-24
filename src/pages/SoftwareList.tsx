@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useSoftware } from '../hooks/useApi';
 import { useSector } from '../contexts/SectorContext';
+import { useDomain } from '../contexts/DomainContext';
 import { useFuseFilter } from '../hooks/useFuseFilter';
 import { PageHeader } from '../components/layout/PageHeader';
 import { DataTable, type ColumnDef } from '../components/shared/DataTable';
@@ -16,6 +17,7 @@ export function SoftwareList() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { sectorParam } = useSector();
+  const { domainParam } = useDomain();
 
   const type = searchParams.get('type') ?? '';
   const sort = searchParams.get('sort') ?? 'attack_id';
@@ -23,7 +25,7 @@ export function SoftwareList() {
 
   const [search, setSearch] = useState('');
 
-  const params: Record<string, string> = { limit: '5000', ...sectorParam };
+  const params: Record<string, string> = { limit: '5000', ...sectorParam, ...domainParam };
   if (type) params.type = type;
   if (sort) params.sort = sort;
   if (order) params.order = order;

@@ -10,6 +10,7 @@ const ALLOWED_SORT = ['name', 'attack_id', 'first_seen', 'last_seen', 'stix_modi
 const querySchema = paginationSchema.extend({
   search: z.string().min(3).max(200).optional(),
   sector: z.string().max(50).optional(),
+  domain: z.enum(['enterprise-attack', 'mobile-attack', 'ics-attack']).optional(),
   include_deprecated: z.coerce.boolean().default(false),
 });
 
@@ -20,7 +21,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     return;
   }
 
-  const { page, limit, sort, order, search, sector, include_deprecated } = parsed.data;
+  const { page, limit, sort, order, search, sector, domain, include_deprecated } = parsed.data;
   const sortCol = sort ?? 'name';
   const sortClause = buildSortClause(sortCol, order, ALLOWED_SORT);
   const { offset } = buildPaginationClause(page, limit);
@@ -45,6 +46,11 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
       JOIN group_sectors gs ON gs.group_id = gc.group_id
       JOIN sectors s ON s.id = gs.sector_id WHERE s.slug = $${params.length}
     )`);
+  }
+
+  if (domain) {
+    params.push(domain);
+    conditions.push(`c.domain = $${params.length}`);
   }
 
   const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';

@@ -45,6 +45,8 @@ function makeNodes(c: ReturnType<typeof useThemeColors>): ModelNode[] {
     { id: 'atomic', label: 'Atomic Tests', x: 750, y: 420, color: '#ef4444', bg: '#ef444418', path: '/techniques', description: 'Red team test procedures from Atomic Red Team per technique', category: 'intelligence' },
     { id: 'd3fend', label: 'D3FEND', x: 900, y: 430, color: c.accentGreen, bg: alpha(c.accentGreen, '18'), path: '/techniques', description: 'Defensive countermeasures from MITRE D3FEND', category: 'intelligence' },
     { id: 'thaicert', label: 'ETDA Actors', x: 85, y: 250, color: c.accentNeutral, bg: alpha(c.accentNeutral, '18'), path: '/external-actors', description: '500+ extended threat actors from ThaiCERT encyclopedia', category: 'intelligence' },
+    { id: 'ics', label: 'ICS', x: 400, y: 180, color: '#f97316', bg: '#f9731618', path: '/matrix?domain=ics-attack', description: 'Industrial Control Systems ATT&CK domain — OT-specific techniques', category: 'core', scale: 0.85 },
+    { id: 'mobile', label: 'Mobile', x: 700, y: 180, color: '#8b5cf6', bg: '#8b5cf618', path: '/matrix?domain=mobile-attack', description: 'Mobile ATT&CK domain — Android and iOS specific techniques', category: 'core', scale: 0.85 },
   ];
 }
 
@@ -70,6 +72,8 @@ const EDGES: ModelEdge[] = [
   { from: 'virustotal', to: 'technique', label: 'sandbox verifies', style: 'dashed' },
   { from: 'd3fend', to: 'technique', label: 'defends', style: 'dashed' },
   { from: 'thaicert', to: 'group', label: 'extends', style: 'dashed' },
+  { from: 'ics', to: 'technique', label: 'contains', style: 'dashed' },
+  { from: 'mobile', to: 'technique', label: 'contains', style: 'dashed' },
 ];
 
 function getEdgePath(from: ModelNode, to: ModelNode): { path: string; midX: number; midY: number; angle: number } {

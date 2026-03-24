@@ -1,6 +1,7 @@
 import { useNavigate, Link } from 'react-router-dom';
 import { useDashboard, useReports } from '../hooks/useApi';
 import { useSector } from '../contexts/SectorContext';
+import { useDomain } from '../contexts/DomainContext';
 import { PageHeader } from '../components/layout/PageHeader';
 import { StatCard } from '../components/shared/StatCard';
 import { EntityLink } from '../components/shared/EntityLink';
@@ -130,7 +131,8 @@ function VersionBannerSkeleton() {
 export function Dashboard() {
   const navigate = useNavigate();
   const { sectorParam } = useSector();
-  const { data, isLoading, error } = useDashboard(sectorParam);
+  const { domainParam } = useDomain();
+  const { data, isLoading, error } = useDashboard({ ...sectorParam, ...domainParam });
   const { data: reportsData, isLoading: reportsLoading } = useReports({
     limit: '5',
     since: new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0],

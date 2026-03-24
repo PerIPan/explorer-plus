@@ -12,6 +12,7 @@ export const paginationSchema = z.object({
 });
 
 export const platformSchema = z.enum([
+  // Enterprise
   'Windows',
   'Linux',
   'macOS',
@@ -24,6 +25,17 @@ export const platformSchema = z.enum([
   'Google Workspace',
   'Azure AD',
   'PRE',
+  // ICS
+  'Field Controller/RTU/PLC/IED',
+  'Safety Instrumented System/Protection Relay',
+  'Engineering Workstation',
+  'Human-Machine Interface',
+  'Control Server',
+  'Data Historian',
+  'Input/Output Server',
+  // Mobile
+  'Android',
+  'iOS',
 ]);
 
 export const softwareTypeSchema = z.enum(['malware', 'tool']);

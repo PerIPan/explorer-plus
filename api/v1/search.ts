@@ -6,6 +6,7 @@ import { z } from 'zod';
 
 const querySchema = z.object({
   q: searchSchema,
+  domain: z.enum(['enterprise-attack', 'mobile-attack', 'ics-attack']).optional(),
 });
 
 const FTS = `to_tsvector('english', COALESCE(name, '') || ' ' || COALESCE(description, '')) @@ plainto_tsquery('english', $1)`;
@@ -21,16 +22,20 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     return;
   }
 
-  const q = parsed.data.q;
+  const { q, domain } = parsed.data;
+  // $1 = search term; $2 = domain (when provided)
+  const domainCond = domain ? ` AND domain = $2` : '';
+  const domainParams = domain ? [q, domain] : [q];
 
   const [techResult, groupResult, softResult, mitResult, campResult, dsResult] = await Promise.all([
     query<{ attackId: string; name: string; description: string | null; platforms: string[] | null }>(
       `SELECT attack_id AS "attackId", name, description, platforms
        FROM techniques
-       WHERE ${FTS} AND is_revoked = false AND is_deprecated = false
+       WHERE ${FTS} AND is_revoked = false AND is_deprecated = false${domainCond}
        ORDER BY name ASC LIMIT 20`,
-      [q],
+      domainParams,
     ),
+    // Groups are NOT filtered by domain
     query<{ attackId: string; name: string; description: string | null; aliases: string[] | null }>(
       `SELECT attack_id AS "attackId", name, description, aliases
        FROM threat_groups
@@ -41,30 +46,30 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     query<{ attackId: string; name: string; type: string; description: string | null }>(
       `SELECT attack_id AS "attackId", name, type, description
        FROM attack_software
-       WHERE ${FTS} AND is_revoked = false AND is_deprecated = false
+       WHERE ${FTS} AND is_revoked = false AND is_deprecated = false${domainCond}
        ORDER BY name ASC LIMIT 20`,
-      [q],
+      domainParams,
     ),
     query<{ attackId: string; name: string; description: string | null }>(
       `SELECT attack_id AS "attackId", name, description
        FROM mitigations
-       WHERE ${FTS} AND is_revoked = false AND is_deprecated = false
+       WHERE ${FTS} AND is_revoked = false AND is_deprecated = false${domainCond}
        ORDER BY name ASC LIMIT 20`,
-      [q],
+      domainParams,
     ),
     query<{ attackId: string; name: string; description: string | null }>(
       `SELECT attack_id AS "attackId", name, description
        FROM campaigns
-       WHERE ${FTS} AND is_revoked = false AND is_deprecated = false
+       WHERE ${FTS} AND is_revoked = false AND is_deprecated = false${domainCond}
        ORDER BY name ASC LIMIT 20`,
-      [q],
+      domainParams,
     ),
     query<{ attackId: string; name: string; description: string | null }>(
       `SELECT attack_id AS "attackId", name, description
        FROM data_sources
-       WHERE ${FTS}
+       WHERE ${FTS}${domainCond}
        ORDER BY name ASC LIMIT 20`,
-      [q],
+      domainParams,
     ),
   ]);
 

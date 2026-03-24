@@ -17,6 +17,7 @@ const querySchema = paginationSchema.extend({
   tactic: z.string().optional(),
   platform: platformSchema.optional(),
   sector: z.string().max(50).optional(),
+  domain: z.enum(['enterprise-attack', 'mobile-attack', 'ics-attack']).optional(),
   include_deprecated: z.coerce.boolean().default(false),
 });
 
@@ -27,7 +28,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     return;
   }
 
-  const { page, limit, sort, order, search, tactic, platform, sector, include_deprecated } = parsed.data;
+  const { page, limit, sort, order, search, tactic, platform, sector, domain, include_deprecated } = parsed.data;
   const sortCol = SORT_MAP[sort ?? 'name'] ?? 't.name';
   const sortDir = order === 'desc' ? 'DESC' : 'ASC';
   const sortClause = `ORDER BY ${sortCol} ${sortDir}`;
@@ -67,6 +68,11 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
       JOIN group_sectors gs ON gs.group_id = gt.group_id
       JOIN sectors s ON s.id = gs.sector_id WHERE s.slug = $${params.length}
     )`);
+  }
+
+  if (domain) {
+    params.push(domain);
+    conditions.push(`t.domain = $${params.length}`);
   }
 
   const whereClause = `WHERE ${conditions.join(' AND ')}`;
