@@ -87,6 +87,9 @@ function FeedCard({ feed, syncing, onSync }: FeedCardProps) {
             {SOURCE_LABELS[feed.source] ?? feed.source}
           </h3>
         </div>
+        {!AUTO_ONLY_SOURCES.has(feed.source) && (
+          <SyncButton source={feed.source} disabled={syncing} onSync={onSync} />
+        )}
       </div>
 
       {/* Stats row */}
