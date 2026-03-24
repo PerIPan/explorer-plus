@@ -6,6 +6,7 @@ import { SectorDropdown } from './components/layout/SectorDropdown';
 import { SectorProvider } from './contexts/SectorContext';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { RelationshipModel } from './components/relationships/RelationshipModel';
+import { ErrorBoundary } from './components/shared/ErrorBoundary';
 
 // Lazy-loaded pages
 const Dashboard       = lazy(() => import('./pages/Dashboard').then((m) => ({ default: m.Dashboard })));
@@ -142,7 +143,9 @@ function Layout() {
 
         {/* Page content */}
         <main className="flex-1 px-6 py-6 overflow-auto">
-          <Outlet />
+          <ErrorBoundary>
+            <Outlet />
+          </ErrorBoundary>
         </main>
       </div>
 

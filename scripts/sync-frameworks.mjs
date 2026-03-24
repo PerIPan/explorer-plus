@@ -22,7 +22,7 @@ const isProduction =
 const pool = new Pool({
   connectionString,
   max: isProduction ? 1 : 5,
-  ssl: isProduction ? { rejectUnauthorized: false } : undefined,
+  ssl: isProduction ? { rejectUnauthorized: true } : undefined,
 });
 
 /** Fetch JSON from a URL with a simple retry. */
@@ -157,7 +157,8 @@ async function syncNist(techniqueMap) {
           ],
         );
         inserted++;
-      } catch {
+      } catch (err) {
+        console.warn(`  DB error for ${controlId}/${attackId}: ${err.message}`);
         skipped++;
       }
     }
@@ -275,7 +276,8 @@ async function syncEngage(techniqueMap) {
             ],
           );
           inserted++;
-        } catch {
+        } catch (err) {
+          console.warn(`  DB error for ${entry.id}/${attackId}: ${err.message}`);
           skipped++;
         }
       }

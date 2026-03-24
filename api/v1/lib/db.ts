@@ -5,12 +5,18 @@ let pool: Pool | null = null;
 function getPool(): Pool {
   if (!pool) {
     const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
-    const isProduction = connectionString?.includes('neon') || connectionString?.includes('vercel');
+    if (!connectionString) {
+      throw new Error('DATABASE_URL or POSTGRES_URL environment variable must be set');
+    }
+    const isProduction = connectionString.includes('neon') || connectionString.includes('vercel');
     pool = new Pool({
       connectionString,
       statement_timeout: 5000,
       max: isProduction ? 1 : 10,
       ssl: isProduction ? { rejectUnauthorized: true } : undefined,
+    });
+    pool.on('error', (err) => {
+      console.error('Unexpected PostgreSQL pool error:', err);
     });
   }
   return pool;

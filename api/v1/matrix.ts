@@ -4,7 +4,7 @@ import { withHandler } from './lib/middleware.js';
 import { z } from 'zod';
 
 const querySchema = z.object({
-  domain: z.string().optional(),
+  domain: z.enum(['enterprise-attack', 'mobile-attack', 'ics-attack']).optional(),
   sector: z.string().max(50).optional(),
 });
 

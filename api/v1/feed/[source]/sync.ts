@@ -56,10 +56,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const cronHandler = HANDLERS[sourceKey];
   if (!cronHandler) {
-    res.status(404).json({
-      error: `Unknown source: ${sourceKey}`,
-      available: Object.keys(HANDLERS),
-    });
+    res.status(404).json({ error: 'Unknown source' });
     return;
   }
 

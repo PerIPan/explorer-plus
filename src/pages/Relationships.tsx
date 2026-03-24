@@ -99,6 +99,7 @@ export function Relationships() {
   const [activeTab, setActiveTab] = useState<TabId>(tabParam);
   const graphRef = useRef<ForceGraphHandle>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const blurTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /** Keep selectedId in sync with URL param */
   useEffect(() => {
@@ -116,6 +117,13 @@ export function Relationships() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tabParam]);
+
+  /** Clear blur timer on unmount */
+  useEffect(() => {
+    return () => {
+      if (blurTimerRef.current !== null) clearTimeout(blurTimerRef.current);
+    };
+  }, []);
 
   const { data: graphData, isLoading, error } = useRelationships(selectedId);
 
@@ -165,7 +173,7 @@ export function Relationships() {
       });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entityType]);
+  }, [entityType, activeTab]);
 
   const selectEntity = useCallback(
     (attackId: string, knownType?: string) => {
@@ -246,12 +254,14 @@ export function Relationships() {
               setShowSuggestions(true);
               if (selectedId) setSearchInput('');
             }}
-            onBlur={() => setTimeout(() => {
-              setShowSuggestions(false);
-              if (!searchInput && selectedId && graphData?.center) {
-                setSearchInput(graphData?.center?.label ?? '');
-              }
-            }, 200)}
+            onBlur={() => {
+              blurTimerRef.current = setTimeout(() => {
+                setShowSuggestions(false);
+                if (!searchInput && selectedId && graphData?.center) {
+                  setSearchInput(graphData?.center?.label ?? '');
+                }
+              }, 200);
+            }}
             onKeyDown={(e) => {
               if (e.key === 'Escape') {
                 setShowSuggestions(false);

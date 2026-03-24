@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { query } from '../lib/db.js';
 import { withHandler } from '../lib/middleware.js';
 import { paginationSchema } from '../lib/validate.js';
+import { escapeLikePattern } from '../lib/queries.js';
 import { z } from 'zod';
 
 const querySchema = paginationSchema.extend({
@@ -35,7 +36,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   }
 
   if (q) {
-    params.push(`%${q}%`);
+    params.push(`%${escapeLikePattern(q)}%`);
     conditions.push(`(s.title ILIKE $${params.length} OR s.sigma_id ILIKE $${params.length})`);
   }
 

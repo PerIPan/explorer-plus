@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { isSafeUrl } from '../../lib/urlSafety';
 
 /** Collapsible references list with a chevron toggle. */
 export function RefsChevron({ refs }: { refs: string[] }) {
@@ -28,15 +29,19 @@ export function RefsChevron({ refs }: { refs: string[] }) {
       {open && (
         <div className="mt-1.5 ml-4 flex flex-wrap gap-2">
           {refs.map((ref) => (
-            <a
-              key={ref}
-              href={ref}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-[var(--accent-teal)] hover:underline break-all"
-            >
-              {ref}
-            </a>
+            isSafeUrl(ref) ? (
+              <a
+                key={ref}
+                href={ref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-[var(--accent-teal)] hover:underline break-all"
+              >
+                {ref}
+              </a>
+            ) : (
+              <span key={ref} className="text-xs text-[var(--text-secondary)] break-all">{ref}</span>
+            )
           ))}
         </div>
       )}

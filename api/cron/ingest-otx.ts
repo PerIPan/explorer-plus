@@ -134,28 +134,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           recordsInserted++;
 
           // Link ATT&CK techniques and collect IDs for IOC linking
-          const techIds: string[] = [];
+          const normalizedAttackIds: string[] = [];
           for (const atkEntry of pulse.attack_ids ?? []) {
             // OTX returns attack_ids as string[] or Array<{id:string}>
             const rawId = typeof atkEntry === 'string' ? atkEntry : atkEntry.id;
             const normalized = /^T\d{4}(\.\d{3})?$/.test(rawId ?? '')
               ? rawId
               : null;
-            if (!normalized) continue;
+            if (normalized) normalizedAttackIds.push(normalized);
+          }
 
-            const techResult = await query<{ id: string }>(
-              `SELECT id FROM techniques WHERE attack_id = $1 LIMIT 1`,
-              [normalized],
+          // Batch-resolve all technique UUIDs in one query (avoids N+1)
+          const techIds: string[] = [];
+          if (normalizedAttackIds.length > 0) {
+            const techResult = await query<{ id: string; attack_id: string }>(
+              `SELECT id, attack_id FROM techniques WHERE attack_id = ANY($1::text[])`,
+              [normalizedAttackIds],
             );
-            if (!techResult.rows[0]) continue;
-
-            techIds.push(techResult.rows[0].id);
-            await query(
-              `INSERT INTO report_techniques (report_id, technique_id)
-               VALUES ($1, $2)
-               ON CONFLICT DO NOTHING`,
-              [reportId, techResult.rows[0].id],
-            );
+            for (const row of techResult.rows) {
+              techIds.push(row.id);
+              await query(
+                `INSERT INTO report_techniques (report_id, technique_id)
+                 VALUES ($1, $2)
+                 ON CONFLICT DO NOTHING`,
+                [reportId, row.id],
+              );
+            }
           }
 
           // Extract IOCs and link to techniques from the same pulse

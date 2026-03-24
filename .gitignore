@@ -4,6 +4,7 @@ __pycache__/
 *.pyc
 .env
 .env.local
+.env.vercel
 .env.production
 .env*.local
 node_modules/

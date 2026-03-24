@@ -151,7 +151,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
 
         recordsInserted++;
-        await sleep(1000); // Rate-limit: 1 req/sec
+        await sleep(apiKey ? 1000 : 6000); // NVD rate-limit: 50/30s w/ key, 5/30s without
       } catch (cveErr) {
         console.error(`Failed to enrich ${row.cve_id}:`, cveErr);
         recordsSkipped++;

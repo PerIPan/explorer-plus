@@ -48,7 +48,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
        ea.attribution_confidence AS "attributionConfidence"
      FROM external_actors ea
      LEFT JOIN threat_groups tg ON tg.attack_id = ea.mitre_group_id
-     WHERE ea.name = $1
+     WHERE LOWER(ea.name) = LOWER($1)
      LIMIT 1`,
     [name],
   );

@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { isSafeUrl } from '../lib/urlSafety';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useIocs } from '../hooks/useApi';
@@ -183,7 +184,7 @@ export function IocsList() {
         return (
           <div className={showDesc ? 'flex flex-col gap-0.5' : ''}>
             <div className="flex items-center gap-0.5">
-              {link ? (
+              {link && isSafeUrl(link) ? (
                 <a
                   href={link}
                   target="_blank"

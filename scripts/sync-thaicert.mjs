@@ -24,7 +24,7 @@ const isProduction =
 const pool = new Pool({
   connectionString,
   max: isProduction ? 1 : 5,
-  ssl: isProduction ? { rejectUnauthorized: false } : undefined,
+  ssl: isProduction ? { rejectUnauthorized: true } : undefined,
 });
 
 /** Fetch JSON from a URL with simple retry. */

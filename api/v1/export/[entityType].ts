@@ -22,27 +22,27 @@ function toCsv(rows: Record<string, unknown>[]): string {
 const ENTITY_QUERIES: Record<string, string> = {
   techniques: `
     SELECT attack_id, name, description, url, platforms, is_subtechnique, is_revoked, is_deprecated, domain, stix_modified
-    FROM techniques ORDER BY attack_id ASC`,
+    FROM techniques ORDER BY attack_id ASC LIMIT 10000`,
   groups: `
     SELECT attack_id, name, description, url, aliases, is_revoked, is_deprecated, domain, stix_modified
-    FROM threat_groups ORDER BY attack_id ASC`,
+    FROM threat_groups ORDER BY attack_id ASC LIMIT 10000`,
   software: `
     SELECT attack_id, name, description, url, type, platforms, aliases, is_revoked, is_deprecated, domain, stix_modified
-    FROM attack_software ORDER BY attack_id ASC`,
+    FROM attack_software ORDER BY attack_id ASC LIMIT 10000`,
   mitigations: `
     SELECT attack_id, name, description, url, is_revoked, is_deprecated, domain, stix_modified
-    FROM mitigations ORDER BY attack_id ASC`,
+    FROM mitigations ORDER BY attack_id ASC LIMIT 10000`,
   campaigns: `
     SELECT attack_id, name, description, url, aliases, first_seen, last_seen, is_revoked, is_deprecated, domain
-    FROM campaigns ORDER BY attack_id ASC`,
+    FROM campaigns ORDER BY attack_id ASC LIMIT 10000`,
   data_sources: `
     SELECT attack_id, name, description, url, is_revoked, is_deprecated, domain
-    FROM data_sources ORDER BY attack_id ASC`,
+    FROM data_sources ORDER BY attack_id ASC LIMIT 10000`,
   tactics: `
     SELECT attack_id, name, description, url, sort_order, domain
-    FROM tactics ORDER BY sort_order ASC NULLS LAST`,
+    FROM tactics ORDER BY sort_order ASC NULLS LAST LIMIT 10000`,
   sectors: `
-    SELECT name, slug FROM sectors ORDER BY name ASC`,
+    SELECT name, slug FROM sectors ORDER BY name ASC LIMIT 10000`,
 };
 
 async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {

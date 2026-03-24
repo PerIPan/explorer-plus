@@ -1,4 +1,4 @@
-import { createContext, useContext, useCallback, useMemo, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useCallback, useMemo, useEffect, useState, type ReactNode } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 interface SectorContextValue {
@@ -24,7 +24,10 @@ export function SectorProvider({ children }: { children: ReactNode }) {
   const urlSector = searchParams.get('sector') || null;
 
   // Derive sector: URL takes priority, sessionStorage as fallback
-  const storedSector = typeof window !== 'undefined' ? sessionStorage.getItem(STORAGE_KEY) : null;
+  // Use a useState initializer so sessionStorage is read only once on mount
+  const [storedSector] = useState<string | null>(() =>
+    typeof window !== 'undefined' ? sessionStorage.getItem(STORAGE_KEY) : null
+  );
   const sector = urlSector ?? storedSector;
 
   // Persist to sessionStorage when URL sector changes

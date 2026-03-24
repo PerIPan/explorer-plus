@@ -290,7 +290,7 @@ export function useExternalActors(params: Record<string, string> = {}) {
 export function useExternalActorByGroup(mitreGroupId: string) {
   return useQuery({
     queryKey: ['external-actor-by-group', mitreGroupId],
-    queryFn: () => apiFetch<{ data: ExternalActor[] }>(`/external-actors?mitre_group=${mitreGroupId}&limit=10`),
+    queryFn: () => apiFetch<{ data: ExternalActor[] }>('/external-actors', { mitre_group: mitreGroupId, limit: '10' }),
     enabled: Boolean(mitreGroupId),
   });
 }

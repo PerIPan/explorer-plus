@@ -252,6 +252,7 @@ export const ForceGraph = forwardRef<ForceGraphHandle, ForceGraphProps>(
 
       /* ── Tick ── */
       sim.on('tick', () => {
+        if (!svgRef.current) { sim.stop(); return; }
         edgeSel
           .attr('x1', (d) => (d.source as SimNode).x ?? 0)
           .attr('y1', (d) => (d.source as SimNode).y ?? 0)

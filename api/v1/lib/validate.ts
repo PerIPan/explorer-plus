@@ -6,7 +6,7 @@ export const searchSchema = z.string().min(3).max(200);
 
 export const paginationSchema = z.object({
   page: z.coerce.number().int().positive().max(1000).default(1),
-  limit: z.coerce.number().int().positive().max(5000).default(50),
+  limit: z.coerce.number().int().positive().max(500).default(50),
   sort: z.string().optional(),
   order: z.enum(['asc', 'desc']).default('asc'),
 });

@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
+import { isSafeUrl } from '../lib/urlSafety';
 import { useTechnique, useIntelligence, useFrameworks } from '../hooks/useApi';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Badge } from '../components/shared/Badge';
@@ -454,6 +455,14 @@ export function TechniqueDetail() {
   const validTabs = new Set<string>(TABS.map((t) => t.id));
   const [activeTab, setActiveTab] = useState<TabId>(tabParam && validTabs.has(tabParam) ? tabParam : 'overview');
 
+  // Sync active tab when URL ?tab= changes (e.g. back button, external link)
+  useEffect(() => {
+    if (tabParam && validTabs.has(tabParam) && tabParam !== activeTab) {
+      setActiveTab(tabParam);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tabParam]);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64 text-[var(--text-secondary)]">
@@ -517,7 +526,7 @@ export function TechniqueDetail() {
             ))}
           </div>
         ) : null}
-        {data.url && (
+        {data.url && isSafeUrl(data.url) && (
           <a
             href={data.url}
             target="_blank"

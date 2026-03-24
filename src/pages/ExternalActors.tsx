@@ -349,15 +349,7 @@ export function ExternalActors() {
                     className={`px-4 py-3 font-semibold text-xs text-[var(--text-secondary)] uppercase tracking-wider text-left ${col.sortKey ? 'cursor-pointer select-none hover:text-[var(--text-primary)] transition-colors duration-150' : ''}`}
                     onClick={col.sortKey ? () => handleSort(col.sortKey!) : undefined}
                   >
-                    <span className="inline-flex items-center gap-1">
-                      {col.header}
-                      {col.tooltip && (
-                        <svg className="w-3 h-3 opacity-40" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
-                          <circle cx="12" cy="12" r="10" />
-                          <path d="M12 16v-4M12 8h.01" />
-                        </svg>
-                      )}
-                    </span>
+                    {col.header}
                     {col.sortKey && sortBy === col.sortKey && (
                       <span className="ml-1 text-[var(--accent-teal)]">
                         {sortDir === 'asc' ? '\u25B4' : '\u25BE'}

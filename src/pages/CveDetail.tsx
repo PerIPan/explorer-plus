@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { isSafeUrl } from '../lib/urlSafety';
 import { useCveDetail } from '../hooks/useApi';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Badge } from '../components/shared/Badge';
@@ -197,7 +198,7 @@ export function CveDetail() {
                 {data.sources.map((s) => (
                   <div key={s.source} className="flex items-center gap-2">
                     <Badge label={s.source} variant={SOURCE_VARIANTS[s.source] ?? 'neutral'} />
-                    {s.sourceRef && (
+                    {s.sourceRef && isSafeUrl(s.sourceRef) && (
                       <a
                         href={s.sourceRef}
                         target="_blank"
@@ -283,7 +284,7 @@ export function CveDetail() {
                     key={r.id}
                     className="flex items-center justify-between gap-3 py-2 px-3 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)]"
                   >
-                    {r.url ? (
+                    {r.url && isSafeUrl(r.url) ? (
                       <a
                         href={r.url}
                         target="_blank"

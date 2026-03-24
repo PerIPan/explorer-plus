@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { isSafeUrl } from '../lib/urlSafety';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useReports } from '../hooks/useApi';
@@ -92,17 +93,20 @@ const columns: ColumnDef<ThreatReport>[] = [
     key: 'title',
     header: 'Title',
     sortKey: 'title',
-    render: (row) => (
-      <a
-        href={row.url}
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={(e) => e.stopPropagation()}
-        className="text-[var(--text-primary)] hover:text-[var(--accent-teal)] hover:underline transition-colors"
-      >
-        {row.title}
-      </a>
-    ),
+    render: (row) =>
+      isSafeUrl(row.url) ? (
+        <a
+          href={row.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="text-[var(--text-primary)] hover:text-[var(--accent-teal)] hover:underline transition-colors"
+        >
+          {row.title}
+        </a>
+      ) : (
+        <span className="text-[var(--text-primary)]">{row.title}</span>
+      ),
   },
   {
     key: 'source',

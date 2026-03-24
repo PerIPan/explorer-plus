@@ -1,4 +1,12 @@
 /**
+ * Escapes PostgreSQL LIKE/ILIKE special characters in user input.
+ * Prevents wildcard injection via %, _, and \ characters.
+ */
+export function escapeLikePattern(input: string): string {
+  return input.replace(/\\/g, '\\\\').replace(/%/g, '\\%').replace(/_/g, '\\_');
+}
+
+/**
  * Builds a full-text search WHERE condition using PostgreSQL tsvector.
  * Returns the clause template and the param value separately so the caller
  * can splice the param into their own positional-parameter array.

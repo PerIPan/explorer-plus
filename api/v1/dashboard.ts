@@ -144,6 +144,10 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   ]);
 
   const raw = statsResult.rows[0];
+  if (!raw) {
+    res.status(500).json({ error: 'Failed to load stats', code: 'INTERNAL_ERROR' });
+    return;
+  }
   res.status(200).json({
     stats: {
       techniqueCount: parseInt(raw.techniqueCount, 10),

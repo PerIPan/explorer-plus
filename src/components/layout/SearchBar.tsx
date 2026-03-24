@@ -25,6 +25,7 @@ export function SearchBar() {
   const [value, setValue] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const blurTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navigate = useNavigate();
 
   /** Load all entities for Fuse.js */
@@ -50,9 +51,11 @@ export function SearchBar() {
     return fuse.search(value.trim(), { limit: 8 }).map(r => r.item);
   }, [fuse, value]);
 
-  /** Cleanup on unmount */
+  /** Cleanup blur timer on unmount */
   useEffect(() => {
-    return () => {};
+    return () => {
+      if (blurTimerRef.current !== null) clearTimeout(blurTimerRef.current);
+    };
   }, []);
 
   /** Focus on `/` keypress */
@@ -124,7 +127,9 @@ export function SearchBar() {
         value={value}
         onChange={(e) => { setValue(e.target.value); setShowDropdown(true); }}
         onFocus={() => setShowDropdown(true)}
-        onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
+        onBlur={() => {
+          blurTimerRef.current = setTimeout(() => setShowDropdown(false), 200);
+        }}
         placeholder="Search techniques, groups, software..."
         aria-label="Search MITRE ATT&CK entities"
         className="

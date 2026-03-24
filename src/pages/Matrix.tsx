@@ -37,9 +37,11 @@ export function Matrix() {
   });
 
   // Stable reference to group query data (avoids useQueries array reference churn)
+  // Use dataUpdatedAt timestamps as dependency — these are primitives that change only when data changes
   const groupQueryData = useMemo(
     () => groupQueries.map((q) => q.data),
-    [groupQueries.map((q) => q.data).join(',')],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [groupQueries.map((q) => q.dataUpdatedAt).join(',')],
   );
 
   // Build the actor overlay lookup map (only when all queries are loaded)

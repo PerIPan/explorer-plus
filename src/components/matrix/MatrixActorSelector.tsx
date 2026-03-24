@@ -3,9 +3,9 @@ import type { Group } from '../../lib/types';
 import { useFuseFilter } from '../../hooks/useFuseFilter';
 
 const ACTOR_COLORS = [
-  { css: 'var(--accent-orange)', label: 'orange' },
+  { css: 'var(--accent-yellow)', label: 'yellow' },
   { css: 'var(--accent-purple)', label: 'purple' },
-  { css: 'var(--accent-pink)', label: 'pink' },
+  { css: 'var(--accent-blue)', label: 'blue' },
 ];
 
 interface SelectedActor {

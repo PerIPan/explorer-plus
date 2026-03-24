@@ -100,7 +100,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           continue;
         }
 
-        const xml = await resp.text();
+        const MAX_XML_BYTES = 5 * 1024 * 1024; // 5 MB
+        const contentLength = Number(resp.headers.get('content-length') ?? 0);
+        if (contentLength > MAX_XML_BYTES) {
+          feedSummary[feed.source].error = `Feed too large (${contentLength} bytes)`;
+          continue;
+        }
+        const rawText = await resp.text();
+        if (Buffer.byteLength(rawText, 'utf8') > MAX_XML_BYTES) {
+          feedSummary[feed.source].error = 'Feed too large (>5MB)';
+          continue;
+        }
+        const xml = rawText;
         const items = parseRss(xml);
 
         for (const item of items) {
@@ -109,25 +120,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           const searchText = `${item.title} ${item.description}`;
           const rawIds = extractTechniqueIds(searchText);
 
-          // Validate IDs against our techniques table
+          // Resolve technique IDs in one query (returns both id and attack_id)
+          let techRows: Array<{ id: string; attack_id: string }> = [];
           let validIds: string[] = [];
           if (rawIds.length > 0) {
-            const validResult = await query<{ attack_id: string }>(
-              `SELECT attack_id FROM techniques WHERE attack_id = ANY($1::text[])`,
+            const techResult = await query<{ id: string; attack_id: string }>(
+              `SELECT id, attack_id FROM techniques WHERE attack_id = ANY($1::text[])`,
               [rawIds],
             );
-            validIds = validResult.rows.map((r) => r.attack_id);
+            techRows = techResult.rows;
+            validIds = techRows.map((r) => r.attack_id);
           }
 
           try {
-            const rptResult = await query<{ id: string }>(
+            const rptResult = await query<{ id: string; was_inserted: boolean }>(
               `INSERT INTO threat_reports
                  (title, url, source, published_at, summary, extracted_technique_ids)
                VALUES ($1, $2, $3, $4, $5, $6)
                ON CONFLICT (url) DO UPDATE
                  SET title = EXCLUDED.title,
                      updated_at = NOW()
-               RETURNING id`,
+               RETURNING id, (xmax = 0) AS was_inserted`,
               [
                 item.title || 'Untitled',
                 item.link,
@@ -139,26 +152,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             );
 
             const reportId = rptResult.rows[0].id;
-            recordsInserted++;
-            feedSummary[feed.source].inserted++;
+            if (rptResult.rows[0].was_inserted) {
+              recordsInserted++;
+              feedSummary[feed.source].inserted++;
+            }
 
-            if (validIds.length > 0) {
-              const techMapResult = await query<{ id: string; attack_id: string }>(
-                `SELECT id, attack_id FROM techniques WHERE attack_id = ANY($1::text[])`,
-                [validIds],
+            if (techRows.length > 0) {
+              const values = techRows
+                .map((_, i) => `($1, $${i + 2})`)
+                .join(', ');
+              await query(
+                `INSERT INTO report_techniques (report_id, technique_id)
+                 VALUES ${values}
+                 ON CONFLICT DO NOTHING`,
+                [reportId, ...techRows.map((r) => r.id)],
               );
-
-              if (techMapResult.rows.length > 0) {
-                const values = techMapResult.rows
-                  .map((_, i) => `($1, $${i + 2})`)
-                  .join(', ');
-                await query(
-                  `INSERT INTO report_techniques (report_id, technique_id)
-                   VALUES ${values}
-                   ON CONFLICT DO NOTHING`,
-                  [reportId, ...techMapResult.rows.map((r) => r.id)],
-                );
-              }
             }
           } catch (upsertErr) {
             const msg = upsertErr instanceof Error ? upsertErr.message : String(upsertErr);

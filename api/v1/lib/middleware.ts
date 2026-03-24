@@ -12,11 +12,11 @@ export function withHandler(handler: Handler, options?: HandlerOptions) {
 
     // CORS preflight — must be checked before the method allow-list so OPTIONS
     // returns 200 rather than 405.
-    // Use production URL if available, fallback to deployment URL, then localhost
+    // Require VERCEL_PROJECT_PRODUCTION_URL in production; fallback to ALLOWED_ORIGIN or localhost
     const origin = process.env.VERCEL_PROJECT_PRODUCTION_URL
       ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-      : process.env.VERCEL_URL
-        ? `https://${process.env.VERCEL_URL}`
+      : process.env.ALLOWED_ORIGIN
+        ? process.env.ALLOWED_ORIGIN
         : 'http://localhost:5173';
     res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');

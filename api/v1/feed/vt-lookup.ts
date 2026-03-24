@@ -6,7 +6,7 @@ const VT_BASE = 'https://www.virustotal.com/api/v3';
 async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   const hash = Array.isArray(req.query.hash) ? req.query.hash[0] : req.query.hash ?? '';
 
-  if (!hash || !/^[a-fA-F0-9]{32,64}$/.test(hash)) {
+  if (!hash || !/^[a-fA-F0-9]{32}$|^[a-fA-F0-9]{40}$|^[a-fA-F0-9]{64}$/.test(hash)) {
     res.status(400).json({ error: 'Invalid hash', code: 'VALIDATION_ERROR' });
     return;
   }
