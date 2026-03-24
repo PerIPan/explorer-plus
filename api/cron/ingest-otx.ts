@@ -4,7 +4,7 @@ import { verifyCronAuth } from './lib/auth.js';
 
 const OTX_BASE = 'https://otx.alienvault.com/api/v1';
 const MAX_PAGES = 1;       // Keep small — Vercel function timeout ~10s
-const PULSES_PER_PAGE = 10; // Fewer pulses per run, cron catches up
+const PULSES_PER_PAGE = 3; // Smaller batches to avoid Vercel timeout
 
 interface OtxIndicator {
   type: string;
