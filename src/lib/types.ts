@@ -8,6 +8,7 @@ export interface BaseEntity {
   url: string | null;
   isRevoked: boolean;
   isDeprecated: boolean;
+  domain: string | null;
   stixCreated: string;
   stixModified: string;
 }

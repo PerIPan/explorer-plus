@@ -33,6 +33,7 @@ interface SoftwareDetail {
   type: 'malware' | 'tool';
   platforms: string[] | null;
   aliases: string[] | null;
+  domain: string | null;
   techniques: SoftwareTechnique[];
   groups: SoftwareGroup[];
   campaigns: SoftwareCampaign[];
@@ -222,6 +223,9 @@ export function SoftwareMapView({ attackId }: SoftwareMapViewProps) {
             label={software.type}
             variant={software.type === 'malware' ? 'pink' : 'purple'}
           />
+          {software.domain && (
+            <Badge label={software.domain.replace('-attack', '')} variant="neutral" />
+          )}
           {platforms.map((p) => (
             <Badge key={p} label={p} variant="blue" />
           ))}

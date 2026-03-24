@@ -265,6 +265,9 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
           <span className="font-mono text-xs text-[var(--accent-teal)] bg-[var(--teal-faint)] border border-[var(--teal-dim)] px-2 py-0.5 rounded">
             {technique.attackId}
           </span>
+          {technique.domain && (
+            <Badge label={technique.domain.replace('-attack', '')} variant="neutral" />
+          )}
           {technique.tactics?.map((tactic) => (
             <Badge key={tactic} label={tactic} variant="yellow" />
           ))}

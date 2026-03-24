@@ -147,6 +147,9 @@ export function DataSourceMapView({ attackId }: DataSourceMapViewProps) {
             {dataSource.attackId}
           </span>
           <Badge label="data source" variant="pink" />
+          {dataSource.domain && (
+            <Badge label={dataSource.domain.replace('-attack', '')} variant="neutral" />
+          )}
           {dataSource.isDeprecated && <Badge label="deprecated" variant="neutral" />}
           {dataSource.isRevoked && <Badge label="revoked" variant="neutral" />}
           {(dataSource.platforms ?? []).map((p) => (

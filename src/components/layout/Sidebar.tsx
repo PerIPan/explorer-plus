@@ -3,6 +3,34 @@ import { NavLink, Link, useLocation } from 'react-router-dom';
 import { DomainDropdown } from './DomainDropdown';
 import { SectorDropdown } from './SectorDropdown';
 
+function SidebarFilters() {
+  const [open, setOpen] = useState(true);
+  return (
+    <div className="border-b border-[var(--border-color)]">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between px-4 py-2 text-[10px] font-semibold text-[var(--accent-teal)] uppercase tracking-wider hover:bg-[var(--hover-overlay)] transition-colors"
+        aria-expanded={open}
+      >
+        Filters
+        <svg
+          className={`w-3 h-3 transition-transform duration-150 ${open ? 'rotate-180' : ''}`}
+          fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {open && (
+        <div className="px-3 pb-3 space-y-2">
+          <DomainDropdown />
+          <SectorDropdown />
+        </div>
+      )}
+    </div>
+  );
+}
+
 interface SidebarProps {
   open: boolean;
   onClose: () => void;
@@ -144,7 +172,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       {/* Logo / Title */}
       <div className="px-4 py-5 border-b border-[var(--border-color)] flex items-center justify-between">
         <Link to="/" className="group">
-          <div className="text-[var(--accent-teal)] font-bold text-sm tracking-widest uppercase group-hover:text-[var(--accent-teal-light)] transition-colors">
+          <div className="text-[var(--accent-teal)] font-bold text-base tracking-widest uppercase group-hover:text-[var(--accent-teal-light)] transition-colors">
             MITRE ATT&amp;CK
           </div>
           <div className="text-[var(--text-secondary)] text-xs mt-0.5 group-hover:text-[var(--text-primary)] transition-colors">Explorer Plus</div>
@@ -169,11 +197,8 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         </button>
       </div>
 
-      {/* Domain & Sector filters — below logo */}
-      <div className="px-3 py-3 border-b border-[var(--border-color)] space-y-2">
-        <DomainDropdown />
-        <SectorDropdown />
-      </div>
+      {/* Domain & Sector filters — collapsible */}
+      <SidebarFilters />
 
       {/* Main Nav */}
       <nav

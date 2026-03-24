@@ -189,6 +189,9 @@ export function TacticMapView({ attackId }: TacticMapViewProps) {
             {tactic.attackId}
           </span>
           <Badge label="tactic" variant="yellow" />
+          {tactic.domain && (
+            <Badge label={tactic.domain.replace('-attack', '')} variant="neutral" />
+          )}
         </div>
       </div>
 

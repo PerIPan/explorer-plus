@@ -209,6 +209,9 @@ export function MitigationMapView({ attackId }: MitigationMapViewProps) {
             {data.attackId}
           </span>
           <Badge label="mitigation" variant="green" />
+          {data.domain && (
+            <Badge label={data.domain.replace('-attack', '')} variant="neutral" />
+          )}
           {data.isRevoked && <Badge label="revoked" variant="orange" />}
           {data.isDeprecated && <Badge label="deprecated" variant="neutral" />}
         </div>
