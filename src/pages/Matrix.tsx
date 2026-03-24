@@ -13,8 +13,9 @@ import type { Group } from '../lib/types';
 
 export function Matrix() {
   const { sectorParam } = useSector();
-  const { domainParam } = useDomain();
-  const { data, isLoading, error } = useMatrix({ ...sectorParam, ...domainParam });
+  const { domain, domainParam } = useDomain();
+  const isAllDomains = domain === 'all';
+  const { data, isLoading, error } = useMatrix(isAllDomains ? sectorParam : { ...sectorParam, ...domainParam });
   const [inputValue, setInputValue] = useState('');
   const [filterText, setFilterText] = useState('');
   const [selectedActors, setSelectedActors] = useState<SelectedActor[]>([]);
@@ -115,7 +116,9 @@ export function Matrix() {
     <div className="space-y-4">
       <PageHeader
         title="ATT&CK Matrix"
-        subtitle="Techniques organized by tactic — click any cell to view details"
+        subtitle={isAllDomains
+          ? 'Showing all techniques across Enterprise, ICS, and Mobile — select a specific domain for domain-scoped tactics'
+          : 'Techniques organized by tactic — click any cell to view details'}
         actions={
           <span className="text-[var(--text-secondary)] text-sm">
             {totalTechniques} techniques across {(data ?? []).length} tactics

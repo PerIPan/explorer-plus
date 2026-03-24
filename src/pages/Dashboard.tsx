@@ -131,7 +131,8 @@ function VersionBannerSkeleton() {
 export function Dashboard() {
   const navigate = useNavigate();
   const { sectorParam } = useSector();
-  const { domainParam } = useDomain();
+  const { domain, domainParam } = useDomain();
+  const isAllDomains = domain === 'all';
   const { data, isLoading, error } = useDashboard({ ...sectorParam, ...domainParam });
   const { data: reportsData, isLoading: reportsLoading } = useReports({
     limit: '5',
@@ -234,7 +235,7 @@ export function Dashboard() {
                 ATT&CK Version
               </span>
               <span className="text-sm font-bold text-[var(--accent-teal)] tabular-nums">
-                v{attackVersion.attackVersion}
+                {isAllDomains ? '—' : `v${attackVersion.attackVersion}`}
               </span>
             </div>
             <div className="w-px h-4 bg-[var(--border-color)]" />
@@ -243,7 +244,7 @@ export function Dashboard() {
                 Domain
               </span>
               <span className="text-sm font-semibold text-[var(--text-primary)]">
-                {attackVersion.domain}
+                {isAllDomains ? '—' : attackVersion.domain}
               </span>
             </div>
             <div className="w-px h-4 bg-[var(--border-color)]" />
@@ -252,7 +253,7 @@ export function Dashboard() {
                 Last Seeded
               </span>
               <span className="text-sm text-[var(--text-secondary)]">
-                {formatSeeded(attackVersion.seededAt)}
+                {isAllDomains ? '—' : formatSeeded(attackVersion.seededAt)}
               </span>
             </div>
           </div>

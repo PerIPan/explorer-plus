@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { NavLink, Link, useLocation } from 'react-router-dom';
+import { DomainDropdown } from './DomainDropdown';
+import { SectorDropdown } from './SectorDropdown';
 
 interface SidebarProps {
   open: boolean;
@@ -165,6 +167,12 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
+      </div>
+
+      {/* Domain & Sector filters — below logo */}
+      <div className="px-3 py-3 border-b border-[var(--border-color)] space-y-2">
+        <DomainDropdown />
+        <SectorDropdown />
       </div>
 
       {/* Main Nav */}

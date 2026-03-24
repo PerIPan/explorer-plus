@@ -2,8 +2,6 @@ import { lazy, Suspense, useState } from 'react';
 import { Routes, Route, Outlet } from 'react-router-dom';
 import { Sidebar } from './components/layout/Sidebar';
 import { SearchBar } from './components/layout/SearchBar';
-import { SectorDropdown } from './components/layout/SectorDropdown';
-import { DomainDropdown } from './components/layout/DomainDropdown';
 import { SectorProvider } from './contexts/SectorContext';
 import { DomainProvider } from './contexts/DomainContext';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
@@ -124,8 +122,7 @@ function Layout() {
             </svg>
           </button>
           <SearchBar />
-          <SectorDropdown />
-          <DomainDropdown />
+          <div className="flex-1" />
           <button
             type="button"
             onClick={() => setModelOpen(true)}

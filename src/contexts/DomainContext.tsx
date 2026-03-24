@@ -11,6 +11,7 @@ const DOMAINS: DomainOption[] = [
   { value: 'enterprise-attack', label: 'Enterprise', short: 'Enterprise' },
   { value: 'mobile-attack',     label: 'Mobile',     short: 'Mobile'     },
   { value: 'ics-attack',        label: 'ICS',         short: 'ICS'        },
+  { value: 'all',               label: 'All Domains', short: 'All'        },
 ];
 
 export const DEFAULT_DOMAIN = 'enterprise-attack';
@@ -81,7 +82,7 @@ export function DomainProvider({ children }: { children: ReactNode }) {
   );
 
   const domainParam = useMemo<Record<string, string>>(
-    () => ({ domain }),
+    () => (domain === 'all' ? {} as Record<string, string> : { domain }),
     [domain],
   );
 
