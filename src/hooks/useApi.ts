@@ -108,10 +108,10 @@ export function useTechnique(attackId: string, params: Record<string, string> = 
   });
 }
 
-export function useGroup(attackId: string) {
+export function useGroup(attackId: string, params: Record<string, string> = {}) {
   return useQuery({
-    queryKey: ['group', attackId],
-    queryFn: () => apiFetch<Group>(`/groups/${attackId}`),
+    queryKey: ['group', attackId, params],
+    queryFn: () => apiFetch<Group>(`/groups/${attackId}`, params),
     enabled: Boolean(attackId),
   });
 }

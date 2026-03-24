@@ -2,6 +2,9 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { query } from '../lib/db.js';
 import { withHandler } from '../lib/middleware.js';
 import { attackIdSchema } from '../lib/validate.js';
+import { z } from 'zod';
+
+const optionalDomain = z.enum(['enterprise-attack', 'mobile-attack', 'ics-attack']).optional();
 
 async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   const parsed = attackIdSchema.safeParse(req.query.attackId);
@@ -10,6 +13,8 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     return;
   }
   const attackId = parsed.data;
+  const domainParsed = optionalDomain.safeParse(req.query.domain);
+  const domain = domainParsed.success ? domainParsed.data ?? null : null;
 
   const groupResult = await query<{
     id: string; attackId: string; stixId: string | null; name: string;
@@ -34,23 +39,35 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   const groupId = group.id;
 
   const [techniquesResult, softwareResult, campaignsResult, sectorsResult] = await Promise.all([
-    // Techniques with procedures
+    // Techniques with procedures (optionally filtered by domain)
     query<{ attackId: string; name: string; procedure: string | null; platforms: string[] | null }>(
-      `SELECT t.attack_id AS "attackId", t.name, gt.description AS procedure, t.platforms
-       FROM group_techniques gt
-       JOIN techniques t ON t.id = gt.technique_id
-       WHERE gt.group_id = $1
-       ORDER BY t.name ASC`,
-      [groupId],
+      domain
+        ? `SELECT t.attack_id AS "attackId", t.name, gt.description AS procedure, t.platforms
+           FROM group_techniques gt
+           JOIN techniques t ON t.id = gt.technique_id
+           WHERE gt.group_id = $1 AND t.domain = $2
+           ORDER BY t.name ASC`
+        : `SELECT t.attack_id AS "attackId", t.name, gt.description AS procedure, t.platforms
+           FROM group_techniques gt
+           JOIN techniques t ON t.id = gt.technique_id
+           WHERE gt.group_id = $1
+           ORDER BY t.name ASC`,
+      domain ? [groupId, domain] : [groupId],
     ),
-    // Software
+    // Software (optionally filtered by domain)
     query<{ attackId: string; name: string; type: string; description: string | null }>(
-      `SELECT sw.attack_id AS "attackId", sw.name, sw.type, gs.description
-       FROM group_software gs
-       JOIN attack_software sw ON sw.id = gs.software_id
-       WHERE gs.group_id = $1
-       ORDER BY sw.name ASC`,
-      [groupId],
+      domain
+        ? `SELECT sw.attack_id AS "attackId", sw.name, sw.type, gs.description
+           FROM group_software gs
+           JOIN attack_software sw ON sw.id = gs.software_id
+           WHERE gs.group_id = $1 AND sw.domain = $2
+           ORDER BY sw.name ASC`
+        : `SELECT sw.attack_id AS "attackId", sw.name, sw.type, gs.description
+           FROM group_software gs
+           JOIN attack_software sw ON sw.id = gs.software_id
+           WHERE gs.group_id = $1
+           ORDER BY sw.name ASC`,
+      domain ? [groupId, domain] : [groupId],
     ),
     // Campaigns
     query<{ attackId: string; name: string; description: string | null; firstSeen: string | null; lastSeen: string | null }>(

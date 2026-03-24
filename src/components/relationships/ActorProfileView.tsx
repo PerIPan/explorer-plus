@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useGroup, useCampaign, useExternalActorByGroup, useExternalActorByName } from '../../hooks/useApi';
+import { useDomain } from '../../contexts/DomainContext';
 import { EntityLink } from '../shared/EntityLink';
 import { Badge } from '../shared/Badge';
 import { sanitize, sanitizeMarkdown } from '../../lib/sanitize';
@@ -255,7 +256,8 @@ interface ActorProfileViewProps {
  * for a threat group or campaign entity.
  */
 export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps) {
-  const groupResult = useGroup(entityType === 'group' ? attackId : '');
+  const { domainParam } = useDomain();
+  const groupResult = useGroup(entityType === 'group' ? attackId : '', domainParam);
   const campaignResult = useCampaign(entityType === 'campaign' ? attackId : '');
   const thaiCertResult = useExternalActorByGroup(entityType === 'group' ? attackId : '');
   const externalActorResult = useExternalActorByName(entityType === 'external_actor' ? attackId : '');
