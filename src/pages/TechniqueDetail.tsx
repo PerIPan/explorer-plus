@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { useTechnique, useIntelligence, useFrameworks } from '../hooks/useApi';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Badge } from '../components/shared/Badge';
@@ -448,8 +448,11 @@ function FrameworksTab({ attackId }: { attackId: string }) {
 
 export function TechniqueDetail() {
   const { attackId } = useParams<{ attackId: string }>();
+  const [searchParams] = useSearchParams();
   const { data, isLoading, error } = useTechnique(attackId ?? '');
-  const [activeTab, setActiveTab] = useState<TabId>('overview');
+  const tabParam = searchParams.get('tab') as TabId | null;
+  const validTabs = new Set<string>(TABS.map((t) => t.id));
+  const [activeTab, setActiveTab] = useState<TabId>(tabParam && validTabs.has(tabParam) ? tabParam : 'overview');
 
   if (isLoading) {
     return (

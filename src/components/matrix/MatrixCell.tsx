@@ -74,7 +74,10 @@ export const MatrixCell = memo(function MatrixCell({ technique, groupUsageCount,
         {technique.name}
       </div>
       {technique.subTechniques.length > 0 && (
-        <div className="text-[10px] text-[var(--accent-teal)] font-medium mt-0.5">
+        <div
+          onClick={(e) => { e.stopPropagation(); navigate(`/techniques/${technique.attackId}?tab=subtechniques`); }}
+          className="text-[10px] text-[var(--text-secondary)] font-medium mt-0.5 cursor-pointer"
+        >
           ▸ {technique.subTechniques.length} sub
         </div>
       )}
