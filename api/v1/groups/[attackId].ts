@@ -69,15 +69,22 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
            ORDER BY sw.name ASC`,
       domain ? [groupId, domain] : [groupId],
     ),
-    // Campaigns
+    // Campaigns (optionally filtered by domain)
     query<{ attackId: string; name: string; description: string | null; firstSeen: string | null; lastSeen: string | null }>(
-      `SELECT c.attack_id AS "attackId", c.name, gc.description,
-              c.first_seen AS "firstSeen", c.last_seen AS "lastSeen"
-       FROM group_campaigns gc
-       JOIN campaigns c ON c.id = gc.campaign_id
-       WHERE gc.group_id = $1
-       ORDER BY c.name ASC`,
-      [groupId],
+      domain
+        ? `SELECT c.attack_id AS "attackId", c.name, gc.description,
+                c.first_seen AS "firstSeen", c.last_seen AS "lastSeen"
+           FROM group_campaigns gc
+           JOIN campaigns c ON c.id = gc.campaign_id
+           WHERE gc.group_id = $1 AND c.domain = $2
+           ORDER BY c.name ASC`
+        : `SELECT c.attack_id AS "attackId", c.name, gc.description,
+                c.first_seen AS "firstSeen", c.last_seen AS "lastSeen"
+           FROM group_campaigns gc
+           JOIN campaigns c ON c.id = gc.campaign_id
+           WHERE gc.group_id = $1
+           ORDER BY c.name ASC`,
+      domain ? [groupId, domain] : [groupId],
     ),
     // Sectors
     query<{ name: string; slug: string | null }>(

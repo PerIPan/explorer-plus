@@ -58,7 +58,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
          WHERE (gt.technique_id = $1
             OR gt.technique_id IN (SELECT id FROM techniques WHERE parent_technique_id = $1))
          ${sector ? `AND tg.id IN (SELECT gs.group_id FROM group_sectors gs JOIN sectors s ON s.id = gs.sector_id WHERE s.slug = $2)` : ''}
-         ORDER BY tg.name ASC`,
+         ORDER BY tg.name ASC, (gt.technique_id = $1) DESC`,
         sector ? [techId, sector] : [techId],
       ),
       // Related software
