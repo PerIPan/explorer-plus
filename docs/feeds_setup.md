@@ -154,14 +154,25 @@ These run automatically via Vercel cron and don't need manual triggering:
 - **VT enrichment** (every 8h) — adds VirusTotal verdicts to IOCs, 10 per batch
 - **OTX** (every 12h) — catches up with more pulses each run
 
-### Step 5: Trigger GitHub Actions (from repo Actions tab)
+### Step 5: Trigger GitHub Actions
 
-These cannot be triggered via CLI without `gh` installed:
+Using gh CLI at `/Users/peripan/dev/gh_CLI/bin/gh`:
 
-- **sync-sigma** — clones SigmaHQ repo, parses ~3000 Sigma rules
-- **sync-atomic** — clones Atomic Red Team repo, parses ~1500 test definitions
+```bash
+GH=/Users/peripan/dev/gh_CLI/bin/gh
+REPO=PerIPan/mitre-explorer-plus
 
-Go to: `https://github.com/PerIPan/mitre-explorer-plus/actions` → select workflow → "Run workflow"
+# Sigma rules (~3000 rules, takes ~2-3 min)
+$GH workflow run sync-sigma.yml --repo $REPO
+
+# Atomic Red Team tests (~1500 tests, takes ~2-3 min)
+$GH workflow run sync-atomic.yml --repo $REPO
+
+# Check status
+$GH run list --repo $REPO --limit 5
+```
+
+Or via browser: `https://github.com/PerIPan/mitre-explorer-plus/actions` → select workflow → "Run workflow"
 
 ### Step 6: Verify counts
 
