@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { usePageTitle } from '../hooks/usePageTitle';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useDataSources } from '../hooks/useApi';
 import { useFuseFilter } from '../hooks/useFuseFilter';
@@ -11,6 +12,8 @@ import type { DataSource } from '../lib/types';
 const FUSE_KEYS = ['name', 'attackId', 'description'];
 
 export function DataSourcesList() {
+  usePageTitle('Data Sources');
+
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState('');

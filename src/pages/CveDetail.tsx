@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { usePageTitle } from '../hooks/usePageTitle';
 import { useParams, Link } from 'react-router-dom';
 import { isSafeUrl } from '../lib/urlSafety';
 import { useCveDetail } from '../hooks/useApi';
@@ -81,6 +82,7 @@ function parseCvssVector(vector: string | null): Array<{ label: string; value: s
 export function CveDetail() {
   const { cveId } = useParams<{ cveId: string }>();
   const { data, isLoading, error } = useCveDetail(cveId ?? '');
+  usePageTitle(data ? data.cveId : 'CVE');
   const [activeTab, setActiveTab] = useState<TabId>('overview');
 
   // Reset tab when navigating between CVEs

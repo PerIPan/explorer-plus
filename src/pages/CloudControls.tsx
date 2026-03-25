@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { usePageTitle } from '../hooks/usePageTitle';
 import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '../lib/api';
 import { PageHeader } from '../components/layout/PageHeader';
@@ -38,6 +39,8 @@ const TYPE_COLORS: Record<string, string> = {
 };
 
 export function CloudControls() {
+  usePageTitle('Cloud Security Controls');
+
   const [search, setSearch] = useState('');
   const [provider, setProvider] = useState('');
 

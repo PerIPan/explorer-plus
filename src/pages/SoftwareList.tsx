@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { usePageTitle } from '../hooks/usePageTitle';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useSoftware } from '../hooks/useApi';
 import { useSector } from '../contexts/SectorContext';
@@ -14,6 +15,8 @@ import type { Software } from '../lib/types';
 const FUSE_KEYS = ['name', 'attackId', 'description'];
 
 export function SoftwareList() {
+  usePageTitle('Software');
+
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { sectorParam } = useSector();

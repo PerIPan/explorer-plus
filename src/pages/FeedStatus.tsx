@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { usePageTitle } from '../hooks/usePageTitle';
 import { useQuery } from '@tanstack/react-query';
 import { useFeedStatus } from '../hooks/useApi';
 import { apiFetch } from '../lib/api';
@@ -113,6 +114,8 @@ function EmptyFeedCard({ source }: { source: string }) {
 const ALL_SOURCES = ['otx', 'abuse_ch', 'cisa_kev', 'rss', 'd3fend', 'nvd', 'virustotal'];
 
 export function FeedStatus() {
+  usePageTitle('Feed Status');
+
   const { data, refetch } = useFeedStatus();
 
   const feedMap = new Map<string, FeedSyncStatus>(

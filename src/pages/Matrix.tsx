@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { usePageTitle } from '../hooks/usePageTitle';
 import { useQueries } from '@tanstack/react-query';
 import { useMatrix, useGroups } from '../hooks/useApi';
 import { apiFetch } from '../lib/api';
@@ -14,6 +15,8 @@ import { exportMatrixHtml } from '../lib/exportMatrix';
 import { useTheme } from '../contexts/ThemeContext';
 
 export function Matrix() {
+  usePageTitle('ATT&CK Matrix');
+
   const { sectorParam, sector } = useSector();
   const { domain, domainParam } = useDomain();
   const { theme } = useTheme();
@@ -153,7 +156,7 @@ export function Matrix() {
           <button
             type="button"
             onClick={handleExport}
-            className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium bg-[var(--surface-alt)] border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--accent-teal)] hover:border-[var(--accent-teal)] transition-colors"
+            className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium bg-[var(--surface-alt)] border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--accent-teal)] hover:border-[var(--accent-teal)] transition-colors ml-3"
             title="Export matrix as HTML file"
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">

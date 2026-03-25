@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { usePageTitle } from '../hooks/usePageTitle';
 import { useSearchParams } from 'react-router-dom';
 import { useReactActions } from '../hooks/useApi';
 import { useFuseFilter } from '../hooks/useFuseFilter';
@@ -63,23 +64,24 @@ function ActionCard({
 }) {
   return (
     <div className="rounded-lg bg-[var(--surface-card)] border border-[var(--border-color)] overflow-hidden">
-      <button
-        type="button"
-        onClick={onToggle}
-        className="w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-[var(--hover-subtle)] transition-colors"
-      >
+      <div className="flex items-start gap-3 px-4 py-3 hover:bg-[var(--hover-subtle)] transition-colors">
         <a
           href={reactActionUrl(action.actionId, action.title)}
           target="_blank"
           rel="noopener noreferrer"
-          onClick={(e) => e.stopPropagation()}
           className="font-mono text-xs text-[var(--accent-teal)] mt-0.5 shrink-0 w-16 hover:underline"
           title="View on ATC RE&CT docs"
         >
           {action.actionId} ↗
         </a>
-        <span className="flex-1 text-[var(--text-primary)] text-sm select-text">{action.title}</span>
-        <div className="flex items-center gap-2 shrink-0">
+        <button
+          type="button"
+          onClick={onToggle}
+          className="flex-1 text-left text-[var(--text-primary)] text-sm select-text"
+        >
+          {action.title}
+        </button>
+        <button type="button" onClick={onToggle} className="flex items-center gap-2 shrink-0 cursor-pointer">
           <StageBadge stage={action.stage} />
           <svg
             className={`w-4 h-4 text-[var(--text-secondary)] transition-transform ${expanded ? 'rotate-180' : ''}`}
@@ -91,8 +93,8 @@ function ActionCard({
           >
             <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
           </svg>
-        </div>
-      </button>
+        </button>
+      </div>
 
       {expanded && (
         <div className="px-4 pb-4 pt-1 space-y-3 border-t border-[var(--border-color)]">
@@ -123,6 +125,8 @@ function ActionCard({
 }
 
 export function ReactActions() {
+  usePageTitle('RE\u0026CT Actions');
+
   const [searchParams, setSearchParams] = useSearchParams();
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState(searchParams.get('q') ?? '');

@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { usePageTitle } from '../hooks/usePageTitle';
 import { useSearchParams } from 'react-router-dom';
 import { useSigmaRules } from '../hooks/useApi';
 import { PageHeader } from '../components/layout/PageHeader';
@@ -94,6 +95,8 @@ const columns: ColumnDef<SigmaRule>[] = [
 ];
 
 export function SigmaList() {
+  usePageTitle('Sigma Rules');
+
   const [searchParams, setSearchParams] = useSearchParams();
 
   const page = parseInt(searchParams.get('page') ?? '1', 10);

@@ -67,6 +67,7 @@ const frameworksNav: NavItem[] = [
   { path: '/frameworks/veris', label: 'VERIS', tooltip: 'incident classification categories (Verizon DBIR standard)' },
   { path: '/frameworks/cloud', label: 'Cloud Controls', tooltip: 'Azure and GCP security controls mapped to techniques' },
   { path: '/cti/sigma', label: 'Sigma Rules', tooltip: 'detection signatures mapped to techniques (SigmaHQ)' },
+  { path: '/frameworks/atomic', label: 'Atomic Tests', tooltip: 'red team validation tests from Atomic Red Team' },
 ];
 
 const extendedIntelNav: NavItem[] = [

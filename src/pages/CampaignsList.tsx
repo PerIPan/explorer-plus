@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { usePageTitle } from '../hooks/usePageTitle';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useCampaigns } from '../hooks/useApi';
 import { useSector } from '../contexts/SectorContext';
@@ -21,6 +22,8 @@ function fmtDate(d: string | null) {
 const FUSE_KEYS = ['name', 'attackId', 'description'];
 
 export function CampaignsList() {
+  usePageTitle('Campaigns');
+
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { sectorParam } = useSector();

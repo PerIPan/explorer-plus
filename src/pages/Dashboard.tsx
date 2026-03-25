@@ -1,4 +1,5 @@
 import { useNavigate, Link } from 'react-router-dom';
+import { usePageTitle } from '../hooks/usePageTitle';
 import { useDashboard, useReports } from '../hooks/useApi';
 import { useSector } from '../contexts/SectorContext';
 import { useDomain } from '../contexts/DomainContext';
@@ -129,6 +130,8 @@ function VersionBannerSkeleton() {
 // ── Dashboard ─────────────────────────────────────────────────────────────────
 
 export function Dashboard() {
+  usePageTitle('Overview');
+
   const navigate = useNavigate();
   const { sectorParam } = useSector();
   const { domain, domainParam } = useDomain();

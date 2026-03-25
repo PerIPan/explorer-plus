@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { usePageTitle } from '../hooks/usePageTitle';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import Fuse from 'fuse.js';
@@ -90,6 +91,8 @@ function inferEntityType(
 // ── Page component ─────────────────────────────────────────────────────────────
 
 export function Relationships() {
+  usePageTitle('360 Views');
+
   const [searchParams, setSearchParams] = useSearchParams();
   const entityParam = searchParams.get('entity') ?? '';
   const tabParam = (searchParams.get('tab') ?? 'graph') as TabId;

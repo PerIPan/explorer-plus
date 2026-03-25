@@ -43,6 +43,7 @@ const EngageActivities = lazy(() => import('./pages/EngageActivities').then((m) 
 const ReactActions    = lazy(() => import('./pages/ReactActions').then((m) => ({ default: m.ReactActions })));
 const VerisCategories = lazy(() => import('./pages/VerisCategories').then((m) => ({ default: m.VerisCategories })));
 const CloudControls   = lazy(() => import('./pages/CloudControls').then((m) => ({ default: m.CloudControls })));
+const AtomicTests     = lazy(() => import('./pages/AtomicTests').then((m) => ({ default: m.AtomicTests })));
 // Extended Intel pages
 const ExternalActors  = lazy(() => import('./pages/ExternalActors').then((m) => ({ default: m.ExternalActors })));
 
@@ -186,7 +187,6 @@ function Layout() {
                 <li><strong>Detection</strong> — SigmaHQ rules + Atomic Red Team tests mapped to techniques</li>
                 <li><strong>Threat actors</strong> — 191 ATT&CK groups + 514 ThaiCERT/ETDA actors with category inference</li>
                 <li><strong>Sector + domain filters</strong> — narrow everything by industry and ATT&CK domain (AND logic)</li>
-                <li><strong>Auto-updating</strong> — 8+ cron feeds keep data current; ATT&CK re-seeded on new MITRE releases</li>
               </ul>
               <p className="text-[var(--text-secondary)] text-xs pt-2 border-t border-[var(--border-color)]">
                 <span className="text-[var(--accent-teal)]">contact @ mitre-explorer.org</span>
@@ -281,6 +281,7 @@ export default function App() {
           <Route path="frameworks/react" element={<ReactActions />} />
           <Route path="frameworks/veris" element={<VerisCategories />} />
           <Route path="frameworks/cloud" element={<CloudControls />} />
+          <Route path="frameworks/atomic" element={<AtomicTests />} />
 
           {/* Extended Intel */}
           <Route path="external-actors" element={<ExternalActors />} />

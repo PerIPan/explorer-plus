@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { usePageTitle } from '../hooks/usePageTitle';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useNistControls } from '../hooks/useApi';
@@ -128,6 +129,8 @@ const columns: ColumnDef<NistControlSummary>[] = [
 ];
 
 export function NistControls() {
+  usePageTitle('NIST 800-53');
+
   const [searchParams, setSearchParams] = useSearchParams();
   const search = searchParams.get('search') ?? '';
   const family = searchParams.get('family') ?? '';

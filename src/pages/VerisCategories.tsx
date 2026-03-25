@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { usePageTitle } from '../hooks/usePageTitle';
 import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '../lib/api';
 import { PageHeader } from '../components/layout/PageHeader';
@@ -24,6 +25,8 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 export function VerisCategories() {
+  usePageTitle('VERIS Categories');
+
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('');
 

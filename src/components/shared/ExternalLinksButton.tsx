@@ -70,12 +70,19 @@ export function ExternalLinksButton({ type, attackId, name }: ExternalLinksButto
   const [open, setOpen] = useState(false);
   const links = buildLinks(type, attackId, name);
 
+  // Close on Escape
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') setOpen(false);
+  };
+
   return (
     <>
-      <div className="relative ml-1">
+      <div className="relative ml-1" onKeyDown={handleKeyDown}>
         <button
           type="button"
           onClick={() => setOpen(!open)}
+          aria-expanded={open}
+          aria-label="External references"
           className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-medium text-[var(--text-secondary)] hover:text-[var(--accent-teal)] transition-colors"
           title="External references"
         >

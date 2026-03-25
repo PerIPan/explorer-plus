@@ -7,6 +7,7 @@ import { z } from 'zod';
 const querySchema = paginationSchema.extend({
   technique: z.string().optional(),
   platform: z.string().optional(),
+  q: z.string().max(200).optional(),
 });
 
 async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
@@ -16,15 +17,20 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     return;
   }
 
-  const { page, limit, technique, platform } = parsed.data;
+  const { page, limit, technique, platform, q } = parsed.data;
   const offset = (page - 1) * limit;
 
   const params: unknown[] = [];
   const conditions: string[] = [];
 
+  if (q) {
+    const { escapeLikePattern } = await import('../lib/queries.js');
+    params.push(`%${escapeLikePattern(q)}%`);
+    conditions.push(`(a.name ILIKE $${params.length} OR a.attack_technique_id ILIKE $${params.length})`);
+  }
+
   if (technique) {
     params.push(technique);
-    // atomic_tests has attack_technique_id text column
     conditions.push(`a.attack_technique_id = $${params.length}`);
   }
 
