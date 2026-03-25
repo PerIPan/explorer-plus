@@ -85,12 +85,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const tfData = (await tfResp.json()) as ThreatFoxResponse;
         if (tfData.query_status === 'ok' && Array.isArray(tfData.data)) {
           // Collect unique malware family names for batch software lookup
+          // Normalize malware names: strip platform prefix, replace _ with space
+          const normalizeMalware = (m: string) =>
+            m.toLowerCase().replace(/^(win|elf|js|apk|doc|osx|py|vbs)\./i, '').replace(/_/g, ' ');
+
           const malwareNames = [
             ...new Set(
               tfData.data
                 .map((ioc) => ioc.malware)
                 .filter((m): m is string => Boolean(m))
-                .map((m) => m.toLowerCase()),
+                .map(normalizeMalware),
             ),
           ];
 
@@ -100,21 +104,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             const swBatch = await query<{ id: string; name: string }>(
               `SELECT id, name FROM attack_software
                WHERE LOWER(name) = ANY($1::text[])
+                  OR LOWER(REPLACE(name, ' ', '_')) = ANY($1::text[])
                   OR EXISTS (
-                    SELECT 1 FROM unnest(aliases) a WHERE LOWER(a) = ANY($1::text[])
+                    SELECT 1 FROM unnest(aliases) a WHERE LOWER(a) = ANY($1::text[]) OR LOWER(REPLACE(a, ' ', '_')) = ANY($1::text[])
                   )`,
               [malwareNames],
             );
 
+            // Build lookup with both normalized forms
             for (const sw of swBatch.rows) {
               const techRes = await query<{ technique_id: string }>(
                 `SELECT technique_id FROM software_techniques WHERE software_id = $1`,
                 [sw.id],
               );
-              swMap.set(sw.name.toLowerCase(), {
-                id: sw.id,
-                techniqueIds: techRes.rows.map((r) => r.technique_id),
-              });
+              const entry = { id: sw.id, techniqueIds: techRes.rows.map((r) => r.technique_id) };
+              swMap.set(sw.name.toLowerCase(), entry);
+              swMap.set(sw.name.toLowerCase().replace(/ /g, '_'), entry);
             }
           }
 
@@ -138,7 +143,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
               // Cross-reference via pre-resolved software map
               if (ioc.malware) {
-                const swEntry = swMap.get(ioc.malware.toLowerCase());
+                const swEntry = swMap.get(normalizeMalware(ioc.malware));
                 if (swEntry && swEntry.techniqueIds.length > 0) {
                   const iocValues = swEntry.techniqueIds
                     .map((_, i) => `($${i + 1}, $${swEntry.techniqueIds.length + 1}, 'inferred')`)
