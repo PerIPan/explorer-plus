@@ -125,13 +125,17 @@ export function CloudControls() {
                   <svg className="w-3 h-3 text-[var(--text-secondary)] transition-transform group-open:rotate-90 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                   </svg>
-                  <span
-                    className="font-mono text-xs w-32 sm:w-48 shrink-0 truncate"
+                  <a
+                    href={`https://center-for-threat-informed-defense.github.io/mappings-explorer/external/${encodeURIComponent(prov)}/${encodeURIComponent(ctrl.controlId)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="font-mono text-xs w-32 sm:w-48 shrink-0 truncate hover:underline"
                     style={{ color: PROVIDER_COLORS[prov]?.text ?? 'var(--accent-teal)' }}
-                    title={ctrl.controlId}
+                    title={`View ${ctrl.controlId} on CTID Mappings Explorer`}
                   >
-                    {ctrl.controlId}
-                  </span>
+                    {ctrl.controlId} ↗
+                  </a>
                   <span className="text-sm text-[var(--text-primary)] flex-1 truncate">{ctrl.controlName}</span>
                   {ctrl.mappingType && (
                     <Badge label={ctrl.mappingType} variant={(TYPE_COLORS[ctrl.mappingType] ?? 'neutral') as 'purple' | 'green' | 'orange' | 'neutral'} />

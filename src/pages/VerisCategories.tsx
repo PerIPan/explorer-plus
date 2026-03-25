@@ -116,9 +116,16 @@ export function VerisCategories() {
                     <svg className="w-3 h-3 text-[var(--text-secondary)] transition-transform group-open:rotate-90 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                     </svg>
-                    <span className="text-sm text-[var(--text-primary)] flex-1">
+                    <a
+                      href={`https://center-for-threat-informed-defense.github.io/mappings-explorer/external/veris/`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-sm text-[var(--text-primary)] flex-1 hover:text-[var(--accent-teal)] hover:underline"
+                      title="View on CTID Mappings Explorer"
+                    >
                       {shortLabel || row.verisId}
-                    </span>
+                    </a>
                     <span className="text-xs text-[var(--text-secondary)] shrink-0">
                       {row.techniqueCount} techniques
                     </span>

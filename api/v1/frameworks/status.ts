@@ -1,0 +1,26 @@
+import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { query } from '../lib/db.js';
+import { withHandler } from '../lib/middleware.js';
+
+async function handler(_req: VercelRequest, res: VercelResponse): Promise<void> {
+  const result = await query<{ tbl: string; count: string }>(`
+    SELECT 'nist_controls' AS tbl, COUNT(*)::text AS count FROM nist_controls
+    UNION ALL SELECT 'engage_mappings', COUNT(*)::text FROM engage_mappings
+    UNION ALL SELECT 'react_actions', COUNT(*)::text FROM react_actions
+    UNION ALL SELECT 'veris_mappings', COUNT(*)::text FROM veris_mappings
+    UNION ALL SELECT 'cloud_control_mappings', COUNT(*)::text FROM cloud_control_mappings
+    UNION ALL SELECT 'defensive_mappings', COUNT(*)::text FROM defensive_mappings
+    UNION ALL SELECT 'sigma_rules', COUNT(*)::text FROM sigma_rules
+    UNION ALL SELECT 'atomic_tests', COUNT(*)::text FROM atomic_tests
+    UNION ALL SELECT 'external_actors', COUNT(*)::text FROM external_actors
+  `);
+
+  const counts: Record<string, number> = {};
+  for (const row of result.rows) {
+    counts[row.tbl] = parseInt(row.count, 10);
+  }
+
+  res.status(200).json({ counts });
+}
+
+export default withHandler(handler, { cacheTtl: 300 });

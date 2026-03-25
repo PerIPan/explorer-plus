@@ -1,5 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useFeedStatus } from '../hooks/useApi';
+import { apiFetch } from '../lib/api';
 import { PageHeader } from '../components/layout/PageHeader';
 import type { FeedSyncStatus } from '../lib/types';
 
@@ -51,32 +53,11 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-interface SyncButtonProps {
-  source: string;
-  disabled: boolean;
-  onSync: (source: string) => void;
-}
-
-function SyncButton({ source, disabled, onSync }: SyncButtonProps) {
-  return (
-    <button
-      type="button"
-      disabled={disabled}
-      onClick={() => onSync(source)}
-      className="px-3 py-1 text-xs rounded-md border border-[var(--teal-dim)] text-[var(--accent-teal)] bg-[var(--teal-ghost)] hover:bg-[var(--teal-faint)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-    >
-      {disabled ? 'Syncing...' : 'Sync Now'}
-    </button>
-  );
-}
-
 interface FeedCardProps {
   feed: FeedSyncStatus;
-  syncing: boolean;
-  onSync: (source: string) => void;
 }
 
-function FeedCard({ feed, syncing, onSync }: FeedCardProps) {
+function FeedCard({ feed }: FeedCardProps) {
   return (
     <div className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg p-5 space-y-3">
       {/* Header row */}
@@ -133,56 +114,18 @@ const ALL_SOURCES = ['otx', 'abuse_ch', 'cisa_kev', 'rss', 'd3fend', 'nvd', 'vir
 
 export function FeedStatus() {
   const { data, refetch } = useFeedStatus();
-  const [syncingSet, setSyncingSet] = useState<Set<string>>(new Set());
-  const [syncErrors, setSyncErrors] = useState<Record<string, string>>({});
 
   const feedMap = new Map<string, FeedSyncStatus>(
     (data?.data ?? []).map((f) => [f.source, f]),
   );
 
-  /** Poll every 5s while any source is in running state (FIX 35) */
+  /** Poll every 5s while any source is in running state */
   const hasRunning = (data?.data ?? []).some((f) => f.status === 'running');
   useEffect(() => {
     if (!hasRunning) return;
     const interval = setInterval(() => { void refetch(); }, 5000);
     return () => clearInterval(interval);
   }, [hasRunning, refetch]);
-
-  async function handleSync(source: string) {
-    setSyncingSet((prev) => new Set([...prev, source]));
-    setSyncErrors((prev) => {
-      const next = { ...prev };
-      delete next[source];
-      return next;
-    });
-
-    try {
-      const resp = await fetch(`/api/v1/feed/${source}/sync`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-
-      if (!resp.ok) {
-        const body = await resp.json().catch(() => ({ error: `HTTP ${resp.status}` }));
-        setSyncErrors((prev) => ({
-          ...prev,
-          [source]: (body as { error?: string }).error ?? `HTTP ${resp.status}`,
-        }));
-      }
-    } catch (err) {
-      setSyncErrors((prev) => ({
-        ...prev,
-        [source]: err instanceof Error ? err.message : 'Network error',
-      }));
-    } finally {
-      setSyncingSet((prev) => {
-        const next = new Set(prev);
-        next.delete(source);
-        return next;
-      });
-      void refetch();
-    }
-  }
 
   return (
     <div className="space-y-6">
@@ -194,7 +137,6 @@ export function FeedStatus() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {ALL_SOURCES.map((source) => {
           const feed = feedMap.get(source);
-          const syncing = syncingSet.has(source);
 
           if (!feed) {
             return (
@@ -205,17 +147,69 @@ export function FeedStatus() {
             );
           }
 
-          const feedWithError: FeedSyncStatus = syncErrors[source]
-            ? { ...feed, error: syncErrors[source], status: 'error' }
-            : feed;
-
           return (
             <FeedCard
               key={source}
-              feed={feedWithError}
-              syncing={syncing}
-              onSync={handleSync}
+              feed={feed}
             />
+          );
+        })}
+      </div>
+
+      {/* Framework sync status */}
+      <FrameworkStatus />
+    </div>
+  );
+}
+
+const FRAMEWORK_TABLES = [
+  { key: 'nist_controls', label: 'NIST 800-53', source: 'sync-frameworks.mjs' },
+  { key: 'engage_mappings', label: 'MITRE Engage', source: 'sync-frameworks.mjs' },
+  { key: 'react_actions', label: 'RE&CT', source: 'sync-frameworks.mjs' },
+  { key: 'veris_mappings', label: 'VERIS', source: 'sync-frameworks.mjs' },
+  { key: 'cloud_control_mappings', label: 'Cloud Controls (Azure + GCP)', source: 'sync-frameworks.mjs' },
+  { key: 'defensive_mappings', label: 'D3FEND', source: 'sync-d3fend cron' },
+  { key: 'sigma_rules', label: 'Sigma Rules', source: 'GitHub Actions' },
+  { key: 'atomic_tests', label: 'Atomic Red Team', source: 'GitHub Actions' },
+  { key: 'external_actors', label: 'ETDA Actors', source: 'sync-thaicert.mjs' },
+];
+
+function FrameworkStatus() {
+  const { data } = useQuery({
+    queryKey: ['framework-counts'],
+    queryFn: () => apiFetch<{ counts: Record<string, number> }>('/frameworks/status'),
+    refetchInterval: 60_000,
+  });
+
+  return (
+    <div className="space-y-3 mt-8">
+      <h2 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
+        Frameworks &amp; Static Data
+      </h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {FRAMEWORK_TABLES.map((fw) => {
+          const count = data?.counts?.[fw.key];
+          return (
+            <div key={fw.key} className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg p-5 space-y-3">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span className={`inline-block w-2.5 h-2.5 rounded-full ${count && count > 0 ? 'bg-[var(--accent-green)]' : 'bg-[var(--text-secondary)]'}`} />
+                  <h3 className="text-[var(--text-primary)] font-medium text-sm">{fw.label}</h3>
+                </div>
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border bg-[var(--hover-overlay)] text-[var(--text-secondary)] border-[var(--border-color)]">
+                  manual
+                </span>
+              </div>
+              <div className="flex items-center gap-4 text-xs text-[var(--text-secondary)]">
+                <span>Records: <span className="text-[var(--text-primary)] font-medium">{count ?? '...'}</span></span>
+                <span>Source: <span className="text-[var(--text-primary)]">{fw.source}</span></span>
+                {count != null && count > 0 && (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border bg-[var(--green-faint)] text-[var(--accent-green)] border-[var(--green-dim)]">
+                    success
+                  </span>
+                )}
+              </div>
+            </div>
           );
         })}
       </div>

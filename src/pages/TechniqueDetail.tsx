@@ -365,7 +365,13 @@ function CloudControlsSection({ controls }: { controls: CloudControl[] }) {
               </span>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-mono text-xs text-[var(--accent-teal)] shrink-0">{ctrl.controlId}</span>
+                  <a
+                    href={`https://center-for-threat-informed-defense.github.io/mappings-explorer/external/${encodeURIComponent(ctrl.provider)}/${encodeURIComponent(ctrl.controlId)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-mono text-xs text-[var(--accent-teal)] shrink-0 hover:underline"
+                    title={`View on CTID Mappings Explorer`}
+                  >{ctrl.controlId} ↗</a>
                   <span className="text-sm text-[var(--text-primary)]">{ctrl.controlName}</span>
                   {ctrl.mappingType && (
                     <span className="text-xs text-[var(--text-secondary)]">{ctrl.mappingType}</span>

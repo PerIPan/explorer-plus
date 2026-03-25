@@ -666,14 +666,20 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
                             key={`${ctrl.provider}-${ctrl.controlId}`}
                             className="flex items-start gap-2 py-1.5 px-3 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)]"
                           >
-                            <span className="font-mono text-[10px] text-[var(--accent-teal)] shrink-0 mt-0.5 w-28 truncate" title={ctrl.controlId}>
-                              {ctrl.controlId}
-                            </span>
-                            <span className="text-[11px] text-[var(--text-primary)] flex-1 truncate" title={ctrl.controlName}>
+                            <a
+                              href={`https://center-for-threat-informed-defense.github.io/mappings-explorer/external/${encodeURIComponent(ctrl.provider)}/${encodeURIComponent(ctrl.controlId)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-mono text-xs text-[var(--accent-teal)] shrink-0 mt-0.5 min-w-[180px] hover:underline"
+                              title={`View ${ctrl.controlId} on CTID Mappings Explorer`}
+                            >
+                              {ctrl.controlId} ↗
+                            </a>
+                            <span className="text-xs text-[var(--text-primary)] flex-1" title={ctrl.controlName}>
                               {ctrl.controlName}
                             </span>
                             {ctrl.mappingType && (
-                              <span className="text-[9px] text-[var(--text-secondary)] shrink-0">{ctrl.mappingType}</span>
+                              <span className="text-[10px] font-medium text-[var(--text-secondary)] shrink-0 px-1.5 py-0.5 rounded bg-[var(--surface-alt)] border border-[var(--border-color)]">{ctrl.mappingType}</span>
                             )}
                           </div>
                         ))}
