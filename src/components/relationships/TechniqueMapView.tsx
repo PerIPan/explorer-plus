@@ -493,7 +493,7 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 py-1 px-2 rounded hover:bg-[var(--teal-ghost)] transition-colors group"
                 >
-                  <span className="font-mono text-[10px] text-[var(--accent-blue)] shrink-0 w-12">{ctrl.controlId}</span>
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-[var(--green-faint)] text-[var(--accent-green)] border border-[var(--green-dim)] shrink-0">{ctrl.controlId}</span>
                   <span className="text-xs text-[var(--text-primary)] group-hover:text-[var(--accent-teal)]">{ctrl.controlName ?? ctrl.controlId}</span>
                   {ctrl.controlFamily && <span className="text-[9px] text-[var(--text-secondary)] shrink-0">({ctrl.controlFamily})</span>}
                   <span className="text-[9px] text-[var(--text-secondary)] shrink-0 opacity-0 group-hover:opacity-100 ml-auto">↗</span>

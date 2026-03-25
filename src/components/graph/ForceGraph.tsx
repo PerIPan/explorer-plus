@@ -44,6 +44,7 @@ export const ForceGraph = forwardRef<ForceGraphHandle, ForceGraphProps>(
     const svgRef = useRef<SVGSVGElement>(null);
     const simulationRef = useRef<d3.Simulation<SimNode, SimEdge> | null>(null);
     const [tooltip, setTooltip] = useState<TooltipState | null>(null);
+    const [hiddenTypes, setHiddenTypes] = useState<Set<string>>(new Set());
     const colors = useThemeColors();
 
     /** Entity type → accent color mapping */
@@ -76,8 +77,10 @@ export const ForceGraph = forwardRef<ForceGraphHandle, ForceGraphProps>(
 
       if (!data.nodes.length && !data.center) return;
 
-      // Include center node in the simulation
-      const allNodeData = [data.center, ...data.nodes];
+      // Include center node in the simulation — filter out hidden types (but never hide center)
+      const allNodeData = [data.center, ...data.nodes].filter(
+        (n) => n.id === data.center.id || !hiddenTypes.has(n.type)
+      );
       const nodes: SimNode[] = allNodeData.map((n) => ({ ...n }));
       const nodeById = new Map(nodes.map((n) => [n.id, n]));
 
@@ -89,7 +92,7 @@ export const ForceGraph = forwardRef<ForceGraphHandle, ForceGraphProps>(
           sourceId: e.source,
           targetId: e.target,
         }))
-        .filter((e) => e.source && e.target);
+        .filter((e) => typeof e.source === 'object' && typeof e.target === 'object');
 
       /* ── Simulation ── */
       const sim = d3
@@ -267,10 +270,49 @@ export const ForceGraph = forwardRef<ForceGraphHandle, ForceGraphProps>(
         svg.on('.zoom', null);
         svgEl.removeEventListener('wheel', preventScroll);
       };
-    }, [data, width, height, onNodeClick, hideTooltip, colors]);
+    }, [data, width, height, onNodeClick, hideTooltip, colors, hiddenTypes]);
+
+    // Collect unique node types from data for toggle buttons
+    const nodeTypes = Array.from(new Set([data.center?.type, ...data.nodes.map((n) => n.type)].filter(Boolean)));
+
+    const toggleType = (type: string) => {
+      setHiddenTypes((prev) => {
+        const next = new Set(prev);
+        if (next.has(type)) next.delete(type); else next.add(type);
+        return next;
+      });
+    };
 
     return (
       <div className="relative">
+        {nodeTypes.length > 1 && (
+          <div className="flex flex-wrap gap-1.5 mb-2">
+            {nodeTypes.map((type) => {
+              const hidden = hiddenTypes.has(type);
+              const color = NODE_COLORS[type] ?? colors.textSecondary;
+              return (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => toggleType(type)}
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border transition-all ${
+                    hidden
+                      ? 'border-[var(--border-color)] text-[var(--text-secondary)] opacity-40'
+                      : 'border-current'
+                  }`}
+                  style={hidden ? {} : { color, borderColor: color }}
+                  title={hidden ? `Show ${type} nodes` : `Hide ${type} nodes`}
+                >
+                  <span
+                    className="w-2 h-2 rounded-full shrink-0"
+                    style={{ backgroundColor: hidden ? 'var(--text-secondary)' : color }}
+                  />
+                  {type.replace('_', ' ')}
+                </button>
+              );
+            })}
+          </div>
+        )}
         <svg ref={svgRef} className="rounded-lg border border-[var(--border-color)]" />
         {tooltip && (
           <GraphTooltip x={tooltip.x} y={tooltip.y} content={tooltip.content} />
