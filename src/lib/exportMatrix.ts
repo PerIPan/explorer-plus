@@ -58,8 +58,20 @@ export function exportMatrixHtml(data: MatrixData, options: ExportOptions): stri
     return `rgba(${heatR},${opacity})`;
   }
 
-  const columns = data.map((col) => {
-    const cells = col.techniques.map((t) => {
+  const filteredData = data.filter((col) => {
+    if (actorLookup && actorLookup.size > 0) {
+      return col.techniques.some((t) => actorLookup.has(t.attackId));
+    }
+    return true;
+  });
+
+  const columns = filteredData.map((col) => {
+    // When actors selected, only show techniques used by at least one actor
+    const visibleTechniques = actorLookup && actorLookup.size > 0
+      ? col.techniques.filter((t) => actorLookup.has(t.attackId))
+      : col.techniques;
+
+    const cells = visibleTechniques.map((t) => {
       const background = cellBg(t.attackId, t.subTechniques.length);
       const techUrl = `https://mitre-explorer.org/techniques/${t.attackId}`;
       return `<a href="${techUrl}" target="_blank" style="display:block;padding:4px 6px;border-radius:4px;border:1px solid ${border};font-size:11px;line-height:1.3;background:${background};margin-bottom:3px;text-decoration:none;cursor:pointer;">
@@ -78,7 +90,7 @@ export function exportMatrixHtml(data: MatrixData, options: ExportOptions): stri
       <div style="padding:8px 6px;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:${tealAccent};border-bottom:2px solid ${tealAccent};margin-bottom:6px;text-align:center;">
         ${domainShort ? `<div style="font-size:9px;font-weight:700;color:${domainPillColor};margin-bottom:2px;">${domainShort}</div>` : ''}
         <a href="https://mitre-explorer.org/?entity=${col.tactic.attackId}&tab=tactic-map" target="_blank" style="color:${tealAccent};text-decoration:none;">${escapeHtml(col.tactic.name)}</a><br/>
-        <span style="font-size:10px;color:${textSecondary};font-weight:400;text-transform:none;">${col.techniques.length} techniques</span>
+        <div style="font-size:9px;color:${textSecondary};font-weight:400;font-family:monospace;text-transform:none;margin-top:2px;">${col.tactic.attackId}</div>
       </div>
       ${cells}
     </div>`;
@@ -124,7 +136,7 @@ export function exportMatrixHtml(data: MatrixData, options: ExportOptions): stri
       <p style="font-size:12px;color:${textSecondary};margin-top:4px;">Exported ${dateStr} from <a href="https://mitre-explorer.org" target="_blank" style="color:${tealAccent};">mitre-explorer.org</a></p>
     </div>
     <div style="font-size:13px;color:${textSecondary};">
-      ${data.reduce((sum, col) => sum + col.techniques.length, 0)} techniques across ${data.length} tactics
+      ${filteredData.reduce((sum, col) => sum + (actorLookup && actorLookup.size > 0 ? col.techniques.filter((t) => actorLookup.has(t.attackId)).length : col.techniques.length), 0)} techniques across ${filteredData.length} tactics
     </div>
   </div>
   ${actorLegend ? `<div style="margin-bottom:12px;">${actorLegend}</div>` : ''}

@@ -307,6 +307,11 @@ export function Relationships() {
                 />
                 <span className="font-mono text-xs text-[var(--accent-teal)] w-20 flex-shrink-0">{s.attackId}</span>
                 <span className="text-sm text-[var(--text-primary)] truncate">{s.name}</span>
+                {(s as { domain?: string }).domain && (
+                  <span className="text-[9px] font-medium text-[var(--text-secondary)] uppercase shrink-0">
+                    {(s as { domain?: string }).domain!.replace('-attack', '').replace('enterprise', 'ent')}
+                  </span>
+                )}
               </button>
             ))}
           </div>

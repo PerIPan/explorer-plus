@@ -19,44 +19,44 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   const domainParams = domain ? [domain] : [];
 
   const [techniques, groups, software, campaigns, mitigations, tactics, externalActors] = await Promise.all([
-    query<{ attackId: string; name: string }>(
-      `SELECT attack_id AS "attackId", name FROM techniques
+    query<{ attackId: string; name: string; domain: string | null }>(
+      `SELECT attack_id AS "attackId", name, domain FROM techniques
        WHERE is_revoked = false AND is_deprecated = false AND is_subtechnique = false${domainWhere}
        ORDER BY name`,
       domainParams,
     ),
     // Groups span domains — never filtered
-    query<{ attackId: string; name: string }>(`
-      SELECT attack_id AS "attackId", name FROM threat_groups
+    query<{ attackId: string; name: string; domain: string | null }>(`
+      SELECT attack_id AS "attackId", name, domain FROM threat_groups
       WHERE is_revoked = false AND is_deprecated = false
       ORDER BY name
     `),
-    query<{ attackId: string; name: string }>(
-      `SELECT attack_id AS "attackId", name FROM attack_software
+    query<{ attackId: string; name: string; domain: string | null }>(
+      `SELECT attack_id AS "attackId", name, domain FROM attack_software
        WHERE is_revoked = false AND is_deprecated = false${domainWhere}
        ORDER BY name`,
       domainParams,
     ),
-    query<{ attackId: string; name: string }>(
-      `SELECT attack_id AS "attackId", name FROM campaigns
+    query<{ attackId: string; name: string; domain: string | null }>(
+      `SELECT attack_id AS "attackId", name, domain FROM campaigns
        WHERE is_revoked = false AND is_deprecated = false${domainWhere}
        ORDER BY name`,
       domainParams,
     ),
-    query<{ attackId: string; name: string }>(
-      `SELECT attack_id AS "attackId", name FROM mitigations
+    query<{ attackId: string; name: string; domain: string | null }>(
+      `SELECT attack_id AS "attackId", name, domain FROM mitigations
        WHERE is_revoked = false AND is_deprecated = false${domainWhere}
        ORDER BY name`,
       domainParams,
     ),
-    query<{ attackId: string; name: string }>(
-      `SELECT attack_id AS "attackId", name FROM tactics${domain ? ` WHERE domain = $1` : ''}
+    query<{ attackId: string; name: string; domain: string | null }>(
+      `SELECT attack_id AS "attackId", name, domain FROM tactics${domain ? ` WHERE domain = $1` : ''}
        ORDER BY sort_order`,
       domainParams,
     ),
     // External actors are not domain-scoped
-    query<{ attackId: string; name: string }>(`
-      SELECT name AS "attackId", name FROM external_actors ORDER BY name
+    query<{ attackId: string; name: string; domain: string | null }>(`
+      SELECT name AS "attackId", name, NULL as domain FROM external_actors ORDER BY name
     `),
   ]);
 
