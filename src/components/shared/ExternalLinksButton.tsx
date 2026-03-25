@@ -17,7 +17,7 @@ function buildLinks(type: EntityType, attackId: string, name: string): ExternalL
     case 'technique':
       links.push(
         { label: 'MITRE ATT&CK', url: `${MITRE_BASE}/techniques/${attackId.replace('.', '/')}`, description: 'Official technique page' },
-        { label: 'CTID Mappings', url: `https://center-for-threat-informed-defense.github.io/mappings-explorer/attack/${attackId}/`, description: 'Framework mappings for this technique' },
+        { label: 'CTID Mappings', url: `https://center-for-threat-informed-defense.github.io/mappings-explorer/`, description: 'Framework mappings explorer' },
       );
       break;
     case 'group':
