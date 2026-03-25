@@ -3,6 +3,7 @@ import { useTactic } from '../../hooks/useApi';
 import { EntityLink } from '../shared/EntityLink';
 import { Badge } from '../shared/Badge';
 import { sanitize, sanitizeMarkdown } from '../../lib/sanitize';
+import { ExternalLinksButton } from '../shared/ExternalLinksButton';
 
 // ── Local technique shape (as returned by useTactic) ──────────────────────────
 
@@ -183,7 +184,10 @@ export function TacticMapView({ attackId }: TacticMapViewProps) {
 
       {/* Header */}
       <div className="pb-1">
-        <h2 className="text-lg font-semibold text-[var(--text-primary)]">{tactic.name}</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-lg font-semibold text-[var(--text-primary)]">{tactic.name}</h2>
+          <ExternalLinksButton type="tactic" attackId={tactic.attackId} name={tactic.name} />
+        </div>
         <div className="flex flex-wrap items-center gap-2 mt-1">
           <span className="font-mono text-xs text-[var(--accent-yellow)] bg-[var(--yellow-faint)] border border-[var(--yellow-dim)] px-2 py-0.5 rounded">
             {tactic.attackId}
@@ -230,8 +234,7 @@ export function TacticMapView({ attackId }: TacticMapViewProps) {
                     <EntityLink
                       type="technique"
                       attackId={parent.attackId}
-                      name={parent.name}
-                    />
+                      name={parent.name} useMap />
                     {parent.platforms && parent.platforms.length > 0 &&
                       parent.platforms.map((platform) => (
                         <Badge key={platform} label={platform} variant="blue" />
@@ -250,8 +253,7 @@ export function TacticMapView({ attackId }: TacticMapViewProps) {
                           <EntityLink
                             type="technique"
                             attackId={sub.attackId}
-                            name={sub.name}
-                          />
+                            name={sub.name} useMap />
                           {sub.platforms && sub.platforms.length > 0 &&
                             sub.platforms.map((platform) => (
                               <Badge key={platform} label={platform} variant="blue" />
@@ -277,8 +279,7 @@ export function TacticMapView({ attackId }: TacticMapViewProps) {
                           <EntityLink
                             type="technique"
                             attackId={sub.attackId}
-                            name={sub.name}
-                          />
+                            name={sub.name} useMap />
                           {sub.platforms && sub.platforms.length > 0 &&
                             sub.platforms.map((platform) => (
                               <Badge key={platform} label={platform} variant="blue" />

@@ -101,9 +101,9 @@ export const ForceGraph = forwardRef<ForceGraphHandle, ForceGraphProps>(
             .id((d) => d.id)
             .distance(90)
         )
-        .force('charge', d3.forceManyBody().strength(-200))
+        .force('charge', d3.forceManyBody().strength(-350))
         .force('center', d3.forceCenter(width / 2, height / 2))
-        .force('collide', d3.forceCollide(22));
+        .force('collide', d3.forceCollide(35));
       simulationRef.current = sim;
 
       /* ── SVG setup ── */

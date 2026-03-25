@@ -24,8 +24,7 @@ export function sigmaRuleUrl(sigmaId: string): string {
   return `https://grep.app/search?q=${encodeURIComponent(sigmaId)}&filter[repo][0]=SigmaHQ/sigma`;
 }
 
-export function reactActionUrl(actionId: string, title: string): string {
-  const numPart = actionId.replace(/^RA/i, '');
-  const slug = title.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
-  return `https://atc-project.github.io/atc-react/Response_Actions/RA_${numPart}_${slug}/`;
+export function reactActionUrl(_actionId: string, title: string): string {
+  // Title in DB is already the folder name (e.g. RA_1010_get_access_control_matrix)
+  return `https://atc-project.github.io/atc-react/Response_Actions/${encodeURIComponent(title)}/`;
 }

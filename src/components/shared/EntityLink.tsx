@@ -6,6 +6,8 @@ interface EntityLinkProps {
   attackId: string;
   name: string;
   className?: string;
+  /** Link to 360 map view instead of detail page */
+  useMap?: boolean;
 }
 
 const entityConfig: Record<
@@ -56,14 +58,27 @@ const entityConfig: Record<
   },
 };
 
+const MAP_TABS: Record<EntityType, string> = {
+  technique: 'technique-map',
+  group: 'actor',
+  software: 'software-map',
+  mitigation: 'mitigation-map',
+  campaign: 'actor',
+  data_source: 'data-source-map',
+  tactic: 'tactic-map',
+};
+
 /**
- * Color-coded pill that links to an entity's detail page.
+ * Color-coded pill that links to an entity's detail page or 360 map view.
  */
-export function EntityLink({ type, attackId, name, className = '' }: EntityLinkProps) {
+export function EntityLink({ type, attackId, name, className = '', useMap }: EntityLinkProps) {
   const { color, bg, border, path } = entityConfig[type];
+  const href = useMap
+    ? `/?entity=${encodeURIComponent(attackId)}&tab=${MAP_TABS[type]}`
+    : `/${path}/${attackId}`;
   return (
     <Link
-      to={`/${path}/${attackId}`}
+      to={href}
       title={`${attackId} — ${name}`}
       className={`
         inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium

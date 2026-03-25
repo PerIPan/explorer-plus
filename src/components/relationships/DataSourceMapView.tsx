@@ -3,6 +3,7 @@ import { useDataSource } from '../../hooks/useApi';
 import { EntityLink } from '../shared/EntityLink';
 import { Badge } from '../shared/Badge';
 import { sanitize, sanitizeMarkdown } from '../../lib/sanitize';
+import { ExternalLinksButton } from '../shared/ExternalLinksButton';
 
 // ── Collapsible card ───────────────────────────────────────────────────────────
 
@@ -141,7 +142,10 @@ export function DataSourceMapView({ attackId }: DataSourceMapViewProps) {
 
       {/* Header */}
       <div className="pb-1">
-        <h2 className="text-lg font-semibold text-[var(--text-primary)]">{dataSource.name}</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-lg font-semibold text-[var(--text-primary)]">{dataSource.name}</h2>
+          <ExternalLinksButton type="data_source" attackId={dataSource.attackId} name={dataSource.name} />
+        </div>
         <div className="flex flex-wrap items-center gap-2 mt-1">
           <span className="font-mono text-xs text-[var(--accent-pink)] bg-[var(--pink-faint)] border border-[var(--pink-dim)] px-2 py-0.5 rounded">
             {dataSource.attackId}
@@ -213,8 +217,7 @@ export function DataSourceMapView({ attackId }: DataSourceMapViewProps) {
                       key={t.attackId}
                       type="technique"
                       attackId={t.attackId}
-                      name={t.name}
-                    />
+                      name={t.name} useMap />
                   ))}
                 </div>
               </div>

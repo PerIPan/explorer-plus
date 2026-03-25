@@ -3,6 +3,7 @@ import { useMitigation } from '../../hooks/useApi';
 import { EntityLink } from '../shared/EntityLink';
 import { Badge } from '../shared/Badge';
 import { sanitize, sanitizeMarkdown } from '../../lib/sanitize';
+import { ExternalLinksButton } from '../shared/ExternalLinksButton';
 
 // ── Local types ────────────────────────────────────────────────────────────────
 
@@ -203,7 +204,10 @@ export function MitigationMapView({ attackId }: MitigationMapViewProps) {
     <div className="space-y-3">
       {/* Header */}
       <div className="pb-1">
-        <h2 className="text-lg font-semibold text-[var(--text-primary)]">{data.name}</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-lg font-semibold text-[var(--text-primary)]">{data.name}</h2>
+          <ExternalLinksButton type="mitigation" attackId={data.attackId} name={data.name} />
+        </div>
         <div className="flex flex-wrap items-center gap-2 mt-1">
           <span className="font-mono text-xs text-[var(--accent-green)] bg-[var(--green-faint)] border border-[var(--green-dim)] px-2 py-0.5 rounded">
             {data.attackId}
@@ -247,8 +251,7 @@ export function MitigationMapView({ attackId }: MitigationMapViewProps) {
                     <EntityLink
                       type="technique"
                       attackId={parent.attackId}
-                      name={parent.name}
-                    />
+                      name={parent.name} useMap />
                     {parent.platforms?.map((platform) => (
                       <Badge key={platform} label={platform} variant="blue" />
                     ))}
@@ -265,8 +268,7 @@ export function MitigationMapView({ attackId }: MitigationMapViewProps) {
                           <EntityLink
                             type="technique"
                             attackId={sub.attackId}
-                            name={sub.name}
-                          />
+                            name={sub.name} useMap />
                           {sub.platforms?.map((platform) => (
                             <Badge key={platform} label={platform} variant="blue" />
                           ))}

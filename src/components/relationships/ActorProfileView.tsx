@@ -7,6 +7,7 @@ import { Badge } from '../shared/Badge';
 import { sanitize, sanitizeMarkdown } from '../../lib/sanitize';
 import { RefsChevron } from '../shared/RefsChevron';
 import { ctidCloudUrl, ctidVerisUrl } from '../../lib/urlSafety';
+import { ExternalLinksButton } from '../shared/ExternalLinksButton';
 import type { GroupTechnique, GroupSoftware, GroupCampaign, GroupSector, ExternalActor } from '../../lib/types';
 
 // ── Collapsible section ────────────────────────────────────────────────────────
@@ -116,14 +117,14 @@ function CampaignCard({ campaign }: { campaign: GroupCampaign }) {
           {data.techniques && data.techniques.length > 0 && (
             <NestedSection title="Techniques" count={data.techniques.length}>
               {data.techniques.map((t) => (
-                <EntityLink key={t.attackId} type="technique" attackId={t.attackId} name={t.name} />
+                <EntityLink key={t.attackId} type="technique" attackId={t.attackId} name={t.name}  useMap />
               ))}
             </NestedSection>
           )}
           {data.software && data.software.length > 0 && (
             <NestedSection title="Software" count={data.software.length}>
               {data.software.map((s) => (
-                <EntityLink key={s.attackId} type="software" attackId={s.attackId} name={s.name} />
+                <EntityLink key={s.attackId} type="software" attackId={s.attackId} name={s.name}  useMap />
               ))}
             </NestedSection>
           )}
@@ -151,7 +152,7 @@ function SoftwareArsenal({ software }: { software: GroupSoftware[] }) {
         <NestedSection title="Malware" count={malware.length}>
           {malware.map((s) => (
             <div key={s.attackId} className="flex items-center gap-1">
-              <EntityLink type="software" attackId={s.attackId} name={s.name} />
+              <EntityLink type="software" attackId={s.attackId} name={s.name} useMap />
               <Badge label="malware" variant="pink" />
             </div>
           ))}
@@ -161,7 +162,7 @@ function SoftwareArsenal({ software }: { software: GroupSoftware[] }) {
         <NestedSection title="Tools" count={tools.length}>
           {tools.map((s) => (
             <div key={s.attackId} className="flex items-center gap-1">
-              <EntityLink type="software" attackId={s.attackId} name={s.name} />
+              <EntityLink type="software" attackId={s.attackId} name={s.name} useMap />
               <Badge label="tool" variant="purple" />
             </div>
           ))}
@@ -201,13 +202,13 @@ function TechniquesByTactic({ techniques }: { techniques: GroupTechnique[] }) {
         return (
           <div key={t.attackId}>
             <div className="flex items-center gap-2 py-0.5">
-              <EntityLink type="technique" attackId={t.attackId} name={t.name} />
+              <EntityLink type="technique" attackId={t.attackId} name={t.name}  useMap />
             </div>
             {children.length > 0 && (
               <div className="ml-4 pl-2 border-l border-[var(--border-color)] space-y-0.5 mt-0.5">
                 {children.map((sub) => (
                   <div key={sub.attackId} className="flex items-center gap-2 py-0.5">
-                    <EntityLink type="technique" attackId={sub.attackId} name={sub.name} />
+                    <EntityLink type="technique" attackId={sub.attackId} name={sub.name}  useMap />
                   </div>
                 ))}
               </div>
@@ -428,7 +429,10 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
         {/* Header */}
         <div className="flex items-start gap-3 pb-1">
           <div>
-            <h2 className="text-lg font-semibold text-[var(--text-primary)]">{group.name}</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-semibold text-[var(--text-primary)]">{group.name}</h2>
+              <ExternalLinksButton type="group" attackId={group.attackId} name={group.name} />
+            </div>
             <div className="flex items-center gap-2 mt-1">
               <span className="font-mono text-xs text-[var(--accent-orange)] bg-[var(--orange-faint)] border border-[var(--orange-dim)] px-2 py-0.5 rounded">
                 {group.attackId}
@@ -652,7 +656,10 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
       {/* Header */}
       <div className="flex items-start gap-3 pb-1">
         <div>
-          <h2 className="text-lg font-semibold text-[var(--text-primary)]">{campaign.name}</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-semibold text-[var(--text-primary)]">{campaign.name}</h2>
+            <ExternalLinksButton type="campaign" attackId={campaign.attackId} name={campaign.name} />
+          </div>
           <div className="flex items-center gap-2 mt-1">
             <span className="font-mono text-xs text-[var(--accent-blue)] bg-[var(--blue-faint)] border border-[var(--blue-dim)] px-2 py-0.5 rounded">
               {campaign.attackId}
@@ -673,7 +680,7 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
         <CollapsibleSection title="Attributed Groups" count={groups.length} defaultOpen>
           <div className="flex flex-wrap gap-1.5">
             {groups.map((g) => (
-              <EntityLink key={g.attackId} type="group" attackId={g.attackId} name={g.name} />
+              <EntityLink key={g.attackId} type="group" attackId={g.attackId} name={g.name}  useMap />
             ))}
           </div>
         </CollapsibleSection>
@@ -710,7 +717,7 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
         <CollapsibleSection title="Techniques Used" count={techniques.length} defaultOpen>
           <div className="flex flex-wrap gap-1.5">
             {techniques.map((t) => (
-              <EntityLink key={t.attackId} type="technique" attackId={t.attackId} name={t.name} />
+              <EntityLink key={t.attackId} type="technique" attackId={t.attackId} name={t.name}  useMap />
             ))}
           </div>
         </CollapsibleSection>
@@ -722,7 +729,7 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
           <div className="flex flex-wrap gap-1.5">
             {software.map((s) => (
               <div key={s.attackId} className="flex items-center gap-1">
-                <EntityLink type="software" attackId={s.attackId} name={s.name} />
+                <EntityLink type="software" attackId={s.attackId} name={s.name}  useMap />
                 <Badge label={s.type} variant={s.type === 'malware' ? 'pink' : 'purple'} />
               </div>
             ))}

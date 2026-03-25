@@ -8,6 +8,7 @@ import { Badge } from '../shared/Badge';
 import { VtLookupModal, VtButton } from '../shared/VtLookupModal';
 import { sanitize, sanitizeMarkdown } from '../../lib/sanitize';
 import { ctidCloudUrl, ctidVerisUrl } from '../../lib/urlSafety';
+import { ExternalLinksButton } from '../shared/ExternalLinksButton';
 import type { CloudControl } from '../../lib/types';
 
 // ── Level badge (reused pattern from TechniqueDetail) ─────────────────────────
@@ -168,11 +169,11 @@ function VtSection({ iocs, loading }: { iocs: Array<{ id: string; type: string; 
     <>
       <MapCard label="VirusTotal Sandboxing Report" icon={IconVt} count={vtIocs.length}>
         {vtIocs.length > 0 ? (
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             {vtIocs.map((ioc) => (
               <div
                 key={ioc.id}
-                className="flex items-center gap-2 py-1.5 px-3 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)]"
+                className="flex items-center gap-3 py-2.5 px-4 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)] min-w-0"
               >
                 {/* Verdict badge */}
                 {ioc.vt_verdict === 'malicious' && ioc.vt_malicious != null && ioc.vt_total != null ? (
@@ -203,18 +204,19 @@ function VtSection({ iocs, loading }: { iocs: Array<{ id: string; type: string; 
                   </span>
                 )}
                 {/* Hash (truncated) */}
-                <span className="font-mono text-[10px] text-[var(--text-secondary)] truncate flex-1" title={ioc.value}>
+                <span className="font-mono text-[10px] text-[var(--text-secondary)] truncate" title={ioc.value}>
                   {ioc.value.slice(0, 12)}...{ioc.value.slice(-6)}
                 </span>
-                {/* Date */}
+                {/* VT lookup button — right after hash for easy access */}
+                {ioc.type === 'hash' && (
+                  <VtButton hash={ioc.value} onClick={() => setVtHash(ioc.value)} />
+                )}
+                {/* Date — pushed right */}
+                <span className="flex-1" />
                 {ioc.first_seen_at && (
                   <span className="text-[10px] text-[var(--text-secondary)] shrink-0">
                     {new Date(ioc.first_seen_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   </span>
-                )}
-                {/* VT lookup button */}
-                {ioc.type === 'hash' && (
-                  <VtButton hash={ioc.value} onClick={() => setVtHash(ioc.value)} />
                 )}
               </div>
             ))}
@@ -290,7 +292,10 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
     <div className="space-y-3">
       {/* Technique header */}
       <div className="pb-1">
-        <h2 className="text-lg font-semibold text-[var(--text-primary)]">{technique.name}</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-lg font-semibold text-[var(--text-primary)]">{technique.name}</h2>
+          <ExternalLinksButton type="technique" attackId={technique.attackId} name={technique.name} />
+        </div>
         <div className="flex flex-wrap items-center gap-2 mt-1">
           <span className="font-mono text-xs text-[var(--accent-teal)] bg-[var(--teal-faint)] border border-[var(--teal-dim)] px-2 py-0.5 rounded">
             {technique.attackId}
@@ -368,7 +373,7 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
           <MapRow prefix="Groups">
             <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto">
               {groups.map((g) => (
-                <EntityLink key={g.attackId} type="group" attackId={g.attackId} name={g.name} />
+                <EntityLink key={g.attackId} type="group" attackId={g.attackId} name={g.name} useMap />
               ))}
             </div>
           </MapRow>
@@ -378,7 +383,7 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
         {campaigns.length > 0 && (
           <MapRow prefix="Campaigns">
             {campaigns.map((c) => (
-              <EntityLink key={c.attackId} type="campaign" attackId={c.attackId} name={c.name} />
+              <EntityLink key={c.attackId} type="campaign" attackId={c.attackId} name={c.name} useMap />
             ))}
           </MapRow>
         )}
@@ -396,6 +401,7 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
                   type="data_source"
                   attackId={dc.dataSourceAttackId}
                   name={dc.dataSourceName}
+                  useMap
                 />
                 <Badge label={dc.componentName} variant="pink" />
               </div>
@@ -467,7 +473,7 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
         {mitigations.length > 0 ? (
           <MapRow prefix="Mitigations">
             {mitigations.map((m) => (
-              <EntityLink key={m.attackId} type="mitigation" attackId={m.attackId} name={m.name} />
+              <EntityLink key={m.attackId} type="mitigation" attackId={m.attackId} name={m.name} useMap />
             ))}
           </MapRow>
         ) : (

@@ -3,6 +3,7 @@ import { useSoftwareDetail } from '../../hooks/useApi';
 import { EntityLink } from '../shared/EntityLink';
 import { Badge } from '../shared/Badge';
 import { sanitize, sanitizeMarkdown } from '../../lib/sanitize';
+import { ExternalLinksButton } from '../shared/ExternalLinksButton';
 
 // ── Local types for detail-endpoint extras ─────────────────────────────────────
 
@@ -153,13 +154,13 @@ function TechniqueTree({ techniques }: { techniques: SoftwareTechnique[] }) {
         return (
           <div key={t.attackId}>
             <div className="flex items-center gap-2 py-0.5">
-              <EntityLink type="technique" attackId={t.attackId} name={t.name} />
+              <EntityLink type="technique" attackId={t.attackId} name={t.name} useMap />
             </div>
             {children.length > 0 && (
               <div className="ml-4 pl-2 border-l border-[var(--border-color)] space-y-0.5 mt-0.5">
                 {children.map((sub) => (
                   <div key={sub.attackId} className="flex items-center gap-2 py-0.5">
-                    <EntityLink type="technique" attackId={sub.attackId} name={sub.name} />
+                    <EntityLink type="technique" attackId={sub.attackId} name={sub.name} useMap />
                   </div>
                 ))}
               </div>
@@ -214,7 +215,10 @@ export function SoftwareMapView({ attackId }: SoftwareMapViewProps) {
     <div className="space-y-3">
       {/* Header */}
       <div className="pb-1">
-        <h2 className="text-lg font-semibold text-[var(--text-primary)]">{software.name}</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-lg font-semibold text-[var(--text-primary)]">{software.name}</h2>
+          <ExternalLinksButton type="software" attackId={software.attackId} name={software.name} />
+        </div>
         <div className="flex flex-wrap items-center gap-2 mt-1">
           <span className="font-mono text-xs text-[var(--accent-purple)] bg-[var(--purple-faint)] border border-[var(--purple-dim)] px-2 py-0.5 rounded">
             {software.attackId}
@@ -250,7 +254,7 @@ export function SoftwareMapView({ attackId }: SoftwareMapViewProps) {
           <MapRow prefix="Groups">
             <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto">
               {groups.map((g) => (
-                <EntityLink key={g.attackId} type="group" attackId={g.attackId} name={g.name} />
+                <EntityLink key={g.attackId} type="group" attackId={g.attackId} name={g.name} useMap />
               ))}
             </div>
           </MapRow>
@@ -263,7 +267,7 @@ export function SoftwareMapView({ attackId }: SoftwareMapViewProps) {
           <MapRow prefix="Campaigns">
             <div className="flex flex-wrap gap-1.5">
               {campaigns.map((c) => (
-                <EntityLink key={c.attackId} type="campaign" attackId={c.attackId} name={c.name} />
+                <EntityLink key={c.attackId} type="campaign" attackId={c.attackId} name={c.name} useMap />
               ))}
             </div>
           </MapRow>
