@@ -178,19 +178,24 @@ export function DataSourceMapView({ attackId }: DataSourceMapViewProps) {
       <MapCard label="Data Components" icon={IconLayers} count={components.length} defaultOpen>
         {components.length > 0 ? (
           <div className="space-y-4">
-            {components.map((component) => (
-              <div key={component.id} className="space-y-1">
+            {components.map((component: { componentId?: string; componentName?: string; componentDescription?: string; id?: string; name?: string; description?: string | null }) => {
+              const cName = component.componentName ?? component.name ?? '';
+              const cDesc = component.componentDescription ?? component.description ?? '';
+              const cKey = component.componentId ?? component.id ?? cName;
+              return (
+              <div key={cKey} className="space-y-1">
                 <p className="text-xs font-semibold text-[var(--text-primary)] uppercase tracking-wide">
-                  {component.name}
+                  {cName}
                 </p>
-                {component.description && (
+                {cDesc && (
                   <p
                     className="text-xs text-[var(--text-secondary)] leading-relaxed"
-                    dangerouslySetInnerHTML={{ __html: sanitize(sanitizeMarkdown(component.description)) }}
+                    dangerouslySetInnerHTML={{ __html: sanitize(sanitizeMarkdown(cDesc)) }}
                   />
                 )}
               </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <p className="text-xs text-[var(--text-secondary)]">No data components defined.</p>

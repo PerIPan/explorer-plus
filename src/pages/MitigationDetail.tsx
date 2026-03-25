@@ -74,15 +74,15 @@ export function MitigationDetail() {
       )}
 
       <div className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg p-5">
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-4 mb-3">
           <h3 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
             Mitigated Techniques
           </h3>
           <Link
-            to={`/relationships?entity=${data.attackId}`}
-            className="text-xs text-[var(--accent-teal)] hover:underline"
+            to={`/?entity=${data.attackId}&tab=mitigation-map`}
+            className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-medium text-[var(--text-secondary)] hover:text-[var(--accent-teal)] transition-colors"
           >
-            View relationships &rarr;
+            view map →
           </Link>
         </div>
         <p className="text-sm text-[var(--text-secondary)]">
