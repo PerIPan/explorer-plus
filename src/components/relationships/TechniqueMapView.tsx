@@ -576,12 +576,14 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
         {atomicTests.length > 0 ? (
           <>
             <MapRow prefix="Atomic Red Team">
-              <Link
-                to={`/frameworks/atomic?q=${attackId}`}
+              <a
+                href={`/frameworks/atomic?q=${attackId}`}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-medium text-[var(--text-secondary)] hover:text-[var(--accent-teal)] transition-colors"
               >
-                view all →
-              </Link>
+                view all ↗
+              </a>
               <Badge label={`${atomicTests.length} tests`} variant="green" />
               {atomicPlatforms.map((p) => (
                 <Badge key={p} label={p} variant="blue" />

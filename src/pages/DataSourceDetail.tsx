@@ -64,11 +64,11 @@ export function DataSourceDetail() {
             Data Components ({data.components.length})
           </h3>
           <div className="space-y-3">
-            {data.components.map((comp) => {
-              const name = comp.name ?? '';
-              const desc = comp.description ?? '';
+            {data.components.map((comp: { componentId?: string; componentName?: string; componentDescription?: string; id?: string; name?: string; description?: string | null }) => {
+              const name = comp.componentName ?? comp.name ?? '';
+              const desc = comp.componentDescription ?? comp.description ?? '';
               const compDesc = desc ? sanitize(sanitizeMarkdown(desc)) : null;
-              const key = comp.id ?? name;
+              const key = comp.componentId ?? comp.id ?? name;
               return (
                 <div
                   key={key}
