@@ -580,6 +580,15 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
               {atomicPlatforms.map((p) => (
                 <Badge key={p} label={p} variant="blue" />
               ))}
+              <Link
+                to={`/frameworks/atomic?technique=${attackId}`}
+                className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-medium text-[var(--text-secondary)] hover:text-[var(--accent-teal)] transition-colors ml-auto"
+              >
+                <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                </svg>
+                view all
+              </Link>
             </MapRow>
             <div className="mt-1 space-y-1.5">
               {atomicTests.map((test) => (
