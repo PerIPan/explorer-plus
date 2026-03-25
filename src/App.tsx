@@ -175,14 +175,16 @@ function Layout() {
                 <em>MITRE ATT&CK</em>. Single interface for adversary behavior, detection and compliance, enriched with CTI reports.
               </p>
               <ul className="space-y-2 pl-4 list-disc marker:text-[var(--accent-teal)]">
-                <li><strong>16 data sources</strong> — techniques, groups, campaigns, software, mitigations, data sources, tactics, sectors + live feeds from AlienVault OTX, RSS, CISA KEV, NVD, VirusTotal, Sigma, Atomic Red Team, D3FEND</li>
-                <li><strong>Relationships Explorer</strong> — search any entity, see connections via Threat Actor Profile, Technique Map, or D3 force graph</li>
-                <li><strong>Frameworks</strong> — NIST 800-53 controls, MITRE Engage deception, RE&CT response playbooks mapped per technique</li>
-                <li><strong>CVEs</strong> — known vulnerabilities from OTX and CISA KEV, enriched with CVSS scores and descriptions from NVD</li>
-                <li><strong>IOCs</strong> — hashes, domains, IPs, URLs linked to AlienVault OTX indicator pages, enriched with VirusTotal verdicts and sandbox-derived ATT&CK techniques</li>
-                <li><strong>Non-MITRE Actors</strong> — 500+ threat actors from ThaiCERT/ETDA with motivation, state sponsor, and victim data</li>
-                <li><strong>Global sector filter</strong> — narrow the entire view by industry (Finance, Healthcare, etc.)</li>
-                <li><strong>Auto-updating</strong> — scheduled feeds keep data current; ATT&CK re-seeded on new MITRE releases</li>
+                <li><strong>Multi-domain ATT&CK</strong> — Enterprise, ICS, Mobile with domain switcher + "All Domains" cross-domain view</li>
+                <li><strong>Actor comparison</strong> — select up to 3 threat actors on the Matrix, see technique overlap color-coded, export as HTML</li>
+                <li><strong>360 Views</strong> — search any entity, explore via Technique Map, Actor Profile, Software Map, Tactic Map, or D3 force graph</li>
+                <li><strong>Frameworks</strong> — NIST 800-53, MITRE Engage, D3FEND, RE&CT response playbooks mapped per technique</li>
+                <li><strong>CVEs</strong> — CISA KEV + NVD enrichment (CVSS scores), linked to ATT&CK techniques via CWE→CAPEC bridge</li>
+                <li><strong>IOCs</strong> — OTX + ThreatFox + MalwareBazaar, enriched with VirusTotal verdicts and sandbox-derived techniques</li>
+                <li><strong>Detection</strong> — SigmaHQ rules + Atomic Red Team tests mapped to techniques</li>
+                <li><strong>Threat actors</strong> — 191 ATT&CK groups + 514 ThaiCERT/ETDA actors with category inference</li>
+                <li><strong>Sector + domain filters</strong> — narrow everything by industry and ATT&CK domain (AND logic)</li>
+                <li><strong>Auto-updating</strong> — 8+ cron feeds keep data current; ATT&CK re-seeded on new MITRE releases</li>
               </ul>
               <p className="text-[var(--text-secondary)] text-xs pt-2 border-t border-[var(--border-color)]">
                 <span className="text-[var(--accent-teal)]">contact @ mitre-explorer.org</span>

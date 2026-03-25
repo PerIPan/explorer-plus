@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { query } from '../v1/lib/db.js';
 import { verifyCronAuth } from './lib/auth.js';
+import { linkCveTechniquesViaCwe } from './lib/capec-bridge.js';
 
 const NVD_BASE = 'https://services.nvd.nist.gov/rest/json/cves/2.0';
 
@@ -166,6 +167,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       [recordsInserted, recordsSkipped, logId],
     );
 
+    // After NVD assigns CWE IDs, link CVEs to techniques via CAPEC bridge
+    let techniquesLinked = 0;
+    try {
+      techniquesLinked = await linkCveTechniquesViaCwe();
+    } catch (e) {
+      console.warn('CAPEC bridge failed (non-fatal):', e instanceof Error ? e.message : e);
+    }
+
     res.status(200).json({
       ok: true,
       source: 'nvd',
@@ -173,6 +182,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       recordsSkipped,
       batchSize,
       pending: pending.rows.length,
+      techniquesLinked,
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);

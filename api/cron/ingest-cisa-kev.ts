@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { query } from '../v1/lib/db.js';
 import { verifyCronAuth } from './lib/auth.js';
+import { linkCveTechniquesViaCwe } from './lib/capec-bridge.js';
 
 const CISA_KEV_URL =
   'https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json';
@@ -89,12 +90,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       [recordsInserted, recordsSkipped, logId],
     );
 
+    // Link new CVEs to techniques via CWE→CAPEC→ATT&CK bridge
+    let techniquesLinked = 0;
+    try {
+      techniquesLinked = await linkCveTechniquesViaCwe();
+    } catch (e) {
+      console.warn('CAPEC bridge failed (non-fatal):', e instanceof Error ? e.message : e);
+    }
+
     res.status(200).json({
       ok: true,
       source: 'cisa_kev',
       recordsInserted,
       recordsSkipped,
       totalInFeed: data.count,
+      techniquesLinked,
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
