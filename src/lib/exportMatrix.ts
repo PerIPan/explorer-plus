@@ -69,9 +69,15 @@ export function exportMatrixHtml(data: MatrixData, options: ExportOptions): stri
       </a>`;
     }).join('\n');
 
+    const domainShort = (col.tactic as { domain?: string }).domain
+      ? (col.tactic as { domain?: string }).domain!.replace('-attack', '').replace('enterprise', 'ENT').replace('ics', 'ICS').replace('mobile', 'MOBILE')
+      : '';
+    const domainPillColor = domainShort === 'ENT' ? textSecondary : isDark ? '#f97316' : '#ea580c';
+
     return `<div style="flex:1;min-width:140px;max-width:200px;">
       <div style="padding:8px 6px;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:${tealAccent};border-bottom:2px solid ${tealAccent};margin-bottom:6px;text-align:center;">
-        ${escapeHtml(col.tactic.name)}<br/>
+        ${domainShort ? `<div style="font-size:9px;font-weight:700;color:${domainPillColor};margin-bottom:2px;">${domainShort}</div>` : ''}
+        <a href="https://mitre-explorer.org/?entity=${col.tactic.attackId}&tab=tactic-map" target="_blank" style="color:${tealAccent};text-decoration:none;">${escapeHtml(col.tactic.name)}</a><br/>
         <span style="font-size:10px;color:${textSecondary};font-weight:400;text-transform:none;">${col.techniques.length} techniques</span>
       </div>
       ${cells}
