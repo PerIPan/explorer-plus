@@ -18,7 +18,6 @@ export function exportMatrixHtml(data: MatrixData, options: ExportOptions): stri
   const isDark = theme === 'dark';
 
   const bg = isDark ? '#0f172a' : '#f8fafc';
-  const cardBg = isDark ? '#1e293b' : '#ffffff';
   const textPrimary = isDark ? '#e2e8f0' : '#1e293b';
   const textSecondary = isDark ? '#94a3b8' : '#64748b';
   const border = isDark ? '#334155' : '#e2e8f0';
@@ -31,16 +30,27 @@ export function exportMatrixHtml(data: MatrixData, options: ExportOptions): stri
   const title = `ATT&CK Matrix — ${domainLabel}${sector ? ` / ${sector}` : ''}`;
   const dateStr = new Date().toISOString().split('T')[0];
 
+  /** Convert a hex color like #f97316 to rgba with given alpha */
+  function hexToRgba(hex: string, alpha: number): string {
+    const h = hex.replace('#', '');
+    const r = parseInt(h.substring(0, 2), 16);
+    const g = parseInt(h.substring(2, 4), 16);
+    const b = parseInt(h.substring(4, 6), 16);
+    if (isNaN(r) || isNaN(g) || isNaN(b)) return 'transparent';
+    return `rgba(${r},${g},${b},${alpha})`;
+  }
+
   function cellBg(attackId: string, subCount: number): string {
-    if (actorLookup && actorColors) {
-      const actors = actorLookup.get(attackId);
-      if (!actors) return 'transparent';
-      if (actors.size === 1) {
-        const idx = actors.values().next().value!;
-        const color = actorColors[idx];
-        return `color-mix(in srgb, ${color} 55%, transparent)`;
+    if (actorLookup && actorColors && actorColors.length > 0) {
+      const actorSet = actorLookup.get(attackId);
+      if (!actorSet) return 'transparent';
+      if (actorSet.size === 1) {
+        const idx = actorSet.values().next().value!;
+        const color = actorColors[idx] ?? tealAccent;
+        return hexToRgba(color, 0.55);
       }
-      // shared
+      // shared — use teal accent
+      return hexToRgba(tealAccent, 0.45);
     }
     if (subCount === 0) return 'transparent';
     const ratio = subCount / maxUsage;
@@ -50,8 +60,8 @@ export function exportMatrixHtml(data: MatrixData, options: ExportOptions): stri
 
   const columns = data.map((col) => {
     const cells = col.techniques.map((t) => {
-      const bg = cellBg(t.attackId, t.subTechniques.length);
-      return `<div style="padding:4px 6px;border-radius:4px;border:1px solid ${border};font-size:11px;line-height:1.3;background:${bg};margin-bottom:3px;">
+      const background = cellBg(t.attackId, t.subTechniques.length);
+      return `<div style="padding:4px 6px;border-radius:4px;border:1px solid ${border};font-size:11px;line-height:1.3;background:${background};margin-bottom:3px;">
         <div style="font-family:monospace;font-size:10px;color:${textSecondary};margin-bottom:2px;">${t.attackId}</div>
         <div style="color:${textPrimary};overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${escapeHtml(t.name)}</div>
         ${t.subTechniques.length > 0 ? `<div style="font-size:10px;color:${textSecondary};margin-top:2px;">▸ ${t.subTechniques.length} sub</div>` : ''}
@@ -69,9 +79,17 @@ export function exportMatrixHtml(data: MatrixData, options: ExportOptions): stri
 
   const actorLegend = actors && actors.length > 0
     ? `<div style="display:flex;gap:16px;margin-top:8px;font-size:12px;color:${textSecondary};">
-        ${actors.map((a) => `<span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;background:${a.color};display:inline-block;"></span> ${escapeHtml(a.name)}</span>`).join('')}
+        ${actors.map((a) => `<span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;background:${escapeHtml(a.color)};display:inline-block;"></span> ${escapeHtml(a.name)}</span>`).join('')}
         <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;background:${tealAccent};display:inline-block;"></span> Shared</span>
       </div>`
+    : '';
+
+  const domainPill = `<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;background:${isDark ? '#064e3b' : '#ccfbf1'};color:${tealAccent};border:1px solid ${tealAccent}40;margin-left:8px;">${escapeHtml(domainLabel)}</span>`;
+  const sectorPill = sector
+    ? `<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;background:${isDark ? '#1e1b4b' : '#ede9fe'};color:${isDark ? '#a78bfa' : '#7c3aed'};border:1px solid ${isDark ? '#a78bfa' : '#7c3aed'}40;margin-left:4px;">${escapeHtml(sector)}</span>`
+    : '';
+  const actorPills = actors && actors.length > 0
+    ? actors.map((a) => `<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;background:${isDark ? '#1a1a2e' : '#f5f3ff'};color:${textPrimary};border:1px solid ${escapeHtml(a.color)}60;margin-left:4px;"><span style="width:8px;height:8px;border-radius:50%;background:${escapeHtml(a.color)};display:inline-block;"></span>${escapeHtml(a.name)}</span>`).join('')
     : '';
 
   return `<!DOCTYPE html>
@@ -84,20 +102,27 @@ export function exportMatrixHtml(data: MatrixData, options: ExportOptions): stri
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: ${bg}; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 24px; }
   @media print { body { padding: 8px; } .no-print { display: none; } }
+  a { text-decoration: none; }
+  a:hover { opacity: 0.8; }
 </style>
 </head>
 <body>
 <div style="max-width:100%;overflow-x:auto;">
-  <div style="margin-bottom:16px;">
-    <h1 style="font-size:18px;font-weight:700;color:${textPrimary};margin-bottom:4px;">${escapeHtml(title)}</h1>
-    <p style="font-size:12px;color:${textSecondary};">Exported ${dateStr} from mitre-explorer.org</p>
-    ${actorLegend}
+  <div style="margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+    <div>
+      <div style="display:flex;align-items:center;flex-wrap:wrap;">
+        <a href="https://mitre-explorer.org/matrix" target="_blank" style="font-size:18px;font-weight:700;color:${textPrimary};">ATT&amp;CK Matrix</a>
+        ${domainPill}${sectorPill}${actorPills}
+      </div>
+      <p style="font-size:12px;color:${textSecondary};margin-top:4px;">Exported ${dateStr} from <a href="https://mitre-explorer.org" target="_blank" style="color:${tealAccent};">mitre-explorer.org</a></p>
+    </div>
+    <div style="font-size:13px;color:${textSecondary};">
+      ${data.reduce((sum, col) => sum + col.techniques.length, 0)} techniques across ${data.length} tactics
+    </div>
   </div>
+  ${actorLegend ? `<div style="margin-bottom:12px;">${actorLegend}</div>` : ''}
   <div style="display:flex;gap:4px;align-items:flex-start;">
     ${columns}
-  </div>
-  <div style="margin-top:16px;font-size:11px;color:${textSecondary};">
-    ${data.reduce((sum, col) => sum + col.techniques.length, 0)} techniques across ${data.length} tactics
   </div>
 </div>
 </body>
@@ -105,5 +130,5 @@ export function exportMatrixHtml(data: MatrixData, options: ExportOptions): stri
 }
 
 function escapeHtml(str: string): string {
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }

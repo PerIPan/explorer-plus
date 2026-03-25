@@ -130,7 +130,9 @@ export function Matrix() {
     const a = document.createElement('a');
     a.href = url;
     a.download = `mitre-matrix-${domain.replace('-attack', '')}-${new Date().toISOString().split('T')[0]}.html`;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
     URL.revokeObjectURL(url);
   }, [data, domain, sector, selectedActors, actorOverlay, theme]);
 
