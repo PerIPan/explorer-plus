@@ -163,14 +163,14 @@ export function FeedStatus() {
 }
 
 const FRAMEWORK_TABLES = [
-  { key: 'nist_controls', label: 'NIST 800-53', source: 'sync-frameworks.mjs' },
-  { key: 'engage_mappings', label: 'MITRE Engage', source: 'sync-frameworks.mjs' },
-  { key: 'react_actions', label: 'RE&CT', source: 'sync-frameworks.mjs' },
-  { key: 'veris_mappings', label: 'VERIS', source: 'sync-frameworks.mjs' },
-  { key: 'cloud_control_mappings', label: 'Cloud Controls (Azure + GCP)', source: 'sync-frameworks.mjs' },
-  { key: 'sigma_rules', label: 'Sigma Rules', source: 'GitHub Actions' },
-  { key: 'atomic_tests', label: 'Atomic Red Team', source: 'GitHub Actions' },
-  { key: 'external_actors', label: 'ETDA Actors', source: 'sync-thaicert.mjs' },
+  { key: 'nist_controls', label: 'NIST 800-53' },
+  { key: 'engage_mappings', label: 'MITRE Engage' },
+  { key: 'react_actions', label: 'RE&CT' },
+  { key: 'veris_mappings', label: 'VERIS' },
+  { key: 'cloud_control_mappings', label: 'Cloud Controls (Azure + GCP)' },
+  { key: 'sigma_rules', label: 'Sigma Rules' },
+  { key: 'atomic_tests', label: 'Atomic Red Team' },
+  { key: 'external_actors', label: 'ETDA Actors' },
 ];
 
 function FrameworkStatus() {
@@ -203,7 +203,6 @@ function FrameworkStatus() {
               </div>
               <div className="flex items-center gap-4 text-xs text-[var(--text-secondary)]">
                 <span>Last sync: <span className="text-[var(--text-primary)]">{count != null && count > 0 ? 'synced' : 'pending'}</span></span>
-                <span className="text-[var(--text-primary)]">{fw.source}</span>
               </div>
             </div>
           );

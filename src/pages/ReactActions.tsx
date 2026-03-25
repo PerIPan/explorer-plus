@@ -5,6 +5,7 @@ import { useFuseFilter } from '../hooks/useFuseFilter';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Badge } from '../components/shared/Badge';
 import type { ReactAction } from '../lib/types';
+import { reactActionUrl } from '../lib/urlSafety';
 
 const FUSE_KEYS = ['title', 'description', 'stage'];
 
@@ -67,10 +68,17 @@ function ActionCard({
         onClick={onToggle}
         className="w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-[var(--hover-subtle)] transition-colors"
       >
-        <span className="font-mono text-xs text-[var(--accent-teal)] mt-0.5 shrink-0 w-16">
-          {action.actionId}
-        </span>
-        <span className="flex-1 text-[var(--text-primary)] text-sm">{action.title}</span>
+        <a
+          href={reactActionUrl(action.actionId, action.title)}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="font-mono text-xs text-[var(--accent-teal)] mt-0.5 shrink-0 w-16 hover:underline"
+          title="View on ATC RE&CT docs"
+        >
+          {action.actionId} ↗
+        </a>
+        <span className="flex-1 text-[var(--text-primary)] text-sm select-text">{action.title}</span>
         <div className="flex items-center gap-2 shrink-0">
           <StageBadge stage={action.stage} />
           <svg

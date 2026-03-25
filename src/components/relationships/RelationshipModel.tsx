@@ -50,7 +50,7 @@ function makeNodes(c: ReturnType<typeof useThemeColors>): ModelNode[] {
     { id: 'gcp', label: 'GCP', x: 1200, y: 390, color: '#34d399', bg: '#34d39918', path: '/techniques', description: 'GCP security controls mapped to ATT&CK techniques', category: 'compliance', scale: 0.85 },
     { id: 'capec', label: 'CAPEC', x: 380, y: 520, color: '#fbbf24', bg: '#fbbf2418', path: '/cti/cves', description: 'CWE→CAPEC→ATT&CK bridge linking CVEs to techniques', category: 'intelligence', scale: 0.85 },
     { id: 'ics', label: 'ICS', x: 400, y: 180, color: '#f97316', bg: '#f9731618', path: '/matrix?domain=ics-attack', description: 'Industrial Control Systems ATT&CK domain — OT-specific techniques', category: 'core', scale: 0.85 },
-    { id: 'mobile', label: 'Mobile', x: 700, y: 180, color: '#8b5cf6', bg: '#8b5cf618', path: '/matrix?domain=mobile-attack', description: 'Mobile ATT&CK domain — Android and iOS specific techniques', category: 'core', scale: 0.85 },
+    { id: 'mobile', label: 'Mobile', x: 700, y: 140, color: '#8b5cf6', bg: '#8b5cf618', path: '/matrix?domain=mobile-attack', description: 'Mobile ATT&CK domain — Android and iOS specific techniques', category: 'core', scale: 0.85 },
   ];
 }
 

@@ -6,6 +6,7 @@ import { DataTable, type ColumnDef } from '../components/shared/DataTable';
 import { Badge } from '../components/shared/Badge';
 import { EntityLink } from '../components/shared/EntityLink';
 import type { SigmaRule } from '../lib/types';
+import { sigmaRuleUrl } from '../lib/urlSafety';
 
 
 // Override yellow specifically using className
@@ -41,7 +42,7 @@ const columns: ColumnDef<SigmaRule>[] = [
     render: (row) => (
       <div>
         <span className="text-[var(--text-primary)]">{row.title}</span>
-        <div className="text-[var(--text-secondary)] text-xs font-mono mt-0.5">{row.sigma_id}</div>
+        <a href={sigmaRuleUrl(row.sigma_id)} target="_blank" rel="noopener noreferrer" className="text-[var(--accent-teal)] text-xs font-mono mt-0.5 hover:underline block">{row.sigma_id} ↗</a>
       </div>
     ),
   },

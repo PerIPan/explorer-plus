@@ -15,6 +15,17 @@ export function ctidCloudUrl(provider: string, controlId: string): string {
   return `${CTID_BASE}/${encodeURIComponent(provider)}/attack-16.1/domain-enterprise/${version}/capability-groups/${encodeURIComponent(controlId)}/`;
 }
 
-export function ctidVerisUrl(verisId: string): string {
-  return `${CTID_BASE}/veris/attack-16.1/domain-enterprise/veris-1.4.0/capability-groups/${encodeURIComponent(verisId)}/`;
+export function ctidVerisUrl(_verisId: string): string {
+  // CTID does not have per-category deep links for VERIS — link to overview
+  return `${CTID_BASE}/veris/`;
+}
+
+export function sigmaRuleUrl(sigmaId: string): string {
+  return `https://grep.app/search?q=${encodeURIComponent(sigmaId)}&filter[repo][0]=SigmaHQ/sigma`;
+}
+
+export function reactActionUrl(actionId: string, title: string): string {
+  const numPart = actionId.replace(/^RA/i, '');
+  const slug = title.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+  return `https://atc-project.github.io/atc-react/Response_Actions/RA_${numPart}_${slug}/`;
 }
