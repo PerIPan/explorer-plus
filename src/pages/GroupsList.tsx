@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useGroups } from '../hooks/useApi';
 import { useSector } from '../contexts/SectorContext';
+import { useDomain } from '../contexts/DomainContext';
 import { useFuseFilter } from '../hooks/useFuseFilter';
 import { PageHeader } from '../components/layout/PageHeader';
 import { DataTable, type ColumnDef } from '../components/shared/DataTable';
@@ -15,13 +16,14 @@ export function GroupsList() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { sectorParam } = useSector();
+  const { domainParam } = useDomain();
 
   const sortBy = searchParams.get('sort') ?? 'attack_id';
   const sortDir = (searchParams.get('order') ?? 'asc') as 'asc' | 'desc';
 
   const [search, setSearch] = useState('');
 
-  const params: Record<string, string> = { limit: '5000', ...sectorParam };
+  const params: Record<string, string> = { limit: '5000', ...sectorParam, ...domainParam };
   if (sortBy) params.sort = sortBy;
   if (sortDir) params.order = sortDir;
 

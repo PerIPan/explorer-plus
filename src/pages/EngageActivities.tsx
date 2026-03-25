@@ -136,7 +136,7 @@ const columns: ColumnDef<EngageSummary>[] = [
 
 export function EngageActivities() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(searchParams.get('q') ?? '');
 
   const goal = searchParams.get('goal') ?? '';
 

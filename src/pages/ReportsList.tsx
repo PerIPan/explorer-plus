@@ -146,7 +146,7 @@ const columns: ColumnDef<ThreatReport>[] = [
 export function ReportsList() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { sectorParam } = useSector();
-  const [q, setQ] = useState('');
+  const [q, setQ] = useState(searchParams.get('q') ?? '');
 
   const source = searchParams.get('source') ?? '';
   const defaultSince = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];

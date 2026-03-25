@@ -45,8 +45,9 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   if (type) {
     params.push(type);
     conditions.push(`i.type = $${params.length}`);
-  } else {
+  } else if (source !== 'cisa_kev') {
     // Exclude CVEs by default — they have their own /cves endpoint
+    // But allow them through when explicitly filtering by cisa_kev source
     conditions.push(`i.type != 'cve'`);
   }
 

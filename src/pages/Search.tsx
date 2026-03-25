@@ -1,5 +1,6 @@
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { useSearch } from '../hooks/useApi';
+import { useDomain } from '../contexts/DomainContext';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Badge } from '../components/shared/Badge';
 import type { EntityType } from '../lib/types';
@@ -72,9 +73,10 @@ function ResultRow({
 export function Search() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { domainParam } = useDomain();
   const q = searchParams.get('q') ?? '';
 
-  const { data, isLoading, error } = useSearch(q);
+  const { data, isLoading, error } = useSearch(q, domainParam);
 
   const totalCount =
     (data?.techniques.length ?? 0) +

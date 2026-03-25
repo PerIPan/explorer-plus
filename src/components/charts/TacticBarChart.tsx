@@ -24,10 +24,12 @@ interface TacticBarChartProps {
 export function TacticBarChart({ data, onBarClick }: TacticBarChartProps) {
   const c = useThemeColors();
 
-  // Add domain prefix for non-enterprise tactics (visible in "All Domains" mode)
+  // Show domain prefix only when multiple domains are present (All Domains mode)
+  const uniqueDomains = new Set(data.map((d) => d.domain).filter(Boolean));
+  const multiDomain = uniqueDomains.size > 1;
   const chartData = data.map((d) => ({
     ...d,
-    label: d.domain
+    label: multiDomain && d.domain
       ? `[${d.domain.replace('-attack', '').replace('enterprise', 'ENT').toUpperCase()}] ${d.tacticName}`
       : d.tacticName,
   }));

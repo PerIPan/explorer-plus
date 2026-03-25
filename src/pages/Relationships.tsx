@@ -128,12 +128,12 @@ export function Relationships() {
 
   const { data: graphData, isLoading, error } = useRelationships(selectedId);
 
-  const { domain } = useDomain();
+  const { domain, domainParam } = useDomain();
 
   /** Load all entity names once for Fuse.js fuzzy search */
   const { data: allEntities } = useQuery({
     queryKey: ['entities-all', domain],
-    queryFn: () => apiFetch<{ data: EntityEntry[] }>('/entities', { domain }).then(r => r.data),
+    queryFn: () => apiFetch<{ data: EntityEntry[] }>('/entities', domainParam).then(r => r.data),
     staleTime: 60 * 60 * 1000, // 1 hour
     gcTime: 60 * 60 * 1000,
   });
@@ -218,8 +218,8 @@ export function Relationships() {
   return (
     <div className="space-y-4">
       <PageHeader
-        title="Relationships Explorer"
-        subtitle="Graph and map views for every entity type — select an entity to start"
+        title="360 Views"
+        subtitle="Map 360 Views for every entity type — select an entity to start, domain filtered search"
         actions={
           selectedId ? (
             <button

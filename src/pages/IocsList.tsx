@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { isSafeUrl } from '../lib/urlSafety';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -157,6 +157,16 @@ export function IocsList() {
     [setSearchParams],
   );
 
+  const [qInput, setQInput] = useState(q);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  useEffect(() => { setQInput(q); }, [q]);
+  const handleQChange = useCallback((value: string) => {
+    setQInput(value);
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => setParam('q', value), 300);
+  }, [setParam]);
+  useEffect(() => () => clearTimeout(debounceRef.current), []);
+
   const params: Record<string, string> = { page: String(page), limit: '100', ...sectorParam };
   if (type) params.type = type;
   if (source) params.source = source;
@@ -270,8 +280,8 @@ export function IocsList() {
         <input
           type="search"
           placeholder="Search IOCs..."
-          value={q}
-          onChange={(e) => setParam('q', e.target.value)}
+          value={qInput}
+          onChange={(e) => handleQChange(e.target.value)}
           className="min-w-[200px] px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent-teal)]"
         />
         <select

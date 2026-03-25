@@ -28,12 +28,12 @@ export function SearchBar() {
   const inputRef = useRef<HTMLInputElement>(null);
   const blurTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navigate = useNavigate();
-  const { domain } = useDomain();
+  const { domain, domainParam } = useDomain();
 
   /** Load all entities for Fuse.js — filtered by active domain */
   const { data: allEntities } = useQuery({
     queryKey: ['entities-all', domain],
-    queryFn: () => apiFetch<{ data: EntityEntry[] }>('/entities', { domain }).then(r => r.data),
+    queryFn: () => apiFetch<{ data: EntityEntry[] }>('/entities', domainParam).then(r => r.data),
     staleTime: 60 * 60 * 1000,
     gcTime: 60 * 60 * 1000,
   });

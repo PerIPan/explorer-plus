@@ -117,7 +117,7 @@ function ActionCard({
 export function ReactActions() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(searchParams.get('q') ?? '');
 
   const stage = searchParams.get('stage') ?? '';
 

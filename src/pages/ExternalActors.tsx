@@ -150,7 +150,7 @@ function ActorDetailModal({ actor, onClose }: { actor: ExternalActor; onClose: (
 export function ExternalActors() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [modalActor, setModalActor] = useState<ExternalActor | null>(null);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(searchParams.get('search') ?? '');
 
   const country = searchParams.get('country') ?? '';
   const category = searchParams.get('category') ?? '';

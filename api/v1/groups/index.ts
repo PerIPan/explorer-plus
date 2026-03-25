@@ -10,6 +10,7 @@ const ALLOWED_SORT = ['name', 'attack_id', 'stix_modified'];
 const querySchema = paginationSchema.extend({
   search: z.string().min(3).max(200).optional(),
   sector: z.string().max(50).optional(),
+  domain: z.enum(['enterprise-attack', 'mobile-attack', 'ics-attack']).optional(),
   include_deprecated: z.coerce.boolean().default(false),
 });
 
@@ -20,7 +21,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     return;
   }
 
-  const { page, limit, sort, order, search, sector, include_deprecated } = parsed.data;
+  const { page, limit, sort, order, search, sector, domain, include_deprecated } = parsed.data;
   const sortCol = sort ?? 'name';
   const sortClause = buildSortClause(sortCol, order, ALLOWED_SORT);
   const { offset } = buildPaginationClause(page, limit);
@@ -44,6 +45,15 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
       SELECT 1 FROM group_sectors gs
       JOIN sectors s ON s.id = gs.sector_id
       WHERE gs.group_id = g.id AND s.slug = $${params.length}
+    )`);
+  }
+
+  if (domain) {
+    params.push(domain);
+    conditions.push(`EXISTS (
+      SELECT 1 FROM group_techniques gt
+      JOIN techniques t ON t.id = gt.technique_id
+      WHERE gt.group_id = g.id AND t.domain = $${params.length}
     )`);
   }
 

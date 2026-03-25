@@ -158,10 +158,10 @@ export function useTactic(attackId: string) {
 
 // ── Special hooks ─────────────────────────────────────────────────────────────
 
-export function useSearch(q: string) {
+export function useSearch(q: string, params?: Record<string, string>) {
   return useQuery({
-    queryKey: ['search', q],
-    queryFn: () => apiFetch<SearchResponse>('/search', { q }),
+    queryKey: ['search', q, params],
+    queryFn: () => apiFetch<SearchResponse>('/search', { q, ...params }),
     enabled: q.trim().length >= 3,
   });
 }
