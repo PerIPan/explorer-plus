@@ -483,18 +483,20 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
         )}
 
         {nistControls.length > 0 ? (
-          <MapRow prefix="NIST Controls">
-            <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto">
+          <MapRow prefix="NIST 800-53">
+            <div className="space-y-1 max-h-48 overflow-y-auto w-full">
               {nistControls.map((ctrl) => (
                 <a
                   key={ctrl.controlId}
                   href={`https://csf.tools/reference/nist-sp-800-53/r5/${ctrl.controlId.split('-')[0].toLowerCase()}/${ctrl.controlId.replace(/-0+/g, '-').toLowerCase()}/`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  title={ctrl.controlName ?? ctrl.controlId}
-                  className="hover:opacity-80 transition-opacity"
+                  className="flex items-center gap-2 py-1 px-2 rounded hover:bg-[var(--teal-ghost)] transition-colors group"
                 >
-                  <Badge label={ctrl.controlId} variant="blue" />
+                  <span className="font-mono text-[10px] text-[var(--accent-blue)] shrink-0 w-12">{ctrl.controlId}</span>
+                  <span className="text-xs text-[var(--text-primary)] group-hover:text-[var(--accent-teal)]">{ctrl.controlName ?? ctrl.controlId}</span>
+                  {ctrl.controlFamily && <span className="text-[9px] text-[var(--text-secondary)] shrink-0">({ctrl.controlFamily})</span>}
+                  <span className="text-[9px] text-[var(--text-secondary)] shrink-0 opacity-0 group-hover:opacity-100 ml-auto">↗</span>
                 </a>
               ))}
             </div>
