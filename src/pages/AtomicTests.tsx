@@ -42,7 +42,6 @@ export function AtomicTests() {
   const [searchParams, setSearchParams] = useSearchParams();
   const q = searchParams.get('q') ?? '';
   const platform = searchParams.get('platform') ?? '';
-  const technique = searchParams.get('technique') ?? '';
   const page = parseInt(searchParams.get('page') ?? '1', 10) || 1;
 
   const setParam = useCallback(
@@ -60,7 +59,6 @@ export function AtomicTests() {
   const params: Record<string, string> = { page: String(page), limit: '50' };
   if (q) params.q = q;
   if (platform) params.platform = platform;
-  if (technique) params.technique = technique;
 
   const { data, isLoading } = useQuery({
     queryKey: ['atomic-tests', params],
@@ -102,13 +100,6 @@ export function AtomicTests() {
           ))}
         </select>
       </div>
-
-      {technique && (
-        <div className="flex items-center gap-2 text-xs text-[var(--text-secondary)] bg-[var(--surface-alt)] border border-[var(--border-color)] rounded-md px-3 py-2">
-          <span>Filtered by technique: <strong className="text-[var(--accent-teal)]">{technique}</strong></span>
-          <button type="button" onClick={() => setParam('technique', '')} className="text-[var(--accent-teal)] hover:underline">clear</button>
-        </div>
-      )}
 
       {isLoading && (
         <div className="space-y-2">

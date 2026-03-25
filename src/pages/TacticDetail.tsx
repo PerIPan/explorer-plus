@@ -56,18 +56,11 @@ export function TacticDetail() {
           { label: 'Tactics', href: '/tactics' },
           { label: data.attackId },
         ]}
+        titleAction={
+          <Link to={`/?entity=${data.attackId}&tab=tactic-map`} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-medium text-[var(--text-secondary)] hover:text-[var(--accent-teal)] transition-colors" title="View in 360 Views">360 →</Link>
+        }
         actions={
-          <div className="flex items-center gap-3">
-            <Link
-              to={`/?entity=${data.attackId}&tab=tactic-map`}
-              className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium text-[var(--text-secondary)] bg-[var(--surface-alt)] border border-[var(--border-color)] hover:text-[var(--accent-teal)] hover:border-[var(--accent-teal)] transition-colors"
-            >
-              View 360 &rarr;
-            </Link>
-            <span className="font-mono text-xs text-[var(--accent-yellow)] bg-[var(--yellow-faint)] border border-[var(--yellow-dim)] px-2 py-1 rounded">
-              {data.attackId}
-            </span>
-          </div>
+          <span className="font-mono text-xs text-[var(--accent-yellow)] bg-[var(--yellow-faint)] border border-[var(--yellow-dim)] px-2 py-1 rounded">{data.attackId}</span>
         }
       />
 
