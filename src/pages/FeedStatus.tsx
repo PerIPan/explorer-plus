@@ -168,7 +168,6 @@ const FRAMEWORK_TABLES = [
   { key: 'react_actions', label: 'RE&CT', source: 'sync-frameworks.mjs' },
   { key: 'veris_mappings', label: 'VERIS', source: 'sync-frameworks.mjs' },
   { key: 'cloud_control_mappings', label: 'Cloud Controls (Azure + GCP)', source: 'sync-frameworks.mjs' },
-  { key: 'defensive_mappings', label: 'D3FEND', source: 'sync-d3fend cron' },
   { key: 'sigma_rules', label: 'Sigma Rules', source: 'GitHub Actions' },
   { key: 'atomic_tests', label: 'Atomic Red Team', source: 'GitHub Actions' },
   { key: 'external_actors', label: 'ETDA Actors', source: 'sync-thaicert.mjs' },
@@ -196,18 +195,15 @@ function FrameworkStatus() {
                   <span className={`inline-block w-2.5 h-2.5 rounded-full ${count && count > 0 ? 'bg-[var(--accent-green)]' : 'bg-[var(--text-secondary)]'}`} />
                   <h3 className="text-[var(--text-primary)] font-medium text-sm">{fw.label}</h3>
                 </div>
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border bg-[var(--hover-overlay)] text-[var(--text-secondary)] border-[var(--border-color)]">
-                  manual
-                </span>
-              </div>
-              <div className="flex items-center gap-4 text-xs text-[var(--text-secondary)]">
-                <span>Records: <span className="text-[var(--text-primary)] font-medium">{count ?? '...'}</span></span>
-                <span>Source: <span className="text-[var(--text-primary)]">{fw.source}</span></span>
                 {count != null && count > 0 && (
                   <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border bg-[var(--green-faint)] text-[var(--accent-green)] border-[var(--green-dim)]">
                     success
                   </span>
                 )}
+              </div>
+              <div className="flex items-center gap-4 text-xs text-[var(--text-secondary)]">
+                <span>Last sync: <span className="text-[var(--text-primary)]">{count != null && count > 0 ? 'synced' : 'pending'}</span></span>
+                <span className="text-[var(--text-primary)]">{fw.source}</span>
               </div>
             </div>
           );

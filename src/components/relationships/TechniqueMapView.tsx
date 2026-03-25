@@ -7,6 +7,7 @@ import { EntityLink } from '../shared/EntityLink';
 import { Badge } from '../shared/Badge';
 import { VtLookupModal, VtButton } from '../shared/VtLookupModal';
 import { sanitize, sanitizeMarkdown } from '../../lib/sanitize';
+import { ctidCloudUrl, ctidVerisUrl } from '../../lib/urlSafety';
 import type { CloudControl } from '../../lib/types';
 
 // ── Level badge (reused pattern from TechniqueDetail) ─────────────────────────
@@ -615,13 +616,16 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
             {veris.length > 0 ? (
               <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto">
                 {veris.map((v) => (
-                  <span
+                  <a
                     key={v.verisId}
-                    title={v.verisId}
-                    className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium bg-[var(--purple-faint)] text-[var(--accent-purple)] border border-[var(--purple-dim)]"
+                    href={ctidVerisUrl(v.verisId)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={`View ${v.verisId} on CTID Mappings Explorer`}
+                    className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium bg-[var(--purple-faint)] text-[var(--accent-purple)] border border-[var(--purple-dim)] hover:bg-[var(--purple-dim)] transition-colors"
                   >
-                    {v.verisId}
-                  </span>
+                    {v.verisId} ↗
+                  </a>
                 ))}
               </div>
             ) : (
@@ -667,7 +671,7 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
                             className="flex items-start gap-2 py-1.5 px-3 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)]"
                           >
                             <a
-                              href={`https://center-for-threat-informed-defense.github.io/mappings-explorer/external/${encodeURIComponent(ctrl.provider)}/${encodeURIComponent(ctrl.controlId)}`}
+                              href={ctidCloudUrl(ctrl.provider, ctrl.controlId)}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="font-mono text-xs text-[var(--accent-teal)] shrink-0 mt-0.5 min-w-[180px] hover:underline"

@@ -9,7 +9,6 @@ async function handler(_req: VercelRequest, res: VercelResponse): Promise<void> 
     UNION ALL SELECT 'react_actions', COUNT(*)::text FROM react_actions
     UNION ALL SELECT 'veris_mappings', COUNT(*)::text FROM veris_mappings
     UNION ALL SELECT 'cloud_control_mappings', COUNT(*)::text FROM cloud_control_mappings
-    UNION ALL SELECT 'defensive_mappings', COUNT(*)::text FROM defensive_mappings
     UNION ALL SELECT 'sigma_rules', COUNT(*)::text FROM sigma_rules
     UNION ALL SELECT 'atomic_tests', COUNT(*)::text FROM atomic_tests
     UNION ALL SELECT 'external_actors', COUNT(*)::text FROM external_actors

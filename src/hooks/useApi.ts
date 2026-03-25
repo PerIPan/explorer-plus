@@ -307,3 +307,17 @@ export function useExternalActorByName(name: string) {
     enabled: Boolean(name),
   });
 }
+
+interface AggregatedFrameworks {
+  veris: Array<{ verisId: string; count: number }>;
+  cloud: Array<{ provider: string; controlId: string; controlName: string; mappingType: string | null; count: number }>;
+}
+
+export function useFrameworksByTechniques(techniqueIds: string[]) {
+  const ids = techniqueIds.join(',');
+  return useQuery({
+    queryKey: ['frameworks-by-techniques', ids],
+    queryFn: () => apiFetch<AggregatedFrameworks>('/frameworks/by-techniques', { ids }),
+    enabled: techniqueIds.length > 0,
+  });
+}

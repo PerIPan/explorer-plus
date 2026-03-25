@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useGroup, useCampaign, useExternalActorByGroup, useExternalActorByName } from '../../hooks/useApi';
+import { useGroup, useCampaign, useExternalActorByGroup, useExternalActorByName, useFrameworksByTechniques } from '../../hooks/useApi';
 import { useDomain } from '../../contexts/DomainContext';
 import { useSector } from '../../contexts/SectorContext';
 import { EntityLink } from '../shared/EntityLink';
 import { Badge } from '../shared/Badge';
 import { sanitize, sanitizeMarkdown } from '../../lib/sanitize';
 import { RefsChevron } from '../shared/RefsChevron';
+import { ctidCloudUrl, ctidVerisUrl } from '../../lib/urlSafety';
 import type { GroupTechnique, GroupSoftware, GroupCampaign, GroupSector, ExternalActor } from '../../lib/types';
 
 // ── Collapsible section ────────────────────────────────────────────────────────
@@ -268,6 +269,11 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
   const campaignResult = useCampaign(entityType === 'campaign' ? attackId : '');
   const thaiCertResult = useExternalActorByGroup(entityType === 'group' ? attackId : '');
   const externalActorResult = useExternalActorByName(entityType === 'external_actor' ? attackId : '');
+
+  // Aggregate VERIS + Cloud frameworks from this entity's techniques
+  const techniqueIds = (entityType === 'group' ? groupResult.data?.techniques : campaignResult.data?.techniques)
+    ?.map((t: { attackId: string }) => t.attackId) ?? [];
+  const fwResult = useFrameworksByTechniques(techniqueIds);
 
   // ── External actor profile (ThaiCERT / ETDA) ───────────────────────────
   if (entityType === 'external_actor') {
@@ -575,6 +581,47 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
           </CollapsibleSection>
         )}
 
+        {/* VERIS Categories — collapsed */}
+        {fwResult.data?.veris && fwResult.data.veris.length > 0 && (
+          <CollapsibleSection title="VERIS Incident Categories" count={fwResult.data.veris.length} defaultOpen={false}>
+            <div className="flex flex-wrap gap-1.5">
+              {fwResult.data.veris.map((v) => (
+                <a
+                  key={v.verisId}
+                  href={ctidVerisUrl(v.verisId)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={`${v.count} techniques → ${v.verisId}`}
+                  className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium bg-[var(--purple-faint)] text-[var(--accent-purple)] border border-[var(--purple-dim)] hover:bg-[var(--purple-dim)] transition-colors"
+                >
+                  {v.verisId} ↗
+                </a>
+              ))}
+            </div>
+          </CollapsibleSection>
+        )}
+
+        {/* Cloud Controls — collapsed */}
+        {fwResult.data?.cloud && fwResult.data.cloud.length > 0 && (
+          <CollapsibleSection title="Cloud Security Controls" count={fwResult.data.cloud.length} defaultOpen={false}>
+            <div className="flex flex-wrap gap-1.5">
+              {fwResult.data.cloud.map((c) => (
+                <a
+                  key={`${c.provider}-${c.controlId}`}
+                  href={ctidCloudUrl(c.provider, c.controlId)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={`${c.controlName} (${c.provider}) — ${c.count} techniques`}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium bg-[var(--teal-faint)] text-[var(--accent-teal)] border border-[var(--teal-dim)] hover:bg-[var(--teal-dim)] transition-colors"
+                >
+                  <span className="uppercase text-[8px] opacity-60">{c.provider}</span>
+                  {c.controlId} ↗
+                </a>
+              ))}
+            </div>
+          </CollapsibleSection>
+        )}
+
         {/* Techniques — last, largest section */}
         {techniques.length > 0 && (
           <CollapsibleSection title="Techniques" count={techniques.length} defaultOpen>
@@ -627,6 +674,32 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
           <div className="flex flex-wrap gap-1.5">
             {groups.map((g) => (
               <EntityLink key={g.attackId} type="group" attackId={g.attackId} name={g.name} />
+            ))}
+          </div>
+        </CollapsibleSection>
+      )}
+
+      {/* VERIS — collapsed */}
+      {fwResult.data?.veris && fwResult.data.veris.length > 0 && (
+        <CollapsibleSection title="VERIS Incident Categories" count={fwResult.data.veris.length} defaultOpen={false}>
+          <div className="flex flex-wrap gap-1.5">
+            {fwResult.data.veris.map((v) => (
+              <a key={v.verisId} href={`https://center-for-threat-informed-defense.github.io/mappings-explorer/external/veris/attack-16.1/domain-enterprise/veris-1.4.0/capability-groups/${encodeURIComponent(v.verisId)}/`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium bg-[var(--purple-faint)] text-[var(--accent-purple)] border border-[var(--purple-dim)] hover:bg-[var(--purple-dim)] transition-colors">
+                {v.verisId} ↗
+              </a>
+            ))}
+          </div>
+        </CollapsibleSection>
+      )}
+
+      {/* Cloud Controls — collapsed */}
+      {fwResult.data?.cloud && fwResult.data.cloud.length > 0 && (
+        <CollapsibleSection title="Cloud Security Controls" count={fwResult.data.cloud.length} defaultOpen={false}>
+          <div className="flex flex-wrap gap-1.5">
+            {fwResult.data.cloud.map((c) => (
+              <a key={`${c.provider}-${c.controlId}`} href={ctidCloudUrl(c.provider, c.controlId)} target="_blank" rel="noopener noreferrer" title={`${c.controlName} (${c.provider})`} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium bg-[var(--teal-faint)] text-[var(--accent-teal)] border border-[var(--teal-dim)] hover:bg-[var(--teal-dim)] transition-colors">
+                <span className="uppercase text-[8px] opacity-60">{c.provider}</span>{c.controlId} ↗
+              </a>
             ))}
           </div>
         </CollapsibleSection>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
-import { isSafeUrl } from '../lib/urlSafety';
+import { isSafeUrl, ctidCloudUrl, ctidVerisUrl } from '../lib/urlSafety';
 import { useTechnique, useIntelligence, useFrameworks } from '../hooks/useApi';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Badge } from '../components/shared/Badge';
@@ -366,7 +366,7 @@ function CloudControlsSection({ controls }: { controls: CloudControl[] }) {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <a
-                    href={`https://center-for-threat-informed-defense.github.io/mappings-explorer/external/${encodeURIComponent(ctrl.provider)}/${encodeURIComponent(ctrl.controlId)}`}
+                    href={ctidCloudUrl(ctrl.provider, ctrl.controlId)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="font-mono text-xs text-[var(--accent-teal)] shrink-0 hover:underline"
@@ -559,13 +559,16 @@ function FrameworksTab({ attackId }: { attackId: string }) {
           </h3>
           <div className="flex flex-wrap gap-2">
             {data.verisCategories!.map((v) => (
-              <span
+              <a
                 key={v.verisId}
-                title={v.verisId}
-                className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-[var(--purple-faint)] text-[var(--accent-purple)] border border-[var(--purple-dim)]"
+                href={ctidVerisUrl(v.verisId)}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={`View ${v.verisId} on CTID Mappings Explorer`}
+                className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-[var(--purple-faint)] text-[var(--accent-purple)] border border-[var(--purple-dim)] hover:bg-[var(--purple-dim)] transition-colors"
               >
-                {v.verisId}
-              </span>
+                {v.verisId} ↗
+              </a>
             ))}
           </div>
         </section>

@@ -4,6 +4,7 @@ import { apiFetch } from '../lib/api';
 import { PageHeader } from '../components/layout/PageHeader';
 import { EntityLink } from '../components/shared/EntityLink';
 import { Badge } from '../components/shared/Badge';
+import { ctidCloudUrl } from '../lib/urlSafety';
 
 interface CloudControlRow {
   provider: string;
@@ -126,7 +127,7 @@ export function CloudControls() {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                   </svg>
                   <a
-                    href={`https://center-for-threat-informed-defense.github.io/mappings-explorer/external/${encodeURIComponent(prov)}/${encodeURIComponent(ctrl.controlId)}`}
+                    href={ctidCloudUrl(prov, ctrl.controlId)}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}

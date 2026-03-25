@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '../lib/api';
 import { PageHeader } from '../components/layout/PageHeader';
 import { EntityLink } from '../components/shared/EntityLink';
+import { ctidVerisUrl } from '../lib/urlSafety';
 
 interface VerisRow {
   verisId: string;
@@ -117,14 +118,14 @@ export function VerisCategories() {
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                     </svg>
                     <a
-                      href={`https://center-for-threat-informed-defense.github.io/mappings-explorer/external/veris/`}
+                      href={ctidVerisUrl(row.verisId)}
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={(e) => e.stopPropagation()}
-                      className="text-sm text-[var(--text-primary)] flex-1 hover:text-[var(--accent-teal)] hover:underline"
-                      title="View on CTID Mappings Explorer"
+                      className="text-sm text-[var(--accent-teal)] flex-1 hover:underline"
+                      title={`View ${row.verisId} on CTID Mappings Explorer`}
                     >
-                      {shortLabel || row.verisId}
+                      {shortLabel || row.verisId} ↗
                     </a>
                     <span className="text-xs text-[var(--text-secondary)] shrink-0">
                       {row.techniqueCount} techniques
