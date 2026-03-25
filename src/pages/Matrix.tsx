@@ -10,10 +10,13 @@ import { MatrixActorSelector, ACTOR_COLORS } from '../components/matrix/MatrixAc
 import type { ActorOverlay } from '../components/matrix/MatrixGrid';
 import type { SelectedActor } from '../components/matrix/MatrixActorSelector';
 import type { Group } from '../lib/types';
+import { exportMatrixHtml } from '../lib/exportMatrix';
+import { useTheme } from '../contexts/ThemeContext';
 
 export function Matrix() {
-  const { sectorParam } = useSector();
+  const { sectorParam, sector } = useSector();
   const { domain, domainParam } = useDomain();
+  const { theme } = useTheme();
   const isAllDomains = domain === 'all';
   const { data, isLoading, error } = useMatrix(isAllDomains ? sectorParam : { ...sectorParam, ...domainParam });
   const [inputValue, setInputValue] = useState('');
@@ -112,17 +115,51 @@ export function Matrix() {
     setSelectedActors((prev) => prev.filter((a) => a.attackId !== attackId));
   }, []);
 
+  const handleExport = useCallback(() => {
+    if (!data) return;
+    const html = exportMatrixHtml(data, {
+      domain,
+      sector: sector ?? undefined,
+      actors: selectedActors.map((a) => ({ name: a.name, color: ACTOR_COLORS[a.colorIndex].css })),
+      actorLookup: actorOverlay?.lookup,
+      actorColors: actorOverlay?.colors,
+      theme,
+    });
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `mitre-matrix-${domain.replace('-attack', '')}-${new Date().toISOString().split('T')[0]}.html`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [data, domain, sector, selectedActors, actorOverlay, theme]);
+
   return (
     <div className="space-y-4">
       <PageHeader
         title="ATT&CK Matrix"
         subtitle={isAllDomains
           ? 'Showing all techniques across Enterprise, ICS, and Mobile — select a specific domain for domain-scoped tactics'
-          : 'Techniques organized by tactic — click any cell to view details'}
+          : 'Techniques organized by tactic, filtered by domain, sector or actor — click any cell to view details'}
         actions={
-          <span className="text-[var(--text-secondary)] text-sm">
-            {totalTechniques} techniques across {(data ?? []).length} tactics
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="text-[var(--text-secondary)] text-sm">
+              {totalTechniques} techniques across {(data ?? []).length} tactics
+            </span>
+            {data && (
+              <button
+                type="button"
+                onClick={handleExport}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--accent-teal)] hover:border-[var(--accent-teal)] transition-colors"
+                title="Export matrix as HTML file"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                </svg>
+                Export HTML
+              </button>
+            )}
+          </div>
         }
       />
 

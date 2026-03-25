@@ -218,7 +218,7 @@ export function Relationships() {
   return (
     <div className="space-y-4">
       <PageHeader
-        title="360 Views"
+        title="Relationships Map"
         subtitle="Map 360 Views for every entity type — select an entity to start, domain filtered search"
         actions={
           selectedId ? (

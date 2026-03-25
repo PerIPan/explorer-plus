@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { NavLink, Link, useLocation } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { DomainDropdown } from './DomainDropdown';
 import { SectorDropdown } from './SectorDropdown';
 
@@ -144,12 +144,20 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     >
       {/* Logo / Title */}
       <div className="px-5 py-4 border-b border-[var(--border-color)] flex items-center justify-between">
-        <Link to="/" className="group">
+        <button
+          type="button"
+          onClick={() => {
+            sessionStorage.removeItem('mitre-domain');
+            sessionStorage.removeItem('mitre-sector');
+            window.location.href = '/';
+          }}
+          className="group text-left"
+        >
           <div className="flex items-baseline gap-1.5">
             <span className="text-[var(--accent-teal)] font-bold text-xs tracking-widest uppercase group-hover:text-[var(--accent-teal-light)] transition-colors">MITRE EXPLORER</span>
             <span className="text-[var(--text-secondary)] text-[11px] font-semibold group-hover:text-[var(--text-primary)] transition-colors">Plus</span>
           </div>
-        </Link>
+        </button>
         {/* Close button — visible only below lg */}
         <button
           type="button"
