@@ -72,68 +72,51 @@ export function ExternalLinksButton({ type, attackId, name }: ExternalLinksButto
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium text-[var(--text-secondary)] bg-[var(--surface-alt)] border border-[var(--border-color)] hover:text-[var(--accent-teal)] hover:border-[var(--accent-teal)] transition-colors"
-        title="External references"
-      >
-        <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-        </svg>
-        External
-      </button>
-
-      {open && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm"
-          role="presentation"
-          onClick={() => setOpen(false)}
+      <div className="relative ml-1">
+        <button
+          type="button"
+          onClick={() => setOpen(!open)}
+          className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-medium text-[var(--text-secondary)] hover:text-[var(--accent-teal)] transition-colors"
+          title="External references"
         >
-          <div
-            className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg shadow-xl w-full max-w-sm mx-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border-color)]">
-              <div>
-                <h3 className="text-sm font-semibold text-[var(--text-primary)]">External References</h3>
+          <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+          </svg>
+          ext
+        </button>
+
+        {open && (
+          <>
+            <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+            <div className="absolute top-full left-0 mt-1 z-50 bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg shadow-xl w-64">
+              <div className="px-3 py-2 border-b border-[var(--border-color)]">
                 <span className="text-[10px] text-[var(--text-secondary)] font-mono">{attackId}</span>
               </div>
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] p-1"
-                aria-label="Close"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+              <div className="p-1.5 space-y-0.5">
+                {links.map((link) => (
+                  <a
+                    key={link.url}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-[var(--teal-ghost)] transition-colors group"
+                  >
+                    <svg className="w-3 h-3 text-[var(--accent-teal)] shrink-0 opacity-50 group-hover:opacity-100" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                    </svg>
+                    <div className="min-w-0">
+                      <div className="text-xs text-[var(--text-primary)] group-hover:text-[var(--accent-teal)]">{link.label}</div>
+                      {link.description && (
+                        <div className="text-[9px] text-[var(--text-secondary)] truncate">{link.description}</div>
+                      )}
+                    </div>
+                  </a>
+                ))}
+              </div>
             </div>
-            <div className="p-3 space-y-1">
-              {links.map((link) => (
-                <a
-                  key={link.url}
-                  href={link.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-[var(--teal-ghost)] transition-colors group"
-                >
-                  <svg className="w-4 h-4 text-[var(--accent-teal)] shrink-0 opacity-60 group-hover:opacity-100" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-                  </svg>
-                  <div className="min-w-0">
-                    <div className="text-sm font-medium text-[var(--text-primary)] group-hover:text-[var(--accent-teal)]">{link.label}</div>
-                    {link.description && (
-                      <div className="text-[10px] text-[var(--text-secondary)] truncate">{link.description}</div>
-                    )}
-                  </div>
-                </a>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </div>
     </>
   );
 }
