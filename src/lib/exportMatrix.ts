@@ -61,11 +61,12 @@ export function exportMatrixHtml(data: MatrixData, options: ExportOptions): stri
   const columns = data.map((col) => {
     const cells = col.techniques.map((t) => {
       const background = cellBg(t.attackId, t.subTechniques.length);
-      return `<div style="padding:4px 6px;border-radius:4px;border:1px solid ${border};font-size:11px;line-height:1.3;background:${background};margin-bottom:3px;">
+      const techUrl = `https://mitre-explorer.org/techniques/${t.attackId}`;
+      return `<a href="${techUrl}" target="_blank" style="display:block;padding:4px 6px;border-radius:4px;border:1px solid ${border};font-size:11px;line-height:1.3;background:${background};margin-bottom:3px;text-decoration:none;cursor:pointer;">
         <div style="font-family:monospace;font-size:10px;color:${textSecondary};margin-bottom:2px;">${t.attackId}</div>
         <div style="color:${textPrimary};overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${escapeHtml(t.name)}</div>
         ${t.subTechniques.length > 0 ? `<div style="font-size:10px;color:${textSecondary};margin-top:2px;">▸ ${t.subTechniques.length} sub</div>` : ''}
-      </div>`;
+      </a>`;
     }).join('\n');
 
     return `<div style="flex:1;min-width:140px;max-width:200px;">

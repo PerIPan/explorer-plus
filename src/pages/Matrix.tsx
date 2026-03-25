@@ -117,12 +117,21 @@ export function Matrix() {
 
   const handleExport = useCallback(() => {
     if (!data) return;
+    // Resolve CSS variables to actual hex for standalone HTML
+    const root = document.documentElement;
+    const style = getComputedStyle(root);
+    const resolveColor = (cssVar: string) => {
+      const match = cssVar.match(/var\(--(.+?)\)/);
+      if (!match) return cssVar;
+      return style.getPropertyValue(`--${match[1]}`).trim() || cssVar;
+    };
+    const resolvedActorColors = actorOverlay?.colors?.map((c) => resolveColor(c));
     const html = exportMatrixHtml(data, {
       domain,
       sector: sector ?? undefined,
-      actors: selectedActors.map((a) => ({ name: a.name, color: ACTOR_COLORS[a.colorIndex].css })),
+      actors: selectedActors.map((a) => ({ name: a.name, color: resolveColor(ACTOR_COLORS[a.colorIndex].css) })),
       actorLookup: actorOverlay?.lookup,
-      actorColors: actorOverlay?.colors,
+      actorColors: resolvedActorColors,
       theme,
     });
     const blob = new Blob([html], { type: 'text/html' });
@@ -140,6 +149,19 @@ export function Matrix() {
     <div className="space-y-4">
       <PageHeader
         title="ATT&CK Matrix"
+        titleAction={data && (
+          <button
+            type="button"
+            onClick={handleExport}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--accent-teal)] hover:border-[var(--accent-teal)] transition-colors"
+            title="Export matrix as HTML file"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+            </svg>
+            Export HTML
+          </button>
+        )}
         subtitle={isAllDomains
           ? 'Showing all techniques across Enterprise, ICS, and Mobile — select a specific domain for domain-scoped tactics'
           : 'Techniques organized by tactic, filtered by domain, sector or actor — click any cell to view details'}
@@ -148,19 +170,6 @@ export function Matrix() {
             <span className="text-[var(--text-secondary)] text-sm">
               {totalTechniques} techniques across {(data ?? []).length} tactics
             </span>
-            {data && (
-              <button
-                type="button"
-                onClick={handleExport}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--accent-teal)] hover:border-[var(--accent-teal)] transition-colors"
-                title="Export matrix as HTML file"
-              >
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                </svg>
-                Export HTML
-              </button>
-            )}
           </div>
         }
       />
