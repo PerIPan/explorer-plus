@@ -7,6 +7,7 @@ import { EntityLink } from '../shared/EntityLink';
 import { Badge } from '../shared/Badge';
 import { VtLookupModal, VtButton } from '../shared/VtLookupModal';
 import { sanitize, sanitizeMarkdown } from '../../lib/sanitize';
+import type { CloudControl } from '../../lib/types';
 
 // ── Level badge (reused pattern from TechniqueDetail) ─────────────────────────
 
@@ -122,6 +123,32 @@ const IconVt = (
     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
   </svg>
 );
+
+const IconDatabase = (
+  <svg fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" className="w-4 h-4">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M4 7c0-1.657 3.582-3 8-3s8 1.343 8 3M4 7v10c0 1.657 3.582 3 8 3s8-1.343 8-3V7M4 7c0 1.657 3.582 3 8 3s8-1.343 8-3" />
+  </svg>
+);
+
+const IconCloud = (
+  <svg fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" className="w-4 h-4">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+  </svg>
+);
+
+const CLOUD_PROVIDER_COLORS: Record<string, string> = {
+  azure: 'bg-[var(--blue-faint)] text-[var(--accent-blue)] border-[var(--blue-dim)]',
+  gcp: 'bg-[var(--green-faint)] text-[var(--accent-green)] border-[var(--green-dim)]',
+  aws: 'bg-[var(--orange-faint)] text-[var(--accent-orange)] border-[var(--orange-dim)]',
+  m365: 'bg-[var(--teal-faint)] text-[var(--accent-teal)] border-[var(--teal-dim)]',
+};
+
+const CLOUD_PROVIDER_LABELS: Record<string, string> = {
+  azure: 'Azure',
+  gcp: 'GCP',
+  aws: 'AWS',
+  m365: 'M365',
+};
 
 // ── Main component ─────────────────────────────────────────────────────────────
 
@@ -579,6 +606,101 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
 
       {/* VIRUSTOTAL INTELLIGENCE */}
       <VtSection iocs={intel?.iocs ?? []} loading={intelLoading} />
+
+      {/* VERIS */}
+      {(() => {
+        const veris = frameworks?.verisCategories ?? [];
+        return (
+          <MapCard label="VERIS Categories" icon={IconDatabase} count={veris.length} defaultOpen={false}>
+            {veris.length > 0 ? (
+              <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto">
+                {veris.map((v) => (
+                  <span
+                    key={v.verisId}
+                    title={v.verisId}
+                    className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium bg-[var(--purple-faint)] text-[var(--accent-purple)] border border-[var(--purple-dim)]"
+                  >
+                    {v.verisId}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              fwLoading ? (
+                <MapRow prefix="VERIS">
+                  <span className="text-xs text-[var(--text-secondary)] italic">Loading...</span>
+                </MapRow>
+              ) : (
+                <MapRow prefix="VERIS">
+                  <span className="text-xs text-[var(--text-secondary)]">No VERIS mappings yet. Run sync-frameworks.mjs to populate.</span>
+                </MapRow>
+              )
+            )}
+          </MapCard>
+        );
+      })()}
+
+      {/* CLOUD CONTROLS */}
+      {(() => {
+        const cloud: CloudControl[] = frameworks?.cloudControls ?? [];
+        const providers = Array.from(new Set(cloud.map((c) => c.provider))).sort();
+        return (
+          <MapCard label="Cloud Security Controls" icon={IconCloud} count={cloud.length} defaultOpen={false}>
+            {cloud.length > 0 ? (
+              <div className="space-y-3">
+                {providers.map((p) => {
+                  const ctrls = cloud.filter((c) => c.provider === p);
+                  const colorCls =
+                    CLOUD_PROVIDER_COLORS[p] ??
+                    'bg-[var(--hover-overlay)] text-[var(--text-secondary)] border-[var(--border-color)]';
+                  return (
+                    <div key={p}>
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${colorCls}`}>
+                          {CLOUD_PROVIDER_LABELS[p] ?? p.toUpperCase()}
+                        </span>
+                        <span className="text-xs text-[var(--text-secondary)]">{ctrls.length} controls</span>
+                      </div>
+                      <div className="space-y-1">
+                        {ctrls.slice(0, 8).map((ctrl) => (
+                          <div
+                            key={`${ctrl.provider}-${ctrl.controlId}`}
+                            className="flex items-start gap-2 py-1.5 px-3 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)]"
+                          >
+                            <span className="font-mono text-[10px] text-[var(--accent-teal)] shrink-0 mt-0.5 w-28 truncate" title={ctrl.controlId}>
+                              {ctrl.controlId}
+                            </span>
+                            <span className="text-[11px] text-[var(--text-primary)] flex-1 truncate" title={ctrl.controlName}>
+                              {ctrl.controlName}
+                            </span>
+                            {ctrl.mappingType && (
+                              <span className="text-[9px] text-[var(--text-secondary)] shrink-0">{ctrl.mappingType}</span>
+                            )}
+                          </div>
+                        ))}
+                        {ctrls.length > 8 && (
+                          <span className="text-[10px] text-[var(--accent-teal)] px-3">
+                            +{ctrls.length - 8} more
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              fwLoading ? (
+                <MapRow prefix="Cloud">
+                  <span className="text-xs text-[var(--text-secondary)] italic">Loading...</span>
+                </MapRow>
+              ) : (
+                <MapRow prefix="Cloud">
+                  <span className="text-xs text-[var(--text-secondary)]">No cloud control mappings yet. Run sync-frameworks.mjs to populate.</span>
+                </MapRow>
+              )
+            )}
+          </MapCard>
+        );
+      })()}
 
     </div>
   );

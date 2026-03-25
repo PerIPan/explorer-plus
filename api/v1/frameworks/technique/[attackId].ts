@@ -11,7 +11,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   }
   const attackId = parsed.data;
 
-  const [nistResult, engageResult] = await Promise.all([
+  const [nistResult, engageResult, verisResult, cloudResult] = await Promise.all([
     query<{
       controlId: string;
       controlName: string | null;
@@ -50,12 +50,39 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
        ORDER BY engage_id ASC`,
       [attackId],
     ),
+    query<{ verisId: string }>(
+      `SELECT veris_id AS "verisId"
+       FROM veris_mappings
+       WHERE attack_technique_id = $1
+       ORDER BY veris_id ASC`,
+      [attackId],
+    ),
+    query<{
+      provider: string;
+      controlId: string;
+      controlName: string;
+      controlDescription: string | null;
+      mappingType: string | null;
+    }>(
+      `SELECT
+         provider,
+         control_id          AS "controlId",
+         control_name        AS "controlName",
+         control_description AS "controlDescription",
+         mapping_type        AS "mappingType"
+       FROM cloud_control_mappings
+       WHERE attack_technique_id = $1
+       ORDER BY provider ASC, control_id ASC`,
+      [attackId],
+    ),
   ]);
 
   res.status(200).json({
     attackId,
     nist: nistResult.rows,
     engage: engageResult.rows,
+    verisCategories: verisResult.rows,
+    cloudControls: cloudResult.rows,
   });
 }
 

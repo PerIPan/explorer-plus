@@ -27,7 +27,12 @@ import type {
   ExternalActor,
   CveEntry,
   CveDetail,
+  VerisMapping,
+  CloudControl,
 } from '../lib/types';
+
+// Re-export for consumers that import from useApi
+export type { VerisMapping, CloudControl };
 
 // ── List / paginated hooks ────────────────────────────────────────────────────
 

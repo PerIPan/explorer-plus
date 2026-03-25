@@ -62,6 +62,9 @@ export interface Technique extends BaseEntity {
   mitigations?: TechniqueRelatedMitigation[];
   dataComponents?: TechniqueDataComponent[];
   campaigns?: TechniqueRelatedCampaign[];
+  /** Framework mapping data (returned by frameworks/technique endpoint) */
+  verisCategories?: VerisMapping[];
+  cloudControls?: CloudControl[];
 }
 
 // ── Group detail relationship sub-types ───────────────────────────────────────
@@ -331,10 +334,24 @@ export interface ReactAction {
   workflow: string | null;
 }
 
+export interface VerisMapping {
+  verisId: string;
+}
+
+export interface CloudControl {
+  provider: string;
+  controlId: string;
+  controlName: string;
+  controlDescription?: string | null;
+  mappingType?: string | null;
+}
+
 export interface FrameworkData {
   attackId: string;
   nist: NistControl[];
   engage: EngageMapping[];
+  verisCategories?: VerisMapping[];
+  cloudControls?: CloudControl[];
 }
 
 // ── CTI Feed Types ─────────────────────────────────────────────────────────────

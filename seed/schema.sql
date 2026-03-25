@@ -593,6 +593,43 @@ CREATE INDEX IF NOT EXISTS idx_engage_technique  ON engage_mappings(technique_id
 CREATE INDEX IF NOT EXISTS idx_engage_attack_id  ON engage_mappings(attack_technique_id);
 CREATE INDEX IF NOT EXISTS idx_react_stage       ON react_actions(stage);
 
+-- ---------------------------------------------------------------------------
+-- VERIS mappings (Vocabulary for Event Recording and Incident Sharing)
+-- ---------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS veris_mappings (
+  id                  UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+  technique_id        UUID         REFERENCES techniques(id) ON DELETE CASCADE,
+  attack_technique_id VARCHAR(20)  NOT NULL,
+  veris_id            TEXT         NOT NULL,
+  created_at          TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  UNIQUE (attack_technique_id, veris_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_veris_technique  ON veris_mappings(technique_id);
+CREATE INDEX IF NOT EXISTS idx_veris_attack_id  ON veris_mappings(attack_technique_id);
+
+-- ---------------------------------------------------------------------------
+-- Cloud security control mappings (AWS / Azure / GCP / M365)
+-- ---------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS cloud_control_mappings (
+  id                   UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+  technique_id         UUID         REFERENCES techniques(id) ON DELETE CASCADE,
+  attack_technique_id  VARCHAR(20)  NOT NULL,
+  provider             VARCHAR(20)  NOT NULL,
+  control_id           TEXT         NOT NULL,
+  control_name         TEXT         NOT NULL,
+  control_description  TEXT,
+  mapping_type         VARCHAR(50),
+  created_at           TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  UNIQUE (attack_technique_id, provider, control_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_cloud_technique  ON cloud_control_mappings(technique_id);
+CREATE INDEX IF NOT EXISTS idx_cloud_attack_id  ON cloud_control_mappings(attack_technique_id);
+CREATE INDEX IF NOT EXISTS idx_cloud_provider   ON cloud_control_mappings(provider);
+
 -- Domain indexes for multi-domain filtering (enterprise, ics, mobile)
 CREATE INDEX IF NOT EXISTS idx_techniques_domain   ON techniques(domain);
 CREATE INDEX IF NOT EXISTS idx_tactics_domain      ON tactics(domain);

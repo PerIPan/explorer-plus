@@ -41,6 +41,8 @@ const FeedStatus      = lazy(() => import('./pages/FeedStatus').then((m) => ({ d
 const NistControls    = lazy(() => import('./pages/NistControls').then((m) => ({ default: m.NistControls })));
 const EngageActivities = lazy(() => import('./pages/EngageActivities').then((m) => ({ default: m.EngageActivities })));
 const ReactActions    = lazy(() => import('./pages/ReactActions').then((m) => ({ default: m.ReactActions })));
+const VerisCategories = lazy(() => import('./pages/VerisCategories').then((m) => ({ default: m.VerisCategories })));
+const CloudControls   = lazy(() => import('./pages/CloudControls').then((m) => ({ default: m.CloudControls })));
 // Extended Intel pages
 const ExternalActors  = lazy(() => import('./pages/ExternalActors').then((m) => ({ default: m.ExternalActors })));
 
@@ -178,8 +180,8 @@ function Layout() {
                 <li><strong>Multi-domain ATT&CK</strong> — Enterprise, ICS, Mobile with domain switcher + "All Domains" cross-domain view</li>
                 <li><strong>Actor comparison</strong> — select up to 3 threat actors on the Matrix, see technique overlap color-coded, export as HTML</li>
                 <li><strong>360 Views</strong> — search any entity, explore via Technique Map, Actor Profile, Software Map, Tactic Map, or D3 force graph</li>
-                <li><strong>Frameworks</strong> — NIST 800-53, MITRE Engage, D3FEND, RE&CT response playbooks mapped per technique</li>
-                <li><strong>CVEs</strong> — CISA KEV + NVD enrichment (CVSS scores), linked to ATT&CK techniques via CWE→CAPEC bridge</li>
+                <li><strong>Frameworks</strong> — NIST 800-53, MITRE Engage, D3FEND, RE&CT, VERIS incident classification, Azure + GCP cloud controls</li>
+                <li><strong>CVEs</strong> — CISA KEV + NVD enrichment (CVSS scores), linked to ATT&CK techniques via CWE→CAPEC bridge + CTID hand-curated mappings</li>
                 <li><strong>IOCs</strong> — OTX + ThreatFox + MalwareBazaar, enriched with VirusTotal verdicts and sandbox-derived techniques</li>
                 <li><strong>Detection</strong> — SigmaHQ rules + Atomic Red Team tests mapped to techniques</li>
                 <li><strong>Threat actors</strong> — 191 ATT&CK groups + 514 ThaiCERT/ETDA actors with category inference</li>
@@ -277,6 +279,8 @@ export default function App() {
           <Route path="frameworks/nist" element={<NistControls />} />
           <Route path="frameworks/engage" element={<EngageActivities />} />
           <Route path="frameworks/react" element={<ReactActions />} />
+          <Route path="frameworks/veris" element={<VerisCategories />} />
+          <Route path="frameworks/cloud" element={<CloudControls />} />
 
           {/* Extended Intel */}
           <Route path="external-actors" element={<ExternalActors />} />

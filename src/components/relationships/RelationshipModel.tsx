@@ -45,6 +45,10 @@ function makeNodes(c: ReturnType<typeof useThemeColors>): ModelNode[] {
     { id: 'atomic', label: 'Atomic Tests', x: 750, y: 420, color: '#ef4444', bg: '#ef444418', path: '/techniques', description: 'Red team test procedures from Atomic Red Team per technique', category: 'intelligence' },
     { id: 'd3fend', label: 'D3FEND', x: 900, y: 430, color: c.accentGreen, bg: alpha(c.accentGreen, '18'), path: '/techniques', description: 'Defensive countermeasures from MITRE D3FEND', category: 'intelligence' },
     { id: 'thaicert', label: 'ETDA Actors', x: 85, y: 250, color: c.accentNeutral, bg: alpha(c.accentNeutral, '18'), path: '/external-actors', description: '500+ extended threat actors from ThaiCERT encyclopedia', category: 'intelligence' },
+    { id: 'veris', label: 'VERIS', x: 1200, y: 120, color: '#e879f9', bg: '#e879f918', path: '/techniques', description: 'Incident classification categories mapped to ATT&CK techniques', category: 'compliance', scale: 0.85 },
+    { id: 'azure', label: 'Azure', x: 1200, y: 260, color: '#38bdf8', bg: '#38bdf818', path: '/techniques', description: 'Azure security controls mapped to ATT&CK techniques', category: 'compliance', scale: 0.85 },
+    { id: 'gcp', label: 'GCP', x: 1200, y: 390, color: '#34d399', bg: '#34d39918', path: '/techniques', description: 'GCP security controls mapped to ATT&CK techniques', category: 'compliance', scale: 0.85 },
+    { id: 'capec', label: 'CAPEC', x: 380, y: 520, color: '#fbbf24', bg: '#fbbf2418', path: '/cti/cves', description: 'CWE→CAPEC→ATT&CK bridge linking CVEs to techniques', category: 'intelligence', scale: 0.85 },
     { id: 'ics', label: 'ICS', x: 400, y: 180, color: '#f97316', bg: '#f9731618', path: '/matrix?domain=ics-attack', description: 'Industrial Control Systems ATT&CK domain — OT-specific techniques', category: 'core', scale: 0.85 },
     { id: 'mobile', label: 'Mobile', x: 700, y: 180, color: '#8b5cf6', bg: '#8b5cf618', path: '/matrix?domain=mobile-attack', description: 'Mobile ATT&CK domain — Android and iOS specific techniques', category: 'core', scale: 0.85 },
   ];
@@ -72,6 +76,10 @@ const EDGES: ModelEdge[] = [
   { from: 'virustotal', to: 'technique', label: 'sandbox verifies', style: 'dashed' },
   { from: 'd3fend', to: 'technique', label: 'defends', style: 'dashed' },
   { from: 'thaicert', to: 'group', label: 'extends', style: 'dashed' },
+  { from: 'veris', to: 'technique', label: 'classifies', style: 'dashed' },
+  { from: 'azure', to: 'technique', label: 'defends', style: 'dashed' },
+  { from: 'gcp', to: 'technique', label: 'defends', style: 'dashed' },
+  { from: 'capec', to: 'cve', label: 'bridges', style: 'dashed' },
   { from: 'ics', to: 'technique', label: 'contains', style: 'dashed' },
   { from: 'mobile', to: 'technique', label: 'contains', style: 'dashed' },
 ];
@@ -164,7 +172,7 @@ export function RelationshipModel({ open, onClose }: Props) {
 
         {/* Diagram */}
         <div className="flex-1 overflow-auto p-4">
-          <svg viewBox="0 0 1150 540" className="w-full h-auto min-h-[500px]">
+          <svg viewBox="0 0 1350 570" className="w-full h-auto min-h-[500px]">
             <defs>
               <marker id="arrow" viewBox="0 0 10 7" refX="10" refY="3.5" markerWidth="8" markerHeight="6" orient="auto-start-reverse">
                 <polygon points="0 0, 10 3.5, 0 7" fill={c.borderColor} />
@@ -199,8 +207,8 @@ export function RelationshipModel({ open, onClose }: Props) {
                   {isActive && (
                     <>
                       <rect
-                        x={midX - 30} y={midY - 8}
-                        width={60} height={16}
+                        x={midX - Math.max(30, edge.label.length * 3.5)} y={midY - 8}
+                        width={Math.max(60, edge.label.length * 7)} height={16}
                         rx={3}
                         fill={c.surfaceCard}
                         stroke={`${c.accentTeal}33`}

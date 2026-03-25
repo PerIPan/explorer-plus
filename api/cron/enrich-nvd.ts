@@ -146,7 +146,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         // Also update ioc_entries.description for inline subtitle
         if (desc) {
           await query(
-            `UPDATE ioc_entries SET description = $1, updated_at = NOW() WHERE type = 'cve' AND value = $2`,
+            `UPDATE ioc_entries SET description = $1 WHERE type = 'cve' AND value = $2`,
             [desc, row.cve_id],
           );
         }

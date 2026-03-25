@@ -7,6 +7,7 @@ import { Badge } from '../components/shared/Badge';
 import { DeprecatedBadge } from '../components/shared/DeprecatedBadge';
 import { EntityLink } from '../components/shared/EntityLink';
 import { sanitize, sanitizeMarkdown } from '../lib/sanitize';
+import type { CloudControl } from '../lib/types';
 
 type TabId =
   | 'overview'
@@ -220,9 +221,6 @@ function IntelligenceTab({ attackId }: IntelligenceTabProps) {
                   <span className="font-mono text-xs text-[var(--accent-teal)]">{dm.d3fend_id}</span>
                   <span className="text-[var(--text-primary)] text-sm">{dm.d3fend_label}</span>
                 </div>
-                {dm.d3fend_label && (
-                  <p className="text-[var(--text-secondary)] text-xs mt-1 line-clamp-2">{dm.d3fend_label}</p>
-                )}
               </div>
             ))}
           </div>
@@ -288,6 +286,105 @@ function IntelligenceTab({ attackId }: IntelligenceTabProps) {
   );
 }
 
+// ── Cloud Controls section ─────────────────────────────────────────────────────
+
+const CLOUD_PROVIDER_LABELS: Record<string, string> = {
+  azure: 'Azure',
+  gcp: 'GCP',
+  aws: 'AWS',
+  m365: 'M365',
+};
+
+const CLOUD_PROVIDER_COLORS: Record<string, string> = {
+  azure: 'bg-[var(--blue-faint)] text-[var(--accent-blue)] border-[var(--blue-dim)]',
+  gcp: 'bg-[var(--green-faint)] text-[var(--accent-green)] border-[var(--green-dim)]',
+  aws: 'bg-[var(--orange-faint)] text-[var(--accent-orange)] border-[var(--orange-dim)]',
+  m365: 'bg-[var(--teal-faint)] text-[var(--accent-teal)] border-[var(--teal-dim)]',
+};
+
+function CloudControlsSection({ controls }: { controls: CloudControl[] }) {
+  const [activeProvider, setActiveProvider] = useState<string>('all');
+
+  // Group controls by provider
+  const providers = Array.from(new Set(controls.map((c) => c.provider))).sort();
+  const filtered =
+    activeProvider === 'all'
+      ? controls
+      : controls.filter((c) => c.provider === activeProvider);
+
+  return (
+    <section>
+      <h3 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-3">
+        Cloud Security Controls ({controls.length})
+      </h3>
+
+      {/* Provider filter tabs */}
+      <div className="flex gap-1.5 flex-wrap mb-3">
+        <button
+          type="button"
+          onClick={() => setActiveProvider('all')}
+          className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+            activeProvider === 'all'
+              ? 'bg-[var(--teal-faint)] text-[var(--accent-teal)] border-[var(--teal-dim)]'
+              : 'bg-transparent text-[var(--text-secondary)] border-[var(--border-color)] hover:text-[var(--text-primary)]'
+          }`}
+        >
+          All ({controls.length})
+        </button>
+        {providers.map((p) => {
+          const count = controls.filter((c) => c.provider === p).length;
+          const colorCls =
+            activeProvider === p
+              ? (CLOUD_PROVIDER_COLORS[p] ?? 'bg-[var(--hover-overlay)] text-[var(--text-secondary)] border-[var(--border-color)]')
+              : 'bg-transparent text-[var(--text-secondary)] border-[var(--border-color)] hover:text-[var(--text-primary)]';
+          return (
+            <button
+              key={p}
+              type="button"
+              onClick={() => setActiveProvider(p)}
+              className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${colorCls}`}
+            >
+              {CLOUD_PROVIDER_LABELS[p] ?? p.toUpperCase()} ({count})
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="space-y-1.5">
+        {filtered.map((ctrl) => {
+          const colorCls =
+            CLOUD_PROVIDER_COLORS[ctrl.provider] ??
+            'bg-[var(--hover-overlay)] text-[var(--text-secondary)] border-[var(--border-color)]';
+          return (
+            <div
+              key={`${ctrl.provider}-${ctrl.controlId}`}
+              className="flex items-start gap-3 py-2 px-3 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)]"
+            >
+              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border shrink-0 ${colorCls}`}>
+                {CLOUD_PROVIDER_LABELS[ctrl.provider] ?? ctrl.provider.toUpperCase()}
+              </span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-mono text-xs text-[var(--accent-teal)] shrink-0">{ctrl.controlId}</span>
+                  <span className="text-sm text-[var(--text-primary)]">{ctrl.controlName}</span>
+                  {ctrl.mappingType && (
+                    <span className="text-xs text-[var(--text-secondary)]">{ctrl.mappingType}</span>
+                  )}
+                </div>
+                {ctrl.controlDescription && (
+                  <p className="text-xs text-[var(--text-secondary)] mt-0.5 line-clamp-2">
+                    {ctrl.controlDescription}
+                  </p>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 const NIST_FAMILY_COLORS: Record<string, string> = {
   'Access Control': 'blue',
   'Audit and Accountability': 'purple',
@@ -316,7 +413,11 @@ function FrameworksTab({ attackId }: { attackId: string }) {
     );
   }
 
-  const isEmpty = data.nist.length === 0 && data.engage.length === 0;
+  const isEmpty =
+    data.nist.length === 0 &&
+    data.engage.length === 0 &&
+    (data.verisCategories?.length ?? 0) === 0 &&
+    (data.cloudControls?.length ?? 0) === 0;
 
   if (isEmpty) {
     return (
@@ -443,6 +544,31 @@ function FrameworksTab({ attackId }: { attackId: string }) {
           </Link>
         </div>
       </section>
+
+      {/* VERIS */}
+      {(data.verisCategories?.length ?? 0) > 0 && (
+        <section>
+          <h3 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-3">
+            VERIS Categories ({data.verisCategories!.length})
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            {data.verisCategories!.map((v) => (
+              <span
+                key={v.verisId}
+                title={v.verisId}
+                className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-[var(--purple-faint)] text-[var(--accent-purple)] border border-[var(--purple-dim)]"
+              >
+                {v.verisId}
+              </span>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Cloud Controls */}
+      {(data.cloudControls?.length ?? 0) > 0 && (
+        <CloudControlsSection controls={data.cloudControls!} />
+      )}
     </div>
   );
 }

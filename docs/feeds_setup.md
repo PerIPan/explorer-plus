@@ -30,7 +30,9 @@ Run with `DATABASE_URL=... node scripts/<script>.mjs`
 | Script | What it does |
 |--------|-------------|
 | `sync-thaicert.mjs` | ETDA/ThaiCERT threat actors → external_actors (514 actors) |
-| `sync-frameworks.mjs` | NIST 800-53 + MITRE Engage + RE&CT → nist_controls, engage_mappings, react_actions |
+| `sync-frameworks.mjs` | NIST 800-53 + Engage + RE&CT + VERIS + Azure + GCP + CAPEC bridge → nist_controls, engage_mappings, react_actions, veris_mappings, cloud_control_mappings, technique_iocs |
+| `sync-ctid-cve-mappings.mjs` | CTID hand-curated CVE→ATT&CK mappings → technique_iocs (confirmed) |
+| `sync-capec-bridge.mjs` | CWE→CAPEC→ATT&CK bridge for CVE technique linking (standalone) |
 | `sync-sigma.mjs` | Same as GH Action but requires local `/tmp/sigma/rules/` clone |
 | `sync-atomic.mjs` | Same as GH Action but requires local clone |
 
@@ -89,7 +91,7 @@ After a full reseed, restore feeds in this order:
 | `threat_reports` | OTX, RSS | ~200+ |
 | `report_techniques` | OTX, RSS | ~500+ |
 | `ioc_entries` | OTX, abuse.ch | ~1000+ |
-| `technique_iocs` | OTX, abuse.ch | ~500+ |
+| `technique_iocs` | OTX, abuse.ch, CAPEC, CTID | ~7000+ |
 | `cve_details` | CISA KEV, NVD | ~1500+ |
 | `sigma_rules` | SigmaHQ | ~3000 |
 | `atomic_tests` | Atomic Red Team | ~1500 |
@@ -97,6 +99,8 @@ After a full reseed, restore feeds in this order:
 | `nist_controls` | NIST 800-53 | ~5300 |
 | `engage_mappings` | MITRE Engage | ~1100 |
 | `react_actions` | RE&CT | ~216 |
+| `veris_mappings` | VERIS (CTID) | ~1092 |
+| `cloud_control_mappings` | Azure + GCP (CTID) | ~1490 |
 | `external_actors` | ThaiCERT/ETDA | 514 |
 
 ## Full Database Restoration After Truncate
@@ -190,6 +194,9 @@ UNION ALL SELECT 'engage_mappings', COUNT(*) FROM engage_mappings
 UNION ALL SELECT 'react_actions', COUNT(*) FROM react_actions
 UNION ALL SELECT 'external_actors', COUNT(*) FROM external_actors
 UNION ALL SELECT 'defensive_mappings', COUNT(*) FROM defensive_mappings
+UNION ALL SELECT 'veris_mappings', COUNT(*) FROM veris_mappings
+UNION ALL SELECT 'cloud_controls', COUNT(*) FROM cloud_control_mappings
+UNION ALL SELECT 'technique_iocs', COUNT(*) FROM technique_iocs
 ORDER BY tbl;
 ```
 
@@ -208,6 +215,8 @@ Expected totals after full restoration:
 | nist_controls | ~5,300 |
 | engage_mappings | ~1,100 |
 | react_actions | ~216 |
+| veris_mappings | ~1,092 |
+| cloud_control_mappings | ~1,490 |
 | external_actors | 514 |
 | defensive_mappings | ~800 |
 

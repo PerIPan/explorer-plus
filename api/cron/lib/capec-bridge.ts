@@ -27,7 +27,7 @@ async function loadBridge(): Promise<Map<string, Set<string>>> {
   if (!resp.ok) throw new Error(`CAPEC fetch failed: ${resp.status}`);
   const stix = (await resp.json()) as { objects: CapecStixObject[] };
 
-  cweToTechniques = new Map();
+  const result = new Map<string, Set<string>>();
   for (const obj of stix.objects) {
     if (obj.type !== 'attack-pattern') continue;
     const refs = obj.external_references ?? [];
@@ -39,12 +39,14 @@ async function loadBridge(): Promise<Map<string, Set<string>>> {
     }
     if (cwes.length === 0 || attackIds.length === 0) continue;
     for (const cwe of cwes) {
-      if (!cweToTechniques.has(cwe)) cweToTechniques.set(cwe, new Set());
+      if (!result.has(cwe)) result.set(cwe, new Set());
       for (const tid of attackIds) {
-        cweToTechniques.get(cwe)!.add(tid.split('.')[0]); // normalize to parent
+        result.get(cwe)!.add(tid.split('.')[0]); // normalize to parent
       }
     }
   }
+  // Only cache after successful full parse
+  cweToTechniques = result;
   return cweToTechniques;
 }
 
