@@ -322,6 +322,7 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
         </div>
       )}
 
+
       {/* THREAT REPORTS — first */}
       {(() => {
         const reports = intel?.reports ?? [];
