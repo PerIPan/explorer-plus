@@ -377,17 +377,19 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
                     key={r.id}
                     className="flex items-center gap-2 py-1.5 px-3 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)]"
                   >
-                    <a
-                      href={r.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-[var(--text-primary)] hover:text-[var(--accent-teal)] flex-1 truncate"
-                    >
-                      {r.title}
-                    </a>
-                    {(r as { technique_count?: number }).technique_count != null && (r as { technique_count?: number }).technique_count! > 0 && (
-                      <ReportTechniquePopover reportId={r.id} count={(r as { technique_count?: number }).technique_count!} />
-                    )}
+                    <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                      <a
+                        href={r.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-[var(--text-primary)] hover:text-[var(--accent-teal)] truncate"
+                      >
+                        {r.title}
+                      </a>
+                      {(r as { technique_count?: number }).technique_count != null && (r as { technique_count?: number }).technique_count! > 0 && (
+                        <ReportTechniquePopover reportId={r.id} count={(r as { technique_count?: number }).technique_count!} />
+                      )}
+                    </div>
                     <Badge label={r.source} variant="neutral" />
                     {r.published_at && (
                       <span className="text-[10px] text-[var(--text-secondary)] shrink-0">
