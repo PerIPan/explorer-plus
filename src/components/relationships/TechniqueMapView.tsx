@@ -71,7 +71,7 @@ function MapCard({ label, icon, count, defaultOpen = true, children }: MapCardPr
         </svg>
       </button>
       {open && (
-        <div className="px-4 py-4 bg-[var(--surface-alt)] space-y-3">
+        <div className="px-4 py-4 bg-[var(--surface-alt)] space-y-5">
           {children}
         </div>
       )}
