@@ -577,6 +577,29 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
         </MapRow>
       </MapCard>
 
+      {/* PROCEDURES */}
+      {(() => {
+        const procedures = groups.filter((g) => g.procedure);
+        if (procedures.length === 0) return null;
+        return (
+          <MapCard label="Procedures" icon={IconPeople} count={procedures.length} defaultOpen={false}>
+            <div className="space-y-2 max-h-64 overflow-y-auto">
+              {procedures.map((g) => (
+                <div key={g.attackId} className="py-1.5 px-3 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)]">
+                  <div className="flex items-center gap-2 mb-1">
+                    <EntityLink type="group" attackId={g.attackId} name={g.name} useMap />
+                  </div>
+                  <p
+                    className="text-[11px] text-[var(--text-secondary)] leading-relaxed"
+                    dangerouslySetInnerHTML={{ __html: sanitize(sanitizeMarkdown(g.procedure ?? '')) }}
+                  />
+                </div>
+              ))}
+            </div>
+          </MapCard>
+        );
+      })()}
+
       {/* HOW TO TEST */}
       <MapCard label="How to Test" icon={IconTest}
         count={atomicTests.length}
