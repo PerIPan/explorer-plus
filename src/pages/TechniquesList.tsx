@@ -53,6 +53,7 @@ export function TechniquesList() {
   const platform = searchParams.get('platform') ?? '';
   const sortBy = searchParams.get('sort') ?? 'attack_id';
   const sortDir = (searchParams.get('order') ?? 'asc') as 'asc' | 'desc';
+  const showSubs = searchParams.get('subs') === '1';
 
   const [search, setSearch] = useState('');
   const [expandedParents, setExpandedParents] = useState<Set<string>>(new Set());
@@ -62,6 +63,7 @@ export function TechniquesList() {
   if (platform) params.platform = platform;
   if (sortBy) params.sort = sortBy;
   if (sortDir) params.order = sortDir;
+  if (showSubs) params.include_subtechniques = '1';
 
   const { data, isLoading } = useTechniques(params);
   const { data: tacticsData } = useTactics({ limit: '100', ...domainParam });
@@ -230,6 +232,17 @@ export function TechniquesList() {
             <option key={p} value={p}>{p}</option>
           ))}
         </select>
+        <button
+          type="button"
+          onClick={() => setParam('subs', showSubs ? '' : '1')}
+          className={`px-2.5 py-1.5 text-xs rounded-md border transition-colors ${
+            showSubs
+              ? 'border-[var(--accent-teal)] text-[var(--accent-teal)] bg-[var(--teal-faint)]'
+              : 'border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--teal-dim)]'
+          }`}
+        >
+          Sub-techniques
+        </button>
       </div>
 
       <DataTable

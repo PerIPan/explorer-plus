@@ -19,6 +19,7 @@ const querySchema = paginationSchema.extend({
   sector: z.string().max(50).optional(),
   domain: z.enum(['enterprise-attack', 'mobile-attack', 'ics-attack']).optional(),
   include_deprecated: z.coerce.boolean().default(false),
+  include_subtechniques: z.coerce.boolean().default(false),
 });
 
 async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
@@ -28,14 +29,14 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     return;
   }
 
-  const { page, limit, sort, order, search, tactic, platform, sector, domain, include_deprecated } = parsed.data;
+  const { page, limit, sort, order, search, tactic, platform, sector, domain, include_deprecated, include_subtechniques } = parsed.data;
   const sortCol = SORT_MAP[sort ?? 'name'] ?? 't.name';
   const sortDir = order === 'desc' ? 'DESC' : 'ASC';
   const sortClause = `ORDER BY ${sortCol} ${sortDir}`;
   const { offset } = buildPaginationClause(page, limit);
 
   const params: unknown[] = [];
-  const conditions: string[] = ['t.is_subtechnique = false'];
+  const conditions: string[] = include_subtechniques ? [] : ['t.is_subtechnique = false'];
 
   if (!include_deprecated) {
     conditions.push('t.is_revoked = false', 't.is_deprecated = false');
@@ -95,18 +96,25 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
        t.name,
        t.description,
        t.url,
-       t.platforms,
+       COALESCE(t.platforms, pt.platforms) AS "platforms",
        t.is_revoked       AS "isRevoked",
        t.is_deprecated    AS "isDeprecated",
        t.stix_modified    AS "stixModified",
-       t.domain,
-       array_agg(DISTINCT ta.name) FILTER (WHERE ta.name IS NOT NULL) AS "tactics"
+       COALESCE(t.domain, pt.domain)      AS "domain",
+       COALESCE(
+         array_agg(DISTINCT ta.name) FILTER (WHERE ta.name IS NOT NULL),
+         array_agg(DISTINCT pta.name) FILTER (WHERE pta.name IS NOT NULL)
+       ) AS "tactics"
      FROM techniques t
+     LEFT JOIN techniques pt ON pt.id = t.parent_technique_id
      LEFT JOIN technique_tactics tt ON tt.technique_id = t.id
      LEFT JOIN tactics ta ON ta.id = tt.tactic_id
+     LEFT JOIN technique_tactics ptt ON ptt.technique_id = pt.id
+     LEFT JOIN tactics pta ON pta.id = ptt.tactic_id
      ${whereClause}
      GROUP BY t.id, t.attack_id, t.name, t.description, t.url, t.platforms,
-              t.is_revoked, t.is_deprecated, t.stix_modified, t.domain
+              t.is_revoked, t.is_deprecated, t.stix_modified, t.domain,
+              pt.platforms, pt.domain
      ${sortClause}
      LIMIT $${params.length - 1} OFFSET $${params.length}`,
     params,
