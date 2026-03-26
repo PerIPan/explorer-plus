@@ -367,15 +367,15 @@ export function Relationships() {
         </div>
       )}
 
-      {/* Error */}
-      {selectedId && error && (
+      {/* Error — only show for graph-backed entities, not sectors */}
+      {selectedId && error && entityType !== 'sector' && (
         <div className="flex items-center justify-center h-20 text-[var(--accent-orange)]">
           Failed to load relationships.
         </div>
       )}
 
-      {/* Tab bar — shown once entity is selected and graph has loaded */}
-      {selectedId && !isLoading && !error && graphData && (
+      {/* Tab bar — shown once entity is selected (graph loaded, or non-graph entity like sector) */}
+      {selectedId && ((!isLoading && !error && graphData) || entityType === 'sector') && (
         <div className="border-b border-[var(--border-color)]">
           <div className="flex gap-1">
             {visibleTabs.map((tab) => (
@@ -400,10 +400,10 @@ export function Relationships() {
       )}
 
       {/* Tab content */}
-      {selectedId && !isLoading && !error && graphData && (
+      {selectedId && ((!isLoading && !error && graphData) || entityType === 'sector') && (
         <div>
           {/* Graph tab */}
-          {activeTab === 'graph' && (
+          {activeTab === 'graph' && graphData && (
             <div className="space-y-3">
               {/* Stats bar */}
               <div className="flex items-center gap-4 text-xs text-[var(--text-secondary)]">
