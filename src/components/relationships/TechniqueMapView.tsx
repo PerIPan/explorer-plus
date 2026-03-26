@@ -656,9 +656,14 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
           <MapRow prefix="MITRE Engage">
             {engageActivities.map((act) => (
               <div key={act.engageId} className="flex items-center gap-1">
-                <span className="font-mono text-xs text-[var(--accent-teal)] bg-[var(--teal-ghost)] border border-[var(--teal-dim)] px-1.5 py-0.5 rounded">
-                  {act.engageId}
-                </span>
+                <a
+                  href={`https://engage.mitre.org/matrix/${act.engageId.toLowerCase()}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-mono text-xs text-[var(--accent-teal)] bg-[var(--teal-ghost)] border border-[var(--teal-dim)] px-1.5 py-0.5 rounded hover:bg-[var(--teal-dim)] transition-colors"
+                >
+                  {act.engageId} ↗
+                </a>
                 <span className="text-xs text-[var(--text-primary)]">{act.engageName}</span>
                 {act.goal && <Badge label={act.goal} variant="orange" />}
               </div>
@@ -679,9 +684,14 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
           <MapRow prefix="D3FEND">
             {d3fendMappings.map((m) => (
               <div key={m.d3fend_id} className="flex items-center gap-1">
-                <span className="font-mono text-xs text-[var(--accent-green)] bg-[var(--green-faint)] border border-[var(--green-dim)] px-1.5 py-0.5 rounded">
-                  {m.d3fend_id}
-                </span>
+                <a
+                  href={`https://d3fend.mitre.org/technique/d3f:${encodeURIComponent(m.d3fend_id.replace(/ /g, '_'))}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-mono text-xs text-[var(--accent-green)] bg-[var(--green-faint)] border border-[var(--green-dim)] px-1.5 py-0.5 rounded hover:bg-[var(--green-dim)] transition-colors"
+                >
+                  {m.d3fend_id} ↗
+                </a>
                 <span className="text-xs text-[var(--text-primary)]">{m.d3fend_label}</span>
                 {m.d3fend_tactic && <Badge label={m.d3fend_tactic} variant="green" />}
               </div>
