@@ -122,25 +122,43 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
 
   // Fetch sub-techniques for all returned parent techniques in one query
   const attackIds = dataResult.rows.map((r) => r.attackId);
-  let subTechniqueMap: Record<string, Array<{ attackId: string; name: string }>> = {};
+  let subTechniqueMap: Record<string, Array<{ attackId: string; name: string; platforms: string[]; tactics: string[] }>> = {};
 
   if (attackIds.length > 0) {
-    const subResult = await query<{ parentAttackId: string; attackId: string; name: string }>(
+    const subResult = await query<{
+      parentAttackId: string; attackId: string; name: string;
+      platforms: string[] | null; tactics: string[] | null;
+    }>(
       `SELECT
          p.attack_id  AS "parentAttackId",
          s.attack_id  AS "attackId",
-         s.name
+         s.name,
+         COALESCE(s.platforms, p.platforms) AS "platforms",
+         COALESCE(
+           array_agg(DISTINCT ta.name) FILTER (WHERE ta.name IS NOT NULL),
+           array_agg(DISTINCT pta.name) FILTER (WHERE pta.name IS NOT NULL)
+         ) AS "tactics"
        FROM techniques s
        JOIN techniques p ON p.id = s.parent_technique_id
+       LEFT JOIN technique_tactics stt ON stt.technique_id = s.id
+       LEFT JOIN tactics ta ON ta.id = stt.tactic_id
+       LEFT JOIN technique_tactics ptt ON ptt.technique_id = p.id
+       LEFT JOIN tactics pta ON pta.id = ptt.tactic_id
        WHERE p.attack_id = ANY($1::text[])
          AND s.is_revoked = false
          AND s.is_deprecated = false
+       GROUP BY p.attack_id, s.attack_id, s.name, s.platforms, p.platforms
        ORDER BY s.attack_id ASC`,
       [attackIds],
     );
     for (const row of subResult.rows) {
       if (!subTechniqueMap[row.parentAttackId]) subTechniqueMap[row.parentAttackId] = [];
-      subTechniqueMap[row.parentAttackId].push({ attackId: row.attackId, name: row.name });
+      subTechniqueMap[row.parentAttackId].push({
+        attackId: row.attackId,
+        name: row.name,
+        platforms: row.platforms ?? [],
+        tactics: row.tactics ?? [],
+      });
     }
   }
 

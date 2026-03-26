@@ -15,7 +15,7 @@ import { MitigationMapView } from '../components/relationships/MitigationMapView
 import { DataSourceMapView } from '../components/relationships/DataSourceMapView';
 import { TacticMapView } from '../components/relationships/TacticMapView';
 import { SectorMapView } from '../components/relationships/SectorMapView';
-import type { GraphNode } from '../lib/types';
+import type { GraphNode, GraphData } from '../lib/types';
 
 interface EntityEntry {
   attackId: string;
@@ -134,7 +134,9 @@ export function Relationships() {
     };
   }, []);
 
-  const { data: graphData, isLoading, error } = useRelationships(selectedId);
+  const { data: graphData, isLoading, error } = useRelationships(
+    (tabParam === 'sector-map' || !selectedId) ? '' : selectedId,
+  );
 
   /** Load ALL entity names cross-domain for Fuse.js — shared cache with SearchBar */
   const { data: allEntities } = useQuery({
@@ -166,6 +168,44 @@ export function Relationships() {
   const entityType = inferEntityType(graphData?.center, suggestions, selectedId)
     ?? TAB_TYPE_HINT[tabParam]
     ?? null;
+
+  const isSector = entityType === 'sector';
+
+  /** Sector relationships — fetch only for sectors, build graph from it */
+  const { data: sectorRel } = useQuery({
+    queryKey: ['sector-relationships', selectedId],
+    queryFn: () => apiFetch<{
+      name: string;
+      groups: Array<{ attackId: string; name: string }>;
+      campaigns: Array<{ attackId: string; name: string }>;
+      software: Array<{ attackId: string; name: string }>;
+    }>(`/sectors/${selectedId}/relationships`),
+    enabled: isSector && Boolean(selectedId),
+    staleTime: 2 * 60 * 1000,
+  });
+
+  const sectorGraphData = useMemo<GraphData | null>(() => {
+    if (!isSector || !sectorRel) return null;
+    const center: GraphNode = { id: selectedId, label: sectorRel.name, type: 'sector', attackId: selectedId };
+    const nodes: GraphNode[] = [center];
+    const edges: GraphData['edges'] = [];
+    for (const g of sectorRel.groups) {
+      nodes.push({ id: g.attackId, label: g.name, type: 'group', attackId: g.attackId });
+      edges.push({ source: selectedId, target: g.attackId, relationship: 'targets' });
+    }
+    for (const c of sectorRel.campaigns) {
+      nodes.push({ id: c.attackId, label: c.name, type: 'campaign', attackId: c.attackId });
+      edges.push({ source: selectedId, target: c.attackId, relationship: 'campaign' });
+    }
+    for (const s of sectorRel.software.slice(0, 30)) {
+      nodes.push({ id: s.attackId, label: s.name, type: 'software', attackId: s.attackId });
+      edges.push({ source: selectedId, target: s.attackId, relationship: 'uses' });
+    }
+    return { center, nodes, edges, truncated: sectorRel.software.length > 30 };
+  }, [isSector, sectorRel, selectedId]);
+
+  const effectiveGraphData = isSector ? sectorGraphData : graphData;
+  const graphReady = isSector ? Boolean(sectorGraphData) : (!isLoading && !error && Boolean(graphData));
 
   /** Determine which tabs are visible for the current entity */
   const visibleTabs = TABS.filter(
@@ -370,14 +410,14 @@ export function Relationships() {
       )}
 
       {/* Error — only show for graph-backed entities, not sectors */}
-      {selectedId && error && entityType !== 'sector' && (
+      {selectedId && error && !isSector && (
         <div className="flex items-center justify-center h-20 text-[var(--accent-orange)]">
           Failed to load relationships.
         </div>
       )}
 
-      {/* Tab bar — shown once entity is selected (graph loaded, or non-graph entity like sector) */}
-      {selectedId && ((!isLoading && !error && graphData) || entityType === 'sector') && (
+      {/* Tab bar — shown once entity is selected and data is ready */}
+      {selectedId && graphReady && (
         <div className="border-b border-[var(--border-color)]">
           <div className="flex gap-1">
             {visibleTabs.map((tab) => (
@@ -402,20 +442,20 @@ export function Relationships() {
       )}
 
       {/* Tab content */}
-      {selectedId && ((!isLoading && !error && graphData) || entityType === 'sector') && (
+      {selectedId && graphReady && (
         <div>
           {/* Graph tab */}
-          {activeTab === 'graph' && graphData && (
+          {activeTab === 'graph' && effectiveGraphData && (
             <div className="space-y-3">
               {/* Stats bar */}
               <div className="flex items-center gap-4 text-xs text-[var(--text-secondary)]">
                 <span>
-                  <span className="text-[var(--text-primary)] font-medium">{graphData.nodes.length}</span> nodes
+                  <span className="text-[var(--text-primary)] font-medium">{effectiveGraphData.nodes.length}</span> nodes
                 </span>
                 <span>
-                  <span className="text-[var(--text-primary)] font-medium">{graphData.edges.length}</span> edges
+                  <span className="text-[var(--text-primary)] font-medium">{effectiveGraphData.edges.length}</span> edges
                 </span>
-                {graphData.truncated && (
+                {effectiveGraphData.truncated && (
                   <Badge label="Truncated — too many connections" variant="yellow" />
                 )}
                 <button
@@ -429,7 +469,7 @@ export function Relationships() {
 
               <ForceGraph
                 ref={graphRef}
-                data={graphData}
+                data={effectiveGraphData!}
                 onNodeClick={handleNodeClick}
                 height={800}
               />

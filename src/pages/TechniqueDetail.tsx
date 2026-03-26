@@ -19,6 +19,7 @@ type TabId =
   | 'datasources'
   | 'campaigns'
   | 'subtechniques'
+  | 'procedures'
   | 'intelligence'
   | 'frameworks';
 
@@ -30,6 +31,7 @@ const TABS: { id: TabId; label: string }[] = [
   { id: 'datasources', label: 'Data Sources' },
   { id: 'campaigns', label: 'Campaigns' },
   { id: 'subtechniques', label: 'Sub-Techniques' },
+  { id: 'procedures', label: 'Procedures' },
   { id: 'intelligence', label: 'Intelligence' },
   { id: 'frameworks', label: 'Frameworks' },
 ];
@@ -754,6 +756,33 @@ export function TechniqueDetail() {
             ) : (
               <p className="text-[var(--text-secondary)] text-sm">No sub-techniques.</p>
             )}
+          </div>
+        )}
+
+        {activeTab === 'procedures' && (
+          <div className="space-y-2">
+            {(() => {
+              const procs = (data.groups ?? []).filter((g) => g.procedure);
+              if (procs.length === 0) return (
+                <p className="text-[var(--text-secondary)] text-sm py-4">No procedures documented for this technique.</p>
+              );
+              return procs.map((g) => (
+                <details key={g.attackId} className="group rounded-lg border border-[var(--border-color)] bg-[var(--surface-card)] overflow-hidden">
+                  <summary className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-[var(--teal-ghost)] transition-colors">
+                    <svg className="w-3 h-3 text-[var(--text-secondary)] transition-transform group-open:rotate-90 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
+                    <EntityLink type="group" attackId={g.attackId} name={g.name} />
+                  </summary>
+                  <div className="px-4 pb-3 pt-1 border-t border-[var(--border-color)]">
+                    <p
+                      className="text-xs text-[var(--text-secondary)] leading-relaxed whitespace-pre-wrap"
+                      dangerouslySetInnerHTML={{ __html: sanitize(sanitizeMarkdown(g.procedure ?? '')) }}
+                    />
+                  </div>
+                </details>
+              ));
+            })()}
           </div>
         )}
 
