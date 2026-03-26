@@ -634,7 +634,7 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
             {engageActivities.map((act) => (
               <div key={act.engageId} className="flex items-center gap-1">
                 <a
-                  href={`https://engage.mitre.org/matrix/${act.engageId.toLowerCase()}`}
+                  href="https://engage.mitre.org/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="font-mono text-xs text-[var(--accent-teal)] bg-[var(--teal-ghost)] border border-[var(--teal-dim)] px-1.5 py-0.5 rounded hover:bg-[var(--teal-dim)] transition-colors"
@@ -662,7 +662,7 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
             {d3fendMappings.map((m) => (
               <div key={m.d3fend_id} className="flex items-center gap-1">
                 <a
-                  href={`https://d3fend.mitre.org/technique/d3f:${encodeURIComponent(m.d3fend_id.replace(/ /g, '_'))}`}
+                  href="https://d3fend.mitre.org/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="font-mono text-xs text-[var(--accent-green)] bg-[var(--green-faint)] border border-[var(--green-dim)] px-1.5 py-0.5 rounded hover:bg-[var(--green-dim)] transition-colors"
