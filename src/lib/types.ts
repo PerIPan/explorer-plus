@@ -439,9 +439,10 @@ export interface TechniqueIntelligence {
   reports: Array<{
     id: string;
     title: string;
-    url: string;
+    url: string | null;
     source: string;
     published_at: string | null;
+    technique_count: number;
   }>;
   sigmaRules: Array<{
     id: string;
@@ -479,8 +480,9 @@ export interface TechniqueIntelligence {
     vt_total: number | null;
     vt_verdict: string | null;
     vt_file_type: string | null;
+    cvss_severity: string | null;
   }>;
-  detectionStrategies?: Array<{
+  detectionStrategies: Array<{
     det_id: string;
     name: string;
     analytics: Array<{
@@ -490,7 +492,7 @@ export interface TechniqueIntelligence {
       platforms: string[];
     }>;
   }>;
-  cves?: Array<{
+  cves: Array<{
     cve_id: string;
     description: string | null;
     cvss_severity: string | null;

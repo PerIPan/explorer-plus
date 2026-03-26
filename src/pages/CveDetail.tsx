@@ -3,6 +3,7 @@ import { usePageTitle } from '../hooks/usePageTitle';
 import { useParams, Link } from 'react-router-dom';
 import { isSafeUrl } from '../lib/urlSafety';
 import { useCveDetail } from '../hooks/useApi';
+import { formatDate } from '../lib/formatDate';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Badge } from '../components/shared/Badge';
 import { EntityLink } from '../components/shared/EntityLink';
@@ -38,12 +39,6 @@ function SeverityBadge({ severity }: { severity: string | null }) {
   );
 }
 
-function formatDate(iso: string | null): string {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('en-US', {
-    year: 'numeric', month: 'short', day: 'numeric',
-  });
-}
 
 /** Parse CVSS vector string into readable components */
 function parseCvssVector(vector: string | null): Array<{ label: string; value: string; _key: string }> {

@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useCves } from '../hooks/useApi';
 import { useSector } from '../contexts/SectorContext';
 import { apiFetch } from '../lib/api';
+import { formatDate } from '../lib/formatDate';
 import { PageHeader } from '../components/layout/PageHeader';
 import { DataTable, type ColumnDef } from '../components/shared/DataTable';
 import { EntityLink } from '../components/shared/EntityLink';
@@ -71,20 +72,30 @@ function TechniquePopover({ cveId, count }: { cveId: string; count: number }) {
     queryKey: ['cve-detail', cveId],
     queryFn: () => apiFetch<{ techniques: Array<{ attackId: string; name: string }> }>(`/cves/${cveId}`),
     enabled: open,
+    staleTime: 5 * 60 * 1000,
   });
 
   return (
     <div className="relative">
       <button
         type="button"
-        onClick={(e) => { e.stopPropagation(); setOpen(!open); }}
+        onClick={(e) => { e.stopPropagation(); setOpen((prev) => !prev); }}
+        aria-label={`Show ${count} linked techniques`}
+        aria-expanded={open}
         className="cursor-pointer"
       >
         <Badge label={String(count)} variant="teal" />
       </button>
       {open && (
         <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setOpen(false)}
+            onKeyDown={(e) => { if (e.key === 'Escape') setOpen(false); }}
+            role="button"
+            aria-label="Close popover"
+            tabIndex={-1}
+          />
           <div className="absolute right-0 top-8 z-50 bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg shadow-2xl p-3 min-w-[240px] max-h-[300px] overflow-y-auto">
             <div className="text-[10px] text-[var(--text-secondary)] uppercase tracking-wider mb-2">
               Linked Techniques ({count})
@@ -98,7 +109,7 @@ function TechniquePopover({ cveId, count }: { cveId: string; count: number }) {
             {data?.techniques && (
               <div className="flex flex-col gap-1">
                 {data.techniques.map((t) => (
-                  <EntityLink key={t.attackId} type="technique" attackId={t.attackId} name={t.name} />
+                  <EntityLink key={t.attackId} type="technique" attackId={t.attackId} name={t.name} useMap />
                 ))}
               </div>
             )}
@@ -110,13 +121,6 @@ function TechniquePopover({ cveId, count }: { cveId: string; count: number }) {
       )}
     </div>
   );
-}
-
-function formatDate(iso: string | null): string {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('en-US', {
-    year: 'numeric', month: 'short', day: 'numeric',
-  });
 }
 
 const columns: ColumnDef<CveEntry>[] = [
@@ -221,7 +225,7 @@ export function CvesList() {
   const source = searchParams.get('source') ?? '';
   const q = searchParams.get('q') ?? '';
   const defaultSince = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
-  const since = searchParams.get('since') ?? defaultSince;
+  const since = searchParams.has('since') ? (searchParams.get('since') ?? '') : defaultSince;
 
   const setParam = useCallback(
     (key: string, value: string) => {
@@ -229,6 +233,8 @@ export function CvesList() {
         const next = new URLSearchParams(prev);
         if (value) {
           next.set(key, value);
+        } else if (key === 'since') {
+          next.set(key, ''); // keep empty to represent "all time"
         } else {
           next.delete(key);
         }

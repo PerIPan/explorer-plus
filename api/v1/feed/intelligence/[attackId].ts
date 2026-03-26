@@ -149,9 +149,9 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
            ) AS analytics
          FROM detection_strategies ds
          WHERE ds.attack_technique_id = $1
-            OR ds.attack_technique_id LIKE $1 || '.%'
+            OR ds.attack_technique_id LIKE $2
          ORDER BY ds.det_id`,
-        [id],
+        [id, `${id}.%`],
       ),
 
       // Top 2 CISA KEV CVEs linked to this technique

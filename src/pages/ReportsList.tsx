@@ -7,6 +7,7 @@ import { useReports } from '../hooks/useApi';
 import { useSector } from '../contexts/SectorContext';
 import { apiFetch } from '../lib/api';
 import { useFuseFilter } from '../hooks/useFuseFilter';
+import { formatDate } from '../lib/formatDate';
 import { PageHeader } from '../components/layout/PageHeader';
 import { DataTable, type ColumnDef } from '../components/shared/DataTable';
 import { Badge } from '../components/shared/Badge';
@@ -22,20 +23,30 @@ function TechniquePopover({ reportId, count }: { reportId: string; count: number
     queryKey: ['report-techniques', reportId],
     queryFn: () => apiFetch<{ data: Array<{ attackId: string; name: string }> }>(`/feed/reports/${reportId}/techniques`),
     enabled: open,
+    staleTime: 5 * 60 * 1000,
   });
 
   return (
     <div className="relative">
       <button
         type="button"
-        onClick={(e) => { e.stopPropagation(); setOpen(!open); }}
+        onClick={(e) => { e.stopPropagation(); setOpen((prev) => !prev); }}
+        aria-label={`Show ${count} linked techniques`}
+        aria-expanded={open}
         className="cursor-pointer"
       >
         <Badge label={String(count)} variant="teal" />
       </button>
       {open && (
         <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setOpen(false)}
+            onKeyDown={(e) => { if (e.key === 'Escape') setOpen(false); }}
+            role="button"
+            aria-label="Close popover"
+            tabIndex={-1}
+          />
           <div className="absolute right-0 top-8 z-50 bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg shadow-2xl p-3 min-w-[240px] max-h-[300px] overflow-y-auto">
             <div className="text-[10px] text-[var(--text-secondary)] uppercase tracking-wider mb-2">
               Linked Techniques ({count})
@@ -79,15 +90,6 @@ const SOURCES = [
   { value: 'microsoft_security', label: 'Microsoft Security' },
   { value: 'talos', label: 'Talos' },
 ];
-
-function formatDate(iso: string | null): string {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-}
 
 const columns: ColumnDef<ThreatReport>[] = [
   {
@@ -153,7 +155,7 @@ export function ReportsList() {
 
   const source = searchParams.get('source') ?? '';
   const defaultSince = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
-  const since = searchParams.get('since') ?? defaultSince;
+  const since = searchParams.has('since') ? (searchParams.get('since') ?? '') : defaultSince;
 
   const setParam = useCallback(
     (key: string, value: string) => {
@@ -161,6 +163,8 @@ export function ReportsList() {
         const next = new URLSearchParams(prev);
         if (value) {
           next.set(key, value);
+        } else if (key === 'since') {
+          next.set(key, ''); // keep empty to represent "all time"
         } else {
           next.delete(key);
         }

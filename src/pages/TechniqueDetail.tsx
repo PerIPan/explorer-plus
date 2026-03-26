@@ -3,6 +3,7 @@ import { usePageTitle } from '../hooks/usePageTitle';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { isSafeUrl, ctidCloudUrl, ctidVerisUrl } from '../lib/urlSafety';
 import { useTechnique, useIntelligence, useFrameworks } from '../hooks/useApi';
+import { formatDate } from '../lib/formatDate';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Badge } from '../components/shared/Badge';
 import { DeprecatedBadge } from '../components/shared/DeprecatedBadge';
@@ -33,30 +34,19 @@ const TABS: { id: TabId; label: string }[] = [
   { id: 'frameworks', label: 'Frameworks' },
 ];
 
-const LEVEL_COLORS: Record<string, string> = {
-  critical: 'bg-[var(--pink-faint)] text-[var(--accent-pink)] border-[var(--pink-dim)]',
-  high: 'bg-[var(--orange-faint)] text-[var(--accent-orange)] border-[var(--orange-dim)]',
-  medium: 'bg-[var(--yellow-faint)] text-[var(--accent-yellow)] border-[var(--yellow-dim)]',
-  low: 'bg-[var(--blue-faint)] text-[var(--accent-blue)] border-[var(--blue-dim)]',
-  informational: 'bg-[var(--green-faint)] text-[var(--accent-green)] border-[var(--green-dim)]',
+const LEVEL_VARIANTS: Record<string, 'pink' | 'orange' | 'yellow' | 'blue' | 'green' | 'neutral'> = {
+  critical: 'pink',
+  high: 'orange',
+  medium: 'yellow',
+  low: 'blue',
+  informational: 'green',
 };
 
 function LevelBadge({ level }: { level: string | null }) {
   if (!level) return null;
-  const classes = LEVEL_COLORS[level.toLowerCase()] ?? 'bg-[var(--hover-overlay)] text-[var(--text-secondary)] border-[var(--border-color)]';
-  return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${classes}`}>
-      {level}
-    </span>
-  );
+  return <Badge label={level} variant={LEVEL_VARIANTS[level.toLowerCase()] ?? 'neutral'} />;
 }
 
-function formatDate(iso: string | null): string {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('en-US', {
-    year: 'numeric', month: 'short', day: 'numeric',
-  });
-}
 
 /** Generate OTX indicator URL from IOC type and value */
 function otxUrl(type: string, value: string): string | null {
@@ -128,6 +118,7 @@ function IntelligenceTab({ attackId }: IntelligenceTabProps) {
                 key={r.id}
                 className="flex items-center justify-between gap-3 py-2 px-3 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)]"
               >
+                {r.url ? (
                 <a
                   href={r.url}
                   target="_blank"
@@ -136,6 +127,9 @@ function IntelligenceTab({ attackId }: IntelligenceTabProps) {
                 >
                   {r.title}
                 </a>
+                ) : (
+                <span className="text-[var(--text-primary)] text-sm flex-1 truncate">{r.title}</span>
+                )}
                 <div className="flex items-center gap-2 shrink-0">
                   <Badge label={r.source} variant="neutral" />
                   <span className="text-[var(--text-secondary)] text-xs">{formatDate(r.published_at)}</span>

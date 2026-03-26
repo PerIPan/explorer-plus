@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { apiFetch } from '../../lib/api';
@@ -11,26 +11,22 @@ import { VtLookupModal, VtButton } from '../shared/VtLookupModal';
 import { sanitize, sanitizeMarkdown } from '../../lib/sanitize';
 import { ctidCloudUrl, ctidVerisUrl } from '../../lib/urlSafety';
 import { ExternalLinksButton } from '../shared/ExternalLinksButton';
+import { formatDate } from '../../lib/formatDate';
 import type { CloudControl } from '../../lib/types';
 
-// ── Level badge (reused pattern from TechniqueDetail) ─────────────────────────
+// ── Level badge ──────────────────────────────────────────────────────────────
 
-const LEVEL_COLORS: Record<string, string> = {
-  critical: 'bg-[var(--pink-faint)] text-[var(--accent-pink)] border-[var(--pink-dim)]',
-  high: 'bg-[var(--orange-faint)] text-[var(--accent-orange)] border-[var(--orange-dim)]',
-  medium: 'bg-[var(--yellow-faint)] text-[var(--accent-yellow)] border-[var(--yellow-dim)]',
-  low: 'bg-[var(--blue-faint)] text-[var(--accent-blue)] border-[var(--blue-dim)]',
-  informational: 'bg-[var(--green-faint)] text-[var(--accent-green)] border-[var(--green-dim)]',
+const LEVEL_VARIANTS: Record<string, 'pink' | 'orange' | 'yellow' | 'blue' | 'green' | 'neutral'> = {
+  critical: 'pink',
+  high: 'orange',
+  medium: 'yellow',
+  low: 'blue',
+  informational: 'green',
 };
 
 function LevelBadge({ level }: { level: string | null }) {
   if (!level) return null;
-  const cls = LEVEL_COLORS[level.toLowerCase()] ?? 'bg-[var(--hover-overlay)] text-[var(--text-secondary)] border-[var(--border-color)]';
-  return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${cls}`}>
-      {level}
-    </span>
-  );
+  return <Badge label={level} variant={LEVEL_VARIANTS[level.toLowerCase()] ?? 'neutral'} />;
 }
 
 // ── Collapsible card ───────────────────────────────────────────────────────────
@@ -160,26 +156,36 @@ const CLOUD_PROVIDER_LABELS: Record<string, string> = {
   m365: 'M365',
 };
 
-/** Clickable technique count popover for reports — lazy-loads techniques on click */
-function ReportTechniquePopover({ reportId, count }: { reportId: string; count: number }) {
-  const [open, setOpen] = useState(false);
-  const { data, isLoading } = useQuery({
-    queryKey: ['report-techniques', reportId],
-    queryFn: () => apiFetch<{ data: Array<{ attackId: string; name: string }> }>(`/feed/reports/${reportId}/techniques`),
-    enabled: open,
-  });
+/** Reusable popover shell for technique count circles */
+function TechniqueCountPopover({ count, open, onToggle, onClose, isLoading, techniques }: {
+  count: number;
+  open: boolean;
+  onToggle: () => void;
+  onClose: () => void;
+  isLoading: boolean;
+  techniques: Array<{ attackId: string; name: string }> | undefined;
+}) {
   return (
     <div className="relative shrink-0">
       <button
         type="button"
-        onClick={() => setOpen(!open)}
+        onClick={onToggle}
+        aria-label={`Show ${count} linked techniques`}
+        aria-expanded={open}
         className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[9px] font-bold bg-[var(--teal-faint)] text-[var(--accent-teal)] border border-[var(--teal-dim)] cursor-pointer hover:bg-[var(--teal-dim)] transition-colors"
       >
         {count}
       </button>
       {open && (
         <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div
+            className="fixed inset-0 z-40"
+            onClick={onClose}
+            onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}
+            role="button"
+            aria-label="Close popover"
+            tabIndex={-1}
+          />
           <div className="absolute right-0 top-7 z-50 bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg shadow-2xl p-3 min-w-[240px] max-h-[300px] overflow-y-auto">
             <div className="text-[10px] text-[var(--text-secondary)] uppercase tracking-wider mb-2">
               Linked Techniques ({count})
@@ -190,9 +196,9 @@ function ReportTechniquePopover({ reportId, count }: { reportId: string; count: 
                 Loading...
               </div>
             )}
-            {data?.data && (
+            {techniques && (
               <div className="flex flex-col gap-1">
-                {data.data.map((t) => (
+                {techniques.map((t) => (
                   <EntityLink key={t.attackId} type="technique" attackId={t.attackId} name={t.name} useMap />
                 ))}
               </div>
@@ -201,6 +207,48 @@ function ReportTechniquePopover({ reportId, count }: { reportId: string; count: 
         </>
       )}
     </div>
+  );
+}
+
+/** Clickable technique count popover for CVEs — lazy-loads techniques on click */
+function CveTechniquePopover({ cveId, count }: { cveId: string; count: number }) {
+  const [open, setOpen] = useState(false);
+  const { data, isLoading } = useQuery({
+    queryKey: ['cve-detail', cveId],
+    queryFn: () => apiFetch<{ techniques: Array<{ attackId: string; name: string }> }>(`/cves/${cveId}`),
+    enabled: open,
+    staleTime: 5 * 60 * 1000,
+  });
+  return (
+    <TechniqueCountPopover
+      count={count}
+      open={open}
+      onToggle={() => setOpen((prev) => !prev)}
+      onClose={() => setOpen(false)}
+      isLoading={isLoading}
+      techniques={data?.techniques}
+    />
+  );
+}
+
+/** Clickable technique count popover for reports — lazy-loads techniques on click */
+function ReportTechniquePopover({ reportId, count }: { reportId: string; count: number }) {
+  const [open, setOpen] = useState(false);
+  const { data, isLoading } = useQuery({
+    queryKey: ['report-techniques', reportId],
+    queryFn: () => apiFetch<{ data: Array<{ attackId: string; name: string }> }>(`/feed/reports/${reportId}/techniques`),
+    enabled: open,
+    staleTime: 5 * 60 * 1000,
+  });
+  return (
+    <TechniqueCountPopover
+      count={count}
+      open={open}
+      onToggle={() => setOpen((prev) => !prev)}
+      onClose={() => setOpen(false)}
+      isLoading={isLoading}
+      techniques={data?.data}
+    />
   );
 }
 
@@ -267,7 +315,7 @@ function VtSection({ iocs, loading }: { iocs: Array<{ id: string; type: string; 
                 <span className="flex-1" />
                 {ioc.first_seen_at && (
                   <span className="text-[10px] text-[var(--text-secondary)] shrink-0">
-                    {new Date(ioc.first_seen_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    {formatDate(ioc.first_seen_at)}
                   </span>
                 )}
               </div>
@@ -314,23 +362,25 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
     );
   }
 
-  // ── Derived counts for sigma rules ────────────────────────────────────────
+  // ── Derived values (memoized to avoid recalc on popover toggles) ─────────
 
   const sigmaRules = intel?.sigmaRules ?? [];
-  const sigmaByLevel = sigmaRules.reduce<Record<string, number>>((acc, r) => {
+  const sigmaByLevel = useMemo(() => sigmaRules.reduce<Record<string, number>>((acc, r) => {
     const lvl = r.level?.toLowerCase() ?? 'unknown';
     acc[lvl] = (acc[lvl] ?? 0) + 1;
     return acc;
-  }, {});
+  }, {}), [sigmaRules]);
 
   const atomicTests = intel?.atomicTests ?? [];
-  const atomicPlatforms = Array.from(
+  const atomicPlatforms = useMemo(() => Array.from(
     new Set(atomicTests.flatMap((t) => t.platforms ?? []))
-  );
+  ), [atomicTests]);
 
   const nistControls = frameworks?.nist ?? [];
   const engageActivities = frameworks?.engage ?? [];
   const d3fendMappings = intel?.defensiveMappings ?? [];
+  const reports = intel?.reports ?? [];
+  const cves = intel?.cves ?? [];
 
   const groups = technique.groups ?? [];
   const campaigns = technique.campaigns ?? [];
@@ -376,95 +426,89 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
 
 
       {/* THREAT INTELLIGENCE — reports + CVEs */}
-      {(() => {
-        const reports = intel?.reports ?? [];
-        const cves = intel?.cves ?? [];
-        return (
-          <MapCard label="Threat Intelligence" icon={IconResponse} count={reports.length + cves.length}>
-            {reports.length > 0 ? (
-              <div className="space-y-1.5">
-                {reports.slice(0, 3).map((r) => (
-                  <div
-                    key={r.id}
-                    className="flex items-center gap-2 py-1.5 px-3 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)]"
-                  >
-                    <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                      <a
-                        href={r.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs text-[var(--text-primary)] hover:text-[var(--accent-teal)] truncate"
-                      >
-                        {r.title}
-                      </a>
-                      {(r as { technique_count?: number }).technique_count != null && (r as { technique_count?: number }).technique_count! > 0 && (
-                        <ReportTechniquePopover reportId={r.id} count={(r as { technique_count?: number }).technique_count!} />
-                      )}
-                    </div>
-                    <Badge label={r.source} variant="neutral" />
-                    {r.published_at && (
-                      <span className="text-[10px] text-[var(--text-secondary)] shrink-0">
-                        {new Date(r.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                      </span>
+      <MapCard label="Threat Intelligence" icon={IconResponse} count={reports.length + cves.length}>
+        {reports.length > 0 ? (
+          <div className="space-y-1.5">
+            {reports.slice(0, 3).map((r) => (
+              <div
+                key={r.id}
+                className="flex items-center gap-2 py-1.5 px-3 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)]"
+              >
+                <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                  {r.url ? (
+                    <a
+                      href={r.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-[var(--text-primary)] hover:text-[var(--accent-teal)] truncate"
+                    >
+                      {r.title}
+                    </a>
+                  ) : (
+                    <span className="text-xs text-[var(--text-primary)] truncate">{r.title}</span>
+                  )}
+                  {r.technique_count > 0 && (
+                    <ReportTechniquePopover reportId={r.id} count={r.technique_count} />
+                  )}
+                </div>
+                <Badge label={r.source} variant="neutral" />
+                {r.published_at && (
+                  <span className="text-[10px] text-[var(--text-secondary)] shrink-0">
+                    {formatDate(r.published_at)}
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          intelLoading ? (
+            <MapRow prefix="Reports">
+              <span className="text-xs text-[var(--text-secondary)] italic">Loading...</span>
+            </MapRow>
+          ) : (
+            <MapRow prefix="Reports">
+              <span className="text-xs text-[var(--text-secondary)]">No threat reports linked yet.</span>
+            </MapRow>
+          )
+        )}
+
+        {/* CVEs */}
+        {cves.length > 0 && (
+          <div className="space-y-1.5">
+            {cves.map((cve) => {
+              const sevColor = cve.cvss_severity === 'CRITICAL' ? 'pink' : cve.cvss_severity === 'HIGH' ? 'orange' : 'neutral';
+              const desc = cve.description ?? cve.cve_id;
+              const shortDesc = desc.length > 150 ? desc.slice(0, 150) + '...' : desc;
+              return (
+                <div
+                  key={cve.cve_id}
+                  className="flex items-center gap-2 py-1.5 px-3 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)]"
+                >
+                  <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                    <a
+                      href={`/cti/cves?q=${encodeURIComponent(cve.cve_id)}&since=`}
+                      className="text-xs text-[var(--text-primary)] hover:text-[var(--accent-teal)] truncate"
+                      title={desc}
+                    >
+                      {shortDesc}
+                    </a>
+                    {cve.technique_count > 0 && (
+                      <CveTechniquePopover cveId={cve.cve_id} count={cve.technique_count} />
                     )}
                   </div>
-                ))}
-              </div>
-            ) : (
-              intelLoading ? (
-                <MapRow prefix="Reports">
-                  <span className="text-xs text-[var(--text-secondary)] italic">Loading...</span>
-                </MapRow>
-              ) : (
-                <MapRow prefix="Reports">
-                  <span className="text-xs text-[var(--text-secondary)]">No threat reports linked yet.</span>
-                </MapRow>
-              )
-            )}
-
-            {/* CVEs */}
-            {cves.length > 0 && (
-              <div className="space-y-1.5">
-                {cves.map((cve) => {
-                  const sevColor = cve.cvss_severity === 'CRITICAL' ? 'pink' : cve.cvss_severity === 'HIGH' ? 'orange' : 'neutral';
-                  const desc = cve.description ?? cve.cve_id;
-                  const shortDesc = desc.length > 150 ? desc.slice(0, 150) + '...' : desc;
-                  return (
-                    <div
-                      key={cve.cve_id}
-                      className="flex items-center gap-2 py-1.5 px-3 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)]"
-                    >
-                      <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                        <a
-                          href={`/cti/cves?q=${encodeURIComponent(cve.cve_id)}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs text-[var(--text-primary)] hover:text-[var(--accent-teal)] truncate"
-                          title={desc}
-                        >
-                          {shortDesc}
-                        </a>
-                        {cve.technique_count > 0 && (
-                          <span className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[9px] font-bold bg-[var(--teal-faint)] text-[var(--accent-teal)] border border-[var(--teal-dim)] shrink-0">
-                            {cve.technique_count}
-                          </span>
-                        )}
-                      </div>
-                      {cve.cvss_severity && <Badge label={cve.cvss_severity} variant={sevColor as 'pink' | 'orange' | 'neutral'} />}
-                      <span className="font-mono text-[10px] text-[var(--accent-pink)] shrink-0">{cve.cve_id}</span>
-                      {cve.published_at && (
-                        <span className="text-[10px] text-[var(--text-secondary)] shrink-0">
-                          {new Date(cve.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                        </span>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </MapCard>
-        );
-      })()}
+                  {cve.cvss_severity && <Badge label={cve.cvss_severity} variant={sevColor as 'pink' | 'orange' | 'neutral'} />}
+                  <span className="font-mono text-[10px] text-[var(--accent-pink)] shrink-0">{cve.cve_id}</span>
+                  {cve.published_at && (
+                    <span className="text-[10px] text-[var(--text-secondary)] shrink-0">
+                      {formatDate(cve.published_at)}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </MapCard>
 
       {/* WHO USES IT */}
       <MapCard label="Who Uses It" icon={IconPeople} count={groups.length + campaigns.length}>

@@ -10,27 +10,17 @@ import type { SigmaRule } from '../lib/types';
 import { sigmaRuleUrl } from '../lib/urlSafety';
 
 
-// Override yellow specifically using className
+const LEVEL_VARIANTS: Record<string, 'pink' | 'orange' | 'yellow' | 'blue' | 'green' | 'neutral'> = {
+  critical: 'pink',
+  high: 'orange',
+  medium: 'yellow',
+  low: 'blue',
+  informational: 'green',
+};
+
 function LevelBadge({ level }: { level: string | null }) {
   if (!level) return <span className="text-[var(--text-secondary)] text-xs">—</span>;
-
-  const colorMap: Record<string, string> = {
-    critical: 'bg-[var(--pink-faint)] text-[var(--accent-pink)] border-[var(--pink-dim)]',
-    high: 'bg-[var(--orange-faint)] text-[var(--accent-orange)] border-[var(--orange-dim)]',
-    medium: 'bg-[var(--yellow-faint)] text-[var(--accent-yellow)] border-[var(--yellow-dim)]',
-    low: 'bg-[var(--blue-faint)] text-[var(--accent-blue)] border-[var(--blue-dim)]',
-    informational: 'bg-[var(--green-faint)] text-[var(--accent-green)] border-[var(--green-dim)]',
-  };
-
-  const classes = colorMap[level.toLowerCase()] ?? 'bg-[var(--hover-overlay)] text-[var(--text-secondary)] border-[var(--border-color)]';
-
-  return (
-    <span
-      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${classes}`}
-    >
-      {level}
-    </span>
-  );
+  return <Badge label={level} variant={LEVEL_VARIANTS[level.toLowerCase()] ?? 'neutral'} />;
 }
 
 const LEVELS = ['critical', 'high', 'medium', 'low', 'informational'];

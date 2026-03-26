@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useIocs } from '../hooks/useApi';
 import { useSector } from '../contexts/SectorContext';
 import { apiFetch } from '../lib/api';
+import { formatDate } from '../lib/formatDate';
 import { PageHeader } from '../components/layout/PageHeader';
 import { DataTable, type ColumnDef } from '../components/shared/DataTable';
 import { EntityLink } from '../components/shared/EntityLink';
@@ -61,14 +62,6 @@ const SOURCE_VARIANTS: Record<string, 'teal' | 'orange' | 'purple' | 'blue' | 'g
   cisa_kev: 'blue',
 };
 
-function formatDate(iso: string | null): string {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-}
 
 /** Generate OTX indicator URL from IOC type and value */
 function otxUrl(type: string, value: string): string | null {

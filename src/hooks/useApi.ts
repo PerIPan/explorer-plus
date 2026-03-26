@@ -110,6 +110,7 @@ export function useTechnique(attackId: string, params: Record<string, string> = 
     queryKey: ['technique', attackId, params],
     queryFn: () => apiFetch<Technique>(`/techniques/${attackId}`, params),
     enabled: Boolean(attackId),
+    staleTime: 2 * 60 * 1000,
   });
 }
 
@@ -232,6 +233,7 @@ export function useIntelligence(attackId: string) {
     queryKey: ['intelligence', attackId],
     queryFn: () => apiFetch<TechniqueIntelligence>(`/feed/intelligence/${attackId}`),
     enabled: Boolean(attackId),
+    staleTime: 2 * 60 * 1000,
   });
 }
 
@@ -242,6 +244,7 @@ export function useFrameworks(attackId: string) {
     queryKey: ['frameworks', attackId],
     queryFn: () => apiFetch<FrameworkData>(`/frameworks/technique/${attackId}`),
     enabled: Boolean(attackId),
+    staleTime: 2 * 60 * 1000,
   });
 }
 
