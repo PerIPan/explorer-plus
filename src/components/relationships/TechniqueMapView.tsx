@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { apiFetch } from '../../lib/api';
@@ -156,7 +157,7 @@ const CLOUD_PROVIDER_LABELS: Record<string, string> = {
   m365: 'M365',
 };
 
-/** Reusable popover shell for technique count circles */
+/** Reusable popover shell for technique count circles — uses portal to escape overflow-hidden */
 function TechniqueCountPopover({ count, open, onToggle, onClose, isLoading, techniques }: {
   count: number;
   open: boolean;
@@ -165,9 +166,13 @@ function TechniqueCountPopover({ count, open, onToggle, onClose, isLoading, tech
   isLoading: boolean;
   techniques: Array<{ attackId: string; name: string }> | undefined;
 }) {
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const rect = open && btnRef.current ? btnRef.current.getBoundingClientRect() : null;
+
   return (
-    <div className="relative shrink-0">
+    <span className="shrink-0">
       <button
+        ref={btnRef}
         type="button"
         onClick={onToggle}
         aria-label={`Show ${count} linked techniques`}
@@ -176,7 +181,7 @@ function TechniqueCountPopover({ count, open, onToggle, onClose, isLoading, tech
       >
         {count}
       </button>
-      {open && (
+      {open && rect && createPortal(
         <>
           <div
             className="fixed inset-0 z-40"
@@ -186,7 +191,10 @@ function TechniqueCountPopover({ count, open, onToggle, onClose, isLoading, tech
             aria-label="Close popover"
             tabIndex={-1}
           />
-          <div className="absolute right-0 top-7 z-50 bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg shadow-2xl p-3 min-w-[240px] max-h-[300px] overflow-y-auto">
+          <div
+            className="fixed z-50 bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg shadow-2xl p-3 min-w-[240px] max-h-[300px] overflow-y-auto"
+            style={{ top: rect.bottom + 4, left: Math.max(8, rect.right - 240) }}
+          >
             <div className="text-[10px] text-[var(--text-secondary)] uppercase tracking-wider mb-2">
               Linked Techniques ({count})
             </div>
@@ -204,9 +212,10 @@ function TechniqueCountPopover({ count, open, onToggle, onClose, isLoading, tech
               </div>
             )}
           </div>
-        </>
+        </>,
+        document.body,
       )}
-    </div>
+    </span>
   );
 }
 

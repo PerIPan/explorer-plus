@@ -1,4 +1,5 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { isSafeUrl } from '../lib/urlSafety';
 import { useSearchParams } from 'react-router-dom';
@@ -26,9 +27,13 @@ function TechniquePopover({ reportId, count }: { reportId: string; count: number
     staleTime: 5 * 60 * 1000,
   });
 
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const rect = open && btnRef.current ? btnRef.current.getBoundingClientRect() : null;
+
   return (
-    <div className="relative">
+    <span>
       <button
+        ref={btnRef}
         type="button"
         onClick={(e) => { e.stopPropagation(); setOpen((prev) => !prev); }}
         aria-label={`Show ${count} linked techniques`}
@@ -37,7 +42,7 @@ function TechniquePopover({ reportId, count }: { reportId: string; count: number
       >
         <Badge label={String(count)} variant="teal" />
       </button>
-      {open && (
+      {open && rect && createPortal(
         <>
           <div
             className="fixed inset-0 z-40"
@@ -47,7 +52,10 @@ function TechniquePopover({ reportId, count }: { reportId: string; count: number
             aria-label="Close popover"
             tabIndex={-1}
           />
-          <div className="absolute right-0 top-8 z-50 bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg shadow-2xl p-3 min-w-[240px] max-h-[300px] overflow-y-auto">
+          <div
+            className="fixed z-50 bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg shadow-2xl p-3 min-w-[240px] max-h-[300px] overflow-y-auto"
+            style={{ top: rect.bottom + 4, left: Math.max(8, rect.right - 240) }}
+          >
             <div className="text-[10px] text-[var(--text-secondary)] uppercase tracking-wider mb-2">
               Linked Techniques ({count})
             </div>
@@ -68,9 +76,10 @@ function TechniquePopover({ reportId, count }: { reportId: string; count: number
               <span className="text-xs text-[var(--text-secondary)]">No techniques found.</span>
             )}
           </div>
-        </>
+        </>,
+        document.body,
       )}
-    </div>
+    </span>
   );
 }
 
