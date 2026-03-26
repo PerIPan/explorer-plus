@@ -80,10 +80,16 @@ function MapCard({ label, icon, count, defaultOpen = true, children }: MapCardPr
 }
 
 /** Row inside a map card */
-function MapRow({ prefix, children }: { prefix: string; children: React.ReactNode }) {
+function MapRow({ prefix, prefixUrl, children }: { prefix: string; prefixUrl?: string; children: React.ReactNode }) {
   return (
     <div className="flex gap-3">
-      <span className="text-xs text-[var(--text-secondary)] w-32 shrink-0 pt-0.5">{prefix}</span>
+      <span className="text-xs text-[var(--text-secondary)] w-32 shrink-0 pt-0.5">
+        {prefixUrl ? (
+          <a href={prefixUrl} target="_blank" rel="noopener noreferrer" className="hover:text-[var(--accent-teal)] transition-colors">
+            {prefix} ↗
+          </a>
+        ) : prefix}
+      </span>
       <div className="flex-1 flex flex-wrap gap-1.5">{children}</div>
     </div>
   );
@@ -630,17 +636,12 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
         count={engageActivities.length + d3fendMappings.length}
       >
         {engageActivities.length > 0 ? (
-          <MapRow prefix="MITRE Engage">
+          <MapRow prefix="MITRE Engage" prefixUrl="https://engage.mitre.org/">
             {engageActivities.map((act) => (
               <div key={act.engageId} className="flex items-center gap-1">
-                <a
-                  href="https://engage.mitre.org/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-mono text-xs text-[var(--accent-teal)] bg-[var(--teal-ghost)] border border-[var(--teal-dim)] px-1.5 py-0.5 rounded hover:bg-[var(--teal-dim)] transition-colors"
-                >
-                  {act.engageId} ↗
-                </a>
+                <span className="font-mono text-xs text-[var(--accent-teal)] bg-[var(--teal-ghost)] border border-[var(--teal-dim)] px-1.5 py-0.5 rounded">
+                  {act.engageId}
+                </span>
                 <span className="text-xs text-[var(--text-primary)]">{act.engageName}</span>
                 {act.goal && <Badge label={act.goal} variant="orange" />}
               </div>
@@ -648,27 +649,22 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
           </MapRow>
         ) : (
           fwLoading ? (
-            <MapRow prefix="MITRE Engage">
+            <MapRow prefix="MITRE Engage" prefixUrl="https://engage.mitre.org/">
               <span className="text-xs text-[var(--text-secondary)] italic">Loading...</span>
             </MapRow>
           ) : (
-            <MapRow prefix="MITRE Engage">
+            <MapRow prefix="MITRE Engage" prefixUrl="https://engage.mitre.org/">
               <span className="text-xs text-[var(--text-secondary)]">No Engage activities mapped yet.</span>
             </MapRow>
           )
         )}
         {d3fendMappings.length > 0 ? (
-          <MapRow prefix="D3FEND">
+          <MapRow prefix="D3FEND" prefixUrl="https://d3fend.mitre.org/">
             {d3fendMappings.map((m) => (
               <div key={m.d3fend_id} className="flex items-center gap-1">
-                <a
-                  href="https://d3fend.mitre.org/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-mono text-xs text-[var(--accent-green)] bg-[var(--green-faint)] border border-[var(--green-dim)] px-1.5 py-0.5 rounded hover:bg-[var(--green-dim)] transition-colors"
-                >
-                  {m.d3fend_id} ↗
-                </a>
+                <span className="font-mono text-xs text-[var(--accent-green)] bg-[var(--green-faint)] border border-[var(--green-dim)] px-1.5 py-0.5 rounded">
+                  {m.d3fend_id}
+                </span>
                 <span className="text-xs text-[var(--text-primary)]">{m.d3fend_label}</span>
                 {m.d3fend_tactic && <Badge label={m.d3fend_tactic} variant="green" />}
               </div>
@@ -676,11 +672,11 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
           </MapRow>
         ) : (
           intelLoading ? (
-            <MapRow prefix="D3FEND">
+            <MapRow prefix="D3FEND" prefixUrl="https://d3fend.mitre.org/">
               <span className="text-xs text-[var(--text-secondary)] italic">Loading...</span>
             </MapRow>
           ) : (
-            <MapRow prefix="D3FEND">
+            <MapRow prefix="D3FEND" prefixUrl="https://d3fend.mitre.org/">
               <span className="text-xs text-[var(--text-secondary)]">No D3FEND mappings yet.</span>
             </MapRow>
           )
