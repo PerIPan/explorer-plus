@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { apiFetch } from '../../lib/api';
@@ -365,16 +365,16 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
   // ── Derived values (memoized to avoid recalc on popover toggles) ─────────
 
   const sigmaRules = intel?.sigmaRules ?? [];
-  const sigmaByLevel = useMemo(() => sigmaRules.reduce<Record<string, number>>((acc, r) => {
+  const sigmaByLevel = sigmaRules.reduce<Record<string, number>>((acc, r) => {
     const lvl = r.level?.toLowerCase() ?? 'unknown';
     acc[lvl] = (acc[lvl] ?? 0) + 1;
     return acc;
-  }, {}), [sigmaRules]);
+  }, {});
 
   const atomicTests = intel?.atomicTests ?? [];
-  const atomicPlatforms = useMemo(() => Array.from(
+  const atomicPlatforms = Array.from(
     new Set(atomicTests.flatMap((t) => t.platforms ?? []))
-  ), [atomicTests]);
+  );
 
   const nistControls = frameworks?.nist ?? [];
   const engageActivities = frameworks?.engage ?? [];
