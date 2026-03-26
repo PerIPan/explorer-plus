@@ -85,8 +85,8 @@ function MapRow({ prefix, prefixUrl, children }: { prefix: string; prefixUrl?: s
     <div className="flex gap-3">
       <span className="text-xs text-[var(--text-secondary)] w-32 shrink-0 pt-0.5">
         {prefixUrl ? (
-          <a href={prefixUrl} target="_blank" rel="noopener noreferrer" className="hover:text-[var(--accent-teal)] transition-colors">
-            {prefix} ↗
+          <a href={prefixUrl} target="_blank" rel="noopener noreferrer" className="hover:text-[var(--accent-teal)] transition-colors" aria-label={`${prefix} (opens in new tab)`}>
+            {prefix} <span aria-hidden="true">↗</span>
           </a>
         ) : prefix}
       </span>
@@ -484,7 +484,7 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                   </svg>
                   <a
-                    href={`https://attack.mitre.org/detectionstrategies/${ds.det_id}`}
+                    href={`https://attack.mitre.org/detectionstrategies/${ds.det_id}/`}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}
@@ -503,7 +503,7 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
                       <div key={an.analytic_id} className="py-1 px-2 rounded bg-[var(--surface-alt)] text-[11px]">
                         <div className="flex items-center gap-2">
                           <a
-                            href={`https://attack.mitre.org/detectionstrategies/${ds.det_id}#${an.analytic_id}`}
+                            href={`https://attack.mitre.org/detectionstrategies/${ds.det_id}/#${an.analytic_id}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="font-mono text-[10px] text-[var(--accent-blue)] hover:underline shrink-0"
