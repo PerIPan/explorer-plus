@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
+import { apiFetch } from '../../lib/api';
 import { useTechnique, useFrameworks, useIntelligence } from '../../hooks/useApi';
 import { useSector } from '../../contexts/SectorContext';
 import { useDomain } from '../../contexts/DomainContext';
@@ -151,6 +153,46 @@ const CLOUD_PROVIDER_LABELS: Record<string, string> = {
   aws: 'AWS',
   m365: 'M365',
 };
+
+/** Clickable technique count popover for reports — lazy-loads techniques on click */
+function ReportTechniquePopover({ reportId, count }: { reportId: string; count: number }) {
+  const [open, setOpen] = useState(false);
+  const { data, isLoading } = useQuery({
+    queryKey: ['report-techniques', reportId],
+    queryFn: () => apiFetch<{ data: Array<{ attackId: string; name: string }> }>(`/feed/reports/${reportId}/techniques`),
+    enabled: open,
+  });
+  return (
+    <div className="relative shrink-0">
+      <button type="button" onClick={() => setOpen(!open)} className="cursor-pointer">
+        <Badge label={String(count)} variant="teal" />
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 top-7 z-50 bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg shadow-2xl p-3 min-w-[240px] max-h-[300px] overflow-y-auto">
+            <div className="text-[10px] text-[var(--text-secondary)] uppercase tracking-wider mb-2">
+              Linked Techniques ({count})
+            </div>
+            {isLoading && (
+              <div className="flex items-center gap-2 text-[var(--text-secondary)] text-xs py-2">
+                <span className="inline-block w-3 h-3 border-2 border-[var(--teal-dim)] border-t-[var(--accent-teal)] rounded-full animate-spin" />
+                Loading...
+              </div>
+            )}
+            {data?.data && (
+              <div className="flex flex-col gap-1">
+                {data.data.map((t) => (
+                  <EntityLink key={t.attackId} type="technique" attackId={t.attackId} name={t.name} useMap />
+                ))}
+              </div>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
 
 // ── Main component ─────────────────────────────────────────────────────────────
 
@@ -331,18 +373,20 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
             {reports.length > 0 ? (
               <div className="space-y-1.5">
                 {reports.slice(0, 5).map((r) => (
-                  <a
+                  <div
                     key={r.id}
-                    href={r.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 py-1.5 px-3 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)] hover:border-[var(--teal-dim)] transition-colors group"
+                    className="flex items-center gap-2 py-1.5 px-3 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)]"
                   >
-                    <span className="text-xs text-[var(--text-primary)] group-hover:text-[var(--accent-teal)] flex-1 truncate">{r.title}</span>
+                    <a
+                      href={r.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-[var(--text-primary)] hover:text-[var(--accent-teal)] flex-1 truncate"
+                    >
+                      {r.title}
+                    </a>
                     {(r as { technique_count?: number }).technique_count != null && (r as { technique_count?: number }).technique_count! > 0 && (
-                      <span className="text-[10px] text-[var(--accent-teal)] font-mono shrink-0">
-                        {(r as { technique_count?: number }).technique_count} ttps
-                      </span>
+                      <ReportTechniquePopover reportId={r.id} count={(r as { technique_count?: number }).technique_count!} />
                     )}
                     <Badge label={r.source} variant="neutral" />
                     {r.published_at && (
@@ -350,7 +394,7 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
                         {new Date(r.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </span>
                     )}
-                  </a>
+                  </div>
                 ))}
                 {reports.length > 5 && (
                   <Link to="/cti/reports" className="text-[10px] text-[var(--accent-teal)] hover:underline px-3">
@@ -520,6 +564,29 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
         )}
       </MapCard>
 
+      {/* PROCEDURES */}
+      {(() => {
+        const procedures = groups.filter((g) => g.procedure);
+        if (procedures.length === 0) return null;
+        return (
+          <MapCard label="Procedures" icon={IconPeople} count={procedures.length} defaultOpen={false}>
+            <div className="space-y-2 max-h-64 overflow-y-auto">
+              {procedures.map((g) => (
+                <div key={g.attackId} className="py-1.5 px-3 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)]">
+                  <div className="flex items-center gap-2 mb-1">
+                    <EntityLink type="group" attackId={g.attackId} name={g.name} useMap />
+                  </div>
+                  <p
+                    className="text-[11px] text-[var(--text-secondary)] leading-relaxed"
+                    dangerouslySetInnerHTML={{ __html: sanitize(sanitizeMarkdown(g.procedure ?? '')) }}
+                  />
+                </div>
+              ))}
+            </div>
+          </MapCard>
+        );
+      })()}
+
       {/* HOW TO RESPOND */}
       <MapCard label="How to Respond" icon={IconResponse}
         count={engageActivities.length + d3fendMappings.length}
@@ -576,29 +643,6 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
           </Link>
         </MapRow>
       </MapCard>
-
-      {/* PROCEDURES */}
-      {(() => {
-        const procedures = groups.filter((g) => g.procedure);
-        if (procedures.length === 0) return null;
-        return (
-          <MapCard label="Procedures" icon={IconPeople} count={procedures.length} defaultOpen={false}>
-            <div className="space-y-2 max-h-64 overflow-y-auto">
-              {procedures.map((g) => (
-                <div key={g.attackId} className="py-1.5 px-3 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)]">
-                  <div className="flex items-center gap-2 mb-1">
-                    <EntityLink type="group" attackId={g.attackId} name={g.name} useMap />
-                  </div>
-                  <p
-                    className="text-[11px] text-[var(--text-secondary)] leading-relaxed"
-                    dangerouslySetInnerHTML={{ __html: sanitize(sanitizeMarkdown(g.procedure ?? '')) }}
-                  />
-                </div>
-              ))}
-            </div>
-          </MapCard>
-        );
-      })()}
 
       {/* HOW TO TEST */}
       <MapCard label="How to Test" icon={IconTest}
