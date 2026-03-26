@@ -461,6 +461,61 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
           </MapRow>
         ) : null}
 
+        {/* Detection Strategies */}
+        {intel?.detectionStrategies && intel.detectionStrategies.length > 0 && (
+          <div className="space-y-2 mt-2">
+            <span className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
+              Detection Strategies ({intel.detectionStrategies.length})
+            </span>
+            {intel.detectionStrategies.map((ds: { det_id: string; name: string; analytics: Array<{ analytic_id: string; name: string; description: string | null; platforms: string[] }> }) => (
+              <details key={ds.det_id} className="group rounded-md border border-[var(--border-color)] bg-[var(--surface-card)] overflow-hidden">
+                <summary className="flex items-center gap-2 px-3 py-1.5 cursor-pointer hover:bg-[var(--teal-ghost)] transition-colors text-xs">
+                  <svg className="w-2.5 h-2.5 text-[var(--text-secondary)] transition-transform group-open:rotate-90 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                  <a
+                    href={`https://attack.mitre.org/detectionstrategies/${ds.det_id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="font-mono text-[var(--accent-teal)] hover:underline shrink-0"
+                  >
+                    {ds.det_id}
+                  </a>
+                  <span className="text-[var(--text-primary)] truncate">{ds.name.replace(/^Detection Strategy for /, '')}</span>
+                  {ds.analytics.length > 0 && (
+                    <Badge label={`${ds.analytics.length} analytics`} variant="blue" />
+                  )}
+                </summary>
+                {ds.analytics.length > 0 && (
+                  <div className="px-3 pb-2 pt-1 border-t border-[var(--border-color)] space-y-1.5">
+                    {ds.analytics.map((an) => (
+                      <div key={an.analytic_id} className="py-1 px-2 rounded bg-[var(--surface-alt)] text-[11px]">
+                        <div className="flex items-center gap-2">
+                          <a
+                            href={`https://attack.mitre.org/detectionstrategies/${ds.det_id}#${an.analytic_id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-mono text-[10px] text-[var(--accent-blue)] hover:underline shrink-0"
+                          >
+                            {an.analytic_id}
+                          </a>
+                          {an.platforms?.map((p) => (
+                            <span key={p} className="text-[9px] text-[var(--text-secondary)] px-1 py-0.5 rounded border border-[var(--border-color)] shrink-0">{p}</span>
+                          ))}
+                        </div>
+                        {an.description && (
+                          <p className="text-[var(--text-secondary)] mt-0.5 line-clamp-3">{an.description}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </details>
+            ))}
+          </div>
+        )}
+
         {sigmaRules.length > 0 ? (
           <>
             <MapRow prefix="Sigma Rules">

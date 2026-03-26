@@ -480,6 +480,16 @@ export interface TechniqueIntelligence {
     vt_verdict: string | null;
     vt_file_type: string | null;
   }>;
+  detectionStrategies?: Array<{
+    det_id: string;
+    name: string;
+    analytics: Array<{
+      analytic_id: string;
+      name: string;
+      description: string | null;
+      platforms: string[];
+    }>;
+  }>;
 }
 
 // ── CVE Types ─────────────────────────────────────────────────────────────────

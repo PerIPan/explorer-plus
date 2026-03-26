@@ -24,7 +24,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
 
   const techId = techResult.rows[0].id;
 
-  const [reportsResult, sigmaResult, atomicResult, defensiveResult, iocsResult] =
+  const [reportsResult, sigmaResult, atomicResult, defensiveResult, iocsResult, detStrategiesResult] =
     await Promise.all([
       // Top 5 threat reports
       query<{
@@ -124,6 +124,31 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
          LIMIT 10`,
         [techId],
       ),
+
+      // Detection strategies + analytics
+      query<{
+        det_id: string;
+        name: string;
+        analytics: Array<{ analytic_id: string; name: string; description: string | null; platforms: string[] }>;
+      }>(
+        `SELECT
+           ds.det_id,
+           ds.name,
+           COALESCE(
+             (SELECT json_agg(json_build_object(
+               'analytic_id', da.analytic_id,
+               'name', da.name,
+               'description', da.description,
+               'platforms', da.platforms
+             ) ORDER BY da.analytic_id)
+             FROM detection_analytics da WHERE da.det_id = ds.det_id),
+             '[]'::json
+           ) AS analytics
+         FROM detection_strategies ds
+         WHERE ds.attack_technique_id = $1
+         ORDER BY ds.det_id`,
+        [id],
+      ),
     ]);
 
   // Normalize ioc first_seen → first_seen_at for frontend
@@ -138,6 +163,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     sigmaRules: sigmaResult.rows,
     atomicTests: atomicResult.rows,
     defensiveMappings: defensiveResult.rows,
+    detectionStrategies: detStrategiesResult.rows,
     iocs,
   });
 }
