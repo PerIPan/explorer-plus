@@ -338,6 +338,11 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
                     className="flex items-center gap-2 py-1.5 px-3 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)] hover:border-[var(--teal-dim)] transition-colors group"
                   >
                     <span className="text-xs text-[var(--text-primary)] group-hover:text-[var(--accent-teal)] flex-1 truncate">{r.title}</span>
+                    {(r as { technique_count?: number }).technique_count != null && (r as { technique_count?: number }).technique_count! > 0 && (
+                      <span className="text-[10px] text-[var(--accent-teal)] font-mono shrink-0">
+                        {(r as { technique_count?: number }).technique_count} ttps
+                      </span>
+                    )}
                     <Badge label={r.source} variant="neutral" />
                     {r.published_at && (
                       <span className="text-[10px] text-[var(--text-secondary)] shrink-0">

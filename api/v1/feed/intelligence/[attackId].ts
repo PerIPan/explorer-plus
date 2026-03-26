@@ -33,8 +33,10 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
         url: string | null;
         source: string | null;
         published_at: string | null;
+        technique_count: number;
       }>(
-        `SELECT r.id, r.title, r.url, r.source, r.published_at
+        `SELECT r.id, r.title, r.url, r.source, r.published_at,
+                (SELECT COUNT(*) FROM report_techniques rt2 WHERE rt2.report_id = r.id)::int AS technique_count
          FROM threat_reports r
          JOIN report_techniques rt ON rt.report_id = r.id
          WHERE rt.technique_id = $1
