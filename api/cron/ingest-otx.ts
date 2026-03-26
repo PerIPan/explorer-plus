@@ -3,8 +3,8 @@ import { query } from '../v1/lib/db.js';
 import { verifyCronAuth } from './lib/auth.js';
 
 const OTX_BASE = 'https://otx.alienvault.com/api/v1';
-const MAX_PAGES = 1;       // Keep small — Vercel function timeout ~10s
-const PULSES_PER_PAGE = 3; // Smaller batches to avoid Vercel timeout
+const MAX_PAGES = 1;       // Keep small — Vercel function timeout
+const PULSES_PER_PAGE = 1; // Single pulse per run to avoid OTX 504 timeouts
 
 interface OtxIndicator {
   type: string;
@@ -162,36 +162,49 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             }
           }
 
-          // Extract IOCs and link to techniques from the same pulse
-          for (const indicator of pulse.indicators ?? []) {
-            const iocType = mapIocType(indicator.type);
-            if (!iocType || !indicator.indicator) continue;
+          // Extract IOCs — batch insert for speed
+          const indicators = (pulse.indicators ?? [])
+            .map((ind) => ({ type: mapIocType(ind.type), value: ind.indicator }))
+            .filter((ind): ind is { type: string; value: string } => Boolean(ind.type && ind.value))
+            .slice(0, 200); // Cap per pulse to avoid timeout
 
-            // Generate OTX indicator link
+          if (indicators.length > 0) {
             const otxTypeMap: Record<string, string> = {
               ip: 'IPv4', domain: 'domain', url: 'url', hash: 'file', cve: 'cve', email: 'email',
             };
-            const otxPath = otxTypeMap[iocType] ?? iocType;
-            const sourceRef = `https://otx.alienvault.com/indicator/${otxPath}/${encodeURIComponent(indicator.indicator)}`;
 
-            const iocResult = await query<{ id: string }>(
-              `INSERT INTO ioc_entries (type, value, source, source_ref, first_seen)
-               VALUES ($1, $2, 'otx', $3, NOW())
-               ON CONFLICT (type, value, source) DO UPDATE SET source_ref = EXCLUDED.source_ref
-               RETURNING id`,
-              [iocType, indicator.indicator, sourceRef],
-            );
-            const iocId = iocResult.rows[0]?.id;
-            if (!iocId) continue;
+            // Batch insert IOCs — 50 at a time
+            for (let b = 0; b < indicators.length; b += 50) {
+              const batch = indicators.slice(b, b + 50);
+              const values: string[] = [];
+              const params: unknown[] = [];
+              for (const ind of batch) {
+                const offset = params.length;
+                const otxPath = otxTypeMap[ind.type] ?? ind.type;
+                const sourceRef = `https://otx.alienvault.com/indicator/${otxPath}/${encodeURIComponent(ind.value)}`;
+                values.push(`($${offset + 1}, $${offset + 2}, 'otx', $${offset + 3}, NOW())`);
+                params.push(ind.type, ind.value, sourceRef);
+              }
 
-            // Link IOC to every technique referenced by this pulse
-            for (const techId of techIds) {
-              await query(
-                `INSERT INTO technique_iocs (technique_id, ioc_id, confidence)
-                 VALUES ($1, $2, 'inferred')
-                 ON CONFLICT DO NOTHING`,
-                [techId, iocId],
+              const iocResult = await query<{ id: string }>(
+                `INSERT INTO ioc_entries (type, value, source, source_ref, first_seen)
+                 VALUES ${values.join(', ')}
+                 ON CONFLICT (type, value, source) DO UPDATE SET source_ref = EXCLUDED.source_ref
+                 RETURNING id`,
+                params,
               );
+
+              // Link each inserted IOC to the pulse's techniques
+              for (const row of iocResult.rows) {
+                if (!row.id || techIds.length === 0) continue;
+                const tiValues = techIds.map((_, i) => `($${i + 1}, $${techIds.length + 1}, 'inferred')`).join(', ');
+                await query(
+                  `INSERT INTO technique_iocs (technique_id, ioc_id, confidence)
+                   VALUES ${tiValues}
+                   ON CONFLICT DO NOTHING`,
+                  [...techIds, row.id],
+                );
+              }
             }
           }
         } catch (pulseErr) {
