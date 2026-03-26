@@ -49,6 +49,8 @@ const mainSections: NavSection[] = [
     items: [
       { path: '/mitigations', label: 'Mitigations', tooltip: 'countermeasures to prevent or limit techniques' },
       { path: '/data-sources', label: 'Data Sources', tooltip: 'telemetry sources for detecting techniques' },
+      { path: '/frameworks/detection', label: 'Detection', tooltip: 'ATT&CK v18 detection strategies and analytics' },
+      { path: '/frameworks/engage', label: 'Engage', tooltip: 'adversary deception and engagement activities' },
     ],
   },
 ];
@@ -62,7 +64,6 @@ const ctiNav: NavItem[] = [
 
 const frameworksNav: NavItem[] = [
   { path: '/frameworks/nist', label: 'NIST 800-53', tooltip: 'compliance controls mapped to techniques' },
-  { path: '/frameworks/engage', label: 'Engage', tooltip: 'adversary deception and engagement activities' },
   { path: '/frameworks/react', label: 'RE&CT', tooltip: 'incident response actions and playbooks' },
   { path: '/frameworks/veris', label: 'VERIS', tooltip: 'incident classification categories (Verizon DBIR standard)' },
   { path: '/frameworks/cloud', label: 'Cloud Controls', tooltip: 'Azure and GCP security controls mapped to techniques' },

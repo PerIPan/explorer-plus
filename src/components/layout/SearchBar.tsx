@@ -6,10 +6,17 @@ import { apiFetch } from '../../lib/api';
 import { useDomain } from '../../contexts/DomainContext';
 import { Badge } from '../shared/Badge';
 
+const DOMAIN_SHORT: Record<string, string> = {
+  'enterprise-attack': 'Enterprise',
+  'mobile-attack': 'Mobile',
+  'ics-attack': 'ICS',
+};
+
 interface EntityEntry {
   attackId: string;
   name: string;
   type: string;
+  domain: string | null;
 }
 
 const TYPE_VARIANT: Record<string, 'teal' | 'orange' | 'purple' | 'blue' | 'green' | 'pink' | 'yellow' | 'neutral'> = {
@@ -20,6 +27,7 @@ const TYPE_VARIANT: Record<string, 'teal' | 'orange' | 'purple' | 'blue' | 'gree
   mitigation: 'green',
   data_source: 'pink',
   tactic: 'yellow',
+  sector: 'green',
 };
 
 export function SearchBar() {
@@ -28,12 +36,12 @@ export function SearchBar() {
   const inputRef = useRef<HTMLInputElement>(null);
   const blurTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navigate = useNavigate();
-  const { domain, domainParam } = useDomain();
+  const { domain, setDomain } = useDomain();
 
-  /** Load all entities for Fuse.js — filtered by active domain */
+  /** Load ALL entities cross-domain for Fuse.js */
   const { data: allEntities } = useQuery({
-    queryKey: ['entities-all', domain],
-    queryFn: () => apiFetch<{ data: EntityEntry[] }>('/entities', domainParam).then(r => r.data),
+    queryKey: ['entities-all-cross'],
+    queryFn: () => apiFetch<{ data: EntityEntry[] }>('/entities').then(r => r.data),
     staleTime: 60 * 60 * 1000,
     gcTime: 60 * 60 * 1000,
   });
@@ -77,40 +85,52 @@ export function SearchBar() {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  function navigateToEntity(attackId: string, type: string) {
-    setShowDropdown(false);
-    setValue('');
-    // External actors navigate to list with search filter (no detail page)
-    if (type === 'external_actor') {
-      navigate(`/external-actors?search=${encodeURIComponent(attackId)}`);
-      return;
-    }
-    const typeRoutes: Record<string, string> = {
-      technique: 'techniques',
-      group: 'groups',
-      software: 'software',
-      campaign: 'campaigns',
-      mitigation: 'mitigations',
-      tactic: 'tactics',
-      data_source: 'data-sources',
-    };
-    const route = typeRoutes[type] ?? 'techniques';
-    navigate(`/${route}/${attackId}`);
-  }
+  const navigateToEntity = useCallback(
+    (entity: EntityEntry) => {
+      setShowDropdown(false);
+      setValue('');
+      // External actors navigate to list with search filter (no detail page)
+      if (entity.type === 'external_actor') {
+        navigate(`/external-actors?search=${encodeURIComponent(entity.attackId)}`);
+        return;
+      }
+      // Sectors navigate to the 360 View
+      if (entity.type === 'sector') {
+        navigate(`/?entity=${encodeURIComponent(entity.attackId)}&tab=sector-map`);
+        return;
+      }
+      // Auto-switch domain when selecting an entity outside current domain
+      if (entity.domain && entity.domain !== domain && domain !== 'all') {
+        setDomain('all');
+      }
+      const typeRoutes: Record<string, string> = {
+        technique: 'techniques',
+        group: 'groups',
+        software: 'software',
+        campaign: 'campaigns',
+        mitigation: 'mitigations',
+        tactic: 'tactics',
+        data_source: 'data-sources',
+      };
+      const route = typeRoutes[entity.type] ?? 'techniques';
+      navigate(`/${route}/${entity.attackId}`);
+    },
+    [domain, setDomain, navigate],
+  );
 
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault();
       const trimmed = value.trim();
       if (suggestions.length > 0) {
-        navigateToEntity(suggestions[0].attackId, suggestions[0].type);
+        navigateToEntity(suggestions[0]);
       } else if (trimmed.length >= 3) {
         navigate(`/search?q=${encodeURIComponent(trimmed)}`);
         setShowDropdown(false);
         setValue('');
       }
     },
-    [value, suggestions, navigate]
+    [value, suggestions, navigate, navigateToEntity]
   );
 
   return (
@@ -156,9 +176,9 @@ export function SearchBar() {
           </div>
           {suggestions.map((s, i) => (
             <button
-              key={s.attackId}
+              key={`${s.type}-${s.attackId}`}
               type="button"
-              onMouseDown={() => navigateToEntity(s.attackId, s.type)}
+              onMouseDown={() => navigateToEntity(s)}
               className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-[var(--teal-ghost)] transition-colors text-left ${i === 0 ? 'bg-[var(--hover-subtle)]' : ''}`}
             >
               <Badge
@@ -167,6 +187,9 @@ export function SearchBar() {
               />
               <span className="font-mono text-xs text-[var(--accent-teal)] w-20 flex-shrink-0">{s.attackId}</span>
               <span className="text-sm text-[var(--text-primary)] truncate">{s.name}</span>
+              {s.type !== 'group' && s.domain && DOMAIN_SHORT[s.domain] && (
+                <Badge label={DOMAIN_SHORT[s.domain]} variant="neutral" />
+              )}
             </button>
           ))}
         </div>

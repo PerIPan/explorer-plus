@@ -18,7 +18,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   const domainWhere = domain ? ` AND domain = $1` : '';
   const domainParams = domain ? [domain] : [];
 
-  const [techniques, groups, software, campaigns, mitigations, tactics, externalActors] = await Promise.all([
+  const [techniques, groups, software, campaigns, mitigations, tactics, externalActors, sectors] = await Promise.all([
     query<{ attackId: string; name: string; domain: string | null }>(
       `SELECT attack_id AS "attackId", name, domain FROM techniques
        WHERE is_revoked = false AND is_deprecated = false AND is_subtechnique = false${domainWhere}
@@ -58,6 +58,10 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     query<{ attackId: string; name: string; domain: string | null }>(`
       SELECT name AS "attackId", name, NULL as domain FROM external_actors ORDER BY name
     `),
+    // Sectors are not domain-scoped
+    query<{ attackId: string; name: string; domain: string | null }>(`
+      SELECT slug AS "attackId", name, NULL as domain FROM sectors WHERE slug IS NOT NULL ORDER BY name
+    `),
   ]);
 
   const entities = [
@@ -68,6 +72,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     ...mitigations.rows.map(r => ({ ...r, type: 'mitigation' })),
     ...tactics.rows.map(r => ({ ...r, type: 'tactic' })),
     ...externalActors.rows.map(r => ({ ...r, type: 'external_actor' })),
+    ...sectors.rows.map(r => ({ ...r, type: 'sector' })),
   ];
 
   res.status(200).json({ data: entities, total: entities.length });

@@ -5,7 +5,6 @@ import { useQuery } from '@tanstack/react-query';
 import Fuse from 'fuse.js';
 import { useRelationships } from '../hooks/useApi';
 import { apiFetch } from '../lib/api';
-import { useDomain } from '../contexts/DomainContext';
 import { PageHeader } from '../components/layout/PageHeader';
 import { ForceGraph, type ForceGraphHandle } from '../components/graph/ForceGraph';
 import { Badge } from '../components/shared/Badge';
@@ -15,12 +14,14 @@ import { SoftwareMapView } from '../components/relationships/SoftwareMapView';
 import { MitigationMapView } from '../components/relationships/MitigationMapView';
 import { DataSourceMapView } from '../components/relationships/DataSourceMapView';
 import { TacticMapView } from '../components/relationships/TacticMapView';
+import { SectorMapView } from '../components/relationships/SectorMapView';
 import type { GraphNode } from '../lib/types';
 
 interface EntityEntry {
   attackId: string;
   name: string;
   type: string;
+  domain: string | null;
 }
 
 // ── Entity type → badge variant ───────────────────────────────────────────────
@@ -34,12 +35,14 @@ const TYPE_VARIANT: Record<string, 'teal' | 'orange' | 'purple' | 'blue' | 'gree
   data_source: 'pink',
   tactic: 'yellow',
   external_actor: 'neutral',
+  sector: 'green',
 };
 
 /** Human-readable label for entity types */
 const TYPE_LABEL: Record<string, string> = {
   external_actor: 'Non-MITRE',
   data_source: 'data source',
+  sector: 'sector',
 };
 
 function typeLabel(type: string): string {
@@ -48,7 +51,7 @@ function typeLabel(type: string): string {
 
 // ── Tab definitions ────────────────────────────────────────────────────────────
 
-type TabId = 'graph' | 'actor' | 'technique-map' | 'software-map' | 'mitigation-map' | 'data-source-map' | 'tactic-map';
+type TabId = 'graph' | 'actor' | 'technique-map' | 'software-map' | 'mitigation-map' | 'data-source-map' | 'tactic-map' | 'sector-map';
 
 interface TabDef {
   id: TabId;
@@ -64,6 +67,7 @@ const TABS: TabDef[] = [
   { id: 'mitigation-map', label: 'Mitigation Map', forTypes: ['mitigation'] },
   { id: 'data-source-map', label: 'Data Source Map', forTypes: ['data_source'] },
   { id: 'tactic-map', label: 'Tactic Map', forTypes: ['tactic'] },
+  { id: 'sector-map', label: 'Sector Map', forTypes: ['sector'] },
   { id: 'graph', label: 'Graph' },
 ];
 
@@ -75,6 +79,7 @@ const TAB_FOR_TYPE: Record<string, TabId> = {
   mitigation: 'mitigation-map',
   data_source: 'data-source-map',
   tactic: 'tactic-map',
+  sector: 'sector-map',
 };
 
 /** Derive the entity type from the graph center node or from search suggestions */
@@ -131,12 +136,10 @@ export function Relationships() {
 
   const { data: graphData, isLoading, error } = useRelationships(selectedId);
 
-  const { domain, domainParam } = useDomain();
-
-  /** Load all entity names once for Fuse.js fuzzy search */
+  /** Load ALL entity names cross-domain for Fuse.js — shared cache with SearchBar */
   const { data: allEntities } = useQuery({
-    queryKey: ['entities-all', domain],
-    queryFn: () => apiFetch<{ data: EntityEntry[] }>('/entities', domainParam).then(r => r.data),
+    queryKey: ['entities-all-cross'],
+    queryFn: () => apiFetch<{ data: EntityEntry[] }>('/entities').then(r => r.data),
     staleTime: 60 * 60 * 1000, // 1 hour
     gcTime: 60 * 60 * 1000,
   });
@@ -158,7 +161,11 @@ export function Relationships() {
     return fuse.search(searchInput.trim(), { limit: 12 }).map(r => r.item);
   }, [fuse, searchInput]);
 
-  const entityType = inferEntityType(graphData?.center, suggestions, selectedId);
+  // Infer entity type from graph center or suggestions; fall back to tab hint for non-graph entities
+  const TAB_TYPE_HINT: Record<string, string> = { 'sector-map': 'sector' };
+  const entityType = inferEntityType(graphData?.center, suggestions, selectedId)
+    ?? TAB_TYPE_HINT[tabParam]
+    ?? null;
 
   /** Determine which tabs are visible for the current entity */
   const visibleTabs = TABS.filter(
@@ -310,9 +317,9 @@ export function Relationships() {
                 />
                 <span className="font-mono text-xs text-[var(--accent-teal)] w-20 flex-shrink-0">{s.attackId}</span>
                 <span className="text-sm text-[var(--text-primary)] truncate">{s.name}</span>
-                {(s as { domain?: string }).domain && (
+                {s.type !== 'group' && s.domain && (
                   <span className="text-[9px] font-medium text-[var(--text-secondary)] uppercase shrink-0">
-                    {(s as { domain?: string }).domain!.replace('-attack', '').replace('enterprise', 'ent')}
+                    {s.domain.replace('-attack', '').replace('enterprise', 'ent')}
                   </span>
                 )}
               </button>
@@ -467,6 +474,11 @@ export function Relationships() {
           {/* Tactic Map tab */}
           {activeTab === 'tactic-map' && entityType === 'tactic' && (
             <TacticMapView attackId={selectedId} />
+          )}
+
+          {/* Sector Map tab */}
+          {activeTab === 'sector-map' && entityType === 'sector' && (
+            <SectorMapView sectorSlug={selectedId} />
           )}
         </div>
       )}
