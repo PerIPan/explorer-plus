@@ -6,6 +6,9 @@ async function handler(_req: VercelRequest, res: VercelResponse): Promise<void> 
   const result = await query<{ tbl: string; count: string }>(`
     SELECT 'nist_controls' AS tbl, COUNT(*)::text AS count FROM nist_controls
     UNION ALL SELECT 'engage_mappings', COUNT(*)::text FROM engage_mappings
+    UNION ALL SELECT 'defensive_mappings', COUNT(*)::text FROM defensive_mappings
+    UNION ALL SELECT 'detection_strategies', COUNT(*)::text FROM detection_strategies
+    UNION ALL SELECT 'detection_analytics', COUNT(*)::text FROM detection_analytics
     UNION ALL SELECT 'react_actions', COUNT(*)::text FROM react_actions
     UNION ALL SELECT 'veris_mappings', COUNT(*)::text FROM veris_mappings
     UNION ALL SELECT 'cloud_control_mappings', COUNT(*)::text FROM cloud_control_mappings

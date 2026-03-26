@@ -111,7 +111,7 @@ function EmptyFeedCard({ source }: { source: string }) {
   );
 }
 
-const ALL_SOURCES = ['otx', 'abuse_ch', 'cisa_kev', 'rss', 'd3fend', 'nvd', 'virustotal'];
+const ALL_SOURCES = ['otx', 'abuse_ch', 'cisa_kev', 'rss', 'nvd', 'virustotal'];
 
 export function FeedStatus() {
   usePageTitle('Feed Status');
@@ -168,6 +168,9 @@ export function FeedStatus() {
 const FRAMEWORK_TABLES = [
   { key: 'nist_controls', label: 'NIST 800-53' },
   { key: 'engage_mappings', label: 'MITRE Engage' },
+  { key: 'defensive_mappings', label: 'D3FEND' },
+  { key: 'detection_strategies', label: 'Detection Strategies' },
+  { key: 'detection_analytics', label: 'Detection Analytics' },
   { key: 'react_actions', label: 'RE&CT' },
   { key: 'veris_mappings', label: 'VERIS' },
   { key: 'cloud_control_mappings', label: 'Cloud Controls (Azure + GCP)' },
