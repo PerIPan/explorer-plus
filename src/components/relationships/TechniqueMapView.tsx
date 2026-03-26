@@ -433,20 +433,23 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
                 <span className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
                   Related CVEs ({cveIocs.length})
                 </span>
-                {cveIocs.map((ioc) => (
-                  <a
-                    key={ioc.id}
-                    href={`/cti/cves?q=${encodeURIComponent(ioc.value)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 py-1.5 px-3 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)] hover:border-[var(--teal-dim)] transition-colors"
-                  >
-                    <span className="font-mono text-xs text-[var(--accent-pink)] shrink-0">{ioc.value}</span>
-                    {ioc.description && (
-                      <span className="text-[10px] text-[var(--text-secondary)] truncate flex-1">{ioc.description}</span>
-                    )}
-                  </a>
-                ))}
+                {cveIocs.map((ioc) => {
+                  const severity = (ioc as { cvss_severity?: string }).cvss_severity;
+                  const sevColor = severity === 'CRITICAL' ? 'pink' : severity === 'HIGH' ? 'orange' : 'neutral';
+                  return (
+                    <a
+                      key={ioc.id}
+                      href={`/cti/cves?q=${encodeURIComponent(ioc.value)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 py-1.5 px-3 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)] hover:border-[var(--teal-dim)] transition-colors"
+                    >
+                      <span className="text-xs text-[var(--text-primary)] truncate flex-1">{ioc.description ?? ioc.value}</span>
+                      {severity && <Badge label={severity} variant={sevColor as 'pink' | 'orange' | 'neutral'} />}
+                      <span className="font-mono text-[10px] text-[var(--accent-pink)] shrink-0">{ioc.value}</span>
+                    </a>
+                  );
+                })}
                 <Link to="/cti/cves" className="text-[10px] text-[var(--accent-teal)] hover:underline px-3">
                   Browse all CVEs →
                 </Link>

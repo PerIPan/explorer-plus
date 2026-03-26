@@ -111,12 +111,15 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
         vt_total: number | null;
         vt_verdict: string | null;
         vt_file_type: string | null;
+        cvss_severity: string | null;
       }>(
         `SELECT
            i.id, i.type, i.value, i.source, i.malware_family, i.first_seen,
-           i.description, ti.confidence, i.vt_malicious, i.vt_total, i.vt_verdict, i.vt_file_type
+           i.description, ti.confidence, i.vt_malicious, i.vt_total, i.vt_verdict, i.vt_file_type,
+           cd.cvss_severity
          FROM ioc_entries i
          JOIN technique_iocs ti ON ti.ioc_id = i.id
+         LEFT JOIN cve_details cd ON i.type = 'cve' AND cd.cve_id = i.value
          WHERE ti.technique_id = $1
          ORDER BY
            CASE ti.confidence WHEN 'sandbox_verified' THEN 1 WHEN 'inferred' THEN 2 ELSE 3 END,
