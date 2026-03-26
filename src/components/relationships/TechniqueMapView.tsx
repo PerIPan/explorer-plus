@@ -164,8 +164,12 @@ function ReportTechniquePopover({ reportId, count }: { reportId: string; count: 
   });
   return (
     <div className="relative shrink-0">
-      <button type="button" onClick={() => setOpen(!open)} className="cursor-pointer">
-        <Badge label={String(count)} variant="teal" />
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[9px] font-bold bg-[var(--teal-faint)] text-[var(--accent-teal)] border border-[var(--teal-dim)] cursor-pointer hover:bg-[var(--teal-dim)] transition-colors"
+      >
+        {count}
       </button>
       {open && (
         <>

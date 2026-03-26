@@ -143,9 +143,9 @@ async function main() {
           if (!resp.ok) continue;
           const d3data = await resp.json();
 
-          const bindings = d3data?.results?.bindings ?? [];
+          const bindings = d3data?.off_to_def?.results?.bindings ?? [];
           for (const b of bindings) {
-            const d3fendId = b.def_tech_label?.value ?? null;
+            const d3fendId = b.def_tech_id?.value?.split('/').pop() ?? b.def_tech_label?.value ?? null;
             const d3fendName = b.def_tech_label?.value ?? null;
             const d3fendTactic = b.def_tactic_label?.value ?? null;
             const d3fendUrl = b.def_tech?.value ?? null;
