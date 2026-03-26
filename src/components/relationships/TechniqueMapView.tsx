@@ -378,7 +378,7 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
       {/* THREAT INTELLIGENCE — reports + CVEs */}
       {(() => {
         const reports = intel?.reports ?? [];
-        const cves = (intel as { cves?: Array<{ cve_id: string; description: string | null; cvss_severity: string | null }> })?.cves ?? [];
+        const cves = intel?.cves ?? [];
         return (
           <MapCard label="Threat Intelligence" icon={IconResponse} count={reports.length + cves.length}>
             {reports.length > 0 ? (
@@ -409,11 +409,6 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
                     )}
                   </div>
                 ))}
-                {reports.length > 3 && (
-                  <Link to="/cti/reports" className="text-[10px] text-[var(--accent-teal)] hover:underline px-3">
-                    +{reports.length - 3} more reports
-                  </Link>
-                )}
               </div>
             ) : (
               intelLoading ? (
@@ -427,31 +422,44 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
               )
             )}
 
-            {/* CVEs at the end */}
+            {/* CVEs */}
             {cves.length > 0 && (
-              <div className="space-y-1.5 mt-3 pt-3 border-t border-[var(--border-color)]">
-                <span className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
-                  CISA KEV CVEs ({cves.length})
-                </span>
+              <div className="space-y-1.5">
                 {cves.map((cve) => {
                   const sevColor = cve.cvss_severity === 'CRITICAL' ? 'pink' : cve.cvss_severity === 'HIGH' ? 'orange' : 'neutral';
+                  const desc = cve.description ?? cve.cve_id;
+                  const shortDesc = desc.length > 150 ? desc.slice(0, 150) + '...' : desc;
                   return (
-                    <a
+                    <div
                       key={cve.cve_id}
-                      href={`/cti/cves?q=${encodeURIComponent(cve.cve_id)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 py-1.5 px-3 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)] hover:border-[var(--teal-dim)] transition-colors"
+                      className="flex items-center gap-2 py-1.5 px-3 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)]"
                     >
-                      <span className="text-xs text-[var(--text-primary)] truncate flex-1">{cve.description ?? cve.cve_id}</span>
+                      <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                        <a
+                          href={`/cti/cves?q=${encodeURIComponent(cve.cve_id)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-[var(--text-primary)] hover:text-[var(--accent-teal)] truncate"
+                          title={desc}
+                        >
+                          {shortDesc}
+                        </a>
+                        {cve.technique_count > 0 && (
+                          <span className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[9px] font-bold bg-[var(--teal-faint)] text-[var(--accent-teal)] border border-[var(--teal-dim)] shrink-0">
+                            {cve.technique_count}
+                          </span>
+                        )}
+                      </div>
                       {cve.cvss_severity && <Badge label={cve.cvss_severity} variant={sevColor as 'pink' | 'orange' | 'neutral'} />}
                       <span className="font-mono text-[10px] text-[var(--accent-pink)] shrink-0">{cve.cve_id}</span>
-                    </a>
+                      {cve.published_at && (
+                        <span className="text-[10px] text-[var(--text-secondary)] shrink-0">
+                          {new Date(cve.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </span>
+                      )}
+                    </div>
                   );
                 })}
-                <Link to="/cti/cves" className="text-[10px] text-[var(--accent-teal)] hover:underline px-3">
-                  Browse all CVEs →
-                </Link>
               </div>
             )}
           </MapCard>

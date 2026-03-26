@@ -490,6 +490,13 @@ export interface TechniqueIntelligence {
       platforms: string[];
     }>;
   }>;
+  cves?: Array<{
+    cve_id: string;
+    description: string | null;
+    cvss_severity: string | null;
+    published_at: string | null;
+    technique_count: number;
+  }>;
 }
 
 // ── CVE Types ─────────────────────────────────────────────────────────────────

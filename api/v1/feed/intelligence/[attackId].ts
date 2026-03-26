@@ -159,8 +159,13 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
         cve_id: string;
         description: string | null;
         cvss_severity: string | null;
+        published_at: string | null;
+        technique_count: number;
       }>(
-        `SELECT cd.cve_id, cd.description, cd.cvss_severity
+        `SELECT cd.cve_id, cd.description, cd.cvss_severity, cd.published_at,
+                (SELECT COUNT(*) FROM technique_iocs ti2
+                 JOIN ioc_entries i2 ON i2.id = ti2.ioc_id AND i2.value = cd.cve_id AND i2.type = 'cve'
+                )::int AS technique_count
          FROM technique_iocs ti
          JOIN ioc_entries i ON i.id = ti.ioc_id AND i.type = 'cve' AND i.source = 'cisa_kev'
          JOIN cve_details cd ON cd.cve_id = i.value
