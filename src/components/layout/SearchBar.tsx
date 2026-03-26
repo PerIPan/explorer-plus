@@ -185,7 +185,9 @@ export function SearchBar() {
                 label={s.type.replace('_', ' ')}
                 variant={TYPE_VARIANT[s.type] ?? 'neutral'}
               />
-              <span className="font-mono text-xs text-[var(--accent-teal)] w-20 flex-shrink-0">{s.attackId}</span>
+              {s.type !== 'sector' && (
+                <span className="font-mono text-xs text-[var(--accent-teal)] w-20 flex-shrink-0">{s.attackId}</span>
+              )}
               <span className="text-sm text-[var(--text-primary)] truncate">{s.name}</span>
               {s.type !== 'group' && s.domain && DOMAIN_SHORT[s.domain] && (
                 <Badge label={DOMAIN_SHORT[s.domain]} variant="neutral" />

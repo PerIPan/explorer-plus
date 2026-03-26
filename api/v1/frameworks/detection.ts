@@ -44,15 +44,22 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     detId: string;
     name: string;
     attackTechniqueId: string | null;
-    techniqueCount: string;
-    analyticCount: string;
+    analytics: string;
   }>(
     `SELECT
        ds.det_id                          AS "detId",
        MAX(ds.name)                       AS "name",
        MAX(ds.attack_technique_id)        AS "attackTechniqueId",
-       COUNT(DISTINCT ds.attack_technique_id) AS "techniqueCount",
-       (SELECT COUNT(*) FROM detection_analytics da WHERE da.det_id = ds.det_id)::text AS "analyticCount"
+       COALESCE(
+         (SELECT json_agg(json_build_object(
+           'analyticId', da.analytic_id,
+           'name', da.name,
+           'description', da.description,
+           'platforms', da.platforms
+         ) ORDER BY da.analytic_id)
+         FROM detection_analytics da WHERE da.det_id = ds.det_id),
+         '[]'::json
+       )::text AS "analytics"
      FROM detection_strategies ds
      ${where}
      GROUP BY ds.det_id
@@ -63,9 +70,12 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
 
   res.status(200).json({
     data: dataResult.rows.map((r) => ({
-      ...r,
-      techniqueCount: parseInt(r.techniqueCount, 10),
-      analyticCount: parseInt(r.analyticCount, 10),
+      detId: r.detId,
+      name: r.name,
+      attackTechniqueId: r.attackTechniqueId,
+      analytics: JSON.parse(r.analytics) as Array<{
+        analyticId: string; name: string; description: string | null; platforms: string[];
+      }>,
     })),
     pagination: {
       page,

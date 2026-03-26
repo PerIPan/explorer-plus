@@ -4,75 +4,26 @@ import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '../lib/api';
 import { PageHeader } from '../components/layout/PageHeader';
-import { DataTable, type ColumnDef } from '../components/shared/DataTable';
 import { Badge } from '../components/shared/Badge';
-import { EntityLink } from '../components/shared/EntityLink';
+
+interface Analytic {
+  analyticId: string;
+  name: string;
+  description: string | null;
+  platforms: string[];
+}
 
 interface DetectionStrategy {
   detId: string;
   name: string;
   attackTechniqueId: string | null;
-  analyticCount: number;
+  analytics: Analytic[];
 }
 
 interface PaginatedResponse {
   data: DetectionStrategy[];
   pagination: { page: number; limit: number; total: number; totalPages: number };
 }
-
-const columns: ColumnDef<DetectionStrategy>[] = [
-  {
-    key: 'detId',
-    header: 'ID',
-    tooltip: 'ATT&CK detection strategy identifier',
-    width: '100px',
-    render: (row) => (
-      <a
-        href={`https://attack.mitre.org/detectionstrategies/${row.detId}/`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="font-mono text-xs text-[var(--accent-teal)] hover:underline"
-      >
-        {row.detId}
-      </a>
-    ),
-  },
-  {
-    key: 'name',
-    header: 'Name',
-    tooltip: 'Detection strategy name',
-    render: (row) => (
-      <span className="text-xs text-[var(--text-primary)]">
-        {row.name.replace(/^Detection Strategy for /, '')}
-      </span>
-    ),
-  },
-  {
-    key: 'attackTechniqueId',
-    header: 'Technique',
-    tooltip: 'Primary ATT&CK technique this strategy detects',
-    width: '120px',
-    render: (row) =>
-      row.attackTechniqueId ? (
-        <EntityLink type="technique" attackId={row.attackTechniqueId} name={row.attackTechniqueId} useMap />
-      ) : (
-        <span className="text-[var(--text-secondary)] text-xs">—</span>
-      ),
-  },
-  {
-    key: 'analyticCount',
-    header: 'Analytics',
-    tooltip: 'Number of detection analytics in this strategy',
-    width: '90px',
-    align: 'center',
-    render: (row) =>
-      row.analyticCount > 0 ? (
-        <Badge label={String(row.analyticCount)} variant="blue" />
-      ) : (
-        <span className="text-[var(--text-secondary)] text-xs">—</span>
-      ),
-  },
-];
 
 export function DetectionStrategies() {
   usePageTitle('Detection Strategies');
@@ -107,6 +58,9 @@ export function DetectionStrategies() {
     queryFn: () => apiFetch<PaginatedResponse>('/frameworks/detection', params),
   });
 
+  const strategies = data?.data ?? [];
+  const pagination = data?.pagination;
+
   return (
     <div className="space-y-4">
       <PageHeader
@@ -137,15 +91,108 @@ export function DetectionStrategies() {
         )}
       </div>
 
-      <DataTable
-        columns={columns}
-        data={data?.data ?? []}
-        loading={isLoading}
-        pagination={data?.pagination}
-        onPageChange={(p) => setParam('page', String(p))}
-        rowKey={(row) => row.detId}
-        emptyMessage="No detection strategies found. Run sync-detection-strategies.mjs to populate."
-      />
+      {/* Loading */}
+      {isLoading && (
+        <div className="flex items-center gap-2 text-[var(--text-secondary)] text-sm py-8 justify-center">
+          <span className="inline-block w-5 h-5 border-2 border-[var(--teal-dim)] border-t-[var(--accent-teal)] rounded-full animate-spin" />
+          Loading...
+        </div>
+      )}
+
+      {/* Strategies list */}
+      {!isLoading && strategies.length > 0 && (
+        <div className="space-y-2">
+          {strategies.map((ds) => (
+            <details key={ds.detId} className="group rounded-lg border border-[var(--border-color)] bg-[var(--surface-card)] overflow-hidden">
+              <summary className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-[var(--teal-ghost)] transition-colors">
+                <svg
+                  className="w-3 h-3 text-[var(--text-secondary)] transition-transform group-open:rotate-90 shrink-0"
+                  fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+                <a
+                  href={`https://attack.mitre.org/detectionstrategies/${ds.detId}/`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="font-mono text-xs text-[var(--accent-teal)] hover:underline shrink-0"
+                >
+                  {ds.detId}
+                </a>
+                <span className="text-sm text-[var(--text-primary)] flex-1 truncate">
+                  {ds.name.replace(/^Detection Strategy for /, '')}
+                </span>
+                {ds.attackTechniqueId && (
+                  <span className="font-mono text-[10px] text-[var(--accent-blue)] shrink-0">{ds.attackTechniqueId}</span>
+                )}
+                {ds.analytics.length > 0 && (
+                  <Badge label={`${ds.analytics.length} analytics`} variant="blue" />
+                )}
+              </summary>
+              {ds.analytics.length > 0 && (
+                <div className="px-4 pb-3 pt-1 border-t border-[var(--border-color)] space-y-2">
+                  {ds.analytics.map((an) => (
+                    <div key={an.analyticId} className="py-2 px-3 rounded-md bg-[var(--surface-alt)] border border-[var(--border-color)]">
+                      <div className="flex items-center gap-2 mb-1">
+                        <a
+                          href={`https://attack.mitre.org/detectionstrategies/${ds.detId}/#${an.analyticId}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-mono text-[10px] text-[var(--accent-blue)] hover:underline shrink-0"
+                        >
+                          {an.analyticId}
+                        </a>
+                        <span className="text-xs text-[var(--text-primary)] font-medium">{an.name}</span>
+                        {an.platforms?.map((p) => (
+                          <Badge key={p} label={p} variant="neutral" />
+                        ))}
+                      </div>
+                      {an.description && (
+                        <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed line-clamp-3">
+                          {an.description}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </details>
+          ))}
+        </div>
+      )}
+
+      {/* Empty */}
+      {!isLoading && strategies.length === 0 && (
+        <p className="text-sm text-[var(--text-secondary)] text-center py-8">
+          No detection strategies found. Run sync-detection-strategies.mjs to populate.
+        </p>
+      )}
+
+      {/* Pagination */}
+      {pagination && pagination.totalPages > 1 && (
+        <div className="flex items-center justify-between text-xs text-[var(--text-secondary)]">
+          <span>{(page - 1) * pagination.limit + 1}–{Math.min(page * pagination.limit, pagination.total)} of {pagination.total}</span>
+          <div className="flex gap-1">
+            <button
+              type="button"
+              disabled={page <= 1}
+              onClick={() => setParam('page', String(page - 1))}
+              className="px-2.5 py-1.5 rounded-md border border-[var(--border-color)] disabled:opacity-40 hover:border-[var(--teal-dim)] transition-colors"
+            >
+              Prev
+            </button>
+            <button
+              type="button"
+              disabled={page >= pagination.totalPages}
+              onClick={() => setParam('page', String(page + 1))}
+              className="px-2.5 py-1.5 rounded-md border border-[var(--border-color)] disabled:opacity-40 hover:border-[var(--teal-dim)] transition-colors"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
