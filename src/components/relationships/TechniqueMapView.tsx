@@ -378,12 +378,12 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
       {/* THREAT INTELLIGENCE — reports + CVEs */}
       {(() => {
         const reports = intel?.reports ?? [];
-        const cveIocs = (intel?.iocs ?? []).filter((ioc) => ioc.type === 'cve').slice(0, 2);
+        const cves = (intel as { cves?: Array<{ cve_id: string; description: string | null; cvss_severity: string | null }> })?.cves ?? [];
         return (
-          <MapCard label="Threat Intelligence" icon={IconResponse} count={reports.length + cveIocs.length}>
+          <MapCard label="Threat Intelligence" icon={IconResponse} count={reports.length + cves.length}>
             {reports.length > 0 ? (
               <div className="space-y-1.5">
-                {reports.slice(0, 4).map((r) => (
+                {reports.slice(0, 3).map((r) => (
                   <div
                     key={r.id}
                     className="flex items-center gap-2 py-1.5 px-3 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)]"
@@ -409,9 +409,9 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
                     )}
                   </div>
                 ))}
-                {reports.length > 4 && (
+                {reports.length > 3 && (
                   <Link to="/cti/reports" className="text-[10px] text-[var(--accent-teal)] hover:underline px-3">
-                    +{reports.length - 4} more reports
+                    +{reports.length - 3} more reports
                   </Link>
                 )}
               </div>
@@ -428,25 +428,24 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
             )}
 
             {/* CVEs at the end */}
-            {cveIocs.length > 0 && (
+            {cves.length > 0 && (
               <div className="space-y-1.5 mt-3 pt-3 border-t border-[var(--border-color)]">
                 <span className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
-                  Related CVEs ({cveIocs.length})
+                  CISA KEV CVEs ({cves.length})
                 </span>
-                {cveIocs.map((ioc) => {
-                  const severity = (ioc as { cvss_severity?: string }).cvss_severity;
-                  const sevColor = severity === 'CRITICAL' ? 'pink' : severity === 'HIGH' ? 'orange' : 'neutral';
+                {cves.map((cve) => {
+                  const sevColor = cve.cvss_severity === 'CRITICAL' ? 'pink' : cve.cvss_severity === 'HIGH' ? 'orange' : 'neutral';
                   return (
                     <a
-                      key={ioc.id}
-                      href={`/cti/cves?q=${encodeURIComponent(ioc.value)}`}
+                      key={cve.cve_id}
+                      href={`/cti/cves?q=${encodeURIComponent(cve.cve_id)}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center gap-2 py-1.5 px-3 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)] hover:border-[var(--teal-dim)] transition-colors"
                     >
-                      <span className="text-xs text-[var(--text-primary)] truncate flex-1">{ioc.description ?? ioc.value}</span>
-                      {severity && <Badge label={severity} variant={sevColor as 'pink' | 'orange' | 'neutral'} />}
-                      <span className="font-mono text-[10px] text-[var(--accent-pink)] shrink-0">{ioc.value}</span>
+                      <span className="text-xs text-[var(--text-primary)] truncate flex-1">{cve.description ?? cve.cve_id}</span>
+                      {cve.cvss_severity && <Badge label={cve.cvss_severity} variant={sevColor as 'pink' | 'orange' | 'neutral'} />}
+                      <span className="font-mono text-[10px] text-[var(--accent-pink)] shrink-0">{cve.cve_id}</span>
                     </a>
                   );
                 })}

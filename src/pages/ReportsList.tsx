@@ -49,7 +49,7 @@ function TechniquePopover({ reportId, count }: { reportId: string; count: number
             {data?.data && (
               <div className="flex flex-col gap-1">
                 {data.data.map((t) => (
-                  <EntityLink key={t.attackId} type="technique" attackId={t.attackId} name={t.name} />
+                  <EntityLink key={t.attackId} type="technique" attackId={t.attackId} name={t.name} useMap />
                 ))}
               </div>
             )}

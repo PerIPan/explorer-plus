@@ -24,7 +24,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
 
   const techId = techResult.rows[0].id;
 
-  const [reportsResult, sigmaResult, atomicResult, defensiveResult, iocsResult, detStrategiesResult] =
+  const [reportsResult, sigmaResult, atomicResult, defensiveResult, iocsResult, detStrategiesResult, cvesResult] =
     await Promise.all([
       // Top 5 threat reports
       query<{
@@ -153,6 +153,22 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
          ORDER BY ds.det_id`,
         [id],
       ),
+
+      // Top 2 CISA KEV CVEs linked to this technique
+      query<{
+        cve_id: string;
+        description: string | null;
+        cvss_severity: string | null;
+      }>(
+        `SELECT cd.cve_id, cd.description, cd.cvss_severity
+         FROM technique_iocs ti
+         JOIN ioc_entries i ON i.id = ti.ioc_id AND i.type = 'cve' AND i.source = 'cisa_kev'
+         JOIN cve_details cd ON cd.cve_id = i.value
+         WHERE ti.technique_id = $1
+         ORDER BY cd.cvss_score DESC NULLS LAST
+         LIMIT 2`,
+        [techId],
+      ),
     ]);
 
   // Normalize ioc first_seen → first_seen_at for frontend
@@ -168,6 +184,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     atomicTests: atomicResult.rows,
     defensiveMappings: defensiveResult.rows,
     detectionStrategies: detStrategiesResult.rows,
+    cves: cvesResult.rows,
     iocs,
   });
 }
