@@ -187,7 +187,7 @@ export function Relationships() {
   const sectorGraphData = useMemo<GraphData | null>(() => {
     if (!isSector || !sectorRel) return null;
     const center: GraphNode = { id: selectedId, label: sectorRel.name, type: 'sector', attackId: selectedId };
-    const nodes: GraphNode[] = [center];
+    const nodes: GraphNode[] = [];
     const edges: GraphData['edges'] = [];
     for (const g of sectorRel.groups) {
       nodes.push({ id: g.attackId, label: g.name, type: 'group', attackId: g.attackId });
