@@ -44,7 +44,7 @@ export const ForceGraph = forwardRef<ForceGraphHandle, ForceGraphProps>(
     const svgRef = useRef<SVGSVGElement>(null);
     const simulationRef = useRef<d3.Simulation<SimNode, SimEdge> | null>(null);
     const [tooltip, setTooltip] = useState<TooltipState | null>(null);
-    const [hiddenTypes, setHiddenTypes] = useState<Set<string>>(new Set());
+    const [hiddenTypes, setHiddenTypes] = useState<Set<string>>(new Set(['software']));
     const colors = useThemeColors();
 
     /** Entity type → accent color mapping */
