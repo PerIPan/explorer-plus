@@ -851,17 +851,6 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
         )}
         <MapRow prefix="MITRE Caldera" prefixUrl="https://caldera.mitre.org/">
           <span className="text-xs text-[var(--text-secondary)]">adversary emulation platform</span>
-          <a
-            href="https://github.com/mitre/caldera"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-[var(--accent-teal)] hover:underline"
-          >
-            GitHub ↗
-          </a>
-        </MapRow>
-        <MapRow prefix="Picus Security" prefixUrl="https://www.picussecurity.com/mitre-attck">
-          <span className="text-xs text-[var(--text-secondary)]">breach &amp; attack simulation</span>
         </MapRow>
       </MapCard>
 
