@@ -849,6 +849,16 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
             </MapRow>
           )
         )}
+        <MapRow prefix="MITRE Caldera" prefixUrl="https://caldera.mitre.org/">
+          <a
+            href={`https://github.com/mitre/caldera/search?q=${attackId}&type=code`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-[var(--accent-teal)] hover:underline"
+          >
+            search abilities ↗
+          </a>
+        </MapRow>
       </MapCard>
 
       {/* VIRUSTOTAL INTELLIGENCE */}
