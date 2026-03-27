@@ -140,13 +140,15 @@ export function TechniquesList() {
                 e.stopPropagation();
                 toggleExpand(row.attackId);
               }}
-              className="text-base text-[var(--accent-teal)] hover:text-[var(--accent-teal-light)] transition-colors leading-none"
-              aria-label={expandedParents.has(row.attackId) ? 'Collapse' : 'Expand'}
+              className="w-6 h-6 flex items-center justify-center rounded hover:bg-[var(--teal-ghost)] text-[var(--accent-teal)] hover:text-[var(--accent-teal-light)] transition-colors"
+              aria-label={expandedParents.has(row.attackId) ? 'Collapse sub-techniques' : 'Expand sub-techniques'}
             >
-              {expandedParents.has(row.attackId) ? '▾' : '▸'}
+              <svg className={`w-3.5 h-3.5 transition-transform ${expandedParents.has(row.attackId) ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
             </button>
           )}
-          {row._isSubTechnique && <span className="w-4" />}
+          {row._isSubTechnique && <span className="w-6" />}
           <span className={`font-mono text-xs ${row._isSubTechnique ? 'text-[var(--accent-teal)]' : 'text-[var(--accent-teal)]'}`}>
             {row.attackId}
           </span>
