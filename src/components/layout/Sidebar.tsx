@@ -41,7 +41,7 @@ const mainSections: NavSection[] = [
     items: [
       { path: '/tactics', label: 'Tactics', tooltip: 'kill chain phases: recon → impact' },
       { path: '/techniques', label: 'Techniques', tooltip: 'attack techniques and sub-techniques used by adversaries' },
-      { path: '/software', label: 'Software', tooltip: 'malware and tools used by threat actors' },
+      { path: '/software', label: 'Software', tooltip: 'attacker view — malware and tools used by threat actors (vs Applications which are victim products)' },
     ],
   },
   {
@@ -56,7 +56,7 @@ const mainSections: NavSection[] = [
 ];
 
 const assetsNav: NavItem[] = [
-  { path: '/applications', label: 'Applications', tooltip: 'vendor products with CVEs mapped to ATT&CK techniques' },
+  { path: '/applications', label: 'Applications', tooltip: 'defender view — vendor products that get exploited (vs Software which is attacker tools)' },
 ];
 
 const ctiNav: NavItem[] = [
