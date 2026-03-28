@@ -45,7 +45,8 @@ export function withHandler(handler: Handler, options?: HandlerOptions) {
       await handler(req, res);
     } catch (err) {
       console.error('API error:', err);
-      res.status(500).json({ error: 'Internal server error', code: 'INTERNAL_ERROR' });
+      const msg = err instanceof Error ? err.message : String(err);
+      res.status(500).json({ error: 'Internal server error', code: 'INTERNAL_ERROR', debug: msg });
     }
   };
 }
