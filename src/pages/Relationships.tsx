@@ -472,14 +472,14 @@ export function Relationships() {
                 {tab.label}
               </button>
             ))}
-            {entityType && (
+            {entityType && entityType !== 'technique' && (
               <button
                 type="button"
                 onClick={() => {
                   const param = entityType === 'group' ? `?actor=${selectedId}` : '';
                   navigate(`/matrix${param}`);
                 }}
-                className="px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors duration-150 border-b-2 -mb-px text-[var(--text-secondary)] border-transparent hover:text-[var(--text-primary)] ml-auto"
+                className="px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors duration-150 border-b-2 -mb-px text-[var(--text-secondary)] border-transparent hover:text-[var(--text-primary)]"
               >
                 Matrix ↗
               </button>

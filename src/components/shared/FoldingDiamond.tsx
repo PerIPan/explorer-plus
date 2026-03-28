@@ -30,7 +30,7 @@ const STYLES = `
 const DURATION = '2.5s';
 const EASING = 'ease-in-out';
 
-export function FoldingDiamond({ size = 40, color = '#C4A87D' }: { size?: number; color?: string }) {
+export function FoldingDiamond({ size = 40, color = '#0d9488' }: { size?: number; color?: string }) {
   const faceBase: CSSProperties = {
     width: '50%',
     height: '50%',
