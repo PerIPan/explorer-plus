@@ -26,31 +26,37 @@ interface ModelEdge {
 function makeNodes(c: ReturnType<typeof useThemeColors>): ModelNode[] {
   const alpha = (hex: string, a: string) => `${hex}${a}`;
   return [
-    { id: 'technique', label: 'Technique', x: 550, y: 280, color: c.accentTeal, bg: alpha(c.accentTeal, '18'), path: '/techniques', description: 'Attack methods and sub-techniques used by adversaries', category: 'core', scale: 1.4 },
-    { id: 'tactic', label: 'Tactic', x: 550, y: 80, color: c.accentYellow, bg: alpha(c.accentYellow, '18'), path: '/tactics', description: 'Kill chain phases: Reconnaissance to Impact', category: 'core' },
-    { id: 'group', label: 'Threat Group', x: 160, y: 160, color: c.accentOrange, bg: alpha(c.accentOrange, '18'), path: '/groups', description: 'Tracked adversary groups (APT29, Lazarus, etc.)', category: 'core' },
-    { id: 'software', label: 'Software', x: 160, y: 340, color: c.accentPurple, bg: alpha(c.accentPurple, '18'), path: '/software', description: 'Malware and tools used in attacks', category: 'core' },
-    { id: 'campaign', label: 'Campaign', x: 340, y: 80, color: c.accentBlue, bg: alpha(c.accentBlue, '18'), path: '/campaigns', description: 'Named intrusion operations with timelines', category: 'core' },
-    { id: 'sector', label: 'Sector', x: 60, y: 60, color: c.accentPink, bg: alpha(c.accentPink, '18'), path: '/sectors', description: 'Industries targeted by threat groups', category: 'core' },
-    { id: 'mitigation', label: 'Mitigation', x: 850, y: 120, color: c.accentGreen, bg: alpha(c.accentGreen, '18'), path: '/mitigations', description: 'Countermeasures to prevent techniques', category: 'defensive' },
-    { id: 'sigma', label: 'Sigma Rules', x: 850, y: 340, color: '#c084fc', bg: '#c084fc18', path: '/cti/sigma', description: 'Detection signatures from SigmaHQ mapped to techniques', category: 'defensive' },
-    { id: 'nist', label: 'NIST 800-53', x: 1050, y: 120, color: '#38bdf8', bg: '#38bdf818', path: '/frameworks/nist', description: 'Federal security controls mapped to ATT&CK techniques', category: 'compliance' },
-    { id: 'engage', label: 'MITRE Engage', x: 1050, y: 270, color: '#fb923c', bg: '#fb923c18', path: '/frameworks/engage', description: 'Adversary deception & engagement activities per technique', category: 'compliance' },
-    { id: 'react', label: 'RE&CT', x: 1050, y: 430, color: '#4ade80', bg: '#4ade8018', path: '/frameworks/react', description: 'Incident response playbooks and actions per technique', category: 'compliance' },
-    { id: 'report', label: 'Threat Reports', x: 200, y: 420, color: c.accentOrange, bg: alpha(c.accentOrange, '18'), path: '/cti/reports', description: 'Live threat intelligence from OTX, RSS feeds', category: 'intelligence' },
-    { id: 'cve', label: 'CVEs', x: 380, y: 430, color: c.accentPink, bg: alpha(c.accentPink, '18'), path: '/cti/cves', description: 'Known vulnerabilities enriched with NVD metadata', category: 'intelligence' },
-    { id: 'nvd', label: 'NVD', x: 260, y: 480, color: '#38bdf8', bg: '#38bdf818', path: '/cti/cves', description: 'National Vulnerability Database — CVSS scores, CWE, descriptions', category: 'intelligence' },
-    { id: 'ioc', label: 'IOCs', x: 550, y: 430, color: '#fb923c', bg: '#fb923c18', path: '/cti/iocs', description: 'Hashes, domains, IPs from OTX, ThreatFox, MalwareBazaar', category: 'intelligence' },
-    { id: 'virustotal', label: 'VirusTotal', x: 680, y: 480, color: '#3b82f6', bg: '#3b82f618', path: '/cti/iocs', description: 'Sandbox verdicts and ATT&CK techniques for file hashes', category: 'intelligence' },
-    { id: 'atomic', label: 'Atomic Tests', x: 750, y: 420, color: '#ef4444', bg: '#ef444418', path: '/techniques', description: 'Red team test procedures from Atomic Red Team per technique', category: 'intelligence' },
-    { id: 'd3fend', label: 'D3FEND', x: 900, y: 430, color: c.accentGreen, bg: alpha(c.accentGreen, '18'), path: '/techniques', description: 'Defensive countermeasures from MITRE D3FEND', category: 'intelligence' },
-    { id: 'thaicert', label: 'ETDA Actors', x: 85, y: 250, color: c.accentNeutral, bg: alpha(c.accentNeutral, '18'), path: '/external-actors', description: '500+ extended threat actors from ThaiCERT encyclopedia', category: 'intelligence' },
-    { id: 'veris', label: 'VERIS', x: 1200, y: 120, color: '#e879f9', bg: '#e879f918', path: '/techniques', description: 'Incident classification categories mapped to ATT&CK techniques', category: 'compliance', scale: 0.85 },
-    { id: 'azure', label: 'Azure', x: 1200, y: 220, color: '#38bdf8', bg: '#38bdf818', path: '/techniques', description: 'Azure security controls mapped to ATT&CK techniques', category: 'compliance', scale: 0.85 },
-    { id: 'gcp', label: 'GCP', x: 1200, y: 390, color: '#34d399', bg: '#34d39918', path: '/techniques', description: 'GCP security controls mapped to ATT&CK techniques', category: 'compliance', scale: 0.85 },
-    { id: 'capec', label: 'CAPEC', x: 380, y: 520, color: '#fbbf24', bg: '#fbbf2418', path: '/cti/cves', description: 'CWE→CAPEC→ATT&CK bridge linking CVEs to techniques', category: 'intelligence', scale: 0.85 },
-    { id: 'ics', label: 'ICS', x: 400, y: 180, color: '#f97316', bg: '#f9731618', path: '/matrix?domain=ics-attack', description: 'Industrial Control Systems ATT&CK domain — OT-specific techniques', category: 'core', scale: 0.85 },
-    { id: 'mobile', label: 'Mobile', x: 700, y: 140, color: '#8b5cf6', bg: '#8b5cf618', path: '/matrix?domain=mobile-attack', description: 'Mobile ATT&CK domain — Android and iOS specific techniques', category: 'core', scale: 0.85 },
+    // Core entities — center cluster with more spacing
+    { id: 'technique', label: 'Technique', x: 650, y: 330, color: c.accentTeal, bg: alpha(c.accentTeal, '18'), path: '/techniques', description: 'Attack methods and sub-techniques used by adversaries', category: 'core', scale: 1.4 },
+    { id: 'tactic', label: 'Tactic', x: 650, y: 100, color: c.accentYellow, bg: alpha(c.accentYellow, '18'), path: '/tactics', description: 'Kill chain phases: Reconnaissance to Impact', category: 'core' },
+    { id: 'group', label: 'Threat Group', x: 180, y: 190, color: c.accentOrange, bg: alpha(c.accentOrange, '18'), path: '/groups', description: 'Tracked adversary groups (APT29, Lazarus, etc.)', category: 'core' },
+    { id: 'software', label: 'Software', x: 180, y: 400, color: c.accentPurple, bg: alpha(c.accentPurple, '18'), path: '/software', description: 'Attacker tools — malware and hacking tools used in attacks', category: 'core' },
+    { id: 'campaign', label: 'Campaign', x: 400, y: 100, color: c.accentBlue, bg: alpha(c.accentBlue, '18'), path: '/campaigns', description: 'Named intrusion operations with timelines', category: 'core' },
+    { id: 'sector', label: 'Sector', x: 70, y: 80, color: c.accentPink, bg: alpha(c.accentPink, '18'), path: '/sectors', description: 'Industries targeted by threat groups', category: 'core' },
+    { id: 'application', label: 'Application', x: 180, y: 560, color: '#3b82f6', bg: '#3b82f618', path: '/applications', description: 'Defender view — vendor products with CVEs (Windows, PAN-OS, etc.)', category: 'core' },
+    // Defensive
+    { id: 'mitigation', label: 'Mitigation', x: 1000, y: 140, color: c.accentGreen, bg: alpha(c.accentGreen, '18'), path: '/mitigations', description: 'Countermeasures to prevent techniques', category: 'defensive' },
+    { id: 'sigma', label: 'Sigma Rules', x: 1000, y: 400, color: '#c084fc', bg: '#c084fc18', path: '/cti/sigma', description: 'Detection signatures from SigmaHQ mapped to techniques', category: 'defensive' },
+    // Compliance & frameworks
+    { id: 'nist', label: 'NIST 800-53', x: 1240, y: 140, color: '#38bdf8', bg: '#38bdf818', path: '/frameworks/nist', description: 'Federal security controls mapped to ATT&CK techniques', category: 'compliance' },
+    { id: 'engage', label: 'MITRE Engage', x: 1240, y: 310, color: '#fb923c', bg: '#fb923c18', path: '/frameworks/engage', description: 'Adversary deception & engagement activities per technique', category: 'compliance' },
+    { id: 'react', label: 'RE&CT', x: 1240, y: 490, color: '#4ade80', bg: '#4ade8018', path: '/frameworks/react', description: 'Incident response playbooks and actions per technique', category: 'compliance' },
+    { id: 'veris', label: 'VERIS', x: 1420, y: 140, color: '#e879f9', bg: '#e879f918', path: '/techniques', description: 'Incident classification categories mapped to ATT&CK techniques', category: 'compliance', scale: 0.85 },
+    { id: 'azure', label: 'Azure', x: 1420, y: 260, color: '#38bdf8', bg: '#38bdf818', path: '/techniques', description: 'Azure security controls mapped to ATT&CK techniques', category: 'compliance', scale: 0.85 },
+    { id: 'gcp', label: 'GCP', x: 1420, y: 450, color: '#34d399', bg: '#34d39918', path: '/techniques', description: 'GCP security controls mapped to ATT&CK techniques', category: 'compliance', scale: 0.85 },
+    // Intelligence
+    { id: 'report', label: 'Threat Reports', x: 240, y: 490, color: c.accentOrange, bg: alpha(c.accentOrange, '18'), path: '/cti/reports', description: 'Live threat intelligence from OTX, RSS feeds', category: 'intelligence' },
+    { id: 'cve', label: 'CVEs', x: 440, y: 500, color: c.accentPink, bg: alpha(c.accentPink, '18'), path: '/cti/cves', description: 'Known vulnerabilities enriched with NVD metadata', category: 'intelligence' },
+    { id: 'nvd', label: 'NVD', x: 320, y: 560, color: '#38bdf8', bg: '#38bdf818', path: '/cti/cves', description: 'National Vulnerability Database — CVSS scores, CWE, descriptions', category: 'intelligence' },
+    { id: 'capec', label: 'CAPEC', x: 440, y: 600, color: '#fbbf24', bg: '#fbbf2418', path: '/cti/cves', description: 'CWE→CAPEC→ATT&CK bridge linking CVEs to techniques', category: 'intelligence', scale: 0.85 },
+    { id: 'ioc', label: 'IOCs', x: 650, y: 500, color: '#fb923c', bg: '#fb923c18', path: '/cti/iocs', description: 'Hashes, domains, IPs from OTX, ThreatFox, MalwareBazaar', category: 'intelligence' },
+    { id: 'virustotal', label: 'VirusTotal', x: 790, y: 560, color: '#3b82f6', bg: '#3b82f618', path: '/cti/iocs', description: 'Sandbox verdicts and ATT&CK techniques for file hashes', category: 'intelligence' },
+    { id: 'atomic', label: 'Atomic Tests', x: 860, y: 490, color: '#ef4444', bg: '#ef444418', path: '/techniques', description: 'Red team test procedures from Atomic Red Team per technique', category: 'intelligence' },
+    { id: 'd3fend', label: 'D3FEND', x: 1060, y: 490, color: c.accentGreen, bg: alpha(c.accentGreen, '18'), path: '/techniques', description: 'Defensive countermeasures from MITRE D3FEND', category: 'intelligence' },
+    { id: 'thaicert', label: 'ETDA Actors', x: 80, y: 300, color: c.accentNeutral, bg: alpha(c.accentNeutral, '18'), path: '/external-actors', description: '500+ extended threat actors from ThaiCERT encyclopedia', category: 'intelligence' },
+    // Domain variants
+    { id: 'ics', label: 'ICS', x: 460, y: 220, color: '#f97316', bg: '#f9731618', path: '/matrix?domain=ics-attack', description: 'Industrial Control Systems ATT&CK domain — OT-specific techniques', category: 'core', scale: 0.85 },
+    { id: 'mobile', label: 'Mobile', x: 830, y: 170, color: '#8b5cf6', bg: '#8b5cf618', path: '/matrix?domain=mobile-attack', description: 'Mobile ATT&CK domain — Android and iOS specific techniques', category: 'core', scale: 0.85 },
   ];
 }
 
@@ -80,6 +86,9 @@ const EDGES: ModelEdge[] = [
   { from: 'azure', to: 'technique', label: 'defends', style: 'dashed' },
   { from: 'gcp', to: 'technique', label: 'defends', style: 'dashed' },
   { from: 'capec', to: 'cve', label: 'bridges', style: 'dashed' },
+  { from: 'application', to: 'cve', label: 'affected by' },
+  { from: 'capec', to: 'technique', label: 'maps to', style: 'dashed' },
+  { from: 'application', to: 'technique', label: 'exploited via', style: 'dashed' },
   { from: 'ics', to: 'technique', label: 'contains', style: 'dashed' },
   { from: 'mobile', to: 'technique', label: 'contains', style: 'dashed' },
 ];
@@ -151,7 +160,7 @@ export function RelationshipModel({ open, onClose }: Props) {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={onClose}>
       <div
-        className="bg-[var(--surface-deep)] border border-[var(--border-color)] rounded-xl shadow-2xl w-[95vw] max-w-[1200px] max-h-[90vh] overflow-hidden flex flex-col"
+        className="bg-[var(--surface-deep)] border border-[var(--border-color)] rounded-xl shadow-2xl w-[95vw] max-w-[1400px] max-h-[90vh] overflow-hidden flex flex-col"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
@@ -172,7 +181,7 @@ export function RelationshipModel({ open, onClose }: Props) {
 
         {/* Diagram */}
         <div className="flex-1 overflow-auto p-4">
-          <svg viewBox="0 0 1350 570" className="w-full h-auto min-h-[500px]">
+          <svg viewBox="0 0 1520 660" className="w-full h-auto min-h-[550px]">
             <defs>
               <marker id="arrow" viewBox="0 0 10 7" refX="10" refY="3.5" markerWidth="8" markerHeight="6" orient="auto-start-reverse">
                 <polygon points="0 0, 10 3.5, 0 7" fill={c.borderColor} />
