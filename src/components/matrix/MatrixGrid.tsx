@@ -18,14 +18,17 @@ interface MatrixGridProps {
   filterText?: string;
   /** Actor comparison overlay */
   actorOverlay?: ActorOverlay;
+  /** Set of technique IDs to highlight (dims everything else) */
+  highlightIds?: Set<string>;
 }
 
 /**
  * Full ATT&CK matrix — tactics as columns, techniques as cells.
  * groupUsageCount uses subTechniques.length as a proxy for cell "richness".
  */
-export function MatrixGrid({ data, filterText = '', actorOverlay }: MatrixGridProps) {
+export function MatrixGrid({ data, filterText = '', actorOverlay, highlightIds }: MatrixGridProps) {
   const normalizedFilter = filterText.trim().toLowerCase();
+  const hasHighlight = highlightIds && highlightIds.size > 0;
 
   /** Pre-compute overlay per cell */
   const overlayMap = useMemo(() => {
@@ -72,10 +75,11 @@ export function MatrixGrid({ data, filterText = '', actorOverlay }: MatrixGridPr
           >
             {data.map((col) => {
               // Hide entire column when all techniques are filtered out
-              if (overlayMap || normalizedFilter) {
+              if (overlayMap || normalizedFilter || hasHighlight) {
                 const hasVisible = col.techniques.some((tech) => {
                   const co = overlayMap?.get(tech.attackId);
                   if (co?.mode === 'hidden') return false;
+                  if (hasHighlight) return highlightIds!.has(tech.attackId) || highlightIds!.has(tech.attackId.split('.')[0]);
                   if (normalizedFilter) {
                     return tech.name.toLowerCase().includes(normalizedFilter) || tech.attackId.toLowerCase().includes(normalizedFilter);
                   }

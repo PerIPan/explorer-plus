@@ -476,8 +476,12 @@ export function Relationships() {
               <button
                 type="button"
                 onClick={() => {
-                  const param = entityType === 'group' ? `?actor=${selectedId}` : '';
-                  navigate(`/matrix${param}`);
+                  if (entityType === 'group') {
+                    navigate(`/matrix?actor=${selectedId}`);
+                  } else {
+                    const name = searchInput || selectedId;
+                    navigate(`/matrix?type=${entityType}&entity=${encodeURIComponent(selectedId)}&label=${encodeURIComponent(name)}`);
+                  }
                 }}
                 className="px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors duration-150 border-b-2 -mb-px text-[var(--text-secondary)] border-transparent hover:text-[var(--text-primary)]"
               >

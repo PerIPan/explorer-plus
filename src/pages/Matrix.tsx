@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { usePageTitle } from '../hooks/usePageTitle';
-import { useQueries } from '@tanstack/react-query';
+import { useQueries, useQuery } from '@tanstack/react-query';
 import { useMatrix, useGroups } from '../hooks/useApi';
 import { apiFetch } from '../lib/api';
 import { useSector } from '../contexts/SectorContext';
@@ -51,6 +51,50 @@ export function Matrix() {
       autoSelectedRef.current = true;
     }
   }, [groups, searchParams]);
+
+  // Entity highlight: fetch techniques for a given entity and dim non-matching cells
+  const highlightEntity = searchParams.get('entity') ?? null;
+  const highlightType = searchParams.get('type') ?? null;
+
+  const { data: highlightData } = useQuery({
+    queryKey: ['matrix-highlight', highlightType, highlightEntity],
+    queryFn: async () => {
+      if (highlightType === 'software') {
+        const d = await apiFetch<{ techniques?: Array<{ attackId: string }> }>(`/software/${highlightEntity}`);
+        return d.techniques?.map((t) => t.attackId) ?? [];
+      }
+      if (highlightType === 'application') {
+        const d = await apiFetch<{ techniques: Array<{ attackId: string }> }>(`/applications/${highlightEntity}`);
+        return d.techniques.map((t) => t.attackId);
+      }
+      if (highlightType === 'campaign') {
+        const d = await apiFetch<{ techniques?: Array<{ attackId: string }> }>(`/campaigns/${highlightEntity}`);
+        return d.techniques?.map((t) => t.attackId) ?? [];
+      }
+      if (highlightType === 'mitigation') {
+        const d = await apiFetch<{ techniques?: Array<{ attackId: string }> }>(`/mitigations/${highlightEntity}`);
+        return d.techniques?.map((t) => t.attackId) ?? [];
+      }
+      if (highlightType === 'sector') {
+        const d = await apiFetch<{ techniques: Array<{ attackId: string }> }>(`/sectors/${highlightEntity}/relationships`);
+        return d.techniques.map((t) => t.attackId);
+      }
+      if (highlightType === 'data_source') {
+        const d = await apiFetch<{ techniques?: Array<{ attackId: string }> }>(`/data-sources/${highlightEntity}`);
+        return d.techniques?.map((t) => t.attackId) ?? [];
+      }
+      return [];
+    },
+    enabled: Boolean(highlightEntity) && Boolean(highlightType) && highlightType !== 'group',
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const highlightIds = useMemo(() => {
+    if (!highlightData?.length) return undefined;
+    return new Set(highlightData.map((id) => id.split('.')[0]));
+  }, [highlightData]);
+
+  const highlightLabel = searchParams.get('label') ?? null;
 
   // Fetch full group details for selected actors (techniques)
   const groupQueries = useQueries({
@@ -234,6 +278,17 @@ export function Matrix() {
             />
           </div>
 
+          {/* Entity highlight label */}
+          {highlightLabel && highlightIds && (
+            <div className="flex items-center gap-2 text-xs">
+              <span className="text-[var(--text-secondary)]">Filtered by:</span>
+              <span className="px-2 py-0.5 rounded-full bg-[var(--teal-faint)] text-[var(--accent-teal)] border border-[var(--teal-dim)] font-medium">
+                {highlightLabel}
+              </span>
+              <span className="text-[var(--text-secondary)]">{highlightIds.size} techniques</span>
+            </div>
+          )}
+
           {/* Right: actor pills + legend */}
           {selectedActors.length > 0 && (
             <div className="flex items-center gap-3 text-xs">
@@ -266,7 +321,7 @@ export function Matrix() {
       )}
 
       {!isLoading && !error && data && (
-        <MatrixGrid data={data} filterText={filterText} actorOverlay={actorOverlay} />
+        <MatrixGrid data={data} filterText={filterText} actorOverlay={actorOverlay} highlightIds={highlightIds} />
       )}
     </div>
   );
