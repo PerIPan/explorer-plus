@@ -177,6 +177,11 @@ const FRAMEWORK_TABLES = [
   { key: 'sigma_rules', label: 'Sigma Rules' },
   { key: 'atomic_tests', label: 'Atomic Red Team' },
   { key: 'external_actors', label: 'ETDA Actors' },
+  { key: 'applications', label: 'Applications (CVElistV5)' },
+  { key: 'capec_mappings', label: 'CAPEC Bridge' },
+  { key: 'cve_details', label: 'CVE Details' },
+  { key: 'cve_weaknesses', label: 'CVE Weaknesses' },
+  { key: 'affected_products', label: 'Affected Products' },
 ];
 
 function FrameworkStatus() {

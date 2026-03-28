@@ -15,6 +15,11 @@ async function handler(_req: VercelRequest, res: VercelResponse): Promise<void> 
     UNION ALL SELECT 'sigma_rules', COUNT(*)::text FROM sigma_rules
     UNION ALL SELECT 'atomic_tests', COUNT(*)::text FROM atomic_tests
     UNION ALL SELECT 'external_actors', COUNT(*)::text FROM external_actors
+    UNION ALL SELECT 'applications', COUNT(*)::text FROM applications
+    UNION ALL SELECT 'capec_mappings', COUNT(*)::text FROM capec_mappings
+    UNION ALL SELECT 'cve_details', COUNT(*)::text FROM cve_details
+    UNION ALL SELECT 'cve_weaknesses', COUNT(*)::text FROM cve_weaknesses
+    UNION ALL SELECT 'affected_products', COUNT(*)::text FROM affected_products
   `);
 
   const counts: Record<string, number> = {};
