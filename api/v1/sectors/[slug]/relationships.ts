@@ -93,7 +93,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
        JOIN cve_details cd ON cd.cve_id = ie.value
        WHERE gs.sector_id = $1
        ORDER BY cd.published_at DESC NULLS LAST
-       LIMIT 20`,
+       LIMIT 100`,
       [sectorId],
     ),
 
@@ -107,7 +107,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
        JOIN applications a ON a.id = atg.application_id
        WHERE gs.sector_id = $1
        ORDER BY a.cve_count DESC
-       LIMIT 20`,
+       LIMIT 100`,
       [sectorId],
     ),
   ]);

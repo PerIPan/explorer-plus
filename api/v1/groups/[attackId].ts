@@ -102,7 +102,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
        JOIN applications a ON a.id = atg.application_id
        WHERE atg.group_attack_id = $1
        ORDER BY a.cve_count DESC
-       LIMIT 20`,
+       LIMIT 100`,
       [group.attackId],
     ),
   ]);

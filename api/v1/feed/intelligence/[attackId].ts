@@ -183,7 +183,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
          WHERE atg.technique_id = $1
          GROUP BY a.normalized, a.vendor, a.product, a.cve_count
          ORDER BY a.cve_count DESC
-         LIMIT 20`,
+         LIMIT 100`,
         [techId],
       ),
     ]);
