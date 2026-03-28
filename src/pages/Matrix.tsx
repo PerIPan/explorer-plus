@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { useQueries, useQuery } from '@tanstack/react-query';
@@ -28,7 +28,6 @@ export function Matrix() {
   const [inputValue, setInputValue] = useState('');
   const [filterText, setFilterText] = useState('');
   const [selectedActors, setSelectedActors] = useState<SelectedActor[]>([]);
-  const autoSelectedRef = useRef(false);
 
   // Fetch all groups for the actor selector (respects sector filter)
   const groupsParams = useMemo(() => ({ limit: '5000', ...sectorParam, ...domainParam }), [sectorParam, domainParam]);
@@ -40,25 +39,19 @@ export function Matrix() {
     return () => clearTimeout(timer);
   }, [inputValue]);
 
-  // Auto-select actor from URL param (e.g. ?actor=G0016)
-  useEffect(() => {
-    if (autoSelectedRef.current || groups.length === 0) return;
-    const actorParam = searchParams.get('actor');
-    if (!actorParam) return;
-    const group = groups.find((g) => g.attackId === actorParam);
-    if (group) {
-      setSelectedActors([{ attackId: group.attackId, name: group.name, colorIndex: 0 }]);
-      autoSelectedRef.current = true;
-    }
-  }, [groups, searchParams]);
-
-  // Entity highlight: fetch techniques for a given entity and dim non-matching cells
-  const highlightEntity = searchParams.get('entity') ?? null;
-  const highlightType = searchParams.get('type') ?? null;
+  // Entity highlight: fetch techniques for a given entity and hide non-matching cells
+  // Works for all entity types including groups (from 360 View Matrix button)
+  const actorParam = searchParams.get('actor');
+  const highlightEntity = searchParams.get('entity') ?? actorParam ?? null;
+  const highlightType = searchParams.get('type') ?? (actorParam ? 'group' : null);
 
   const { data: highlightData } = useQuery({
     queryKey: ['matrix-highlight', highlightType, highlightEntity],
     queryFn: async () => {
+      if (highlightType === 'group') {
+        const d = await apiFetch<{ techniques?: Array<{ attackId: string }> }>(`/groups/${highlightEntity}`);
+        return d.techniques?.map((t) => t.attackId) ?? [];
+      }
       if (highlightType === 'software') {
         const d = await apiFetch<{ techniques?: Array<{ attackId: string }> }>(`/software/${highlightEntity}`);
         return d.techniques?.map((t) => t.attackId) ?? [];
@@ -85,7 +78,7 @@ export function Matrix() {
       }
       return [];
     },
-    enabled: Boolean(highlightEntity) && Boolean(highlightType) && highlightType !== 'group',
+    enabled: Boolean(highlightEntity) && Boolean(highlightType),
     staleTime: 5 * 60 * 1000,
   });
 
@@ -94,7 +87,8 @@ export function Matrix() {
     return new Set(highlightData.map((id) => id.split('.')[0]));
   }, [highlightData]);
 
-  const highlightLabel = searchParams.get('label') ?? null;
+  const highlightLabel = searchParams.get('label')
+    ?? (actorParam ? groups.find((g) => g.attackId === actorParam)?.name ?? actorParam : null);
 
   // Fetch full group details for selected actors (techniques)
   const groupQueries = useQueries({
@@ -213,17 +207,24 @@ export function Matrix() {
       <PageHeader
         title="ATT&CK Matrix"
         titleAction={data && (
-          <button
-            type="button"
-            onClick={handleExport}
-            className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium bg-[var(--surface-alt)] border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--accent-teal)] hover:border-[var(--accent-teal)] transition-colors ml-3"
-            title="Export matrix as HTML file"
-          >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-            </svg>
-            Export HTML
-          </button>
+          <span className="inline-flex items-center gap-2 ml-3">
+            {highlightLabel && highlightIds && (
+              <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-[10px] font-medium bg-[var(--teal-faint)] text-[var(--accent-teal)] border border-[var(--teal-dim)]">
+                {highlightLabel} ({highlightIds.size})
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={handleExport}
+              className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium bg-[var(--surface-alt)] border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--accent-teal)] hover:border-[var(--accent-teal)] transition-colors"
+              title="Export matrix as HTML file"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+              </svg>
+              Export HTML
+            </button>
+          </span>
         )}
         subtitle={isAllDomains
           ? 'Showing all techniques across Enterprise, ICS, and Mobile — select a specific domain for domain-scoped tactics'
@@ -277,17 +278,6 @@ export function Matrix() {
               onRemove={handleRemoveActor}
             />
           </div>
-
-          {/* Entity highlight label */}
-          {highlightLabel && highlightIds && (
-            <div className="flex items-center gap-2 text-xs">
-              <span className="text-[var(--text-secondary)]">Filtered by:</span>
-              <span className="px-2 py-0.5 rounded-full bg-[var(--teal-faint)] text-[var(--accent-teal)] border border-[var(--teal-dim)] font-medium">
-                {highlightLabel}
-              </span>
-              <span className="text-[var(--text-secondary)]">{highlightIds.size} techniques</span>
-            </div>
-          )}
 
           {/* Right: actor pills + legend */}
           {selectedActors.length > 0 && (

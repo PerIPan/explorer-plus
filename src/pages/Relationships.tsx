@@ -398,9 +398,7 @@ export function Relationships() {
                 )}
                 <span className="text-sm text-[var(--text-primary)] truncate">{s.name}</span>
                 {s.type !== 'group' && s.domain && (
-                  <span className="text-[9px] font-medium text-[var(--text-secondary)] uppercase shrink-0">
-                    {s.domain.replace('-attack', '').replace('enterprise', 'ent')}
-                  </span>
+                  <Badge label={s.domain.replace('-attack', '')} variant="neutral" />
                 )}
               </button>
             ))}
