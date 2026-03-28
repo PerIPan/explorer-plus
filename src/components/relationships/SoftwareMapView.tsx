@@ -4,6 +4,7 @@ import { EntityLink } from '../shared/EntityLink';
 import { Badge } from '../shared/Badge';
 import { sanitize, sanitizeMarkdown } from '../../lib/sanitize';
 import { ExternalLinksButton } from '../shared/ExternalLinksButton';
+import { DiamondLoader } from '../shared/FoldingDiamond';
 
 // ── Local types for detail-endpoint extras ─────────────────────────────────────
 
@@ -186,12 +187,7 @@ export function SoftwareMapView({ attackId }: SoftwareMapViewProps) {
   const { data, isLoading, error } = useSoftwareDetail(attackId);
 
   if (isLoading) {
-    return (
-      <div className="flex items-center gap-2 text-[var(--text-secondary)] text-sm py-8 justify-center">
-        <span className="inline-block w-5 h-5 border-2 border-[var(--teal-dim)] border-t-[var(--accent-teal)] rounded-full animate-spin" />
-        Loading software map...
-      </div>
-    );
+    return <DiamondLoader text="Loading software map..." />;
   }
 
   if (error || !data) {

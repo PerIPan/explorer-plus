@@ -9,6 +9,7 @@ import { RefsChevron } from '../shared/RefsChevron';
 import { ctidCloudUrl, ctidVerisUrl } from '../../lib/urlSafety';
 import { ExternalLinksButton } from '../shared/ExternalLinksButton';
 import type { GroupTechnique, GroupSoftware, GroupCampaign, GroupSector, ExternalActor } from '../../lib/types';
+import { DiamondLoader } from '../shared/FoldingDiamond';
 
 // ── Collapsible section ────────────────────────────────────────────────────────
 
@@ -280,10 +281,7 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
   if (entityType === 'external_actor') {
     if (externalActorResult.isLoading) {
       return (
-        <div className="flex items-center gap-2 text-[var(--text-secondary)] text-sm py-8 justify-center">
-          <span className="inline-block w-5 h-5 border-2 border-[var(--teal-dim)] border-t-[var(--accent-teal)] rounded-full animate-spin" />
-          Loading actor profile...
-        </div>
+        <DiamondLoader text="Loading actor profile..." />
       );
     }
     if (externalActorResult.error || !externalActorResult.data) {
@@ -390,12 +388,7 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
   const error = entityType === 'group' ? groupResult.error : campaignResult.error;
 
   if (isLoading) {
-    return (
-      <div className="flex items-center gap-2 text-[var(--text-secondary)] text-sm py-8 justify-center">
-        <span className="inline-block w-5 h-5 border-2 border-[var(--teal-dim)] border-t-[var(--accent-teal)] rounded-full animate-spin" />
-        Loading actor profile...
-      </div>
-    );
+    return <DiamondLoader text="Loading actor profile..." />;
   }
 
   if (error) {

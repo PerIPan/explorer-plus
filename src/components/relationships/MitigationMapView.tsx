@@ -4,6 +4,7 @@ import { EntityLink } from '../shared/EntityLink';
 import { Badge } from '../shared/Badge';
 import { sanitize, sanitizeMarkdown } from '../../lib/sanitize';
 import { ExternalLinksButton } from '../shared/ExternalLinksButton';
+import { DiamondLoader } from '../shared/FoldingDiamond';
 
 // ── Local types ────────────────────────────────────────────────────────────────
 
@@ -178,12 +179,7 @@ export function MitigationMapView({ attackId }: MitigationMapViewProps) {
   const mitigationResult = useMitigation(attackId);
 
   if (mitigationResult.isLoading) {
-    return (
-      <div className="flex items-center gap-2 text-[var(--text-secondary)] text-sm py-8 justify-center">
-        <span className="inline-block w-5 h-5 border-2 border-[var(--green-dim)] border-t-[var(--accent-green)] rounded-full animate-spin" />
-        Loading mitigation map...
-      </div>
-    );
+    return <DiamondLoader text="Loading mitigation map..." />;
   }
 
   if (mitigationResult.error || !mitigationResult.data) {
