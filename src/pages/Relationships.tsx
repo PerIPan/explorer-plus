@@ -472,7 +472,7 @@ export function Relationships() {
                 {tab.label}
               </button>
             ))}
-            {entityType && ['group', 'campaign', 'sector'].includes(entityType) && (
+            {entityType && (
               <button
                 type="button"
                 onClick={() => {
