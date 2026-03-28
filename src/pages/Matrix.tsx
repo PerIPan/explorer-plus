@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { useQueries } from '@tanstack/react-query';
 import { useMatrix, useGroups } from '../hooks/useApi';
@@ -13,10 +14,12 @@ import type { SelectedActor } from '../components/matrix/MatrixActorSelector';
 import type { Group } from '../lib/types';
 import { exportMatrixHtml } from '../lib/exportMatrix';
 import { useTheme } from '../contexts/ThemeContext';
+import { DiamondLoader } from '../components/shared/FoldingDiamond';
 
 export function Matrix() {
   usePageTitle('ATT&CK Matrix');
 
+  const [searchParams] = useSearchParams();
   const { sectorParam, sector } = useSector();
   const { domain, domainParam } = useDomain();
   const { theme } = useTheme();
@@ -25,6 +28,7 @@ export function Matrix() {
   const [inputValue, setInputValue] = useState('');
   const [filterText, setFilterText] = useState('');
   const [selectedActors, setSelectedActors] = useState<SelectedActor[]>([]);
+  const [autoSelected, setAutoSelected] = useState(false);
 
   // Fetch all groups for the actor selector (respects sector filter)
   const groupsParams = useMemo(() => ({ limit: '5000', ...sectorParam, ...domainParam }), [sectorParam, domainParam]);
@@ -35,6 +39,18 @@ export function Matrix() {
     const timer = setTimeout(() => setFilterText(inputValue), 200);
     return () => clearTimeout(timer);
   }, [inputValue]);
+
+  // Auto-select actor from URL param (e.g. ?actor=G0016)
+  useEffect(() => {
+    if (autoSelected || groups.length === 0) return;
+    const actorParam = searchParams.get('actor');
+    if (!actorParam) return;
+    const group = groups.find((g) => g.attackId === actorParam);
+    if (group) {
+      setSelectedActors([{ attackId: group.attackId, name: group.name, colorIndex: 0 }]);
+      setAutoSelected(true);
+    }
+  }, [groups, searchParams, autoSelected]);
 
   // Fetch full group details for selected actors (techniques)
   const groupQueries = useQueries({
@@ -240,10 +256,7 @@ export function Matrix() {
       )}
 
       {isLoading && (
-        <div className="flex items-center justify-center h-64 text-[var(--text-secondary)]">
-          <span className="inline-block w-5 h-5 border-2 border-[var(--teal-dim)] border-t-[var(--accent-teal)] rounded-full animate-spin mr-2" />
-          Loading matrix...
-        </div>
+        <DiamondLoader text="Loading matrix..." />
       )}
 
       {error && (

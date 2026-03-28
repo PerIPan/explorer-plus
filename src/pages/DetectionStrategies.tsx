@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '../lib/api';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Badge } from '../components/shared/Badge';
+import { DiamondLoader } from '../components/shared/FoldingDiamond';
 
 interface Analytic {
   analyticId: string;
@@ -93,10 +94,7 @@ export function DetectionStrategies() {
 
       {/* Loading */}
       {isLoading && (
-        <div className="flex items-center gap-2 text-[var(--text-secondary)] text-sm py-8 justify-center">
-          <span className="inline-block w-5 h-5 border-2 border-[var(--teal-dim)] border-t-[var(--accent-teal)] rounded-full animate-spin" />
-          Loading...
-        </div>
+        <DiamondLoader text="Loading..." />
       )}
 
       {/* Strategies list */}

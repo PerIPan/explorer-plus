@@ -8,6 +8,7 @@ import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { RelationshipModel } from './components/relationships/RelationshipModel';
 import { ErrorBoundary } from './components/shared/ErrorBoundary';
 import { Analytics } from '@vercel/analytics/react';
+import { DiamondLoader } from './components/shared/FoldingDiamond';
 
 // Lazy-loaded pages
 const Dashboard       = lazy(() => import('./pages/Dashboard').then((m) => ({ default: m.Dashboard })));
@@ -51,12 +52,7 @@ const ExternalActors  = lazy(() => import('./pages/ExternalActors').then((m) => 
 
 /** Simple spinner used as Suspense fallback */
 function LoadingSpinner() {
-  return (
-    <div className="flex items-center justify-center h-64 text-[var(--text-secondary)]">
-      <span className="inline-block w-5 h-5 border-2 border-[var(--teal-dim)] border-t-[var(--accent-teal)] rounded-full animate-spin mr-2" />
-      Loading...
-    </div>
-  );
+  return <DiamondLoader text="Loading..." />;
 }
 
 /** Theme toggle — sun/moon icon */

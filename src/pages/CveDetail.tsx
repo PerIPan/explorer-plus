@@ -7,6 +7,7 @@ import { formatDate } from '../lib/formatDate';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Badge } from '../components/shared/Badge';
 import { EntityLink } from '../components/shared/EntityLink';
+import { DiamondLoader } from '../components/shared/FoldingDiamond';
 
 type TabId = 'overview' | 'techniques' | 'reports';
 
@@ -84,12 +85,7 @@ export function CveDetail() {
   useEffect(() => { setActiveTab('overview'); }, [cveId]);
 
   if (isLoading) {
-    return (
-      <div className="flex items-center gap-3 text-[var(--text-secondary)] py-12">
-        <span className="inline-block w-5 h-5 border-2 border-[var(--teal-dim)] border-t-[var(--accent-teal)] rounded-full animate-spin" />
-        Loading CVE details...
-      </div>
-    );
+    return <DiamondLoader text="Loading CVE details..." />;
   }
 
   if (error || !data) {

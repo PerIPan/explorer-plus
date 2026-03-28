@@ -4,6 +4,7 @@ import { EntityLink } from '../shared/EntityLink';
 import { Badge } from '../shared/Badge';
 import { sanitize, sanitizeMarkdown } from '../../lib/sanitize';
 import { ExternalLinksButton } from '../shared/ExternalLinksButton';
+import { DiamondLoader } from '../shared/FoldingDiamond';
 
 // ── Collapsible card ───────────────────────────────────────────────────────────
 
@@ -102,12 +103,7 @@ export function DataSourceMapView({ attackId }: DataSourceMapViewProps) {
   const { data: dataSource, isLoading, error } = useDataSource(attackId);
 
   if (isLoading) {
-    return (
-      <div className="flex items-center gap-2 text-[var(--text-secondary)] text-sm py-8 justify-center">
-        <span className="inline-block w-5 h-5 border-2 border-[var(--pink-dim)] border-t-[var(--accent-pink)] rounded-full animate-spin" />
-        Loading data source map...
-      </div>
-    );
+    return <DiamondLoader text="Loading data source map..." />;
   }
 
   if (error || !dataSource) {

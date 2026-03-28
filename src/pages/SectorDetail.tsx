@@ -3,6 +3,7 @@ import { usePageTitle } from '../hooks/usePageTitle';
 import { useGroups } from '../hooks/useApi';
 import { PageHeader } from '../components/layout/PageHeader';
 import { EntityLink } from '../components/shared/EntityLink';
+import { DiamondLoader } from '../components/shared/FoldingDiamond';
 
 export function SectorDetail() {
   const { sectorName } = useParams<{ sectorName: string }>();
@@ -14,12 +15,7 @@ export function SectorDetail() {
   usePageTitle(decodedName ? `${decodedName} Sector` : 'Sector');
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64 text-[var(--text-secondary)]">
-        <span className="inline-block w-5 h-5 border-2 border-[var(--teal-dim)] border-t-[var(--accent-teal)] rounded-full animate-spin mr-2" />
-        Loading...
-      </div>
-    );
+    return <DiamondLoader text="Loading..." />;
   }
 
   if (error) {

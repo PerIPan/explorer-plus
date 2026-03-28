@@ -3,6 +3,7 @@ import { usePageTitle } from '../hooks/usePageTitle';
 import { useDataSource } from '../hooks/useApi';
 import { PageHeader } from '../components/layout/PageHeader';
 import { sanitize, sanitizeMarkdown } from '../lib/sanitize';
+import { DiamondLoader } from '../components/shared/FoldingDiamond';
 
 export function DataSourceDetail() {
   const { attackId } = useParams<{ attackId: string }>();
@@ -10,12 +11,7 @@ export function DataSourceDetail() {
   usePageTitle(data ? `${data.name} ${data.attackId}` : 'Data Source');
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64 text-[var(--text-secondary)]">
-        <span className="inline-block w-5 h-5 border-2 border-[var(--teal-dim)] border-t-[var(--accent-teal)] rounded-full animate-spin mr-2" />
-        Loading...
-      </div>
-    );
+    return <DiamondLoader text="Loading..." />;
   }
 
   if (error || !data) {

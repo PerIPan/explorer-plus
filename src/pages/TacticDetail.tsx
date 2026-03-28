@@ -5,6 +5,7 @@ import { useTactic } from '../hooks/useApi';
 import { PageHeader } from '../components/layout/PageHeader';
 import { EntityLink } from '../components/shared/EntityLink';
 import { sanitize, sanitizeMarkdown } from '../lib/sanitize';
+import { DiamondLoader } from '../components/shared/FoldingDiamond';
 
 export function TacticDetail() {
   const { attackId } = useParams<{ attackId: string }>();
@@ -28,12 +29,7 @@ export function TacticDetail() {
   }, [allTechniques, techFilter]);
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64 text-[var(--text-secondary)]">
-        <span className="inline-block w-5 h-5 border-2 border-[var(--teal-dim)] border-t-[var(--accent-teal)] rounded-full animate-spin mr-2" />
-        Loading...
-      </div>
-    );
+    return <DiamondLoader text="Loading..." />;
   }
 
   if (error || !data) {

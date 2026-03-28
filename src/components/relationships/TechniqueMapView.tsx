@@ -13,6 +13,7 @@ import { sanitize, sanitizeMarkdown } from '../../lib/sanitize';
 import { ctidCloudUrl, ctidVerisUrl } from '../../lib/urlSafety';
 import { ExternalLinksButton } from '../shared/ExternalLinksButton';
 import { formatDate } from '../../lib/formatDate';
+import { DiamondLoader } from '../shared/FoldingDiamond';
 import type { CloudControl } from '../../lib/types';
 
 // ── Level badge ──────────────────────────────────────────────────────────────
@@ -355,12 +356,7 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
   const { data: intel, isLoading: intelLoading } = useIntelligence(attackId);
 
   if (techLoading) {
-    return (
-      <div className="flex items-center gap-2 text-[var(--text-secondary)] text-sm py-8 justify-center">
-        <span className="inline-block w-5 h-5 border-2 border-[var(--teal-dim)] border-t-[var(--accent-teal)] rounded-full animate-spin" />
-        Loading technique map...
-      </div>
-    );
+    return <DiamondLoader text="Loading technique map..." />;
   }
 
   if (techError || !technique) {

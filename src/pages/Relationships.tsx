@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { usePageTitle } from '../hooks/usePageTitle';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import Fuse from 'fuse.js';
 import { useRelationships } from '../hooks/useApi';
@@ -17,6 +17,7 @@ import { TacticMapView } from '../components/relationships/TacticMapView';
 import { SectorMapView } from '../components/relationships/SectorMapView';
 import { ApplicationMapView } from '../components/relationships/ApplicationMapView';
 import type { GraphNode, GraphData } from '../lib/types';
+import { DiamondLoader } from '../components/shared/FoldingDiamond';
 
 interface EntityEntry {
   attackId: string;
@@ -104,6 +105,7 @@ function inferEntityType(
 export function Relationships() {
   usePageTitle('360 Views');
 
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const entityParam = searchParams.get('entity') ?? '';
   const tabParam = (searchParams.get('tab') ?? 'graph') as TabId;
@@ -439,10 +441,7 @@ export function Relationships() {
 
       {/* Loading */}
       {selectedId && isLoading && (
-        <div className="flex items-center justify-center h-20 text-[var(--text-secondary)]">
-          <span className="inline-block w-5 h-5 border-2 border-[var(--teal-dim)] border-t-[var(--accent-teal)] rounded-full animate-spin mr-2" />
-          Loading...
-        </div>
+        <DiamondLoader text="Loading..." />
       )}
 
       {/* Error — only show for graph-backed entities, not sectors */}
@@ -473,6 +472,18 @@ export function Relationships() {
                 {tab.label}
               </button>
             ))}
+            {entityType && ['group', 'campaign', 'sector'].includes(entityType) && (
+              <button
+                type="button"
+                onClick={() => {
+                  const param = entityType === 'group' ? `?actor=${selectedId}` : '';
+                  navigate(`/matrix${param}`);
+                }}
+                className="px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors duration-150 border-b-2 -mb-px text-[var(--text-secondary)] border-transparent hover:text-[var(--text-primary)] ml-auto"
+              >
+                Matrix ↗
+              </button>
+            )}
           </div>
         </div>
       )}

@@ -5,6 +5,7 @@ import { useDomain } from '../contexts/DomainContext';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Badge } from '../components/shared/Badge';
 import type { EntityType } from '../lib/types';
+import { DiamondLoader } from '../components/shared/FoldingDiamond';
 
 const ENTITY_PATH: Record<EntityType, string> = {
   technique: 'techniques',
@@ -132,10 +133,7 @@ export function Search() {
 
       {/* Loading */}
       {isLoading && (
-        <div className="flex items-center text-[var(--text-secondary)]">
-          <span className="inline-block w-5 h-5 border-2 border-[var(--teal-dim)] border-t-[var(--accent-teal)] rounded-full animate-spin mr-2" />
-          Searching...
-        </div>
+        <DiamondLoader text="Searching..." />
       )}
 
       {/* Error */}

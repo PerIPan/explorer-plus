@@ -4,6 +4,7 @@ import { apiFetch } from '../../lib/api';
 import { EntityLink } from '../shared/EntityLink';
 import { Badge } from '../shared/Badge';
 import { formatDate } from '../../lib/formatDate';
+import { DiamondLoader } from '../shared/FoldingDiamond';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -111,12 +112,7 @@ export function SectorMapView({ sectorSlug }: SectorMapViewProps) {
   });
 
   if (isLoading) {
-    return (
-      <div className="flex items-center gap-2 text-[var(--text-secondary)] text-sm py-8 justify-center">
-        <span className="inline-block w-5 h-5 border-2 border-[var(--teal-dim)] border-t-[var(--accent-teal)] rounded-full animate-spin" />
-        Loading sector map...
-      </div>
-    );
+    return <DiamondLoader text="Loading sector map..." />;
   }
 
   if (error || !data) {

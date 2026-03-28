@@ -10,6 +10,7 @@ import { DeprecatedBadge } from '../components/shared/DeprecatedBadge';
 import { EntityLink } from '../components/shared/EntityLink';
 import { sanitize, sanitizeMarkdown } from '../lib/sanitize';
 import type { CloudControl } from '../lib/types';
+import { DiamondLoader } from '../components/shared/FoldingDiamond';
 
 type TabId =
   | 'overview'
@@ -597,12 +598,7 @@ export function TechniqueDetail() {
   }, [tabParam]);
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64 text-[var(--text-secondary)]">
-        <span className="inline-block w-5 h-5 border-2 border-[var(--teal-dim)] border-t-[var(--accent-teal)] rounded-full animate-spin mr-2" />
-        Loading...
-      </div>
-    );
+    return <DiamondLoader text="Loading..." />;
   }
 
   if (error || !data) {
