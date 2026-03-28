@@ -100,7 +100,7 @@ export function ApplicationMapView({ appSlug }: { appSlug: string }) {
       </div>
 
       {/* VULNERABILITIES */}
-      <MapCard label="Vulnerabilities" icon={IconShield} count={data.cvePagination.total}>
+      <MapCard label="Vulnerabilities" icon={IconShield} count={data.cvePagination.total} defaultOpen={false}>
         {data.cves.length > 0 ? (
           <div className="space-y-1.5">
             {data.cves.map((cve) => (

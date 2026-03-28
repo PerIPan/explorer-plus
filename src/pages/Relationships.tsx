@@ -210,8 +210,38 @@ export function Relationships() {
     return { center, nodes, edges, truncated: sectorRel.software.length > 30 };
   }, [isSector, sectorRel, selectedId]);
 
-  const effectiveGraphData = isSector ? sectorGraphData : graphData;
-  const graphReady = isNonGraphEntity ? (isSector ? Boolean(sectorGraphData) : true) : (!isLoading && !error && Boolean(graphData));
+  /** Application graph — build from application detail API */
+  const isApp = entityType === 'application';
+  const { data: appDetail } = useQuery({
+    queryKey: ['application-detail', selectedId],
+    queryFn: () => apiFetch<{
+      vendor: string; product: string;
+      techniques: Array<{ attackId: string; name: string }>;
+      groups: Array<{ attackId: string; name: string }>;
+    }>(`/applications/${selectedId}`),
+    enabled: isApp && Boolean(selectedId),
+    staleTime: 2 * 60 * 1000,
+  });
+
+  const appGraphData = useMemo<GraphData | null>(() => {
+    if (!isApp || !appDetail) return null;
+    const label = `${appDetail.vendor} / ${appDetail.product}`;
+    const center: GraphNode = { id: selectedId, label, type: 'application', attackId: selectedId };
+    const nodes: GraphNode[] = [];
+    const edges: GraphData['edges'] = [];
+    for (const t of appDetail.techniques.slice(0, 30)) {
+      nodes.push({ id: t.attackId, label: t.name, type: 'technique', attackId: t.attackId });
+      edges.push({ source: selectedId, target: t.attackId, relationship: 'exploits' });
+    }
+    for (const g of appDetail.groups.slice(0, 30)) {
+      nodes.push({ id: g.attackId, label: g.name, type: 'group', attackId: g.attackId });
+      edges.push({ source: selectedId, target: g.attackId, relationship: 'targeted_by' });
+    }
+    return { center, nodes, edges, truncated: appDetail.techniques.length > 30 || appDetail.groups.length > 30 };
+  }, [isApp, appDetail, selectedId]);
+
+  const effectiveGraphData = isSector ? sectorGraphData : isApp ? appGraphData : graphData;
+  const graphReady = isNonGraphEntity ? Boolean(isSector ? sectorGraphData : appGraphData) : (!isLoading && !error && Boolean(graphData));
 
   /** Determine which tabs are visible for the current entity */
   const visibleTabs = TABS.filter(
