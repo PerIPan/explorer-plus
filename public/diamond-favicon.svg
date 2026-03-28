@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- Diamond at the "full, starting to unload" moment — all 4 faces visible with staggered fade -->
+  <g transform="translate(16,16) rotate(45) translate(-11,-11)">
+    <!-- Face 1: top-left (first to fold in, first to start fading) -->
+    <rect x="0" y="0" width="10.8" height="10.8" fill="#C4A87D" opacity="0.6"/>
+    <!-- Face 2: top-right (second in) -->
+    <rect x="11.2" y="0" width="10.8" height="10.8" fill="#C4A87D" opacity="0.75"/>
+    <!-- Face 3: bottom-right (third in) -->
+    <rect x="11.2" y="11.2" width="10.8" height="10.8" fill="#C4A87D" opacity="0.88"/>
+    <!-- Face 4: bottom-left (last in, still fully visible) -->
+    <rect x="0" y="11.2" width="10.8" height="10.8" fill="#C4A87D" opacity="1"/>
+  </g>
+</svg>

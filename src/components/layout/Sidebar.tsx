@@ -159,8 +159,9 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             sessionStorage.removeItem('mitre-sector');
             window.location.href = '/';
           }}
-          className="group text-left"
+          className="group text-left flex flex-col items-start gap-1.5"
         >
+          <img src="/diamond-favicon.svg" alt="" aria-hidden="true" className="w-8 h-8" />
           <div className="flex items-baseline gap-1.5">
             <span className="text-[var(--accent-teal)] font-bold text-xs tracking-widest uppercase group-hover:text-[var(--accent-teal-light)] transition-colors">MITRE EXPLORER</span>
             <span className="text-[var(--text-secondary)] text-[11px] font-semibold group-hover:text-[var(--text-primary)] transition-colors">Plus</span>
