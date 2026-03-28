@@ -38,7 +38,7 @@ const TYPE_VARIANT: Record<string, 'teal' | 'orange' | 'purple' | 'blue' | 'gree
   tactic: 'yellow',
   external_actor: 'neutral',
   sector: 'green',
-  application: 'green',
+  application: 'blue',
 };
 
 /** Human-readable label for entity types */

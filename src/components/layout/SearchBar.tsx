@@ -28,7 +28,7 @@ const TYPE_VARIANT: Record<string, 'teal' | 'orange' | 'purple' | 'blue' | 'gree
   data_source: 'pink',
   tactic: 'yellow',
   sector: 'green',
-  application: 'green',
+  application: 'blue',
 };
 
 export function SearchBar() {
