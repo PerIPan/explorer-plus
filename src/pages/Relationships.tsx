@@ -111,6 +111,7 @@ export function Relationships() {
   const tabParam = (searchParams.get('tab') ?? 'graph') as TabId;
 
   const [selectedId, setSelectedId] = useState<string>(entityParam);
+  const [selectedName, setSelectedName] = useState<string>(entityParam);
   const [searchInput, setSearchInput] = useState(entityParam);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>(tabParam);
@@ -268,9 +269,10 @@ export function Relationships() {
   }, [entityType, activeTab]);
 
   const selectEntity = useCallback(
-    (attackId: string, knownType?: string) => {
+    (attackId: string, knownType?: string, name?: string) => {
       setSelectedId(attackId);
-      setSearchInput(attackId);
+      setSelectedName(name ?? attackId);
+      setSearchInput(name ?? attackId);
       setShowSuggestions(false);
 
       // Immediately pick the best tab based on known type
@@ -300,7 +302,7 @@ export function Relationships() {
   );
 
   const handleNodeClick = useCallback((node: GraphNode) => {
-    if (node.attackId) selectEntity(node.attackId, node.type);
+    if (node.attackId) selectEntity(node.attackId, node.type, node.label);
   }, [selectEntity]);
 
   return (
@@ -349,8 +351,8 @@ export function Relationships() {
             onBlur={() => {
               blurTimerRef.current = setTimeout(() => {
                 setShowSuggestions(false);
-                if (!searchInput && selectedId && graphData?.center) {
-                  setSearchInput(graphData?.center?.label ?? '');
+                if (!searchInput && selectedId) {
+                  setSearchInput(selectedName || graphData?.center?.label || selectedId);
                 }
               }, 200);
             }}
@@ -360,10 +362,10 @@ export function Relationships() {
                 (e.target as HTMLInputElement).blur();
               }
               if (e.key === 'Enter' && suggestions.length > 0) {
-                selectEntity(suggestions[0].attackId, suggestions[0].type);
+                selectEntity(suggestions[0].attackId, suggestions[0].type, suggestions[0].name);
               }
             }}
-            placeholder={selectedId ? 'Search for another entity...' : 'Phishing, APT29, PowerShell, T1059...'}
+            placeholder={selectedId ? 'Search for another entity...' : 'Phishing, APT29, PowerShell, T1059, Windows Server...'}
             className="flex-1 bg-transparent text-sm text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none"
           />
           {searchInput && (
@@ -386,7 +388,7 @@ export function Relationships() {
               <button
                 key={s.attackId}
                 type="button"
-                onMouseDown={() => selectEntity(s.attackId, s.type)}
+                onMouseDown={() => selectEntity(s.attackId, s.type, s.name)}
                 className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-[var(--teal-ghost)] transition-colors text-left ${i === 0 ? 'bg-[var(--hover-subtle)]' : ''}`}
               >
                 <Badge
@@ -438,7 +440,7 @@ export function Relationships() {
       )}
 
       {/* Loading */}
-      {selectedId && isLoading && (
+      {selectedId && !isNonGraphEntity && isLoading && (
         <DiamondLoader text="Loading..." />
       )}
 
@@ -477,8 +479,7 @@ export function Relationships() {
                   if (entityType === 'group') {
                     navigate(`/matrix?actor=${selectedId}`);
                   } else {
-                    const name = searchInput || selectedId;
-                    navigate(`/matrix?type=${entityType}&entity=${encodeURIComponent(selectedId)}&label=${encodeURIComponent(name)}`);
+                    navigate(`/matrix?type=${entityType}&entity=${encodeURIComponent(selectedId)}&label=${encodeURIComponent(selectedName || selectedId)}`);
                   }
                 }}
                 className="px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors duration-150 border-b-2 -mb-px text-[var(--text-secondary)] border-transparent hover:text-[var(--text-primary)]"

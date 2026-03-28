@@ -90,6 +90,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       [recordsInserted, recordsSkipped, logId],
     );
 
+    // Mark CVEs as KEV in cve_details (if table exists)
+    try {
+      await query(
+        `UPDATE cve_details SET is_kev = true
+         WHERE cve_id IN (SELECT value FROM ioc_entries WHERE source = 'cisa_kev' AND type = 'cve')
+           AND is_kev = false`,
+      );
+    } catch { /* cve_details may not exist yet */ }
+
     // Link new CVEs to techniques via CWE→CAPEC→ATT&CK bridge
     let techniquesLinked = 0;
     try {
