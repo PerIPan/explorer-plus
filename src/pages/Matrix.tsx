@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { useQueries } from '@tanstack/react-query';
@@ -28,7 +28,7 @@ export function Matrix() {
   const [inputValue, setInputValue] = useState('');
   const [filterText, setFilterText] = useState('');
   const [selectedActors, setSelectedActors] = useState<SelectedActor[]>([]);
-  const [autoSelected, setAutoSelected] = useState(false);
+  const autoSelectedRef = useRef(false);
 
   // Fetch all groups for the actor selector (respects sector filter)
   const groupsParams = useMemo(() => ({ limit: '5000', ...sectorParam, ...domainParam }), [sectorParam, domainParam]);
@@ -42,15 +42,15 @@ export function Matrix() {
 
   // Auto-select actor from URL param (e.g. ?actor=G0016)
   useEffect(() => {
-    if (autoSelected || groups.length === 0) return;
+    if (autoSelectedRef.current || groups.length === 0) return;
     const actorParam = searchParams.get('actor');
     if (!actorParam) return;
     const group = groups.find((g) => g.attackId === actorParam);
     if (group) {
       setSelectedActors([{ attackId: group.attackId, name: group.name, colorIndex: 0 }]);
-      setAutoSelected(true);
+      autoSelectedRef.current = true;
     }
-  }, [groups, searchParams, autoSelected]);
+  }, [groups, searchParams]);
 
   // Fetch full group details for selected actors (techniques)
   const groupQueries = useQueries({
