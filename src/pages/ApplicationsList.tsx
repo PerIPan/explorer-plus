@@ -49,7 +49,7 @@ const columns: ColumnDef<Application>[] = [
     header: 'CVEs',
     width: '80px',
     align: 'center',
-    render: (row) => <Badge label={String(row.cveCount)} variant="teal" />,
+    render: (row) => <Badge label={String(row.cveCount)} variant="pink" />,
   },
   {
     key: 'topSeverity',
