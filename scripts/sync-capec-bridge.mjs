@@ -1,21 +1,15 @@
 #!/usr/bin/env node
 /**
- * Build CWE → ATT&CK technique bridge via CAPEC STIX data.
- * Links CISA KEV CVEs (which have CWE IDs from NVD) to ATT&CK techniques.
+ * Sync CAPEC bridge: CWE → CAPEC → ATT&CK technique.
+ * Downloads STIX CAPEC bundle and populates capec_mappings table.
  *
  * Usage: DATABASE_URL=... node scripts/sync-capec-bridge.mjs
  */
 
 import pg from 'pg';
 
-const CAPEC_STIX_URL =
-  'https://raw.githubusercontent.com/mitre/cti/master/capec/2.1/stix-capec.json';
-
 const DATABASE_URL = process.env.DATABASE_URL;
-if (!DATABASE_URL) {
-  console.error('DATABASE_URL required');
-  process.exit(1);
-}
+if (!DATABASE_URL) { console.error('DATABASE_URL required'); process.exit(1); }
 
 const isProduction = DATABASE_URL.includes('neon') || DATABASE_URL.includes('vercel');
 const pool = new pg.Pool({
@@ -23,105 +17,107 @@ const pool = new pg.Pool({
   ssl: isProduction ? { rejectUnauthorized: true } : undefined,
 });
 
+const CAPEC_URL = 'https://raw.githubusercontent.com/mitre/cti/master/capec/2.1/stix-capec.json';
+
 async function main() {
-  console.log('Fetching CAPEC STIX bundle...');
-  const resp = await fetch(CAPEC_STIX_URL);
-  if (!resp.ok) throw new Error(`CAPEC fetch failed: ${resp.status}`);
-  const stix = await resp.json();
+  console.log('Downloading CAPEC STIX bundle...');
+  const res = await fetch(CAPEC_URL);
+  if (!res.ok) { console.error(`Failed: ${res.status}`); process.exit(1); }
+  const data = await res.json();
 
-  // Build CWE → ATT&CK technique ID mapping from CAPEC attack-patterns
-  const cweToTechniques = new Map();
-  let capecWithAttack = 0;
+  const capecs = data.objects.filter(o => o.type === 'attack-pattern');
+  console.log(`Loaded ${capecs.length} CAPEC patterns`);
 
-  for (const obj of stix.objects) {
-    if (obj.type !== 'attack-pattern') continue;
-    const refs = obj.external_references || [];
-
-    const attackIds = [];
-    const cwes = [];
-    for (const ref of refs) {
-      if (ref.source_name === 'ATTACK' && ref.external_id) {
-        attackIds.push(ref.external_id);
-      }
-      if (ref.source_name === 'cwe' && ref.external_id) {
-        cwes.push(ref.external_id);
-      }
-    }
-
-    if (attackIds.length > 0) capecWithAttack++;
-    if (cwes.length === 0 || attackIds.length === 0) continue;
-
-    for (const cwe of cwes) {
-      if (!cweToTechniques.has(cwe)) cweToTechniques.set(cwe, new Set());
-      for (const tid of attackIds) {
-        // Normalize to parent technique (T1059.001 → T1059)
-        cweToTechniques.get(cwe).add(tid.split('.')[0]);
-      }
-    }
-  }
-
-  console.log(`CAPEC patterns with ATT&CK refs: ${capecWithAttack}`);
-  console.log(`CWEs with technique mapping: ${cweToTechniques.size}`);
-  const totalMappings = [...cweToTechniques.values()].reduce((s, v) => s + v.size, 0);
-  console.log(`Total CWE→technique mappings: ${totalMappings}`);
-
-  // Load technique UUID lookup from DB
-  const techResult = await pool.query(
-    `SELECT id, attack_id FROM techniques WHERE is_revoked = false AND is_deprecated = false`
-  );
+  // Build technique UUID lookup
+  const techResult = await pool.query('SELECT id, attack_id FROM techniques WHERE is_revoked = false');
   const techMap = new Map();
-  for (const row of techResult.rows) {
-    techMap.set(row.attack_id, row.id);
-  }
-  console.log(`Loaded ${techMap.size} techniques from DB`);
+  for (const row of techResult.rows) techMap.set(row.attack_id, row.id);
+  console.log(`Loaded ${techMap.size} techniques for FK resolution`);
 
-  // Find CVEs with CWE IDs that we can link
-  const cveResult = await pool.query(
-    `SELECT cd.id, cd.cve_id, cd.cwe_id, i.id as ioc_id
-     FROM cve_details cd
-     JOIN ioc_entries i ON i.value = cd.cve_id AND i.type = 'cve'
-     WHERE cd.cwe_id IS NOT NULL AND cd.cwe_id != ''`
-  );
-  console.log(`CVEs with CWE IDs: ${cveResult.rows.length}`);
+  // Parse CAPEC → rows
+  const rows = [];
+  for (const ap of capecs) {
+    const refs = ap.external_references ?? [];
+    let capecId = null;
+    const cwes = [];
+    const techniques = [];
 
-  let linked = 0;
-  let skipped = 0;
-  let alreadyLinked = 0;
-
-  for (const cve of cveResult.rows) {
-    const techniques = cweToTechniques.get(cve.cwe_id);
-    if (!techniques) {
-      skipped++;
-      continue;
+    for (const ref of refs) {
+      if (ref.source_name === 'capec') capecId = ref.external_id;
+      else if (ref.source_name === 'cwe') cwes.push(ref.external_id);
+      else if (ref.source_name === 'ATTACK' && ref.external_id?.startsWith('T'))
+        techniques.push(ref.external_id);
     }
+    if (!capecId || cwes.length === 0) continue;
 
-    for (const tid of techniques) {
-      const techId = techMap.get(tid);
-      if (!techId) continue;
+    const name = ap.name ?? null;
+    const desc = ap.description ? ap.description.slice(0, 500) : null;
 
-      try {
-        await pool.query(
-          `INSERT INTO technique_iocs (technique_id, ioc_id, confidence)
-           VALUES ($1, $2, 'inferred')
-           ON CONFLICT DO NOTHING`,
-          [techId, cve.ioc_id]
-        );
-        linked++;
-      } catch {
-        alreadyLinked++;
+    if (techniques.length === 0) {
+      // Store CWE→CAPEC without technique (for completeness)
+      for (const cwe of cwes)
+        rows.push([capecId, name, desc, cwe, null, null]);
+    } else {
+      for (const cwe of cwes)
+        for (const tech of techniques)
+          rows.push([capecId, name, desc, cwe, tech, techMap.get(tech) ?? null]);
+    }
+  }
+
+  console.log(`Generated ${rows.length} mappings`);
+
+  if (rows.length < 100) {
+    console.error(`Only ${rows.length} mappings generated — expected 1000+. Aborting to prevent data loss.`);
+    process.exit(1);
+  }
+
+  // Clear + insert
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    await client.query('DELETE FROM capec_mappings');
+
+    for (let i = 0; i < rows.length; i += 50) {
+      const batch = rows.slice(i, i + 50);
+      const values = [];
+      const params = [];
+      for (const r of batch) {
+        const o = params.length;
+        values.push(`($${o+1},$${o+2},$${o+3},$${o+4},$${o+5},$${o+6})`);
+        params.push(...r);
       }
+      await client.query(
+        `INSERT INTO capec_mappings (capec_id, capec_name, capec_description, cwe_id, attack_technique_id, technique_id)
+         VALUES ${values.join(',')} ON CONFLICT DO NOTHING`,
+        params,
+      );
     }
+    await client.query('COMMIT');
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
   }
+
+  // Stats
+  const s = (await pool.query(`
+    SELECT COUNT(*) AS total,
+      COUNT(DISTINCT capec_id) AS capecs,
+      COUNT(DISTINCT cwe_id) AS cwes,
+      COUNT(DISTINCT attack_technique_id) FILTER (WHERE attack_technique_id IS NOT NULL) AS techniques,
+      COUNT(*) FILTER (WHERE technique_id IS NOT NULL) AS with_fk
+    FROM capec_mappings
+  `)).rows[0];
 
   console.log(`\nResults:`);
-  console.log(`  Technique links created: ${linked}`);
-  console.log(`  CVEs with no CWE→technique mapping: ${skipped}`);
-  console.log(`  Already linked (skipped): ${alreadyLinked}`);
+  console.log(`  Total mappings:    ${s.total}`);
+  console.log(`  Unique CAPECs:     ${s.capecs}`);
+  console.log(`  Unique CWEs:       ${s.cwes}`);
+  console.log(`  Unique techniques: ${s.techniques}`);
+  console.log(`  With technique FK: ${s.with_fk}`);
 
   await pool.end();
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+main().catch(e => { console.error(e); process.exit(1); });

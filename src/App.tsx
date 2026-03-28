@@ -45,6 +45,7 @@ const VerisCategories = lazy(() => import('./pages/VerisCategories').then((m) =>
 const CloudControls   = lazy(() => import('./pages/CloudControls').then((m) => ({ default: m.CloudControls })));
 const AtomicTests     = lazy(() => import('./pages/AtomicTests').then((m) => ({ default: m.AtomicTests })));
 const DetectionStrategies = lazy(() => import('./pages/DetectionStrategies').then((m) => ({ default: m.DetectionStrategies })));
+const ApplicationsList = lazy(() => import('./pages/ApplicationsList').then((m) => ({ default: m.ApplicationsList })));
 // Extended Intel pages
 const ExternalActors  = lazy(() => import('./pages/ExternalActors').then((m) => ({ default: m.ExternalActors })));
 
@@ -280,6 +281,7 @@ export default function App() {
           <Route path="frameworks/nist" element={<NistControls />} />
           <Route path="frameworks/engage" element={<EngageActivities />} />
           <Route path="frameworks/detection" element={<DetectionStrategies />} />
+          <Route path="applications" element={<ApplicationsList />} />
           <Route path="frameworks/react" element={<ReactActions />} />
           <Route path="frameworks/veris" element={<VerisCategories />} />
           <Route path="frameworks/cloud" element={<CloudControls />} />

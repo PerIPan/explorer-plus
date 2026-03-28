@@ -28,6 +28,7 @@ const TYPE_VARIANT: Record<string, 'teal' | 'orange' | 'purple' | 'blue' | 'gree
   data_source: 'pink',
   tactic: 'yellow',
   sector: 'green',
+  application: 'green',
 };
 
 export function SearchBar() {
@@ -94,9 +95,13 @@ export function SearchBar() {
         navigate(`/external-actors?search=${encodeURIComponent(entity.attackId)}`);
         return;
       }
-      // Sectors navigate to the 360 View
+      // Sectors and applications navigate to the 360 View
       if (entity.type === 'sector') {
         navigate(`/?entity=${encodeURIComponent(entity.attackId)}&tab=sector-map`);
+        return;
+      }
+      if (entity.type === 'application') {
+        navigate(`/?entity=${encodeURIComponent(entity.attackId)}&tab=application-map`);
         return;
       }
       // Auto-switch domain when selecting an entity outside current domain
@@ -185,7 +190,7 @@ export function SearchBar() {
                 label={s.type.replace('_', ' ')}
                 variant={TYPE_VARIANT[s.type] ?? 'neutral'}
               />
-              {s.type !== 'sector' && (
+              {s.type !== 'sector' && s.type !== 'application' && (
                 <span className="font-mono text-xs text-[var(--accent-teal)] w-20 flex-shrink-0">{s.attackId}</span>
               )}
               <span className="text-sm text-[var(--text-primary)] truncate">{s.name}</span>

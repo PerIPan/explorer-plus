@@ -1,0 +1,86 @@
+import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { query } from '../lib/db.js';
+import { withHandler } from '../lib/middleware.js';
+import { z } from 'zod';
+
+const querySchema = z.object({
+  search: z.string().max(200).optional(),
+  vendor: z.string().max(200).optional(),
+  page: z.coerce.number().int().positive().max(1000).default(1),
+  limit: z.coerce.number().int().positive().max(200).default(50),
+  sort: z.enum(['cve_count', 'vendor', 'product']).default('cve_count'),
+  order: z.enum(['asc', 'desc']).default('desc'),
+});
+
+async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
+  const parsed = querySchema.safeParse(req.query);
+  if (!parsed.success) {
+    res.status(400).json({ error: 'Invalid query params', code: 'VALIDATION_ERROR' });
+    return;
+  }
+
+  const { search, vendor, page, limit, sort, order } = parsed.data;
+  const offset = (page - 1) * limit;
+  const params: unknown[] = [];
+  const conditions: string[] = [];
+
+  if (search) {
+    params.push(search);
+    conditions.push(`(a.vendor ILIKE '%' || $${params.length} || '%' OR a.product ILIKE '%' || $${params.length} || '%')`);
+  }
+  if (vendor) {
+    params.push(vendor);
+    conditions.push(`a.vendor = $${params.length}`);
+  }
+
+  const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+
+  const sortMap: Record<string, string> = {
+    cve_count: 'a.cve_count',
+    vendor: 'a.vendor',
+    product: 'a.product',
+  };
+  const sortCol = sortMap[sort] ?? 'a.cve_count';
+  const sortDir = order === 'asc' ? 'ASC' : 'DESC';
+
+  const countResult = await query<{ total: string }>(
+    `SELECT COUNT(*) AS total FROM applications a ${where}`,
+    params,
+  );
+  const total = parseInt(countResult.rows[0].total, 10);
+
+  params.push(limit, offset);
+  const dataResult = await query<{
+    id: string;
+    vendor: string;
+    product: string;
+    normalized: string;
+    cpePrefix: string | null;
+    cveCount: string;
+    topSeverity: string | null;
+  }>(
+    `SELECT
+       a.id, a.vendor, a.product, a.normalized, a.cpe_prefix AS "cpePrefix",
+       a.cve_count::text AS "cveCount",
+       (SELECT cd.cvss_severity FROM cve_details cd
+        JOIN affected_products ap ON ap.cve_id = cd.cve_id AND ap.application_id = a.id
+        WHERE cd.cvss_severity IS NOT NULL
+        ORDER BY cd.cvss_score DESC NULLS LAST LIMIT 1
+       ) AS "topSeverity"
+     FROM applications a
+     ${where}
+     ORDER BY ${sortCol} ${sortDir}, a.vendor ASC, a.product ASC
+     LIMIT $${params.length - 1} OFFSET $${params.length}`,
+    params,
+  );
+
+  res.status(200).json({
+    data: dataResult.rows.map((r) => ({
+      ...r,
+      cveCount: parseInt(r.cveCount, 10),
+    })),
+    pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+  });
+}
+
+export default withHandler(handler, { cacheTtl: 3600 });

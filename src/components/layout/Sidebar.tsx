@@ -55,6 +55,10 @@ const mainSections: NavSection[] = [
   },
 ];
 
+const assetsNav: NavItem[] = [
+  { path: '/applications', label: 'Applications', tooltip: 'vendor products with CVEs mapped to ATT&CK techniques' },
+];
+
 const ctiNav: NavItem[] = [
   { path: '/cti/reports', label: 'Reports', tooltip: 'threat intelligence reports from OTX, RSS feeds' },
   { path: '/cti/cves', label: 'CVEs', tooltip: 'known vulnerabilities from OTX, CISA KEV, enriched via NVD' },
@@ -207,6 +211,21 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           </div>
         ))}
       </nav>
+
+      {/* Separator */}
+      <div className="mx-4 border-t border-[var(--border-color)]" />
+
+      {/* Assets Section */}
+      <div className="px-2 py-4">
+        <div className="px-3 mb-2 ml-1 border-l-2 border-[var(--teal-muted)] pl-2 text-[11px] font-bold text-[var(--accent-teal)] uppercase tracking-widest">
+          Assets
+        </div>
+        <div className="space-y-0.5">
+          {assetsNav.map((item) => (
+            <NavItemLink key={item.path} path={item.path} label={item.label} tooltip={item.tooltip} />
+          ))}
+        </div>
+      </div>
 
       {/* Separator */}
       <div className="mx-4 border-t border-[var(--border-color)]" />

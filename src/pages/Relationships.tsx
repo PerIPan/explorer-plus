@@ -15,6 +15,7 @@ import { MitigationMapView } from '../components/relationships/MitigationMapView
 import { DataSourceMapView } from '../components/relationships/DataSourceMapView';
 import { TacticMapView } from '../components/relationships/TacticMapView';
 import { SectorMapView } from '../components/relationships/SectorMapView';
+import { ApplicationMapView } from '../components/relationships/ApplicationMapView';
 import type { GraphNode, GraphData } from '../lib/types';
 
 interface EntityEntry {
@@ -36,6 +37,7 @@ const TYPE_VARIANT: Record<string, 'teal' | 'orange' | 'purple' | 'blue' | 'gree
   tactic: 'yellow',
   external_actor: 'neutral',
   sector: 'green',
+  application: 'green',
 };
 
 /** Human-readable label for entity types */
@@ -51,7 +53,7 @@ function typeLabel(type: string): string {
 
 // ── Tab definitions ────────────────────────────────────────────────────────────
 
-type TabId = 'graph' | 'actor' | 'technique-map' | 'software-map' | 'mitigation-map' | 'data-source-map' | 'tactic-map' | 'sector-map';
+type TabId = 'graph' | 'actor' | 'technique-map' | 'software-map' | 'mitigation-map' | 'data-source-map' | 'tactic-map' | 'sector-map' | 'application-map';
 
 interface TabDef {
   id: TabId;
@@ -68,6 +70,7 @@ const TABS: TabDef[] = [
   { id: 'data-source-map', label: 'Data Source Map', forTypes: ['data_source'] },
   { id: 'tactic-map', label: 'Tactic Map', forTypes: ['tactic'] },
   { id: 'sector-map', label: 'Sector Map', forTypes: ['sector'] },
+  { id: 'application-map', label: 'Application Map', forTypes: ['application'] },
   { id: 'graph', label: 'Graph' },
 ];
 
@@ -80,7 +83,10 @@ const TAB_FOR_TYPE: Record<string, TabId> = {
   data_source: 'data-source-map',
   tactic: 'tactic-map',
   sector: 'sector-map',
+  application: 'application-map',
 };
+
+const TAB_TYPE_HINT: Record<string, string> = { 'sector-map': 'sector', 'application-map': 'application' };
 
 /** Derive the entity type from the graph center node or from search suggestions */
 function inferEntityType(
@@ -135,7 +141,7 @@ export function Relationships() {
   }, []);
 
   const { data: graphData, isLoading, error } = useRelationships(
-    (tabParam === 'sector-map' || !selectedId) ? '' : selectedId,
+    (tabParam === 'sector-map' || tabParam === 'application-map' || !selectedId) ? '' : selectedId,
   );
 
   /** Load ALL entity names cross-domain for Fuse.js — shared cache with SearchBar */
@@ -164,12 +170,12 @@ export function Relationships() {
   }, [fuse, searchInput]);
 
   // Infer entity type from graph center or suggestions; fall back to tab hint for non-graph entities
-  const TAB_TYPE_HINT: Record<string, string> = { 'sector-map': 'sector' };
   const entityType = inferEntityType(graphData?.center, suggestions, selectedId)
     ?? TAB_TYPE_HINT[tabParam]
     ?? null;
 
   const isSector = entityType === 'sector';
+  const isNonGraphEntity = isSector || entityType === 'application';
 
   /** Sector relationships — fetch only for sectors, build graph from it */
   const { data: sectorRel } = useQuery({
@@ -205,7 +211,7 @@ export function Relationships() {
   }, [isSector, sectorRel, selectedId]);
 
   const effectiveGraphData = isSector ? sectorGraphData : graphData;
-  const graphReady = isSector ? Boolean(sectorGraphData) : (!isLoading && !error && Boolean(graphData));
+  const graphReady = isNonGraphEntity ? (isSector ? Boolean(sectorGraphData) : true) : (!isLoading && !error && Boolean(graphData));
 
   /** Determine which tabs are visible for the current entity */
   const visibleTabs = TABS.filter(
@@ -355,7 +361,7 @@ export function Relationships() {
                   label={typeLabel(s.type)}
                   variant={TYPE_VARIANT[s.type] ?? 'neutral'}
                 />
-                {s.type !== 'sector' && (
+                {s.type !== 'sector' && s.type !== 'application' && (
                   <span className="font-mono text-xs text-[var(--accent-teal)] w-20 flex-shrink-0">{s.attackId}</span>
                 )}
                 <span className="text-sm text-[var(--text-primary)] truncate">{s.name}</span>
@@ -410,7 +416,7 @@ export function Relationships() {
       )}
 
       {/* Error — only show for graph-backed entities, not sectors */}
-      {selectedId && error && !isSector && (
+      {selectedId && error && !isNonGraphEntity && (
         <div className="flex items-center justify-center h-20 text-[var(--accent-orange)]">
           Failed to load relationships.
         </div>
@@ -521,6 +527,11 @@ export function Relationships() {
           {/* Sector Map tab */}
           {activeTab === 'sector-map' && entityType === 'sector' && (
             <SectorMapView sectorSlug={selectedId} />
+          )}
+
+          {/* Application Map tab */}
+          {activeTab === 'application-map' && entityType === 'application' && (
+            <ApplicationMapView appSlug={selectedId} />
           )}
         </div>
       )}
