@@ -11,9 +11,16 @@ const querySchema = z.object({
 });
 
 async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
-  const slugParsed = slugSchema.safeParse(
-    Array.isArray(req.query.slug) ? req.query.slug.join('/') : req.query.slug,
-  );
+  // Handle both catch-all ([...slug]) and rewrite (:vendor/:product) routing
+  let rawSlug: string | undefined;
+  if (req.query.slug) {
+    rawSlug = Array.isArray(req.query.slug) ? req.query.slug.join('/') : req.query.slug;
+  } else if (req.query.vendor && req.query.product) {
+    const v = Array.isArray(req.query.vendor) ? req.query.vendor[0] : req.query.vendor;
+    const p = Array.isArray(req.query.product) ? req.query.product[0] : req.query.product;
+    rawSlug = `${v}/${p}`;
+  }
+  const slugParsed = slugSchema.safeParse(rawSlug);
   if (!slugParsed.success) {
     res.status(400).json({ error: 'Invalid slug', code: 'VALIDATION_ERROR' });
     return;
