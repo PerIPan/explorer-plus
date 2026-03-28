@@ -226,6 +226,21 @@ export function Relationships() {
     staleTime: 2 * 60 * 1000,
   });
 
+  // Resolve display name for non-graph entities when API data arrives
+  useEffect(() => {
+    if (isApp && appDetail) {
+      const name = `${appDetail.vendor} / ${appDetail.product}`;
+      setSelectedName(name);
+      setSearchInput(name);
+    }
+  }, [isApp, appDetail]);
+  useEffect(() => {
+    if (isSector && sectorRel) {
+      setSelectedName(sectorRel.name);
+      setSearchInput(sectorRel.name);
+    }
+  }, [isSector, sectorRel]);
+
   const appGraphData = useMemo<GraphData | null>(() => {
     if (!isApp || !appDetail) return null;
     const label = `${appDetail.vendor} / ${appDetail.product}`;

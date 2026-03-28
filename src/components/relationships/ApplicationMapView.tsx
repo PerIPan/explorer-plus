@@ -88,10 +88,10 @@ export function ApplicationMapView({ appSlug }: { appSlug: string }) {
       <div className="pb-1">
         <h2 className="text-lg font-semibold text-[var(--text-primary)]">{data.vendor} / {data.product}</h2>
         <div className="flex flex-wrap items-center gap-2 mt-1">
-          <Badge label="application" variant="green" />
-          <Badge label={`${data.cveCount} CVEs`} variant="teal" />
-          <Badge label={`${data.techniques.length} techniques`} variant="orange" />
-          <Badge label={`${data.groups.length} threat groups`} variant="pink" />
+          <Badge label="application" variant="blue" />
+          <Badge label={`${data.cveCount} CVEs`} variant="pink" />
+          <Badge label={`${data.techniques.length} techniques`} variant="teal" />
+          <Badge label={`${data.groups.length} threat groups`} variant="orange" />
         </div>
       </div>
 

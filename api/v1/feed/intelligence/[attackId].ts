@@ -24,7 +24,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
 
   const techId = techResult.rows[0].id;
 
-  const [reportsResult, sigmaResult, atomicResult, defensiveResult, iocsResult, detStrategiesResult, cvesResult] =
+  const [reportsResult, sigmaResult, atomicResult, defensiveResult, iocsResult, detStrategiesResult, cvesResult, appsResult] =
     await Promise.all([
       // Top 5 threat reports
       query<{
@@ -174,6 +174,18 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
          LIMIT 2`,
         [techId],
       ),
+
+      // Affected applications via CAPEC bridge (materialized view)
+      query<{ normalized: string; vendor: string; product: string; cveCount: string }>(
+        `SELECT a.normalized, a.vendor, a.product, a.cve_count::text AS "cveCount"
+         FROM app_technique_groups atg
+         JOIN applications a ON a.id = atg.application_id
+         WHERE atg.technique_id = $1
+         GROUP BY a.normalized, a.vendor, a.product, a.cve_count
+         ORDER BY a.cve_count DESC
+         LIMIT 20`,
+        [techId],
+      ),
     ]);
 
   // Normalize ioc first_seen → first_seen_at for frontend
@@ -191,6 +203,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     detectionStrategies: detStrategiesResult.rows,
     cves: cvesResult.rows,
     iocs,
+    affectedApps: appsResult.rows.map((r) => ({ ...r, cveCount: parseInt(r.cveCount, 10) })),
   });
 }
 

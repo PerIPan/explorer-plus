@@ -578,6 +578,24 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
           </CollapsibleSection>
         )}
 
+        {/* Targeted Applications — collapsed */}
+        {(group as { targetedApps?: Array<{ normalized: string; vendor: string; product: string; cveCount: number }> }).targetedApps?.length ? (
+          <CollapsibleSection title="Targeted Applications" count={(group as { targetedApps: Array<unknown> }).targetedApps.length} defaultOpen={false}>
+            <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto" tabIndex={0} aria-label="Targeted applications">
+              {(group as { targetedApps: Array<{ normalized: string; vendor: string; product: string; cveCount: number }> }).targetedApps.map((app) => (
+                <a
+                  key={app.normalized}
+                  href={`/?entity=${encodeURIComponent(app.normalized)}&tab=application-map`}
+                  className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs bg-[var(--surface-card)] border border-[var(--border-color)] hover:border-[var(--teal-dim)] transition-colors"
+                >
+                  <span className="text-[var(--text-primary)]">{app.vendor} / {app.product}</span>
+                  <Badge label={String(app.cveCount)} variant="blue" />
+                </a>
+              ))}
+            </div>
+          </CollapsibleSection>
+        ) : null}
+
         {/* VERIS Categories — collapsed */}
         {fwResult.data?.veris && fwResult.data.veris.length > 0 && (
           <CollapsibleSection title="VERIS Incident Categories" count={fwResult.data.veris.length} defaultOpen={false}>

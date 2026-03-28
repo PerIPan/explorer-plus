@@ -28,7 +28,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   const sector = sectorResult.rows[0];
   const sectorId = sector.id;
 
-  const [groups, campaigns, software, techniques, cves] = await Promise.all([
+  const [groups, campaigns, software, techniques, cves, apps] = await Promise.all([
     // Groups targeting this sector
     query<{ attackId: string; name: string; aliases: string[] | null; source: string }>(
       `SELECT
@@ -96,6 +96,20 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
        LIMIT 20`,
       [sectorId],
     ),
+
+    // Vulnerable applications (via groups → techniques → CAPEC → CVE → apps)
+    query<{ normalized: string; vendor: string; product: string; cveCount: string }>(
+      `SELECT DISTINCT a.normalized, a.vendor, a.product, a.cve_count::text AS "cveCount"
+       FROM group_sectors gs
+       JOIN app_technique_groups atg ON atg.group_attack_id = (
+         SELECT attack_id FROM threat_groups WHERE id = gs.group_id
+       )
+       JOIN applications a ON a.id = atg.application_id
+       WHERE gs.sector_id = $1
+       ORDER BY a.cve_count DESC
+       LIMIT 20`,
+      [sectorId],
+    ),
   ]);
 
   res.status(200).json({
@@ -108,6 +122,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
       groupCount: parseInt(r.groupCount, 10),
     })),
     cves: cves.rows,
+    vulnerableApps: apps.rows.map((r) => ({ ...r, cveCount: parseInt(r.cveCount, 10) })),
   });
 }
 

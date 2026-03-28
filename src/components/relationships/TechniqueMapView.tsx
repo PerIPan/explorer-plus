@@ -850,6 +850,24 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
         </MapRow>
       </MapCard>
 
+      {/* AFFECTED APPLICATIONS */}
+      {(intel?.affectedApps ?? []).length > 0 && (
+        <MapCard label="Affected Applications" icon={IconDatabase} count={intel!.affectedApps.length} defaultOpen={false}>
+          <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto" tabIndex={0} aria-label="Affected applications">
+            {intel!.affectedApps.map((app) => (
+              <a
+                key={app.normalized}
+                href={`/?entity=${encodeURIComponent(app.normalized)}&tab=application-map`}
+                className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs bg-[var(--surface-card)] border border-[var(--border-color)] hover:border-[var(--teal-dim)] transition-colors"
+              >
+                <span className="text-[var(--text-primary)]">{app.vendor} / {app.product}</span>
+                <Badge label={String(app.cveCount)} variant="blue" />
+              </a>
+            ))}
+          </div>
+        </MapCard>
+      )}
+
       {/* VIRUSTOTAL INTELLIGENCE */}
       <VtSection iocs={intel?.iocs ?? []} loading={intelLoading} />
 

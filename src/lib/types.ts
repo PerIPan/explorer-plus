@@ -103,6 +103,7 @@ export interface Group extends BaseEntity {
   software?: GroupSoftware[];
   campaigns?: GroupCampaign[];
   sectors?: GroupSector[];
+  targetedApps?: Array<{ normalized: string; vendor: string; product: string; cveCount: number }>;
 }
 
 // ── Campaign detail relationship sub-types ────────────────────────────────────
@@ -498,6 +499,12 @@ export interface TechniqueIntelligence {
     cvss_severity: string | null;
     published_at: string | null;
     technique_count: number;
+  }>;
+  affectedApps: Array<{
+    normalized: string;
+    vendor: string;
+    product: string;
+    cveCount: number;
   }>;
 }
 
