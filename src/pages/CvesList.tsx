@@ -200,7 +200,14 @@ const columns: ColumnDef<CveEntry>[] = [
     width: '90px',
     render: (row) =>
       row.cweId ? (
-        <span className="text-xs text-[var(--accent-blue)] font-mono">{row.cweId}</span>
+        <a
+          href={`https://cwe.mitre.org/data/definitions/${row.cweId.replace('CWE-', '')}.html`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs text-[var(--accent-blue)] font-mono hover:underline"
+        >
+          {row.cweId}
+        </a>
       ) : (
         <span className="text-[var(--text-secondary)] text-xs">—</span>
       ),

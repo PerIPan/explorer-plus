@@ -64,7 +64,7 @@ export function DataTable<T extends Record<string, any>>({
 
   return (
     <div className="flex flex-col">
-      <div className="overflow-x-auto rounded-lg border border-[var(--border-color)]">
+      <div className="overflow-x-auto overflow-y-visible rounded-lg border border-[var(--border-color)]">
         <table className="w-full text-sm border-collapse">
           {/* Sticky header */}
           <thead className="sticky top-0 z-10 bg-[var(--surface-card)] border-b border-[var(--border-color)]">

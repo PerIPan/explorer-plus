@@ -123,9 +123,14 @@ export function CveDetail() {
             </span>
           )}
           {data.cweId && (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border bg-[var(--blue-faint)] text-[var(--accent-blue)] border-[var(--blue-dim)]">
+            <a
+              href={`https://cwe.mitre.org/data/definitions/${data.cweId.replace('CWE-', '')}.html`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border bg-[var(--blue-faint)] text-[var(--accent-blue)] border-[var(--blue-dim)] hover:brightness-125"
+            >
               {data.cweId}
-            </span>
+            </a>
           )}
           {data.isKev && (
             <Badge label="CISA KEV" variant="orange" />
