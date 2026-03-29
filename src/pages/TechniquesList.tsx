@@ -224,16 +224,22 @@ export function TechniquesList() {
             </option>
           ))}
         </select>
-        <select
-          value={platform}
-          onChange={(e) => setParam('platform', e.target.value)}
-          className="min-w-[140px] px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-teal)]"
-        >
-          <option value="">All Platforms</option>
-          {Array.from(new Set((allItems).flatMap((t) => t.platforms ?? []))).sort().map((p) => (
-            <option key={p} value={p}>{p}</option>
-          ))}
-        </select>
+        {(() => {
+          const platforms = Array.from(new Set((allItems).flatMap((t) => t.platforms ?? []))).sort();
+          if (platforms.length === 0) return null;
+          return (
+            <select
+              value={platform}
+              onChange={(e) => setParam('platform', e.target.value)}
+              className="min-w-[140px] px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-teal)]"
+            >
+              <option value="">All Platforms</option>
+              {platforms.map((p) => (
+                <option key={p} value={p}>{p}</option>
+              ))}
+            </select>
+          );
+        })()}
         <button
           type="button"
           onClick={() => setParam('subs', showSubs ? '' : '1')}
