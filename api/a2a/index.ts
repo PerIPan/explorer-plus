@@ -4,25 +4,27 @@ import { query } from '../v1/lib/db.js';
 
 /**
  * A2A (Agent-to-Agent) endpoint — JSON-RPC 2.0 over HTTPS.
- * Accepts natural language queries, uses Gemini 3.1 Flash-Lite to interpret,
+ * Accepts natural language queries, uses Gemini 2.5 Flash-Lite to interpret,
  * calls internal APIs, returns structured results.
  *
  * Rate limit: 50 req/day per IP, no auth required.
  */
 
+// Vercel body size limit
+export const config = { api: { bodyParser: { sizeLimit: '16kb' } } };
+
 const DAILY_LIMIT = 50;
 const MODEL = 'gemini-3.1-flash-lite-preview';
 const MAX_INPUT_LENGTH = 2000;
-const BASE_URL = process.env.VERCEL_URL
-  ? `https://${process.env.VERCEL_URL}`
-  : 'https://mitre-explorer.org';
+const BASE_URL = 'https://mitre-explorer.org';
 
 // ── Input validation ─────────────────────────────────────────────────────────
 
 const CVE_RE = /^CVE-\d{4}-\d{4,}$/;
-const ATTACK_ID_RE = /^(AML\.)?(TA|T|G|S|M|C|DS)\d{4}(\.\d{3})?$/;
-const SECTOR_RE = /^[a-z]{3,30}$/;
+const ATTACK_ID_RE = /^(AML\.)?(TA|T|G|S|M|C|CS|DS)\d{4}(\.\d{3})?$/;
+const SECTOR_RE = /^[a-z][a-z0-9-]{1,28}[a-z0-9]$/;
 const DOMAIN_RE = /^(enterprise|ics|mobile|atlas)-attack$/;
+const SEVERITY_VALUES = new Set(['CRITICAL', 'HIGH', 'MEDIUM', 'LOW']);
 
 function validateCveId(id: unknown): string | null {
   const s = String(id ?? '').trim();
@@ -110,11 +112,11 @@ const TOOL_DECLARATIONS = [
   },
   {
     name: 'search_groups',
-    description: 'Search threat groups by name or description. Returns group ID, name, and technique count.',
+    description: 'Search threat groups by name or description (min 3 characters). Returns group ID, name, and technique count.',
     parameters: {
       type: "OBJECT",
       properties: {
-        search: { type: "STRING", description: 'Search keyword' },
+        search: { type: "STRING", description: 'Search keyword (minimum 3 characters)' },
         sector: { type: "STRING", description: 'Filter by sector slug (e.g. financial, healthcare, government)' },
         domain: { type: "STRING", description: 'ATT&CK domain: enterprise-attack, ics-attack, mobile-attack, atlas-attack' },
         limit: { type: "NUMBER", description: 'Max results (default 10)' },
@@ -157,11 +159,11 @@ const TOOL_DECLARATIONS = [
   },
   {
     name: 'search_entities',
-    description: 'Cross-domain search across all entity types: techniques, groups, software, campaigns, mitigations, data sources, applications.',
+    description: 'Cross-domain search across all entity types: techniques, groups, software, campaigns, mitigations, data sources, applications. Minimum 3 characters.',
     parameters: {
       type: "OBJECT",
       properties: {
-        q: { type: "STRING", description: 'Search query' },
+        q: { type: "STRING", description: 'Search query (minimum 3 characters)' },
       },
       required: ['q'],
     },
@@ -188,6 +190,16 @@ const TOOL_DECLARATIONS = [
       required: ['attack_id'],
     },
   },
+  {
+    name: 'get_threat_reports',
+    description: 'Get recent threat intelligence reports from AlienVault OTX, DFIR Report, Unit42, Microsoft Security, Talos. Reports are mapped to ATT&CK techniques.',
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        limit: { type: "NUMBER", description: 'Max results (default 10)' },
+      },
+    },
+  },
 ];
 
 const SYSTEM_INSTRUCTION = `You are the MITRE Explorer threat intelligence agent. You help security professionals, SOC analysts, and AI agents query the MITRE ATT&CK knowledge base, CVE vulnerabilities, and application security data.
@@ -203,20 +215,26 @@ When responding:
 
 // ── Internal API caller ──────────────────────────────────────────────────────
 
-async function callInternalApi(path: string): Promise<unknown> {
+async function callInternalApi(path: string): Promise<Record<string, unknown>> {
   const url = `${BASE_URL}/api/v1${path}`;
   const resp = await fetch(url, { headers: { 'Accept': 'application/json' } });
   if (!resp.ok) return { error: `API returned ${resp.status}`, path };
-  return resp.json();
+  return resp.json() as Promise<Record<string, unknown>>;
 }
 
-async function executeTool(name: string, args: Record<string, unknown>): Promise<unknown> {
+async function executeTool(name: string, args: Record<string, unknown>): Promise<Record<string, unknown>> {
   switch (name) {
     case 'search_cves': {
       const params = new URLSearchParams();
       if (args.q) params.set('q', sanitizeSearch(args.q));
-      if (args.severity) params.set('severity', String(args.severity).toUpperCase().slice(0, 10));
-      if (args.since) params.set('since', String(args.since).slice(0, 30));
+      if (args.severity) {
+        const sev = String(args.severity).toUpperCase();
+        if (SEVERITY_VALUES.has(sev)) params.set('severity', sev);
+      }
+      if (args.since) {
+        const d = new Date(String(args.since));
+        if (!isNaN(d.getTime())) params.set('since', d.toISOString());
+      }
       params.set('limit', String(Math.min(Math.max(Number(args.limit) || 10, 1), 50)));
       return callInternalApi(`/cves?${params}`);
     }
@@ -242,7 +260,8 @@ async function executeTool(name: string, args: Record<string, unknown>): Promise
     }
     case 'search_groups': {
       const params = new URLSearchParams();
-      if (args.search) params.set('search', sanitizeSearch(args.search));
+      const s = sanitizeSearch(args.search);
+      if (s.length >= 3) params.set('search', s);
       const sec = validateSector(args.sector);
       if (sec) params.set('sector', sec);
       const dom = validateDomain(args.domain);
@@ -251,8 +270,8 @@ async function executeTool(name: string, args: Record<string, unknown>): Promise
       return callInternalApi(`/groups?${params}`);
     }
     case 'get_application_security': {
-      const v = String(args.vendor ?? '').toLowerCase().replace(/[^a-z0-9]/g, '');
-      const p = String(args.product ?? '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const v = String(args.vendor ?? '').toLowerCase().replace(/[^a-z0-9_]/g, '');
+      const p = String(args.product ?? '').toLowerCase().replace(/[^a-z0-9_]/g, '');
       if (!v || !p) return { error: 'Vendor and product are required' };
       return callInternalApi(`/applications/${v}/${p}`);
     }
@@ -267,8 +286,11 @@ async function executeTool(name: string, args: Record<string, unknown>): Promise
       if (!sec) return { error: 'Invalid sector slug' };
       return callInternalApi(`/sectors/${sec}/relationships`);
     }
-    case 'search_entities':
-      return callInternalApi(`/entities?q=${encodeURIComponent(sanitizeSearch(args.q))}`);
+    case 'search_entities': {
+      const s = sanitizeSearch(args.q);
+      if (s.length < 3) return { error: 'Search query must be at least 3 characters' };
+      return callInternalApi(`/search?q=${encodeURIComponent(s)}`);
+    }
     case 'get_dashboard_stats': {
       const params = new URLSearchParams();
       const dom = validateDomain(args.domain);
@@ -282,6 +304,11 @@ async function executeTool(name: string, args: Record<string, unknown>): Promise
       if (!id) return { error: 'Invalid ATT&CK ID format' };
       return callInternalApi(`/frameworks/technique/${id}`);
     }
+    case 'get_threat_reports': {
+      const params = new URLSearchParams();
+      params.set('limit', String(Math.min(Math.max(Number(args.limit) || 10, 1), 50)));
+      return callInternalApi(`/feed/reports?${params}`);
+    }
     default:
       return { error: `Unknown tool: ${name}` };
   }
@@ -290,7 +317,6 @@ async function executeTool(name: string, args: Record<string, unknown>): Promise
 // ── Rate limiting ────────────────────────────────────────────────────────────
 
 function getClientIp(req: VercelRequest): string {
-  // x-real-ip is set by Vercel edge and cannot be spoofed by the client
   const realIp = req.headers['x-real-ip'];
   if (typeof realIp === 'string') return realIp.trim();
   const forwarded = req.headers['x-forwarded-for'];
@@ -313,7 +339,7 @@ async function recordRequest(ip: string, skillId: string | null, tokensUsed: num
       `INSERT INTO a2a_requests (ip, skill_id, tokens_used) VALUES ($1, $2, $3)`,
       [ip, skillId, tokensUsed],
     );
-  } catch { /* non-fatal — don't crash on logging failure */ }
+  } catch { /* non-fatal */ }
 }
 
 // ── JSON-RPC handler ─────────────────────────────────────────────────────────
@@ -330,7 +356,6 @@ function jsonRpcError(id: string | number | null, code: number, message: string)
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -343,9 +368,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
+  // Validate body.id
+  const reqId = typeof body.id === 'string' ? body.id.slice(0, 100) : typeof body.id === 'number' ? body.id : null;
+  if (reqId === null) {
+    res.status(400).json(jsonRpcError(null, -32600, 'Missing or invalid request id'));
+    return;
+  }
+
   const ip = getClientIp(req);
 
-  // Rate limit check — fail-open on DB errors (don't block users if DB is down)
+  // Rate limit — fail-closed on DB errors
   let remaining = DAILY_LIMIT;
   try {
     const rl = await checkRateLimit(ip);
@@ -354,11 +386,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       res.setHeader('Retry-After', '86400');
       res.setHeader('X-RateLimit-Limit', DAILY_LIMIT);
       res.setHeader('X-RateLimit-Remaining', 0);
-      res.status(429).json(jsonRpcError(body.id, -32000, `Rate limit exceeded. ${DAILY_LIMIT} requests/day per IP. Retry after 24 hours.`));
+      res.status(429).json(jsonRpcError(reqId, -32000, `Rate limit exceeded. ${DAILY_LIMIT} requests/day per IP.`));
       return;
     }
   } catch {
-    // DB down — fail-open, allow the request
+    res.status(503).json(jsonRpcError(reqId, -32603, 'Service temporarily unavailable'));
+    return;
   }
   res.setHeader('X-RateLimit-Limit', DAILY_LIMIT);
   res.setHeader('X-RateLimit-Remaining', remaining);
@@ -368,11 +401,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     let userText = message?.parts?.[0]?.text;
 
     if (!userText) {
-      res.status(400).json(jsonRpcError(body.id, -32602, 'Missing message.parts[0].text'));
+      res.status(400).json(jsonRpcError(reqId, -32602, 'Missing message.parts[0].text'));
       return;
     }
 
-    // Cap input length
     if (userText.length > MAX_INPUT_LENGTH) {
       userText = userText.slice(0, MAX_INPUT_LENGTH);
     }
@@ -380,7 +412,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     try {
       const apiKey = process.env.GEMINI_API_KEY;
       if (!apiKey) {
-        res.status(500).json(jsonRpcError(body.id, -32603, 'GEMINI_API_KEY not configured'));
+        res.status(500).json(jsonRpcError(reqId, -32603, 'AI service unavailable'));
         return;
       }
 
@@ -390,25 +422,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // Initial Gemini call with function declarations
       const response = await ai.models.generateContent({
         model: MODEL,
-        contents: [
-          {
-            role: 'user',
-            parts: [{ text: userText }],
-          },
-        ],
-        config: {
-          systemInstruction: SYSTEM_INSTRUCTION,
-          tools: toolsConfig,
-        },
+        contents: [{ role: 'user', parts: [{ text: userText }] }],
+        config: { systemInstruction: SYSTEM_INSTRUCTION, tools: toolsConfig },
       });
 
-      // Process all function calls (Gemini may return multiple)
       const candidate = response.candidates?.[0];
       const parts = candidate?.content?.parts ?? [];
       const functionCalls = parts.filter((p) => p.functionCall);
 
       let finalText: string;
       const skillsUsed: string[] = [];
+      let totalTokens = response.usageMetadata?.totalTokenCount ?? 0;
 
       if (functionCalls.length > 0) {
         // Execute all tool calls in parallel
@@ -418,49 +442,40 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             const toolArgs = (fc.functionCall!.args ?? {}) as Record<string, unknown>;
             skillsUsed.push(toolName);
             const result = await executeTool(toolName, toolArgs);
-            return { name: toolName, args: toolArgs, result };
+            return { name: toolName, id: fc.functionCall!.id, result };
           }),
         );
 
-        // Build follow-up conversation with all tool results
-        const followUpContents: Array<{ role: 'user' | 'model'; parts: any[] }> = [
-          { role: 'user' as const, parts: [{ text: userText }] },
-          { role: 'model' as const, parts: functionCalls.map((fc) => ({ functionCall: { name: fc.functionCall!.name!, args: fc.functionCall!.args } })) },
-          { role: 'user' as const, parts: toolResults.map((tr) => ({ functionResponse: { name: tr.name, response: tr.result as Record<string, unknown> } })) },
-        ];
-
+        // Build follow-up: pass original model parts verbatim to preserve function call IDs
         const followUp = await ai.models.generateContent({
           model: MODEL,
-          contents: followUpContents,
-          config: {
-            systemInstruction: SYSTEM_INSTRUCTION,
-            tools: toolsConfig,
-          },
+          contents: [
+            { role: 'user' as const, parts: [{ text: userText }] },
+            { role: 'model' as const, parts },
+            { role: 'user' as const, parts: toolResults.map((tr) => ({
+              functionResponse: { name: tr.name, id: tr.id, response: { output: tr.result } },
+            })) },
+          ],
+          config: { systemInstruction: SYSTEM_INSTRUCTION, tools: toolsConfig },
         });
 
-        finalText = followUp.candidates?.[0]?.content?.parts?.[0]?.text ?? 'No response generated.';
+        totalTokens += followUp.usageMetadata?.totalTokenCount ?? 0;
+        finalText = followUp.text ?? 'No response generated.';
       } else {
-        // Direct response (no tool call needed)
-        finalText = parts[0]?.text ?? 'No response generated.';
+        finalText = response.text ?? 'No response generated.';
       }
 
-      // Record the request
-      const tokenCount = (response as any).usageMetadata?.totalTokenCount ?? finalText.length;
-      await recordRequest(ip, skillsUsed[0] ?? null, tokenCount);
+      await recordRequest(ip, skillsUsed[0] ?? null, totalTokens);
 
-      // A2A Task response
       const taskId = `task-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
       res.status(200).json({
         jsonrpc: '2.0',
-        id: body.id,
+        id: reqId,
         result: {
           id: taskId,
           status: {
             state: 'completed',
-            message: {
-              role: 'agent',
-              parts: [{ text: finalText }],
-            },
+            message: { role: 'agent', parts: [{ text: finalText }] },
             timestamp: new Date().toISOString(),
           },
           artifacts: skillsUsed.length > 0 ? [{
@@ -472,12 +487,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         },
       });
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      console.error('A2A error:', msg);
+      console.error('A2A error:', err instanceof Error ? err.message : err);
       await recordRequest(ip, null, 0);
-      res.status(500).json(jsonRpcError(body.id, -32603, 'Internal error processing request'));
+      res.status(500).json(jsonRpcError(reqId, -32603, 'Internal error processing request'));
     }
   } else {
-    res.status(400).json(jsonRpcError(body.id, -32601, `Method not found: ${body.method}. Supported: message/send`));
+    res.status(400).json(jsonRpcError(reqId, -32601, 'Method not supported. Use message/send'));
   }
 }

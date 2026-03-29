@@ -7,7 +7,7 @@
     "organization": "MITRE Explorer",
     "url": "https://mitre-explorer.org"
   },
-  "documentationUrl": "https://mitre-explorer.org/docs/feeds_setup.md",
+  "documentationUrl": "https://github.com/PerIPan/mitre-explorer-plus",
   "capabilities": {
     "streaming": false,
     "pushNotifications": false,
