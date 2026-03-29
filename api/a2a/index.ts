@@ -337,11 +337,23 @@ async function checkRateLimit(ip: string): Promise<{ allowed: boolean; remaining
   return { allowed: used < DAILY_LIMIT, remaining: Math.max(0, DAILY_LIMIT - used) };
 }
 
-async function recordRequest(ip: string, skillId: string | null, tokensUsed: number): Promise<void> {
+interface A2aLog {
+  ip: string;
+  userQuery: string | null;
+  skillId: string | null;
+  toolsCalled: string[];
+  responseText: string | null;
+  tokensUsed: number;
+  latencyMs: number;
+  error: string | null;
+}
+
+async function recordRequest(log: A2aLog): Promise<void> {
   try {
     await query(
-      `INSERT INTO a2a_requests (ip, skill_id, tokens_used) VALUES ($1, $2, $3)`,
-      [ip, skillId, tokensUsed],
+      `INSERT INTO a2a_requests (ip, user_query, skill_id, tools_called, response_text, tokens_used, latency_ms, error)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+      [log.ip, log.userQuery, log.skillId, log.toolsCalled, log.responseText, log.tokensUsed, log.latencyMs, log.error],
     );
   } catch { /* non-fatal */ }
 }
@@ -413,6 +425,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       userText = userText.slice(0, MAX_INPUT_LENGTH);
     }
 
+    const startMs = Date.now();
+
     try {
       const apiKey = process.env.GEMINI_API_KEY;
       if (!apiKey) {
@@ -469,7 +483,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         finalText = response.text ?? 'No response generated.';
       }
 
-      await recordRequest(ip, skillsUsed[0] ?? null, totalTokens);
+      await recordRequest({
+        ip, userQuery: userText, skillId: skillsUsed[0] ?? null,
+        toolsCalled: skillsUsed, responseText: finalText.slice(0, 4000),
+        tokensUsed: totalTokens, latencyMs: Date.now() - startMs, error: null,
+      });
 
       const taskId = `task-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
       res.status(200).json({
@@ -491,8 +509,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         },
       });
     } catch (err) {
-      console.error('A2A error:', err instanceof Error ? err.message : err);
-      await recordRequest(ip, null, 0);
+      const errMsg = err instanceof Error ? err.message : String(err);
+      console.error('A2A error:', errMsg);
+      await recordRequest({
+        ip, userQuery: userText, skillId: null, toolsCalled: [],
+        responseText: null, tokensUsed: 0, latencyMs: Date.now() - startMs, error: errMsg.slice(0, 1000),
+      });
       res.status(500).json(jsonRpcError(reqId, -32603, 'Internal error processing request'));
     }
   } else {
