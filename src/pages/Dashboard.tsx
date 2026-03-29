@@ -8,7 +8,7 @@ import { StatCard } from '../components/shared/StatCard';
 import { EntityLink } from '../components/shared/EntityLink';
 import { TacticBarChart } from '../components/charts/TacticBarChart';
 import { SectorPieChart } from '../components/charts/SectorPieChart';
-import { GroupTechniqueChart } from '../components/charts/GroupTechniqueChart';
+import { isSafeUrl } from '../lib/urlSafety';
 
 // ── Icon components (inline SVG, no extra deps) ───────────────────────────────
 
@@ -447,7 +447,7 @@ export function Dashboard() {
                 {recentReports.map((r) => (
                   <div key={r.id} className="group">
                     <a
-                      href={r.url}
+                      href={isSafeUrl(r.url) ? r.url : '#'}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-start justify-between gap-2 py-1.5 border-b border-[var(--border-color)] last:border-0"

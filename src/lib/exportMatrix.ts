@@ -83,9 +83,10 @@ export function exportMatrixHtml(data: MatrixData, options: ExportOptions): stri
 
     const cells = visibleTechniques.map((t) => {
       const background = cellBg(t.attackId, t.subTechniques.length);
-      const techUrl = `https://mitre-explorer.org/techniques/${t.attackId}`;
+      const safeId = escapeHtml(t.attackId);
+      const techUrl = `https://mitre-explorer.org/techniques/${safeId}`;
       return `<a href="${techUrl}" target="_blank" style="display:block;padding:4px 6px;border-radius:4px;border:1px solid ${border};font-size:11px;line-height:1.3;background:${background};margin-bottom:3px;text-decoration:none;cursor:pointer;">
-        <div style="font-family:monospace;font-size:10px;color:${textSecondary};margin-bottom:2px;">${t.attackId}</div>
+        <div style="font-family:monospace;font-size:10px;color:${textSecondary};margin-bottom:2px;">${safeId}</div>
         <div style="color:${textPrimary};overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${escapeHtml(t.name)}</div>
         ${t.subTechniques.length > 0 ? `<div style="font-size:10px;color:${textSecondary};margin-top:2px;">▸ ${t.subTechniques.length} sub</div>` : ''}
       </a>`;
@@ -99,8 +100,8 @@ export function exportMatrixHtml(data: MatrixData, options: ExportOptions): stri
     return `<div style="flex:1;min-width:140px;max-width:200px;">
       <div style="padding:8px 6px;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:${tealAccent};border-bottom:2px solid ${tealAccent};margin-bottom:6px;text-align:center;">
         ${domainShort ? `<div style="font-size:9px;font-weight:700;color:${domainPillColor};margin-bottom:2px;">${domainShort}</div>` : ''}
-        <a href="https://mitre-explorer.org/?entity=${col.tactic.attackId}&tab=tactic-map" target="_blank" style="color:${tealAccent};text-decoration:none;">${escapeHtml(col.tactic.name)}</a><br/>
-        <div style="font-size:9px;color:${textSecondary};font-weight:400;font-family:monospace;text-transform:none;margin-top:2px;">${col.tactic.attackId}</div>
+        <a href="https://mitre-explorer.org/?entity=${escapeHtml(col.tactic.attackId)}&tab=tactic-map" target="_blank" style="color:${tealAccent};text-decoration:none;">${escapeHtml(col.tactic.name)}</a><br/>
+        <div style="font-size:9px;color:${textSecondary};font-weight:400;font-family:monospace;text-transform:none;margin-top:2px;">${escapeHtml(col.tactic.attackId)}</div>
       </div>
       ${cells}
     </div>`;
@@ -149,7 +150,7 @@ export function exportMatrixHtml(data: MatrixData, options: ExportOptions): stri
       <p style="font-size:12px;color:${textSecondary};margin-top:4px;">Exported ${dateStr} from <a href="https://mitre-explorer.org" target="_blank" style="color:${tealAccent};">mitre-explorer.org</a></p>
     </div>
     <div style="font-size:13px;color:${textSecondary};">
-      ${filteredData.reduce((sum, col) => sum + (actorLookup && actorLookup.size > 0 ? col.techniques.filter((t) => actorLookup.has(t.attackId)).length : col.techniques.length), 0)} techniques across ${filteredData.length} tactics
+      ${filteredData.reduce((sum, col) => sum + (highlightIds && highlightIds.size > 0 ? col.techniques.filter((t) => highlightIds.has(t.attackId)).length : actorLookup && actorLookup.size > 0 ? col.techniques.filter((t) => actorLookup.has(t.attackId)).length : col.techniques.length), 0)} techniques across ${filteredData.length} tactics
     </div>
   </div>
   ${actorLegend ? `<div style="margin-bottom:12px;">${actorLegend}</div>` : ''}
