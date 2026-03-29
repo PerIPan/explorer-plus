@@ -314,7 +314,7 @@ export function CveDetail() {
                     className="flex items-center justify-between gap-3 py-2 px-3 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)]"
                   >
                     <Link
-                      to={`/applications/${app.normalized}`}
+                      to={`/?entity=${encodeURIComponent(app.normalized)}&tab=application-map`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-sm text-[var(--text-primary)] hover:text-[var(--accent-blue)] hover:underline"
