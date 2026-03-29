@@ -779,16 +779,33 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             : { name: capped[i].functionCall!.name!, id: capped[i].functionCall!.id, args: {}, result: { error: `Tool failed: ${(s.reason as Error)?.message ?? 'unknown'}` } },
         );
 
-        // Capture raw API results for structured artifact
+        // Capture full raw API results for structured artifact
         rawToolData = toolResults.map((tr) => ({ tool: tr.name, args: tr.args, data: tr.result }));
 
-        // Build follow-up: pass original model parts verbatim to preserve function call IDs
+        // Trim tool results for Gemini context — full data stays in rawToolData for the artifact
+        const trimmedForGemini = toolResults.map((tr) => {
+          const json = JSON.stringify(tr.result);
+          if (json.length <= 4000) return tr;
+          // Truncate: keep top-level scalars, trim arrays to first 5 items
+          const trimmed: Record<string, unknown> = {};
+          for (const [k, v] of Object.entries(tr.result)) {
+            if (Array.isArray(v)) {
+              trimmed[k] = v.slice(0, 5);
+              if (v.length > 5) trimmed[`${k}_total`] = v.length;
+            } else {
+              trimmed[k] = v;
+            }
+          }
+          return { ...tr, result: trimmed };
+        });
+
+        // Build follow-up with trimmed results
         const followUp = await ai.models.generateContent({
           model: MODEL,
           contents: [
             { role: 'user' as const, parts: [{ text: userText }] },
             { role: 'model' as const, parts },
-            { role: 'user' as const, parts: toolResults.map((tr) => ({
+            { role: 'user' as const, parts: trimmedForGemini.map((tr) => ({
               functionResponse: { name: tr.name, id: tr.id, response: { output: tr.result } },
             })) },
           ],
