@@ -206,7 +206,7 @@ export function DataSourceMapView({ attackId }: DataSourceMapViewProps) {
               <div key={componentName} className="space-y-2">
                 {/* Component group header */}
                 <div className="flex items-center gap-2">
-                  <Badge label={componentName} variant="pink" />
+                  <Badge label={componentName} variant="neutral" />
                   <span className="text-[10px] text-[var(--text-secondary)]">
                     {techs.length} technique{techs.length !== 1 ? 's' : ''}
                   </span>

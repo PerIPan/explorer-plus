@@ -899,7 +899,7 @@ export function TechniqueDetail() {
                       attackId={dc.dataSourceAttackId}
                       name={dc.dataSourceName}
                     />
-                    <Badge label={dc.componentName} variant="pink" />
+                    <Badge label={dc.componentName} variant="neutral" />
                   </div>
                   {dc.description && (
                     <p className="text-[var(--text-secondary)] text-xs leading-relaxed pl-1">{dc.description}</p>

@@ -9,11 +9,12 @@ import { Badge } from '../components/shared/Badge';
 import { EntityLink } from '../components/shared/EntityLink';
 import { DiamondLoader } from '../components/shared/FoldingDiamond';
 
-type TabId = 'overview' | 'techniques' | 'reports';
+type TabId = 'overview' | 'techniques' | 'applications' | 'reports';
 
 const TABS: { id: TabId; label: string }[] = [
   { id: 'overview', label: 'Overview' },
   { id: 'techniques', label: 'Techniques' },
+  { id: 'applications', label: 'Applications' },
   { id: 'reports', label: 'Related Reports' },
 ];
 
@@ -28,6 +29,12 @@ const SOURCE_VARIANTS: Record<string, 'teal' | 'orange' | 'purple' | 'blue' | 'g
   otx: 'teal',
   cisa_kev: 'blue',
   nvd: 'purple',
+};
+
+const TECHNIQUE_SOURCE_LABELS: Record<string, string> = {
+  ioc: 'IOC',
+  capec: 'CAPEC',
+  ctid: 'CTID',
 };
 
 function SeverityBadge({ severity }: { severity: string | null }) {
@@ -108,7 +115,7 @@ export function CveDetail() {
     <div className="space-y-4">
       {/* Header */}
       <div>
-        <div className="flex items-center gap-2 mb-2">
+        <div className="flex items-center gap-2 mb-2 flex-wrap">
           <SeverityBadge severity={data.cvssSeverity} />
           {data.cvssScore != null && (
             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border bg-[var(--blue-faint)] text-[var(--accent-blue)] border-[var(--blue-dim)]">
@@ -116,9 +123,12 @@ export function CveDetail() {
             </span>
           )}
           {data.cweId && (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border bg-[var(--hover-overlay)] text-[var(--text-secondary)] border-[var(--border-color)]">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border bg-[var(--blue-faint)] text-[var(--accent-blue)] border-[var(--blue-dim)]">
               {data.cweId}
             </span>
+          )}
+          {data.isKev && (
+            <Badge label="CISA KEV" variant="orange" />
           )}
         </div>
         <PageHeader title={data.cveId} subtitle={data.publishedAt ? `Published ${formatDate(data.publishedAt)}` : 'Vulnerability Details'} />
@@ -128,6 +138,7 @@ export function CveDetail() {
       <div className="flex gap-0 border-b border-[var(--border-color)]">
         {TABS.map((tab) => {
           const count = tab.id === 'techniques' ? data.techniques.length
+            : tab.id === 'applications' ? (data.affectedApps ?? []).length
             : tab.id === 'reports' ? data.reports.length
             : undefined;
           return (
@@ -177,6 +188,28 @@ export function CveDetail() {
                       <div className="text-[10px] text-[var(--text-secondary)] uppercase tracking-wider mb-1">{c.label}</div>
                       <div className="text-sm text-[var(--text-primary)] font-medium">{c.value}</div>
                     </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* All CWEs */}
+            {(data.cwes ?? []).length > 0 && (
+              <section>
+                <h3 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-2">
+                  Weaknesses ({(data.cwes ?? []).length})
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {(data.cwes ?? []).map((cwe) => (
+                    <a
+                      key={cwe}
+                      href={`https://cwe.mitre.org/data/definitions/${cwe.replace('CWE-', '')}.html`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border bg-[var(--blue-faint)] text-[var(--accent-blue)] border-[var(--blue-dim)] hover:brightness-125 transition-all"
+                    >
+                      {cwe}
+                    </a>
                   ))}
                 </div>
               </section>
@@ -253,12 +286,52 @@ export function CveDetail() {
                 >
                   <EntityLink type="technique" attackId={t.attackId} name={t.name} />
                   <div className="flex flex-wrap gap-1 shrink-0">
+                    {(t.sources ?? []).map((s) => (
+                      <Badge key={s} label={TECHNIQUE_SOURCE_LABELS[s] ?? s} variant={s === 'ctid' ? 'green' : s === 'capec' ? 'blue' : 'neutral'} />
+                    ))}
                     {t.tactics.map((tac) => (
                       <Badge key={tac} label={tac} variant="neutral" />
                     ))}
                   </div>
                 </div>
               ))
+            )}
+          </div>
+        )}
+
+        {activeTab === 'applications' && (
+          <div className="space-y-2">
+            {(data.affectedApps ?? []).length === 0 ? (
+              <p className="text-[var(--text-secondary)] text-sm py-6">No affected applications found.</p>
+            ) : (
+              <>
+                <p className="text-[var(--text-secondary)] text-xs mb-3">
+                  {(data.affectedApps ?? []).length} affected products from CVElistV5 CPE data.
+                </p>
+                {(data.affectedApps ?? []).map((app, i) => (
+                  <div
+                    key={`${app.normalized}-${i}`}
+                    className="flex items-center justify-between gap-3 py-2 px-3 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)]"
+                  >
+                    <Link
+                      to={`/applications/${app.normalized}`}
+                      className="text-sm text-[var(--text-primary)] hover:text-[var(--accent-blue)] hover:underline"
+                    >
+                      <span className="text-[var(--text-secondary)]">{app.vendor}</span>
+                      {' '}
+                      <span className="font-medium">{app.product}</span>
+                    </Link>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {app.versionStart && (
+                        <span className="text-[var(--text-secondary)] text-xs font-mono">
+                          {app.versionStart}{app.versionEnd ? ` — ${app.versionEnd}` : '+'}
+                        </span>
+                      )}
+                      <Badge label={`${app.cveCount} CVEs`} variant="pink" />
+                    </div>
+                  </div>
+                ))}
+              </>
             )}
           </div>
         )}

@@ -566,7 +566,7 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
                   name={dc.dataSourceName}
                   useMap
                 />
-                <Badge label={dc.componentName} variant="pink" />
+                <Badge label={dc.componentName} variant="neutral" />
               </div>
             ))}
           </MapRow>

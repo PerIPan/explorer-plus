@@ -526,7 +526,10 @@ export interface CveEntry {
 
 export interface CveDetail extends Omit<CveEntry, 'sources' | 'techniqueCount'> {
   cvssVector: string | null;
+  cwes: string[];
+  isKev: boolean;
   sources: Array<{ source: string; sourceRef: string | null }>;
-  techniques: Array<{ attackId: string; name: string; tactics: string[] }>;
+  techniques: Array<{ attackId: string; name: string; tactics: string[]; sources: string[] }>;
+  affectedApps: Array<{ normalized: string; vendor: string; product: string; versionStart: string | null; versionEnd: string | null; cveCount: number }>;
   reports: Array<{ id: string; title: string; url: string | null; source: string | null; publishedAt: string | null }>;
 }
