@@ -299,11 +299,12 @@ export function RelationshipModel({ open, onClose }: Props) {
               const node = nodeMap[hoveredNode];
               if (!node) return null;
               const tooltipY = node.y < 100 ? node.y + 40 : node.y - 45;
+              const tooltipW = Math.max(280, Math.min(420, node.description.length * 4.5 + 20));
               return (
                 <g className="pointer-events-none">
                   <rect
-                    x={node.x - 120} y={tooltipY - 12}
-                    width={240} height={24}
+                    x={node.x - tooltipW / 2} y={tooltipY - 12}
+                    width={tooltipW} height={24}
                     rx={4}
                     fill={c.surfaceCard}
                     stroke={c.borderColor}

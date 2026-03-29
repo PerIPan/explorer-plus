@@ -362,7 +362,7 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
   if (techError || !technique) {
     return (
       <div className="text-[var(--text-secondary)] text-sm py-8 text-center">
-        Technique <span className="font-mono text-[var(--accent-teal)]">{attackId}</span> not found in the selected domain.
+        Technique <span className="font-mono text-[var(--accent-teal)]">{attackId}</span> not found in the selected domain. Change the Domain selector to <strong>All</strong> to search across all domains.
       </div>
     );
   }
