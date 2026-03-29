@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import Fuse from 'fuse.js';
 import { useRelationships } from '../hooks/useApi';
 import { apiFetch } from '../lib/api';
+import { useDomain } from '../contexts/DomainContext';
 import { PageHeader } from '../components/layout/PageHeader';
 import { ForceGraph, type ForceGraphHandle } from '../components/graph/ForceGraph';
 import { Badge } from '../components/shared/Badge';
@@ -106,6 +107,7 @@ export function Relationships() {
   usePageTitle('360 Views');
 
   const navigate = useNavigate();
+  const { domain } = useDomain();
   const [searchParams, setSearchParams] = useSearchParams();
   const entityParam = searchParams.get('entity') ?? '';
   const tabParam = (searchParams.get('tab') ?? 'graph') as TabId;
@@ -166,11 +168,16 @@ export function Relationships() {
     });
   }, [allEntities]);
 
-  /** Fuzzy search — instant, client-side */
+  /** Fuzzy search — instant, client-side, filtered by active domain */
   const suggestions = useMemo(() => {
     if (!fuse || !searchInput.trim() || searchInput.trim().length < 2) return [];
-    return fuse.search(searchInput.trim(), { limit: 12 }).map(r => r.item);
-  }, [fuse, searchInput]);
+    const results = fuse.search(searchInput.trim(), { limit: 30 }).map(r => r.item);
+    if (domain === 'all') return results.slice(0, 12);
+    // Filter by domain: include entities matching the active domain + domain-agnostic entities (groups, sectors, apps, external actors)
+    return results
+      .filter(s => !s.domain || s.domain === domain || ['group', 'sector', 'application', 'external_actor'].includes(s.type))
+      .slice(0, 12);
+  }, [fuse, searchInput, domain]);
 
   // Infer entity type from graph center or suggestions; fall back to tab hint for non-graph entities
   const entityType = inferEntityType(graphData?.center, suggestions, selectedId)
@@ -424,7 +431,7 @@ export function Relationships() {
 
         {showSuggestions && searchInput.length >= 2 && suggestions.length === 0 && (
           <div className="absolute top-full w-full z-50 bg-[var(--surface-card)] border border-t-0 border-[var(--accent-teal)] rounded-b-lg shadow-2xl p-4 text-center text-sm text-[var(--text-secondary)]">
-            No results for &ldquo;{searchInput}&rdquo;
+            No results for &ldquo;{searchInput}&rdquo;{domain !== 'all' && ` in ${domain.replace('-attack', '')} domain`}
           </div>
         )}
       </div>

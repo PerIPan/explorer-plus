@@ -158,7 +158,7 @@ export function SearchBar() {
         onBlur={() => {
           blurTimerRef.current = setTimeout(() => setShowDropdown(false), 200);
         }}
-        placeholder="Search techniques, groups, software..."
+        placeholder="Search techniques, groups, software, applications — all domains..."
         aria-label="Search MITRE ATT&CK entities"
         className="
           w-full pl-9 pr-16 py-2 rounded-md text-sm
