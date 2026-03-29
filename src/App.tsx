@@ -184,7 +184,7 @@ function Layout() {
                 <li><strong>360 Views</strong> — search any entity, explore via Technique Map, Actor Profile, Software Map, Application Map, Sector Map, or D3 force graph</li>
                 <li><strong>Applications</strong> — 7K+ vendor products linked to CVEs → CWE → CAPEC → ATT&CK techniques → threat groups. See which apps your adversaries target</li>
                 <li><strong>Frameworks</strong> — NIST 800-53, MITRE Engage, D3FEND, RE&CT, VERIS incident classification, Azure + GCP cloud controls</li>
-                <li><strong>CVEs</strong> — CISA KEV + NVD enrichment (CVSS scores), linked to ATT&CK techniques via CWE→CAPEC bridge + CTID hand-curated mappings</li>
+                <li><strong>CVEs</strong> — since 2017, CISA KEV + NVD enrichment (CVSS scores), linked to ATT&CK techniques via CWE→CAPEC bridge + CTID hand-curated mappings</li>
                 <li><strong>IOCs</strong> — OTX + ThreatFox + MalwareBazaar, enriched with VirusTotal verdicts and sandbox-derived techniques</li>
                 <li><strong>Detection</strong> — Detection Strategies + Analytics (ATT&CK v18), SigmaHQ rules, Atomic Red Team tests, MITRE Caldera, D3FEND countermeasures</li>
                 <li><strong>Threat actors</strong> — 191 ATT&CK groups + 514 ThaiCERT/ETDA actors with category inference</li>
