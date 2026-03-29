@@ -678,7 +678,7 @@ export function TechniqueDetail() {
             {data.atlasXrefs.map((xref) => (
               <a
                 key={xref.attackId}
-                href={`/techniques/${xref.attackId}?domain=${xref.domain ?? ''}`}
+                href={`/techniques/${encodeURIComponent(xref.attackId)}?domain=${encodeURIComponent(xref.domain ?? '')}`}
                 className="text-xs text-[var(--accent-teal)] hover:underline font-mono"
               >
                 {xref.attackId} {xref.name}

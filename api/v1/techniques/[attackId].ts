@@ -135,7 +135,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
 
   res.status(200).json({
     ...tech,
-    tactics: tacticsResult.rows.map((t: any) => t.name),
+    tactics: tacticsResult.rows.map((t) => t.name),
     groups: groupsResult.rows,
     software: softwareResult.rows,
     mitigations: mitigationsResult.rows,
