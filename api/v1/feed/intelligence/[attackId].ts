@@ -154,24 +154,27 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
         [id, `${id}.%`],
       ),
 
-      // Top 2 CISA KEV CVEs linked to this technique
+      // CVEs linked to this technique via IOC path + CAPEC/CTID bridge
       query<{
         cve_id: string;
         description: string | null;
         cvss_severity: string | null;
         published_at: string | null;
-        technique_count: number;
+        is_kev: boolean;
       }>(
-        `SELECT cd.cve_id, cd.description, cd.cvss_severity, cd.published_at,
-                (SELECT COUNT(*) FROM technique_iocs ti2
-                 JOIN ioc_entries i2 ON i2.id = ti2.ioc_id AND i2.value = cd.cve_id AND i2.type = 'cve'
-                )::int AS technique_count
-         FROM technique_iocs ti
-         JOIN ioc_entries i ON i.id = ti.ioc_id AND i.type = 'cve' AND i.source = 'cisa_kev'
-         JOIN cve_details cd ON cd.cve_id = i.value
-         WHERE ti.technique_id = $1
-         ORDER BY cd.cvss_score DESC NULLS LAST
-         LIMIT 2`,
+        `SELECT DISTINCT cd.cve_id, cd.description, cd.cvss_severity, cd.published_at,
+                COALESCE(cd.is_kev, false) AS is_kev
+         FROM cve_details cd
+         WHERE cd.cve_id IN (
+           SELECT i.value FROM technique_iocs ti
+           JOIN ioc_entries i ON i.id = ti.ioc_id AND i.type = 'cve'
+           WHERE ti.technique_id = $1
+           UNION
+           SELECT cw.cve_id FROM cve_weaknesses cw
+           JOIN capec_mappings cm ON cm.cwe_id = cw.cwe_id AND cm.technique_id = $1
+         )
+         ORDER BY cd.published_at DESC NULLS LAST
+         LIMIT 20`,
         [techId],
       ),
 

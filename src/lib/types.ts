@@ -501,7 +501,7 @@ export interface TechniqueIntelligence {
     description: string | null;
     cvss_severity: string | null;
     published_at: string | null;
-    technique_count: number;
+    is_kev: boolean;
   }>;
   affectedApps: Array<{
     normalized: string;

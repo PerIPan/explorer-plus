@@ -512,9 +512,7 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
                     >
                       {shortDesc}
                     </a>
-                    {cve.technique_count > 0 && (
-                      <CveTechniquePopover cveId={cve.cve_id} count={cve.technique_count} />
-                    )}
+                    {cve.is_kev && <Badge label="KEV" variant="orange" />}
                   </div>
                   {cve.cvss_severity && <Badge label={cve.cvss_severity} variant={sevColor as 'pink' | 'orange' | 'neutral'} />}
                   <span className="font-mono text-[10px] text-[var(--accent-pink)] shrink-0">{cve.cve_id}</span>
