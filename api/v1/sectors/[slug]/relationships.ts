@@ -81,17 +81,25 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
       [sectorId],
     ),
 
-    // CVEs linked to techniques used by groups in this sector
-    query<{ cveId: string; description: string | null; cvssSeverity: string | null; publishedAt: string | null }>(
-      `SELECT DISTINCT
-         cd.cve_id AS "cveId", cd.description,
-         cd.cvss_severity AS "cvssSeverity", cd.published_at AS "publishedAt"
-       FROM group_sectors gs
-       JOIN group_techniques gt ON gt.group_id = gs.group_id
-       JOIN technique_iocs ti ON ti.technique_id = gt.technique_id
-       JOIN ioc_entries ie ON ie.id = ti.ioc_id AND ie.type = 'cve'
-       JOIN cve_details cd ON cd.cve_id = ie.value
-       WHERE gs.sector_id = $1
+    // CVEs linked to techniques used by groups in this sector (IOC + CAPEC bridge)
+    query<{ cveId: string; description: string | null; cvssSeverity: string | null; publishedAt: string | null; isKev: boolean }>(
+      `SELECT DISTINCT cd.cve_id AS "cveId", cd.description,
+         cd.cvss_severity AS "cvssSeverity", cd.published_at AS "publishedAt",
+         COALESCE(cd.is_kev, false) AS "isKev"
+       FROM cve_details cd
+       WHERE cd.cve_id IN (
+         SELECT ie.value FROM group_sectors gs
+         JOIN group_techniques gt ON gt.group_id = gs.group_id
+         JOIN technique_iocs ti ON ti.technique_id = gt.technique_id
+         JOIN ioc_entries ie ON ie.id = ti.ioc_id AND ie.type = 'cve'
+         WHERE gs.sector_id = $1
+         UNION
+         SELECT cw.cve_id FROM group_sectors gs
+         JOIN group_techniques gt ON gt.group_id = gs.group_id
+         JOIN capec_mappings cm ON cm.technique_id = gt.technique_id AND cm.cwe_id IS NOT NULL
+         JOIN cve_weaknesses cw ON cw.cwe_id = cm.cwe_id
+         WHERE gs.sector_id = $1
+       )
        ORDER BY cd.published_at DESC NULLS LAST
        LIMIT 100`,
       [sectorId],

@@ -98,10 +98,15 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
        cd.published_at,
        (SELECT STRING_AGG(DISTINCT i.source, ',')
         FROM ioc_entries i WHERE i.type = 'cve' AND i.value = cd.cve_id) AS sources,
-       (SELECT COUNT(DISTINCT ti.technique_id)
-        FROM ioc_entries i
-        JOIN technique_iocs ti ON ti.ioc_id = i.id
-        WHERE i.type = 'cve' AND i.value = cd.cve_id)::text AS technique_count
+       (SELECT COUNT(DISTINCT t_id) FROM (
+          SELECT ti.technique_id AS t_id
+          FROM ioc_entries i JOIN technique_iocs ti ON ti.ioc_id = i.id
+          WHERE i.type = 'cve' AND i.value = cd.cve_id
+          UNION
+          SELECT cm.technique_id
+          FROM cve_weaknesses cw JOIN capec_mappings cm ON cm.cwe_id = cw.cwe_id AND cm.technique_id IS NOT NULL
+          WHERE cw.cve_id = cd.cve_id
+        ) sub)::text AS technique_count
      FROM cve_details cd
      ${whereClause}
      ORDER BY cd.published_at ${sortDir} NULLS LAST, cd.cve_id DESC
