@@ -325,3 +325,23 @@ curl -s https://mitre-explorer.org/api/v1/frameworks/status | python3 -m json.to
 - CVElistV5 bulk ingestion must be run locally (zip too large for serverless)
 - CTID sync should be re-run after any CVElistV5 ingestion to catch newly matched CVEs
 - MV refresh is automatic in ingestion scripts; manual refresh: `REFRESH MATERIALIZED VIEW app_technique_groups`
+
+## UI Color Conventions
+
+Entity types have assigned colors — do not change these without explicit approval.
+
+| Entity | Color | CSS vars | Badge variant |
+|--------|-------|----------|---------------|
+| Technique | Teal | `accent-teal` / `teal-faint` / `teal-dim` | `teal` |
+| Group | Orange | `accent-orange` / `orange-faint` / `orange-dim` | `orange` |
+| Software | Purple | `accent-purple` / `purple-faint` / `purple-dim` | `purple` |
+| Mitigation | Green | `accent-green` / `green-faint` / `green-dim` | `green` |
+| Campaign | Blue | `accent-blue` / `blue-faint` / `blue-dim` | `blue` |
+| **Data Source** | **Neutral/Gray** | `accent-neutral` / `neutral-faint` / `neutral-dim` | `neutral` |
+| Tactic | Yellow | `accent-yellow` / `yellow-faint` / `yellow-dim` | `yellow` |
+| Application | Blue | `accent-blue` / `blue-faint` / `blue-dim` | `blue` |
+| CVE | Pink | `accent-pink` / `pink-faint` / `pink-dim` | `pink` |
+| CWE | Blue | `accent-blue` / `blue-faint` / `blue-dim` | — |
+| External Actor | Neutral | `accent-neutral` | `neutral` |
+
+**Important**: Data sources and data components must ALWAYS be neutral/gray — never pink/red. This applies to: EntityLink, ForceGraph NODE_COLORS, SearchBar TYPE_COLORS, Dashboard StatCard, Badge variants in detail pages.
