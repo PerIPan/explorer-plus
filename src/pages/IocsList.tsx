@@ -196,14 +196,14 @@ export function IocsList() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="font-mono text-xs text-[var(--accent-teal)] hover:underline max-w-[240px] truncate"
-                  data-tooltip={row.value}
+                  title={row.value}
                 >
                   {row.value}
                 </a>
               ) : (
                 <span
                   className="font-mono text-xs text-[var(--text-primary)] max-w-[240px] truncate"
-                  data-tooltip={row.value}
+                  title={row.value}
                 >
                   {row.value}
                 </span>
@@ -214,7 +214,7 @@ export function IocsList() {
             {showDesc && (
               <span
                 className="text-[11px] text-[var(--text-secondary)] max-w-[320px] truncate"
-                data-tooltip={row.description!}
+                title={row.description!}
               >
                 {row.description}
               </span>

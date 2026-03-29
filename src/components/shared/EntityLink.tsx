@@ -81,7 +81,7 @@ export function EntityLink({ type, attackId, name, className = '', useMap, newTa
   return (
     <Link
       to={href}
-      data-tooltip={`${attackId} — ${name}`}
+      title={`${attackId} — ${name}`}
       {...(newTab ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
       className={`
         inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium
