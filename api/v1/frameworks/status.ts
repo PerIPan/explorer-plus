@@ -20,6 +20,8 @@ async function handler(_req: VercelRequest, res: VercelResponse): Promise<void> 
     UNION ALL SELECT 'cve_details', COUNT(*)::text FROM cve_details
     UNION ALL SELECT 'cve_weaknesses', COUNT(*)::text FROM cve_weaknesses
     UNION ALL SELECT 'affected_products', COUNT(*)::text FROM affected_products
+    UNION ALL SELECT 'ctid_mappings', COUNT(*)::text FROM capec_mappings WHERE capec_id = 'CTID-DIRECT'
+    UNION ALL SELECT 'atlas_xrefs', COUNT(*)::text FROM atlas_xrefs
   `);
 
   const counts: Record<string, number> = {};

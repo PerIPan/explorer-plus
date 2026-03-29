@@ -179,6 +179,8 @@ const FRAMEWORK_TABLES = [
   { key: 'external_actors', label: 'ETDA Actors' },
   { key: 'applications', label: 'Applications (CVElistV5)' },
   { key: 'capec_mappings', label: 'CAPEC Bridge' },
+  { key: 'ctid_mappings', label: 'CTID CVE→Technique' },
+  { key: 'atlas_xrefs', label: 'ATLAS Cross-References' },
   { key: 'cve_details', label: 'CVE Details' },
   { key: 'cve_weaknesses', label: 'CVE Weaknesses' },
   { key: 'affected_products', label: 'Affected Products' },
