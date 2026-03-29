@@ -101,18 +101,18 @@ const TOOL_DECLARATIONS = [
   },
   {
     name: 'get_group_profile',
-    description: 'Get threat group profile: techniques used, software, campaigns, targeted sectors, targeted applications.',
+    description: 'Get FULL threat group profile by ATT&CK ID — returns ALL techniques, ALL software/malware, campaigns, targeted sectors, applications. Use when asked about a specific group. If you only have the name, call search_groups first to get the ID, then call this.',
     parameters: {
       type: "OBJECT",
       properties: {
-        attack_id: { type: "STRING", description: 'Group ATT&CK ID, e.g. G0016 for APT29' },
+        attack_id: { type: "STRING", description: 'Group ATT&CK ID, e.g. G0032 for Lazarus Group, G0016 for APT29' },
       },
       required: ['attack_id'],
     },
   },
   {
     name: 'search_groups',
-    description: 'Search threat groups by name or description (min 3 characters). Returns group ID, name, and technique count.',
+    description: 'Search/list threat groups by name. Returns summary only (ID, name, technique count) — NOT the full profile. Use to find a group ID, then call get_group_profile for details.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -365,7 +365,14 @@ function buildSystemInstruction(): string {
 
 IMPORTANT: Today's date is ${today}. Always use this date for relative time calculations (e.g. "last 7 days" means since ${new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0]}). Never assume a different year.
 
-Use the available tools to answer questions. Always call a tool before answering — never guess or hallucinate data. If the user asks about a CVE, technique, group, or application, look it up.
+Use the available tools to answer questions. Always call a tool before answering — never guess or hallucinate data.
+
+Tool selection rules:
+- When asked about a SPECIFIC group (e.g. "Lazarus Group", "APT29"): use search_groups to find the ID, then get_group_profile for the full profile
+- When asked about a SPECIFIC technique: use get_technique_detail for description + get_technique_intelligence for feeds
+- When asked about a SPECIFIC software/malware: use search_software to find the ID, then get_software_detail
+- "search_" tools return summaries/lists; "get_" tools return full profiles — always prefer the full profile for specific entities
+- You MUST generate a human-readable summary from the tool results — never return empty or "No response generated"
 
 When responding:
 - Be concise and factual
@@ -792,7 +799,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         // If follow-up also requests tool calls, use any text part; don't recurse
         const followParts = followUp.candidates?.[0]?.content?.parts ?? [];
         const followText = followParts.find((p) => p.text)?.text;
-        finalText = followText ?? followUp.text ?? 'No response generated.';
+        if (followText) {
+          finalText = followText;
+        } else if (followUp.text) {
+          finalText = followUp.text;
+        } else {
+          // Gemini returned empty — build a fallback summary from raw data
+          const toolSummary = toolResults.map((tr) => `**${tr.name}**: ${JSON.stringify(tr.result).slice(0, 500)}...`).join('\n\n');
+          finalText = `Query: "${userText}"\n\nTools called: ${skillsUsed.join(', ')}\n\n${toolSummary}\n\n_See the structured_data artifact for full results._`;
+        }
       } else {
         finalText = response.text ?? 'No response generated.';
       }
