@@ -95,14 +95,18 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
           `SELECT
              (SELECT count(*) FROM techniques
               WHERE is_revoked = false AND is_deprecated = false AND domain = $1) AS "techniqueCount",
-             (SELECT count(*) FROM threat_groups
-              WHERE is_revoked = false AND is_deprecated = false) AS "groupCount",
+             (SELECT count(DISTINCT tg.id) FROM threat_groups tg
+              JOIN group_techniques gt ON gt.group_id = tg.id
+              JOIN techniques t ON t.id = gt.technique_id AND t.domain = $1
+              WHERE tg.is_revoked = false AND tg.is_deprecated = false) AS "groupCount",
              (SELECT count(*) FROM attack_software
               WHERE is_revoked = false AND is_deprecated = false AND domain = $1) AS "softwareCount",
              (SELECT count(*) FROM mitigations
               WHERE is_revoked = false AND is_deprecated = false AND domain = $1) AS "mitigationCount",
-             (SELECT count(*) FROM campaigns
-              WHERE is_revoked = false AND is_deprecated = false AND domain = $1) AS "campaignCount",
+             (SELECT count(DISTINCT c.id) FROM campaigns c
+              JOIN campaign_techniques ct ON ct.campaign_id = c.id
+              JOIN techniques t ON t.id = ct.technique_id AND t.domain = $1
+              WHERE c.is_revoked = false AND c.is_deprecated = false) AS "campaignCount",
              (SELECT count(*) FROM data_sources
               WHERE is_revoked = false AND domain = $1) AS "dataSourceCount"`,
           [domain],
