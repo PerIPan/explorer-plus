@@ -756,7 +756,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const parts = candidate?.content?.parts ?? [];
       const functionCalls = parts.filter((p) => p.functionCall);
 
-      let finalText: string;
+      let finalText = '';
       const skillsUsed: string[] = [];
       let totalTokens = response.usageMetadata?.totalTokenCount ?? 0;
       let rawToolData: Record<string, unknown>[] = [];
@@ -799,31 +799,77 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           return { ...tr, result: trimmed };
         });
 
-        // Build follow-up with trimmed results
-        const followUp = await ai.models.generateContent({
-          model: MODEL,
-          contents: [
-            { role: 'user' as const, parts: [{ text: userText }] },
-            { role: 'model' as const, parts },
-            { role: 'user' as const, parts: trimmedForGemini.map((tr) => ({
+        // Agentic loop: Gemini may chain tools (search → get_profile). Max 3 rounds.
+        let conversationParts: Array<{ role: string; parts: unknown[] }> = [
+          { role: 'user', parts: [{ text: userText }] },
+          { role: 'model', parts },
+          { role: 'user', parts: trimmedForGemini.map((tr) => ({
+            functionResponse: { name: tr.name, id: tr.id, response: { output: tr.result } },
+          })) },
+        ];
+
+        for (let round = 0; round < 3; round++) {
+          const followUp = await ai.models.generateContent({
+            model: MODEL,
+            contents: conversationParts as any,
+            config: { systemInstruction: buildSystemInstruction(), tools: toolsConfig },
+          });
+
+          totalTokens += followUp.usageMetadata?.totalTokenCount ?? 0;
+          const followParts = followUp.candidates?.[0]?.content?.parts ?? [];
+          const moreCalls = followParts.filter((p) => p.functionCall);
+
+          if (moreCalls.length === 0) {
+            // No more tool calls — extract text
+            const followText = followParts.find((p) => p.text)?.text;
+            finalText = followText ?? followUp.text ?? '';
+            break;
+          }
+
+          // Execute next round of tool calls
+          const nextCapped = moreCalls.slice(0, 3);
+          const nextSettled = await Promise.allSettled(
+            nextCapped.map(async (fc) => {
+              const toolName = fc.functionCall!.name!;
+              const toolArgs = (fc.functionCall!.args ?? {}) as Record<string, unknown>;
+              skillsUsed.push(toolName);
+              const result = await executeTool(toolName, toolArgs);
+              return { name: toolName, id: fc.functionCall!.id, args: toolArgs, result };
+            }),
+          );
+          const nextResults = nextSettled.map((s, i) =>
+            s.status === 'fulfilled'
+              ? s.value
+              : { name: nextCapped[i].functionCall!.name!, id: nextCapped[i].functionCall!.id, args: {}, result: { error: `Tool failed: ${(s.reason as Error)?.message ?? 'unknown'}` } },
+          );
+
+          // Add to raw data + trim for Gemini
+          rawToolData.push(...nextResults.map((tr) => ({ tool: tr.name, args: tr.args, data: tr.result })));
+          const nextTrimmed = nextResults.map((tr) => {
+            const json = JSON.stringify(tr.result);
+            if (json.length <= 4000) return tr;
+            const trimmed: Record<string, unknown> = {};
+            for (const [k, v] of Object.entries(tr.result)) {
+              if (Array.isArray(v)) {
+                trimmed[k] = v.slice(0, 5);
+                if (v.length > 5) trimmed[`${k}_total`] = v.length;
+              } else { trimmed[k] = v; }
+            }
+            return { ...tr, result: trimmed };
+          });
+
+          conversationParts = [
+            ...conversationParts,
+            { role: 'model', parts: followParts },
+            { role: 'user', parts: nextTrimmed.map((tr) => ({
               functionResponse: { name: tr.name, id: tr.id, response: { output: tr.result } },
             })) },
-          ],
-          config: { systemInstruction: buildSystemInstruction(), tools: toolsConfig },
-        });
+          ];
+        }
 
-        totalTokens += followUp.usageMetadata?.totalTokenCount ?? 0;
-        // If follow-up also requests tool calls, use any text part; don't recurse
-        const followParts = followUp.candidates?.[0]?.content?.parts ?? [];
-        const followText = followParts.find((p) => p.text)?.text;
-        if (followText) {
-          finalText = followText;
-        } else if (followUp.text) {
-          finalText = followUp.text;
-        } else {
-          // Gemini returned empty — build a fallback summary from raw data
-          const toolSummary = toolResults.map((tr) => `**${tr.name}**: ${JSON.stringify(tr.result).slice(0, 500)}...`).join('\n\n');
-          finalText = `Query: "${userText}"\n\nTools called: ${skillsUsed.join(', ')}\n\n${toolSummary}\n\n_See the structured_data artifact for full results._`;
+        // Fallback if Gemini still produced no text
+        if (!finalText) {
+          finalText = `Tools called: ${skillsUsed.join(', ')}. See the structured_data artifact for full results.`;
         }
       } else {
         finalText = response.text ?? 'No response generated.';
