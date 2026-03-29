@@ -109,22 +109,21 @@ body {
 /* Global styled tooltips — replace native title attr */
 [data-tooltip] {
   position: relative;
-  cursor: help;
 }
 [data-tooltip]::after {
   content: attr(data-tooltip);
   position: absolute;
   left: 0;
-  top: 100%;
-  margin-top: 4px;
-  z-index: 50;
-  max-width: 400px;
+  bottom: 100%;
+  margin-bottom: 6px;
+  z-index: 9999;
+  max-width: 360px;
   padding: 8px 12px;
   border-radius: 8px;
-  background: var(--surface-deep);
-  border: 1px solid var(--border-color);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-  color: var(--text-primary);
+  background: #1a1a2e;
+  border: 1px solid #334155;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  color: #e2e8f0;
   font-size: 13px;
   line-height: 1.5;
   white-space: normal;
@@ -132,7 +131,7 @@ body {
   pointer-events: none;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.15s, visibility 0.15s;
+  transition: opacity 0.2s 0.3s, visibility 0.2s 0.3s;
 }
 [data-tooltip]:hover::after {
   opacity: 1;
