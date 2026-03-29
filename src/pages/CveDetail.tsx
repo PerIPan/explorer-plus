@@ -302,7 +302,10 @@ export function CveDetail() {
         {activeTab === 'applications' && (
           <div className="space-y-2">
             {(data.affectedApps ?? []).length === 0 ? (
-              <p className="text-[var(--text-secondary)] text-sm py-6">No affected applications found.</p>
+              <p className="text-[var(--text-secondary)] text-sm py-6">
+                No affected applications found.
+                <span className="block text-xs mt-1 opacity-70">NVD typically adds CPE entries days after CVE publication — recent CVEs may show empty until enriched.</span>
+              </p>
             ) : (
               <>
                 <p className="text-[var(--text-secondary)] text-xs mb-3">
