@@ -264,6 +264,25 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           ))}
         </div>
       </div>
+
+      {/* A2A Agent Discovery */}
+      <div className="mt-auto px-4 py-3 border-t border-[var(--border-color)]">
+        <a
+          href="/.well-known/agent-card.json"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 px-2 py-1.5 rounded-md text-[10px] font-medium text-[var(--text-secondary)] hover:text-[var(--accent-teal)] hover:bg-[var(--hover-overlay)] transition-colors"
+          title="A2A Agent-to-Agent Protocol — AI agents can query this knowledge base programmatically"
+        >
+          <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <circle cx="4" cy="8" r="2.5" />
+            <circle cx="12" cy="8" r="2.5" />
+            <path d="M6.5 8h3" />
+          </svg>
+          <span>A2A Agent Protocol</span>
+          <span className="ml-auto text-[9px] opacity-50">v1.0</span>
+        </a>
+      </div>
     </aside>
   );
 }

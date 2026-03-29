@@ -1,0 +1,154 @@
+{
+  "name": "MITRE Explorer",
+  "description": "Threat intelligence agent for MITRE ATT&CK, ATLAS, CVE vulnerabilities, and application security. Query techniques, threat groups, campaigns, software, CVEs, detection strategies, and compliance mappings across Enterprise, ICS, Mobile, and ATLAS domains.",
+  "url": "https://mitre-explorer.org/api/a2a",
+  "version": "1.0.0",
+  "provider": {
+    "organization": "MITRE Explorer",
+    "url": "https://mitre-explorer.org"
+  },
+  "documentationUrl": "https://mitre-explorer.org/docs/feeds_setup.md",
+  "capabilities": {
+    "streaming": false,
+    "pushNotifications": false,
+    "stateTransitionHistory": false
+  },
+  "authentication": {
+    "schemes": [],
+    "credentials": null
+  },
+  "defaultInputModes": ["text/plain"],
+  "defaultOutputModes": ["application/json", "text/plain"],
+  "skills": [
+    {
+      "id": "cve-lookup",
+      "name": "CVE Vulnerability Lookup",
+      "description": "Search and retrieve CVE vulnerability details including CVSS scores, severity, CWEs, affected applications, linked ATT&CK techniques, and CISA KEV status. Covers 21,000+ CVEs from 2017-2026.",
+      "inputModes": ["text/plain"],
+      "outputModes": ["application/json"],
+      "examples": [
+        "What is CVE-2024-3400?",
+        "Show me critical CVEs affecting Apache HTTP Server",
+        "What new CVEs were published in the last 7 days?",
+        "Which CVEs are linked to technique T1190?"
+      ],
+      "tags": ["cve", "vulnerability", "security", "cvss", "cisa-kev"]
+    },
+    {
+      "id": "technique-intelligence",
+      "name": "ATT&CK Technique Intelligence",
+      "description": "Get detailed intelligence on ATT&CK and ATLAS techniques: threat groups using them, Sigma detection rules, Atomic Red Team tests, D3FEND countermeasures, affected applications, and NIST 800-53 control mappings.",
+      "inputModes": ["text/plain"],
+      "outputModes": ["application/json"],
+      "examples": [
+        "What groups use T1059 Command and Scripting Interpreter?",
+        "Give me Sigma rules for T1566 Phishing",
+        "What are the D3FEND countermeasures for T1190?",
+        "Show me ATLAS technique AML.T0051"
+      ],
+      "tags": ["technique", "attack", "atlas", "detection", "sigma", "d3fend"]
+    },
+    {
+      "id": "threat-group-profile",
+      "name": "Threat Group Profile",
+      "description": "Retrieve threat actor group profiles with their techniques, targeted sectors, software used, campaigns, and targeted applications. Covers 191 ATT&CK groups plus 514 ETDA/ThaiCERT external actors.",
+      "inputModes": ["text/plain"],
+      "outputModes": ["application/json"],
+      "examples": [
+        "What techniques does APT29 use?",
+        "Which groups target the financial sector?",
+        "Show me the profile of Lazarus Group",
+        "Compare APT28 and APT29 techniques"
+      ],
+      "tags": ["threat-group", "apt", "adversary", "actor"]
+    },
+    {
+      "id": "application-security",
+      "name": "Application Vulnerability Assessment",
+      "description": "Check the security posture of 11,000+ vendor products. Returns CVEs, CWE weakness profile, reachable ATT&CK techniques, and associated threat groups via the CVE-CWE-CAPEC-ATT&CK chain.",
+      "inputModes": ["text/plain"],
+      "outputModes": ["application/json"],
+      "examples": [
+        "What CVEs affect LiteLLM?",
+        "Show the attack surface for Microsoft Windows Server 2022",
+        "Which threat groups target Apache Tomcat?",
+        "What are the top 10 most vulnerable applications?"
+      ],
+      "tags": ["application", "software", "cpe", "vulnerability", "attack-surface"]
+    },
+    {
+      "id": "sector-threat-landscape",
+      "name": "Sector Threat Landscape",
+      "description": "Analyze threats to industry sectors: groups targeting the sector, their techniques, campaigns, vulnerable applications, and associated CVEs. Covers 12 sectors including Financial, Healthcare, Government, Energy, Telecom.",
+      "inputModes": ["text/plain"],
+      "outputModes": ["application/json"],
+      "examples": [
+        "What groups target the healthcare sector?",
+        "Show the threat landscape for financial services",
+        "Which techniques are most used against energy sector?"
+      ],
+      "tags": ["sector", "industry", "threat-landscape"]
+    },
+    {
+      "id": "detection-search",
+      "name": "Detection & Compliance Search",
+      "description": "Search Sigma rules (3,100+), Atomic Red Team tests (1,770+), D3FEND countermeasures (5,000+), NIST 800-53 controls (5,200+), MITRE Engage mappings, VERIS mappings, and cloud security controls for Azure and GCP.",
+      "inputModes": ["text/plain"],
+      "outputModes": ["application/json"],
+      "examples": [
+        "What Sigma rules detect credential dumping?",
+        "Show NIST controls for T1078 Valid Accounts",
+        "What Atomic tests exist for T1059?",
+        "List Azure cloud controls for T1190"
+      ],
+      "tags": ["sigma", "detection", "nist", "compliance", "d3fend", "atomic"]
+    },
+    {
+      "id": "cti-reports",
+      "name": "Threat Intelligence Reports",
+      "description": "Access recent CTI reports from AlienVault OTX, DFIR Report, Unit42, Microsoft Security, and Talos. Reports are mapped to ATT&CK techniques with IOC indicators.",
+      "inputModes": ["text/plain"],
+      "outputModes": ["application/json"],
+      "examples": [
+        "Show me the latest threat reports",
+        "What reports mention T1059?",
+        "Any recent reports about ransomware?"
+      ],
+      "tags": ["cti", "threat-report", "otx", "ioc"]
+    },
+    {
+      "id": "entity-search",
+      "name": "Cross-Domain Entity Search",
+      "description": "Search across all entity types (techniques, groups, software, campaigns, mitigations, data sources, applications) in all domains (Enterprise, ICS, Mobile, ATLAS).",
+      "inputModes": ["text/plain"],
+      "outputModes": ["application/json"],
+      "examples": [
+        "Search for phishing",
+        "Find all entities related to Mimikatz",
+        "What entities match 'remote code execution'?"
+      ],
+      "tags": ["search", "entity", "cross-domain"]
+    }
+  ],
+  "rateLimiting": {
+    "maxRequestsPerDay": 50,
+    "rateLimitBy": "ip",
+    "retryAfterHeader": true
+  },
+  "dataSources": [
+    "MITRE ATT&CK STIX (v18.1 — Enterprise, ICS, Mobile)",
+    "MITRE ATLAS (v1.0 — AI/ML threats)",
+    "CVElistV5 (21,000+ CVEs, 2017-2026)",
+    "CISA KEV (Known Exploited Vulnerabilities)",
+    "NVD (CVSS enrichment)",
+    "CAPEC STIX (CWE→CAPEC→ATT&CK bridge)",
+    "CTID (hand-curated CVE→technique mappings)",
+    "SigmaHQ (3,100+ detection rules)",
+    "Atomic Red Team (1,770+ tests)",
+    "D3FEND (5,000+ countermeasures)",
+    "NIST 800-53 (5,200+ controls)",
+    "AlienVault OTX (threat reports + IOCs)",
+    "ETDA/ThaiCERT (514 external actors)",
+    "MITRE Engage, RE&CT, VERIS, Azure/GCP cloud controls"
+  ]
+}
