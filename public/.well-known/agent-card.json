@@ -14,8 +14,7 @@
     "stateTransitionHistory": false
   },
   "authentication": {
-    "schemes": [],
-    "credentials": null
+    "schemes": []
   },
   "defaultInputModes": ["text/plain"],
   "defaultOutputModes": ["application/json", "text/plain"],

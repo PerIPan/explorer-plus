@@ -12,9 +12,41 @@ import { query } from '../v1/lib/db.js';
 
 const DAILY_LIMIT = 50;
 const MODEL = 'gemini-3.1-flash-lite-preview';
+const MAX_INPUT_LENGTH = 2000;
 const BASE_URL = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
   : 'https://mitre-explorer.org';
+
+// ── Input validation ─────────────────────────────────────────────────────────
+
+const CVE_RE = /^CVE-\d{4}-\d{4,}$/;
+const ATTACK_ID_RE = /^(AML\.)?(TA|T|G|S|M|C|DS)\d{4}(\.\d{3})?$/;
+const SECTOR_RE = /^[a-z]{3,30}$/;
+const DOMAIN_RE = /^(enterprise|ics|mobile|atlas)-attack$/;
+
+function validateCveId(id: unknown): string | null {
+  const s = String(id ?? '').trim();
+  return CVE_RE.test(s) ? s : null;
+}
+
+function validateAttackId(id: unknown): string | null {
+  const s = String(id ?? '').trim();
+  return ATTACK_ID_RE.test(s) ? s : null;
+}
+
+function validateSector(slug: unknown): string | null {
+  const s = String(slug ?? '').trim().toLowerCase();
+  return SECTOR_RE.test(s) ? s : null;
+}
+
+function validateDomain(d: unknown): string | null {
+  const s = String(d ?? '').trim();
+  return DOMAIN_RE.test(s) ? s : null;
+}
+
+function sanitizeSearch(q: unknown): string {
+  return String(q ?? '').trim().slice(0, 200);
+}
 
 // ── Gemini function declarations for our API ─────────────────────────────────
 
@@ -158,6 +190,17 @@ const TOOL_DECLARATIONS = [
   },
 ];
 
+const SYSTEM_INSTRUCTION = `You are the MITRE Explorer threat intelligence agent. You help security professionals, SOC analysts, and AI agents query the MITRE ATT&CK knowledge base, CVE vulnerabilities, and application security data.
+
+Use the available tools to answer questions. Always call a tool before answering — never guess or hallucinate data. If the user asks about a CVE, technique, group, or application, look it up.
+
+When responding:
+- Be concise and factual
+- Include ATT&CK IDs (e.g. T1059, G0016) when relevant
+- Include CVE IDs when relevant
+- Mention severity levels for CVEs
+- Reference specific data counts when available`;
+
 // ── Internal API caller ──────────────────────────────────────────────────────
 
 async function callInternalApi(path: string): Promise<unknown> {
@@ -171,51 +214,74 @@ async function executeTool(name: string, args: Record<string, unknown>): Promise
   switch (name) {
     case 'search_cves': {
       const params = new URLSearchParams();
-      if (args.q) params.set('q', String(args.q));
-      if (args.severity) params.set('severity', String(args.severity));
-      if (args.since) params.set('since', String(args.since));
-      params.set('limit', String(Math.min(Number(args.limit) || 10, 50)));
+      if (args.q) params.set('q', sanitizeSearch(args.q));
+      if (args.severity) params.set('severity', String(args.severity).toUpperCase().slice(0, 10));
+      if (args.since) params.set('since', String(args.since).slice(0, 30));
+      params.set('limit', String(Math.min(Math.max(Number(args.limit) || 10, 1), 50)));
       return callInternalApi(`/cves?${params}`);
     }
-    case 'get_cve_detail':
-      return callInternalApi(`/cves/${args.cve_id}`);
-    case 'get_technique_intelligence':
-      return callInternalApi(`/feed/intelligence/${args.attack_id}`);
-    case 'get_technique_detail':
-      return callInternalApi(`/techniques/${args.attack_id}`);
-    case 'get_group_profile':
-      return callInternalApi(`/groups/${args.attack_id}`);
+    case 'get_cve_detail': {
+      const id = validateCveId(args.cve_id);
+      if (!id) return { error: 'Invalid CVE ID format' };
+      return callInternalApi(`/cves/${id}`);
+    }
+    case 'get_technique_intelligence': {
+      const id = validateAttackId(args.attack_id);
+      if (!id) return { error: 'Invalid ATT&CK ID format' };
+      return callInternalApi(`/feed/intelligence/${id}`);
+    }
+    case 'get_technique_detail': {
+      const id = validateAttackId(args.attack_id);
+      if (!id) return { error: 'Invalid ATT&CK ID format' };
+      return callInternalApi(`/techniques/${id}`);
+    }
+    case 'get_group_profile': {
+      const id = validateAttackId(args.attack_id);
+      if (!id) return { error: 'Invalid group ID format' };
+      return callInternalApi(`/groups/${id}`);
+    }
     case 'search_groups': {
       const params = new URLSearchParams();
-      if (args.search) params.set('search', String(args.search));
-      if (args.sector) params.set('sector', String(args.sector));
-      if (args.domain) params.set('domain', String(args.domain));
-      params.set('limit', String(Math.min(Number(args.limit) || 10, 50)));
+      if (args.search) params.set('search', sanitizeSearch(args.search));
+      const sec = validateSector(args.sector);
+      if (sec) params.set('sector', sec);
+      const dom = validateDomain(args.domain);
+      if (dom) params.set('domain', dom);
+      params.set('limit', String(Math.min(Math.max(Number(args.limit) || 10, 1), 50)));
       return callInternalApi(`/groups?${params}`);
     }
     case 'get_application_security': {
-      const v = String(args.vendor).toLowerCase().replace(/[^a-z0-9]/g, '');
-      const p = String(args.product).toLowerCase().replace(/[^a-z0-9]/g, '');
+      const v = String(args.vendor ?? '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const p = String(args.product ?? '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (!v || !p) return { error: 'Vendor and product are required' };
       return callInternalApi(`/applications/${v}/${p}`);
     }
     case 'search_applications': {
       const params = new URLSearchParams();
-      if (args.search) params.set('search', String(args.search));
-      params.set('limit', String(Math.min(Number(args.limit) || 10, 50)));
+      if (args.search) params.set('search', sanitizeSearch(args.search));
+      params.set('limit', String(Math.min(Math.max(Number(args.limit) || 10, 1), 50)));
       return callInternalApi(`/applications?${params}`);
     }
-    case 'get_sector_threats':
-      return callInternalApi(`/sectors/${args.sector}/relationships`);
+    case 'get_sector_threats': {
+      const sec = validateSector(args.sector);
+      if (!sec) return { error: 'Invalid sector slug' };
+      return callInternalApi(`/sectors/${sec}/relationships`);
+    }
     case 'search_entities':
-      return callInternalApi(`/entities?q=${encodeURIComponent(String(args.q))}`);
+      return callInternalApi(`/entities?q=${encodeURIComponent(sanitizeSearch(args.q))}`);
     case 'get_dashboard_stats': {
       const params = new URLSearchParams();
-      if (args.domain) params.set('domain', String(args.domain));
-      if (args.sector) params.set('sector', String(args.sector));
+      const dom = validateDomain(args.domain);
+      if (dom) params.set('domain', dom);
+      const sec = validateSector(args.sector);
+      if (sec) params.set('sector', sec);
       return callInternalApi(`/dashboard?${params}`);
     }
-    case 'get_framework_mappings':
-      return callInternalApi(`/frameworks/technique/${args.attack_id}`);
+    case 'get_framework_mappings': {
+      const id = validateAttackId(args.attack_id);
+      if (!id) return { error: 'Invalid ATT&CK ID format' };
+      return callInternalApi(`/frameworks/technique/${id}`);
+    }
     default:
       return { error: `Unknown tool: ${name}` };
   }
@@ -224,6 +290,9 @@ async function executeTool(name: string, args: Record<string, unknown>): Promise
 // ── Rate limiting ────────────────────────────────────────────────────────────
 
 function getClientIp(req: VercelRequest): string {
+  // x-real-ip is set by Vercel edge and cannot be spoofed by the client
+  const realIp = req.headers['x-real-ip'];
+  if (typeof realIp === 'string') return realIp.trim();
   const forwarded = req.headers['x-forwarded-for'];
   if (typeof forwarded === 'string') return forwarded.split(',')[0].trim();
   return req.socket?.remoteAddress ?? 'unknown';
@@ -239,10 +308,12 @@ async function checkRateLimit(ip: string): Promise<{ allowed: boolean; remaining
 }
 
 async function recordRequest(ip: string, skillId: string | null, tokensUsed: number): Promise<void> {
-  await query(
-    `INSERT INTO a2a_requests (ip, skill_id, tokens_used) VALUES ($1, $2, $3)`,
-    [ip, skillId, tokensUsed],
-  );
+  try {
+    await query(
+      `INSERT INTO a2a_requests (ip, skill_id, tokens_used) VALUES ($1, $2, $3)`,
+      [ip, skillId, tokensUsed],
+    );
+  } catch { /* non-fatal — don't crash on logging failure */ }
 }
 
 // ── JSON-RPC handler ─────────────────────────────────────────────────────────
@@ -274,23 +345,36 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const ip = getClientIp(req);
 
-  // Rate limit check
-  const { allowed, remaining } = await checkRateLimit(ip);
+  // Rate limit check — fail-open on DB errors (don't block users if DB is down)
+  let remaining = DAILY_LIMIT;
+  try {
+    const rl = await checkRateLimit(ip);
+    remaining = rl.remaining;
+    if (!rl.allowed) {
+      res.setHeader('Retry-After', '86400');
+      res.setHeader('X-RateLimit-Limit', DAILY_LIMIT);
+      res.setHeader('X-RateLimit-Remaining', 0);
+      res.status(429).json(jsonRpcError(body.id, -32000, `Rate limit exceeded. ${DAILY_LIMIT} requests/day per IP. Retry after 24 hours.`));
+      return;
+    }
+  } catch {
+    // DB down — fail-open, allow the request
+  }
   res.setHeader('X-RateLimit-Limit', DAILY_LIMIT);
   res.setHeader('X-RateLimit-Remaining', remaining);
-  if (!allowed) {
-    res.setHeader('Retry-After', '86400');
-    res.status(429).json(jsonRpcError(body.id, -32000, `Rate limit exceeded. ${DAILY_LIMIT} requests/day per IP. Retry after 24 hours.`));
-    return;
-  }
 
   if (body.method === 'message/send') {
     const message = body.params?.message as { role?: string; parts?: Array<{ text?: string }> } | undefined;
-    const userText = message?.parts?.[0]?.text;
+    let userText = message?.parts?.[0]?.text;
 
     if (!userText) {
       res.status(400).json(jsonRpcError(body.id, -32602, 'Missing message.parts[0].text'));
       return;
+    }
+
+    // Cap input length
+    if (userText.length > MAX_INPUT_LENGTH) {
+      userText = userText.slice(0, MAX_INPUT_LENGTH);
     }
 
     try {
@@ -301,6 +385,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       const ai = new GoogleGenAI({ apiKey });
+      const toolsConfig = [{ functionDeclarations: TOOL_DECLARATIONS as any }];
 
       // Initial Gemini call with function declarations
       const response = await ai.models.generateContent({
@@ -312,46 +397,44 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           },
         ],
         config: {
-          systemInstruction: `You are the MITRE Explorer threat intelligence agent. You help security professionals, SOC analysts, and AI agents query the MITRE ATT&CK knowledge base, CVE vulnerabilities, and application security data.
-
-Use the available tools to answer questions. Always call a tool before answering — never guess or hallucinate data. If the user asks about a CVE, technique, group, or application, look it up.
-
-When responding:
-- Be concise and factual
-- Include ATT&CK IDs (e.g. T1059, G0016) when relevant
-- Include CVE IDs when relevant
-- Mention severity levels for CVEs
-- Reference specific data counts when available`,
-          tools: [{ functionDeclarations: TOOL_DECLARATIONS as any }],
+          systemInstruction: SYSTEM_INSTRUCTION,
+          tools: toolsConfig,
         },
       });
 
-      // Check if Gemini wants to call a function
+      // Process all function calls (Gemini may return multiple)
       const candidate = response.candidates?.[0];
       const parts = candidate?.content?.parts ?? [];
-      const functionCall = parts.find((p) => p.functionCall);
+      const functionCalls = parts.filter((p) => p.functionCall);
 
       let finalText: string;
-      let skillUsed: string | null = null;
+      const skillsUsed: string[] = [];
 
-      if (functionCall?.functionCall) {
-        // Execute the tool
-        const toolName = functionCall.functionCall.name!;
-        const toolArgs = (functionCall.functionCall.args ?? {}) as Record<string, unknown>;
-        skillUsed = toolName;
+      if (functionCalls.length > 0) {
+        // Execute all tool calls in parallel
+        const toolResults = await Promise.all(
+          functionCalls.map(async (fc) => {
+            const toolName = fc.functionCall!.name!;
+            const toolArgs = (fc.functionCall!.args ?? {}) as Record<string, unknown>;
+            skillsUsed.push(toolName);
+            const result = await executeTool(toolName, toolArgs);
+            return { name: toolName, args: toolArgs, result };
+          }),
+        );
 
-        const toolResult = await executeTool(toolName, toolArgs);
+        // Build follow-up conversation with all tool results
+        const followUpContents: Array<{ role: 'user' | 'model'; parts: any[] }> = [
+          { role: 'user' as const, parts: [{ text: userText }] },
+          { role: 'model' as const, parts: functionCalls.map((fc) => ({ functionCall: { name: fc.functionCall!.name!, args: fc.functionCall!.args } })) },
+          { role: 'user' as const, parts: toolResults.map((tr) => ({ functionResponse: { name: tr.name, response: tr.result as Record<string, unknown> } })) },
+        ];
 
-        // Send tool result back to Gemini for summarization
         const followUp = await ai.models.generateContent({
           model: MODEL,
-          contents: [
-            { role: 'user' as const, parts: [{ text: userText }] },
-            { role: 'model' as const, parts: [{ functionCall: { name: toolName, args: toolArgs } }] },
-            { role: 'user' as const, parts: [{ functionResponse: { name: toolName, response: toolResult as Record<string, unknown> } }] },
-          ],
+          contents: followUpContents,
           config: {
-            systemInstruction: `You are the MITRE Explorer threat intelligence agent. Summarize the tool results concisely for the user. Include specific data points, IDs, and counts. Format as structured text.`,
+            systemInstruction: SYSTEM_INSTRUCTION,
+            tools: toolsConfig,
           },
         });
 
@@ -362,7 +445,8 @@ When responding:
       }
 
       // Record the request
-      await recordRequest(ip, skillUsed, finalText.length);
+      const tokenCount = (response as any).usageMetadata?.totalTokenCount ?? finalText.length;
+      await recordRequest(ip, skillsUsed[0] ?? null, tokenCount);
 
       // A2A Task response
       const taskId = `task-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -379,10 +463,11 @@ When responding:
             },
             timestamp: new Date().toISOString(),
           },
-          artifacts: skillUsed ? [{
-            artifactId: `${skillUsed}-result`,
-            name: skillUsed,
+          artifacts: skillsUsed.length > 0 ? [{
+            name: skillsUsed.join(', '),
             parts: [{ text: finalText }],
+            index: 0,
+            lastChunk: true,
           }] : [],
         },
       });
