@@ -125,6 +125,7 @@ export function Relationships() {
   useEffect(() => {
     if (entityParam && entityParam !== selectedId) {
       setSelectedId(entityParam);
+      setSelectedName(entityParam);
       setSearchInput(entityParam);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps

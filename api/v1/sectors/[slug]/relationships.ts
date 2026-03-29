@@ -101,9 +101,8 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     query<{ normalized: string; vendor: string; product: string; cveCount: string }>(
       `SELECT DISTINCT a.normalized, a.vendor, a.product, a.cve_count::text AS "cveCount"
        FROM group_sectors gs
-       JOIN app_technique_groups atg ON atg.group_attack_id = (
-         SELECT attack_id FROM threat_groups WHERE id = gs.group_id
-       )
+       JOIN threat_groups tg ON tg.id = gs.group_id
+       JOIN app_technique_groups atg ON atg.group_attack_id = tg.attack_id
        JOIN applications a ON a.id = atg.application_id
        WHERE gs.sector_id = $1
        ORDER BY a.cve_count DESC
