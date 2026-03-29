@@ -660,6 +660,32 @@ export function TechniqueDetail() {
             ))}
           </div>
         ) : null}
+        {data.maturity && (
+          <div className="flex items-center gap-2">
+            <span className="text-[var(--text-secondary)]">Maturity:</span>
+            <Badge
+              label={data.maturity}
+              variant={data.maturity === 'realized' ? 'green' : data.maturity === 'demonstrated' ? 'yellow' : 'orange'}
+              className="cursor-help"
+            />
+          </div>
+        )}
+        {data.atlasXrefs && data.atlasXrefs.length > 0 && (
+          <div className="flex items-center gap-2">
+            <span className="text-[var(--text-secondary)]">
+              {data.domain === 'atlas-attack' ? 'ATT&CK Equivalent:' : 'ATLAS AI Context:'}
+            </span>
+            {data.atlasXrefs.map((xref) => (
+              <a
+                key={xref.attackId}
+                href={`/techniques/${xref.attackId}?domain=${xref.domain ?? ''}`}
+                className="text-xs text-[var(--accent-teal)] hover:underline font-mono"
+              >
+                {xref.attackId} {xref.name}
+              </a>
+            ))}
+          </div>
+        )}
         {data.url && isSafeUrl(data.url) && (
           <a
             href={data.url}

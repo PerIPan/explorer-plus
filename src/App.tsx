@@ -190,6 +190,7 @@ function Layout() {
                 <li><strong>Threat actors</strong> — 191 ATT&CK groups + 514 ThaiCERT/ETDA actors with category inference</li>
                 <li><strong>Data model</strong> — 20+ interconnected data sources: ATT&CK STIX, CVElistV5, CAPEC, NIST, CISA KEV, OTX, SigmaHQ, Atomic Red Team, D3FEND, VERIS, CTID</li>
                 <li><strong>Sector + domain filters</strong> — narrow everything by industry and ATT&CK domain (AND logic)</li>
+                <li><strong>Diamond Model</strong> — Adversary (Threat Actors) | Victim (Sectors) | Infrastructure (Applications) | Capability (Techniques)</li>
               </ul>
               <p className="text-[var(--text-secondary)] text-xs pt-2 border-t border-[var(--border-color)]">
                 <span className="text-[var(--accent-teal)]">contact @ mitre-explorer.org</span>

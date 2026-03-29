@@ -33,7 +33,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
        id, attack_id AS "attackId", stix_id AS "stixId", name, description, url,
        platforms, is_subtechnique AS "isSubtechnique", detection,
        is_revoked AS "isRevoked", is_deprecated AS "isDeprecated", domain,
-       stix_created AS "stixCreated", stix_modified AS "stixModified"
+       stix_created AS "stixCreated", stix_modified AS "stixModified", maturity
      FROM techniques WHERE attack_id = $1 ${domainFilter}`,
     techParams,
   );
@@ -47,7 +47,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   const techId = tech.id;
 
   // Run all relationship queries in parallel
-  const [groupsResult, softwareResult, mitigationsResult, dataComponentsResult, subTechResult, campaignsResult, tacticsResult] =
+  const [groupsResult, softwareResult, mitigationsResult, dataComponentsResult, subTechResult, campaignsResult, tacticsResult, xrefsResult] =
     await Promise.all([
       // Related groups — includes groups using this technique OR any of its sub-techniques
       query<{ attackId: string; name: string; procedure: string | null }>(
@@ -118,6 +118,19 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
          ORDER BY ta.sort_order ASC`,
         [techId],
       ),
+      // ATLAS ↔ ATT&CK cross-references (both directions)
+      query<{ attackId: string; name: string; domain: string | null }>(
+        `SELECT t.attack_id AS "attackId", t.name, t.domain
+         FROM atlas_xrefs ax
+         JOIN techniques t ON t.id = ax.attack_technique_id
+         WHERE ax.atlas_technique_id = $1
+         UNION ALL
+         SELECT t.attack_id AS "attackId", t.name, t.domain
+         FROM atlas_xrefs ax
+         JOIN techniques t ON t.id = ax.atlas_technique_id
+         WHERE ax.attack_technique_id = $1`,
+        [techId],
+      ),
     ]);
 
   res.status(200).json({
@@ -129,6 +142,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     dataComponents: dataComponentsResult.rows,
     sub_techniques: subTechResult.rows,
     campaigns: campaignsResult.rows,
+    atlasXrefs: xrefsResult.rows,
   });
 }
 

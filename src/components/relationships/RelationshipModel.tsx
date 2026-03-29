@@ -28,7 +28,8 @@ function makeNodes(c: ReturnType<typeof useThemeColors>): ModelNode[] {
   return [
     // Core entities — center cluster with more spacing
     { id: 'technique', label: 'Technique', x: 650, y: 330, color: c.accentTeal, bg: alpha(c.accentTeal, '18'), path: '/techniques', description: 'Attack methods and sub-techniques used by adversaries', category: 'core', scale: 1.4 },
-    { id: 'tactic', label: 'Tactic', x: 650, y: 100, color: c.accentYellow, bg: alpha(c.accentYellow, '18'), path: '/tactics', description: 'Kill chain phases: Reconnaissance to Impact', category: 'core' },
+    { id: 'tactic', label: 'Tactic', x: 550, y: 100, color: c.accentYellow, bg: alpha(c.accentYellow, '18'), path: '/tactics', description: 'Kill chain phases: Reconnaissance to Impact', category: 'core' },
+    { id: 'atlas', label: 'ATLAS', x: 850, y: 60, color: '#a78bfa', bg: '#a78bfa18', path: '/matrix?domain=atlas-attack', description: 'MITRE ATLAS — AI/ML adversarial threat framework with 155 techniques', category: 'core' },
     { id: 'group', label: 'Threat Group', x: 180, y: 190, color: c.accentOrange, bg: alpha(c.accentOrange, '18'), path: '/groups', description: 'Tracked adversary groups (APT29, Lazarus, etc.)', category: 'core' },
     { id: 'software', label: 'Software', x: 180, y: 400, color: c.accentPurple, bg: alpha(c.accentPurple, '18'), path: '/software', description: 'Attacker tools — malware and hacking tools used in attacks', category: 'core' },
     { id: 'campaign', label: 'Campaign', x: 400, y: 100, color: c.accentBlue, bg: alpha(c.accentBlue, '18'), path: '/campaigns', description: 'Named intrusion operations with timelines', category: 'core' },
@@ -91,6 +92,7 @@ const EDGES: ModelEdge[] = [
   { from: 'application', to: 'technique', label: 'exploited via', style: 'dashed' },
   { from: 'ics', to: 'technique', label: 'contains', style: 'dashed' },
   { from: 'mobile', to: 'technique', label: 'contains', style: 'dashed' },
+  { from: 'atlas', to: 'technique', label: 'cross-references', style: 'dashed' },
 ];
 
 function getEdgePath(from: ModelNode, to: ModelNode): { path: string; midX: number; midY: number; angle: number } {

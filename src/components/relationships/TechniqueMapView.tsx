@@ -410,11 +410,26 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
           {technique.domain && (
             <Badge label={technique.domain.replace('-attack', '')} variant="neutral" />
           )}
+          {technique.maturity && (
+            <Badge
+              label={technique.maturity}
+              variant={technique.maturity === 'realized' ? 'green' : technique.maturity === 'demonstrated' ? 'yellow' : 'orange'}
+            />
+          )}
           {technique.tactics?.map((tactic) => (
             <Badge key={tactic} label={tactic} variant="yellow" />
           ))}
           {technique.platforms?.map((p) => (
             <Badge key={p} label={p} variant="blue" />
+          ))}
+          {technique.atlasXrefs?.map((xref) => (
+            <a
+              key={xref.attackId}
+              href={`/?entity=${xref.attackId}&tab=technique-map`}
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-[var(--purple-faint)] text-[var(--accent-purple)] border border-[var(--purple-dim)] hover:bg-[var(--purple-dim)] transition-colors"
+            >
+              {technique.domain === 'atlas-attack' ? 'ATT&CK:' : 'ATLAS:'} {xref.attackId} ↗
+            </a>
           ))}
         </div>
       </div>

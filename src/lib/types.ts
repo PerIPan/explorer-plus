@@ -17,6 +17,7 @@ export interface SubTechnique extends BaseEntity {
   tactics: string[];
   platforms: string[] | null;
   detection: string | null;
+  maturity: string | null;
 }
 
 export interface TechniqueRelatedGroup {
@@ -55,6 +56,8 @@ export interface Technique extends BaseEntity {
   tactics: string[];
   platforms: string[] | null;
   detection: string | null;
+  maturity: string | null;
+  atlasXrefs?: Array<{ attackId: string; name: string; domain: string | null }>;
   sub_techniques: SubTechnique[];
   /** Relationship data returned by the detail endpoint */
   groups?: TechniqueRelatedGroup[];
