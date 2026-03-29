@@ -174,7 +174,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
            JOIN capec_mappings cm ON cm.cwe_id = cw.cwe_id AND cm.technique_id = $1
          )
          ORDER BY cd.published_at DESC NULLS LAST
-         LIMIT 20`,
+         LIMIT 4`,
         [techId],
       ),
 

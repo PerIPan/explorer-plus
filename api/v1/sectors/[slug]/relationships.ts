@@ -101,7 +101,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
          WHERE gs.sector_id = $1
        )
        ORDER BY cd.published_at DESC NULLS LAST
-       LIMIT 100`,
+       LIMIT 4`,
       [sectorId],
     ),
 
