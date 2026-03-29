@@ -106,6 +106,39 @@ body {
   background: var(--teal-dim);
 }
 
+/* Global styled tooltips — replace native title attr */
+[data-tooltip] {
+  position: relative;
+  cursor: help;
+}
+[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 0;
+  top: 100%;
+  margin-top: 4px;
+  z-index: 50;
+  max-width: 400px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--surface-deep);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  color: var(--text-primary);
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: normal;
+  word-break: break-word;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s, visibility 0.15s;
+}
+[data-tooltip]:hover::after {
+  opacity: 1;
+  visibility: visible;
+}
+
 /* Print / PDF export styles — hide nav, show only main content */
 @media print {
   /* Hide sidebar, header, and non-content elements */
