@@ -253,14 +253,22 @@ export function CvesList() {
   );
 
   const [qInput, setQInput] = useState(q);
+  const [techInput, setTechInput] = useState(technique);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const techDebounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   useEffect(() => { setQInput(q); }, [q]);
+  useEffect(() => { setTechInput(technique); }, [technique]);
   const handleQChange = useCallback((value: string) => {
     setQInput(value);
     clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => setParam('q', value), 300);
   }, [setParam]);
-  useEffect(() => () => clearTimeout(debounceRef.current), []);
+  const handleTechChange = useCallback((value: string) => {
+    setTechInput(value);
+    clearTimeout(techDebounceRef.current);
+    techDebounceRef.current = setTimeout(() => setParam('technique', value.trim()), 500);
+  }, [setParam]);
+  useEffect(() => () => { clearTimeout(debounceRef.current); clearTimeout(techDebounceRef.current); }, []);
 
   const params: Record<string, string> = { page: String(page), limit: '100', ...sectorParam };
   if (severity) params.severity = severity;
@@ -302,8 +310,8 @@ export function CvesList() {
         <input
           type="text"
           placeholder="Technique (T1190)"
-          value={technique}
-          onChange={(e) => setParam('technique', e.target.value.trim())}
+          value={techInput}
+          onChange={(e) => handleTechChange(e.target.value)}
           className="min-w-[140px] px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--accent-teal)] placeholder-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent-teal)] font-mono"
         />
         <select
