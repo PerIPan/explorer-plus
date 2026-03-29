@@ -13,6 +13,7 @@ All cron endpoints require `Authorization: Bearer $CRON_SECRET` header.
 | **NVD Enrich** | `POST /api/cron/enrich-nvd` | Every 4h | CVSS scores, CWE, descriptions for CVEs → cve_details | 20/batch (6s delay without API key) |
 | **VT Enrich** | `POST /api/cron/enrich-vt` | Every 8h | VirusTotal sandbox verdicts → ioc_entries (vt_* fields) | 10/batch (rate limited) |
 | **D3FEND** | `POST /api/cron/sync-d3fend` | Monthly 1st | MITRE D3FEND defensive mappings → defensive_mappings | ~5000 mappings |
+| **CVE Delta** | `POST /api/cron/ingest-cve-delta` | Daily 4am UTC | NVD API last 48h → cve_details + cve_weaknesses + applications + affected_products, refreshes MV | ~50-300 CVEs/day |
 
 ## GitHub Actions Feeds
 
