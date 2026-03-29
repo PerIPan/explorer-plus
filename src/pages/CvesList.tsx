@@ -172,7 +172,7 @@ const columns: ColumnDef<CveEntry>[] = [
   {
     key: 'applications',
     header: 'Applications',
-    tooltip: 'Affected vendor products from CVElistV5 CPE data',
+    tooltip: 'Affected products from NVD CPE data. NVD typically adds CPE entries days after CVE publication — recent CVEs may show empty until enriched.',
     render: (row) =>
       row.applications ? (
         <span className="text-[10px] text-[var(--accent-blue)] max-w-[200px] line-clamp-2 block leading-relaxed">
