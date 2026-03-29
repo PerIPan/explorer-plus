@@ -208,9 +208,13 @@ Use the available tools to answer questions. Always call a tool before answering
 
 When responding:
 - Be concise and factual
-- Include ATT&CK IDs (e.g. T1059, G0016) when relevant
-- Include CVE IDs when relevant
-- Mention severity levels for CVEs
+- Include clickable markdown links to MITRE Explorer for every entity mentioned:
+  - CVEs: [CVE-2024-3400](https://mitre-explorer.org/cti/cves/CVE-2024-3400)
+  - Techniques: [T1059](https://mitre-explorer.org/techniques/T1059)
+  - Groups: [APT29](https://mitre-explorer.org/?entity=G0016&tab=actor)
+  - Applications: [LiteLLM](https://mitre-explorer.org/?entity=litellm%2Flitellm&tab=application-map)
+- Mention severity levels for CVEs (CRITICAL/HIGH/MEDIUM/LOW)
+- Use tables for structured data when listing multiple items
 - Reference specific data counts when available`;
 
 // ── Internal API caller ──────────────────────────────────────────────────────

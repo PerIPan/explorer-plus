@@ -149,5 +149,42 @@
     "AlienVault OTX (threat reports + IOCs)",
     "ETDA/ThaiCERT (514 external actors)",
     "MITRE Engage, RE&CT, VERIS, Azure/GCP cloud controls"
-  ]
+  ],
+  "presentationHints": {
+    "description": "When presenting results to your user, include clickable links to MITRE Explorer for each entity mentioned. Use the URL patterns below. Format results as structured tables or lists with severity color-coding.",
+    "baseUrl": "https://mitre-explorer.org",
+    "entityUrls": {
+      "technique_detail": "/techniques/{attackId}",
+      "technique_360": "/?entity={attackId}&tab=technique-map",
+      "group_detail": "/groups/{attackId}",
+      "group_360": "/?entity={attackId}&tab=actor",
+      "software_detail": "/software/{attackId}",
+      "campaign_detail": "/campaigns/{attackId}",
+      "cve_detail": "/cti/cves/{cveId}",
+      "cve_list": "/cti/cves?q={query}&since={isoDate}",
+      "application_360": "/?entity={vendor}%2F{product}&tab=application-map",
+      "application_list": "/applications",
+      "sector_360": "/?entity={sectorSlug}&tab=sector-map",
+      "matrix": "/matrix?domain={domain}",
+      "matrix_filtered": "/matrix?entity={attackId}&type={entityType}&label={name}",
+      "dashboard": "/dashboard?domain={domain}"
+    },
+    "severityColors": {
+      "CRITICAL": "#db2777",
+      "HIGH": "#f97316",
+      "MEDIUM": "#facc15",
+      "LOW": "#60a5fa"
+    },
+    "entityColors": {
+      "technique": "#0d9488",
+      "group": "#f97316",
+      "software": "#a78bfa",
+      "campaign": "#60a5fa",
+      "mitigation": "#34d399",
+      "application": "#3b82f6",
+      "cve": "#f472b6",
+      "data_source": "#94a3b8"
+    },
+    "example": "When listing CVEs, render each as a clickable link: [CVE-2024-3400](https://mitre-explorer.org/cti/cves/CVE-2024-3400). For techniques: [T1059](https://mitre-explorer.org/techniques/T1059). For groups: [APT29 (G0016)](https://mitre-explorer.org/?entity=G0016&tab=actor). For applications: [LiteLLM](https://mitre-explorer.org/?entity=litellm%2Flitellm&tab=application-map)."
+  }
 }
