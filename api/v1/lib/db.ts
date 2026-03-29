@@ -18,7 +18,7 @@ function getPool(): Pool {
         port: parseInt(url.port || '5432', 10),
         database: url.pathname.slice(1),
         user: url.username,
-        password: decodeURIComponent(url.password),
+        password: url.password,
         ssl: { rejectUnauthorized: true },
         statement_timeout: 5000,
         connectionTimeoutMillis: 3000,
