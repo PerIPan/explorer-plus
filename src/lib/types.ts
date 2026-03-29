@@ -526,7 +526,7 @@ export interface CveEntry {
   applications: string;
 }
 
-export interface CveDetail extends Omit<CveEntry, 'sources' | 'techniqueCount'> {
+export interface CveDetail extends Omit<CveEntry, 'sources' | 'techniqueCount' | 'techniques'> {
   cvssVector: string | null;
   cwes: string[];
   isKev: boolean;

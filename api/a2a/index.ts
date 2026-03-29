@@ -4,7 +4,7 @@ import { query } from '../v1/lib/db.js';
 
 /**
  * A2A (Agent-to-Agent) endpoint — JSON-RPC 2.0 over HTTPS.
- * Accepts natural language queries, uses Gemini 2.5 Flash-Lite to interpret,
+ * Accepts natural language queries, uses Gemini 3.1 Flash-Lite to interpret,
  * calls internal APIs, returns structured results.
  *
  * Rate limit: 50 req/day per IP, no auth required.
@@ -358,7 +358,12 @@ const TOOL_DECLARATIONS = [
   },
 ];
 
-const SYSTEM_INSTRUCTION = `You are the MITRE Explorer threat intelligence agent. You help security professionals, SOC analysts, and AI agents query the MITRE ATT&CK knowledge base, CVE vulnerabilities, and application security data.
+// Dynamic system instruction — injects current date so Gemini calculates relative dates correctly
+function buildSystemInstruction(): string {
+  const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+  return `You are the MITRE Explorer threat intelligence agent. You help security professionals, SOC analysts, and AI agents query the MITRE ATT&CK knowledge base, CVE vulnerabilities, and application security data.
+
+IMPORTANT: Today's date is ${today}. Always use this date for relative time calculations (e.g. "last 7 days" means since ${new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0]}). Never assume a different year.
 
 Use the available tools to answer questions. Always call a tool before answering — never guess or hallucinate data. If the user asks about a CVE, technique, group, or application, look it up.
 
@@ -375,13 +380,29 @@ When responding:
 - Keep a consistent schema per entity type — do not change column layout between responses
 - Do not truncate CVE descriptions mid-sentence — include the full description or summarize it cleanly
 - When reporting CVEs, add this note at the end: "NVD typically adds CPE entries days after CVE publication — recent CVEs may show empty until enriched."
-- For each CVE with linked techniques, list the technique IDs (e.g. T1190, T1059) — these are the bridge between a vulnerability and the actual attack behaviour it enables`;
+- For each CVE with linked techniques, list the technique IDs (e.g. T1190, T1059) — these are the bridge between a vulnerability and the actual attack behaviour it enables
+- When showing date ranges in your response, always confirm the actual dates used (e.g. "CVEs published between 2026-03-22 and 2026-03-29")`;
+}
+
+// ── Input validation allowlists ─────────────────────────────────────────────
+
+const IOC_TYPES = new Set(['ip', 'domain', 'url', 'hash', 'cve', 'email']);
+const IOC_SOURCES = new Set(['otx', 'threatfox', 'malwarebazaar', 'cisa_kev']);
+const SIGMA_LEVELS = new Set(['critical', 'high', 'medium', 'low', 'informational']);
+const PLATFORMS = new Set(['windows', 'linux', 'macos']);
+
+function clampLimit(val: unknown, def: number, max: number): string {
+  return String(Math.min(Math.max(Number(val) || def, 1), max));
+}
 
 // ── Internal API caller ──────────────────────────────────────────────────────
 
 async function callInternalApi(path: string): Promise<Record<string, unknown>> {
   const url = `${BASE_URL}/api/v1${path}`;
-  const resp = await fetch(url, { headers: { 'Accept': 'application/json' } });
+  const resp = await fetch(url, {
+    headers: { 'Accept': 'application/json' },
+    signal: AbortSignal.timeout(8000),
+  });
   if (!resp.ok) return { error: `API returned ${resp.status}`, path };
   return resp.json() as Promise<Record<string, unknown>>;
 }
@@ -399,7 +420,7 @@ async function executeTool(name: string, args: Record<string, unknown>): Promise
         const d = new Date(String(args.since));
         if (!isNaN(d.getTime())) params.set('since', d.toISOString());
       }
-      params.set('limit', String(Math.min(Math.max(Number(args.limit) || 10, 1), 50)));
+      params.set('limit', clampLimit(args.limit, 10, 50));
       return callInternalApi(`/cves?${params}`);
     }
     case 'get_cve_detail': {
@@ -423,26 +444,27 @@ async function executeTool(name: string, args: Record<string, unknown>): Promise
       return callInternalApi(`/groups/${id}`);
     }
     case 'search_groups': {
-      const params = new URLSearchParams();
       const s = sanitizeSearch(args.search);
+      if (s.length > 0 && s.length < 3) return { error: 'Search query must be at least 3 characters' };
+      const params = new URLSearchParams();
       if (s.length >= 3) params.set('search', s);
       const sec = validateSector(args.sector);
       if (sec) params.set('sector', sec);
       const dom = validateDomain(args.domain);
       if (dom) params.set('domain', dom);
-      params.set('limit', String(Math.min(Math.max(Number(args.limit) || 10, 1), 50)));
+      params.set('limit', clampLimit(args.limit, 10, 50));
       return callInternalApi(`/groups?${params}`);
     }
     case 'get_application_security': {
-      const v = String(args.vendor ?? '').toLowerCase().replace(/[^a-z0-9_]/g, '');
-      const p = String(args.product ?? '').toLowerCase().replace(/[^a-z0-9_]/g, '');
+      const v = String(args.vendor ?? '').toLowerCase().replace(/[^a-z0-9_-]/g, '');
+      const p = String(args.product ?? '').toLowerCase().replace(/[^a-z0-9_-]/g, '');
       if (!v || !p) return { error: 'Vendor and product are required' };
       return callInternalApi(`/applications/${v}/${p}`);
     }
     case 'search_applications': {
       const params = new URLSearchParams();
       if (args.search) params.set('search', sanitizeSearch(args.search));
-      params.set('limit', String(Math.min(Math.max(Number(args.limit) || 10, 1), 50)));
+      params.set('limit', clampLimit(args.limit, 10, 50));
       return callInternalApi(`/applications?${params}`);
     }
     case 'get_sector_threats': {
@@ -470,7 +492,7 @@ async function executeTool(name: string, args: Record<string, unknown>): Promise
     }
     case 'get_threat_reports': {
       const params = new URLSearchParams();
-      params.set('limit', String(Math.min(Math.max(Number(args.limit) || 10, 1), 50)));
+      params.set('limit', clampLimit(args.limit, 10, 50));
       return callInternalApi(`/feed/reports?${params}`);
     }
     // ── New tools ──────────────────────────────────────────────────────────
@@ -480,12 +502,13 @@ async function executeTool(name: string, args: Record<string, unknown>): Promise
       return callInternalApi(`/software/${id}`);
     }
     case 'search_software': {
-      const params = new URLSearchParams();
       const s = sanitizeSearch(args.search);
+      if (s.length > 0 && s.length < 3) return { error: 'Search query must be at least 3 characters' };
+      const params = new URLSearchParams();
       if (s.length >= 3) params.set('search', s);
       const sec = validateSector(args.sector);
       if (sec) params.set('sector', sec);
-      params.set('limit', String(Math.min(Math.max(Number(args.limit) || 10, 1), 50)));
+      params.set('limit', clampLimit(args.limit, 10, 50));
       return callInternalApi(`/software?${params}`);
     }
     case 'get_campaign_detail': {
@@ -494,12 +517,13 @@ async function executeTool(name: string, args: Record<string, unknown>): Promise
       return callInternalApi(`/campaigns/${id}`);
     }
     case 'search_campaigns': {
-      const params = new URLSearchParams();
       const s = sanitizeSearch(args.search);
+      if (s.length > 0 && s.length < 3) return { error: 'Search query must be at least 3 characters' };
+      const params = new URLSearchParams();
       if (s.length >= 3) params.set('search', s);
       const sec = validateSector(args.sector);
       if (sec) params.set('sector', sec);
-      params.set('limit', String(Math.min(Math.max(Number(args.limit) || 10, 1), 50)));
+      params.set('limit', clampLimit(args.limit, 10, 50));
       return callInternalApi(`/campaigns?${params}`);
     }
     case 'get_mitigation_detail': {
@@ -508,23 +532,30 @@ async function executeTool(name: string, args: Record<string, unknown>): Promise
       return callInternalApi(`/mitigations/${id}`);
     }
     case 'search_mitigations': {
-      const params = new URLSearchParams();
       const s = sanitizeSearch(args.search);
+      if (s.length > 0 && s.length < 3) return { error: 'Search query must be at least 3 characters' };
+      const params = new URLSearchParams();
       if (s.length >= 3) params.set('search', s);
-      params.set('limit', String(Math.min(Math.max(Number(args.limit) || 10, 1), 50)));
+      params.set('limit', clampLimit(args.limit, 10, 50));
       return callInternalApi(`/mitigations?${params}`);
     }
     case 'search_iocs': {
       const params = new URLSearchParams();
       if (args.q) params.set('q', sanitizeSearch(args.q));
-      if (args.type) params.set('type', String(args.type));
-      if (args.source) params.set('source', String(args.source));
+      if (args.type) {
+        const t = String(args.type).toLowerCase();
+        if (IOC_TYPES.has(t)) params.set('type', t);
+      }
+      if (args.source) {
+        const s = String(args.source).toLowerCase();
+        if (IOC_SOURCES.has(s)) params.set('source', s);
+      }
       if (args.malware) params.set('malware', sanitizeSearch(args.malware));
       if (args.since) {
         const d = new Date(String(args.since));
         if (!isNaN(d.getTime())) params.set('since', d.toISOString());
       }
-      params.set('limit', String(Math.min(Math.max(Number(args.limit) || 20, 1), 100)));
+      params.set('limit', clampLimit(args.limit, 20, 50));
       return callInternalApi(`/feed/iocs?${params}`);
     }
     case 'search_sigma_rules': {
@@ -534,8 +565,11 @@ async function executeTool(name: string, args: Record<string, unknown>): Promise
         const tid = validateAttackId(args.technique);
         if (tid) params.set('technique', tid);
       }
-      if (args.level) params.set('level', String(args.level).toLowerCase());
-      params.set('limit', String(Math.min(Math.max(Number(args.limit) || 20, 1), 100)));
+      if (args.level) {
+        const lvl = String(args.level).toLowerCase();
+        if (SIGMA_LEVELS.has(lvl)) params.set('level', lvl);
+      }
+      params.set('limit', clampLimit(args.limit, 20, 50));
       return callInternalApi(`/feed/sigma?${params}`);
     }
     case 'search_atomic_tests': {
@@ -545,8 +579,11 @@ async function executeTool(name: string, args: Record<string, unknown>): Promise
         const tid = validateAttackId(args.technique);
         if (tid) params.set('technique', tid);
       }
-      if (args.platform) params.set('platform', String(args.platform).toLowerCase());
-      params.set('limit', String(Math.min(Math.max(Number(args.limit) || 20, 1), 100)));
+      if (args.platform) {
+        const plat = String(args.platform).toLowerCase();
+        if (PLATFORMS.has(plat)) params.set('platform', plat);
+      }
+      params.set('limit', clampLimit(args.limit, 20, 50));
       return callInternalApi(`/feed/atomic?${params}`);
     }
     case 'get_external_actor': {
@@ -555,12 +592,13 @@ async function executeTool(name: string, args: Record<string, unknown>): Promise
       return callInternalApi(`/external-actors/${encodeURIComponent(n)}`);
     }
     case 'search_external_actors': {
-      const params = new URLSearchParams();
       const s = sanitizeSearch(args.search);
+      if (s.length > 0 && s.length < 2) return { error: 'Search query must be at least 2 characters' };
+      const params = new URLSearchParams();
       if (s.length >= 2) params.set('search', s);
-      if (args.country) params.set('country', String(args.country));
-      if (args.category) params.set('category', String(args.category));
-      params.set('limit', String(Math.min(Math.max(Number(args.limit) || 20, 1), 100)));
+      if (args.country) params.set('country', sanitizeSearch(args.country));
+      if (args.category) params.set('category', sanitizeSearch(args.category));
+      params.set('limit', clampLimit(args.limit, 20, 50));
       return callInternalApi(`/external-actors?${params}`);
     }
     case 'get_tactic_detail': {
@@ -615,7 +653,9 @@ async function recordRequest(log: A2aLog): Promise<void> {
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
       [log.ip, log.userQuery, log.skillId, log.toolsCalled, log.responseText, log.tokensUsed, log.latencyMs, log.error],
     );
-  } catch { /* non-fatal */ }
+  } catch (e) {
+    console.error('A2A log write failed:', e instanceof Error ? e.message : e);
+  }
 }
 
 // ── JSON-RPC handler ─────────────────────────────────────────────────────────
@@ -702,7 +742,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const response = await ai.models.generateContent({
         model: MODEL,
         contents: [{ role: 'user', parts: [{ text: userText }] }],
-        config: { systemInstruction: SYSTEM_INSTRUCTION, tools: toolsConfig },
+        config: { systemInstruction: buildSystemInstruction(), tools: toolsConfig },
       });
 
       const candidate = response.candidates?.[0];
@@ -715,15 +755,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       let rawToolData: Record<string, unknown>[] = [];
 
       if (functionCalls.length > 0) {
-        // Execute all tool calls in parallel
-        const toolResults = await Promise.all(
-          functionCalls.map(async (fc) => {
+        // Execute tool calls in parallel (cap at 5)
+        const capped = functionCalls.slice(0, 5);
+        const settled = await Promise.allSettled(
+          capped.map(async (fc) => {
             const toolName = fc.functionCall!.name!;
             const toolArgs = (fc.functionCall!.args ?? {}) as Record<string, unknown>;
             skillsUsed.push(toolName);
             const result = await executeTool(toolName, toolArgs);
             return { name: toolName, id: fc.functionCall!.id, args: toolArgs, result };
           }),
+        );
+        const toolResults = settled.map((s, i) =>
+          s.status === 'fulfilled'
+            ? s.value
+            : { name: capped[i].functionCall!.name!, id: capped[i].functionCall!.id, args: {}, result: { error: `Tool failed: ${(s.reason as Error)?.message ?? 'unknown'}` } },
         );
 
         // Capture raw API results for structured artifact
@@ -739,11 +785,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               functionResponse: { name: tr.name, id: tr.id, response: { output: tr.result } },
             })) },
           ],
-          config: { systemInstruction: SYSTEM_INSTRUCTION, tools: toolsConfig },
+          config: { systemInstruction: buildSystemInstruction(), tools: toolsConfig },
         });
 
         totalTokens += followUp.usageMetadata?.totalTokenCount ?? 0;
-        finalText = followUp.text ?? 'No response generated.';
+        // If follow-up also requests tool calls, use any text part; don't recurse
+        const followParts = followUp.candidates?.[0]?.content?.parts ?? [];
+        const followText = followParts.find((p) => p.text)?.text;
+        finalText = followText ?? followUp.text ?? 'No response generated.';
       } else {
         finalText = response.text ?? 'No response generated.';
       }
@@ -757,22 +806,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const taskId = `task-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
       const now = new Date().toISOString();
 
-      // Build artifacts: text summary + structured JSON data
-      const artifacts: Array<Record<string, unknown>> = [];
-      if (skillsUsed.length > 0) {
-        // Human-readable summary
-        artifacts.push({
+      // Build artifacts: always include summary; add structured data when tools were called
+      const artifacts: Array<Record<string, unknown>> = [
+        {
           artifactId: `${taskId}-summary`,
           name: 'summary',
           description: 'Human-readable response with markdown links',
           parts: [{ text: finalText }],
-        });
-        // Structured API data — machine-parseable
+        },
+      ];
+      if (rawToolData.length > 0) {
         artifacts.push({
           artifactId: `${taskId}-data`,
           name: 'structured_data',
           description: 'Raw API results as structured JSON for downstream parsing',
-          parts: [{ data: rawToolData, mediaType: 'application/json' }],
+          parts: [{ text: JSON.stringify(rawToolData) }],
         });
       }
 
