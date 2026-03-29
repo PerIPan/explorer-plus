@@ -96,7 +96,7 @@ export function ApplicationMapView({ appSlug }: { appSlug: string }) {
       </div>
 
       {/* VULNERABILITIES */}
-      <MapCard label="Vulnerabilities" icon={IconShield} count={data.cvePagination.total} defaultOpen={false}>
+      <MapCard label="Vulnerabilities" icon={IconShield} count={data.cvePagination.total}>
         {data.cves.length > 0 ? (
           <div className="space-y-1.5">
             <div className="flex items-center gap-2 mb-1">
