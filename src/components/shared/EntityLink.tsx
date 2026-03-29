@@ -45,9 +45,9 @@ const entityConfig: Record<
     path: 'campaigns',
   },
   data_source: {
-    color: 'text-[var(--accent-pink)]',
-    bg: 'bg-[var(--pink-faint)]',
-    border: 'border-[var(--pink-dim)]',
+    color: 'text-[var(--accent-neutral)]',
+    bg: 'bg-[var(--neutral-faint)]',
+    border: 'border-[var(--neutral-dim)]',
     path: 'data-sources',
   },
   tactic: {

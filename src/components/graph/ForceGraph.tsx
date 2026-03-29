@@ -54,7 +54,7 @@ export const ForceGraph = forwardRef<ForceGraphHandle, ForceGraphProps>(
       software: colors.accentPurple,
       campaign: colors.accentBlue,
       mitigation: colors.accentGreen,
-      data_source: colors.accentPink,
+      data_source: colors.accentNeutral,
       tactic: colors.accentYellow,
       external_actor: colors.accentNeutral,
     };

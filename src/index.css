@@ -125,18 +125,12 @@ body {
     padding: 0.5in !important;
   }
 
-  /* Override dark theme for print */
+  /* Preserve background colors in print (PDF export) */
   * {
     color: #1a1a2e !important;
     border-color: #ccc !important;
-    background-color: transparent !important;
-  }
-
-  /* Keep badges readable */
-  [class*="bg-[#"] {
-    background-color: #f0f0f0 !important;
-    color: #333 !important;
-    border: 1px solid #999 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   /* Expand all scrollable sections */

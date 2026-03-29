@@ -120,7 +120,7 @@ export function exportMatrixHtml(data: MatrixData, options: ExportOptions): stri
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: ${bg}; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 24px; }
-  @media print { body { padding: 8px; } .no-print { display: none; } }
+  @media print { body { padding: 8px; } .no-print { display: none; } * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } }
   a { text-decoration: none; }
   a:hover { opacity: 0.8; }
 </style>

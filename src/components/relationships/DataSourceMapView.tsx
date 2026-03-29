@@ -143,10 +143,10 @@ export function DataSourceMapView({ attackId }: DataSourceMapViewProps) {
           <ExternalLinksButton type="data_source" attackId={dataSource.attackId} name={dataSource.name} />
         </div>
         <div className="flex flex-wrap items-center gap-2 mt-1">
-          <span className="font-mono text-xs text-[var(--accent-pink)] bg-[var(--pink-faint)] border border-[var(--pink-dim)] px-2 py-0.5 rounded">
+          <span className="font-mono text-xs text-[var(--accent-neutral)] bg-[var(--neutral-faint)] border border-[var(--neutral-dim)] px-2 py-0.5 rounded">
             {dataSource.attackId}
           </span>
-          <Badge label="data source" variant="pink" />
+          <Badge label="data source" variant="neutral" />
           {dataSource.domain && (
             <Badge label={dataSource.domain.replace('-attack', '')} variant="neutral" />
           )}

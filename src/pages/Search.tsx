@@ -23,7 +23,7 @@ const ENTITY_COLOR: Record<EntityType, string> = {
   software: 'text-[var(--accent-purple)]',
   mitigation: 'text-[var(--accent-green)]',
   campaign: 'text-[var(--accent-blue)]',
-  data_source: 'text-[var(--accent-pink)]',
+  data_source: 'text-[var(--accent-neutral)]',
   tactic: 'text-[var(--accent-yellow)]',
 };
 
@@ -180,7 +180,7 @@ export function Search() {
               <Badge label={`${data.campaigns.length} Campaigns`} variant="blue" />
             )}
             {data.data_sources.length > 0 && (
-              <Badge label={`${data.data_sources.length} Data Sources`} variant="pink" />
+              <Badge label={`${data.data_sources.length} Data Sources`} variant="neutral" />
             )}
           </div>
 
