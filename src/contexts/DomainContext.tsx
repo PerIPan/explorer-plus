@@ -11,6 +11,7 @@ const DOMAINS: DomainOption[] = [
   { value: 'enterprise-attack', label: 'Enterprise', short: 'Enterprise' },
   { value: 'mobile-attack',     label: 'Mobile',     short: 'Mobile'     },
   { value: 'ics-attack',        label: 'ICS',         short: 'ICS'        },
+  { value: 'atlas-attack',      label: 'ATLAS',       short: 'ATLAS'      },
   { value: 'all',               label: 'All Domains', short: 'All'        },
 ];
 

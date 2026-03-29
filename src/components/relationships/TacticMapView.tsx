@@ -5,6 +5,7 @@ import { Badge } from '../shared/Badge';
 import { sanitize, sanitizeMarkdown } from '../../lib/sanitize';
 import { ExternalLinksButton } from '../shared/ExternalLinksButton';
 import { DiamondLoader } from '../shared/FoldingDiamond';
+import { getParentId } from '../../lib/getParentId';
 
 // ── Local technique shape (as returned by useTactic) ──────────────────────────
 
@@ -117,7 +118,7 @@ function buildHierarchy(techniques: TacticTechnique[]): {
   const orphanSubs: TacticTechnique[] = [];
 
   for (const sub of subs) {
-    const parentId = sub.attackId.split('.')[0];
+    const parentId = getParentId(sub.attackId);
     if (parentMap.has(parentId)) {
       const list = subsByParent.get(parentId) ?? [];
       list.push(sub);

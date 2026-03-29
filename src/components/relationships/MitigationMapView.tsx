@@ -5,6 +5,7 @@ import { Badge } from '../shared/Badge';
 import { sanitize, sanitizeMarkdown } from '../../lib/sanitize';
 import { ExternalLinksButton } from '../shared/ExternalLinksButton';
 import { DiamondLoader } from '../shared/FoldingDiamond';
+import { getParentId } from '../../lib/getParentId';
 
 // ── Local types ────────────────────────────────────────────────────────────────
 
@@ -28,7 +29,7 @@ function isSubTechnique(attackId: string): boolean {
 
 /** Derives the parent attackId from a sub-technique attackId. */
 function parentId(attackId: string): string {
-  return attackId.split('.')[0];
+  return getParentId(attackId);
 }
 
 /**

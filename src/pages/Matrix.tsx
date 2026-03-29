@@ -13,15 +13,15 @@ import type { ActorOverlay } from '../components/matrix/MatrixGrid';
 import type { SelectedActor } from '../components/matrix/MatrixActorSelector';
 import type { Group } from '../lib/types';
 import { exportMatrixHtml } from '../lib/exportMatrix';
+import { getParentId } from '../lib/getParentId';
 import { useTheme } from '../contexts/ThemeContext';
 import { DiamondLoader } from '../components/shared/FoldingDiamond';
 
 export function Matrix() {
-  usePageTitle('ATT&CK Matrix');
-
   const [searchParams] = useSearchParams();
   const { sectorParam, sector } = useSector();
   const { domain, domainParam } = useDomain();
+  usePageTitle(domain === 'atlas-attack' ? 'ATLAS Matrix' : 'ATT&CK Matrix');
   const { theme } = useTheme();
   const isAllDomains = domain === 'all';
   const { data, isLoading, error } = useMatrix(isAllDomains ? sectorParam : { ...sectorParam, ...domainParam });
@@ -84,7 +84,7 @@ export function Matrix() {
 
   const highlightIds = useMemo(() => {
     if (!highlightData?.length) return undefined;
-    return new Set(highlightData.map((id) => id.split('.')[0]));
+    return new Set(highlightData.map((id) => getParentId(id)));
   }, [highlightData]);
 
   const highlightLabel = searchParams.get('label')
@@ -122,7 +122,7 @@ export function Matrix() {
       if (!data?.techniques) return;
       const colorIdx = selectedActors[idx].colorIndex;
       for (const t of data.techniques) {
-        const parentId = t.attackId.split('.')[0];
+        const parentId = getParentId(t.attackId);
         const existing = lookup.get(parentId);
         if (existing) {
           existing.add(colorIdx);
@@ -145,7 +145,7 @@ export function Matrix() {
   const legendCounts = useMemo(() => {
     return groupQueryData.map((data) => {
       if (!data?.techniques) return 0;
-      const parentIds = new Set(data.techniques.map((t) => t.attackId.split('.')[0]));
+      const parentIds = new Set(data.techniques.map((t) => getParentId(t.attackId)));
       let count = 0;
       parentIds.forEach((id) => { if (matrixAttackIds.has(id)) count++; });
       return count;
@@ -205,7 +205,7 @@ export function Matrix() {
   return (
     <div className="space-y-4">
       <PageHeader
-        title="ATT&CK Matrix"
+        title={domain === 'atlas-attack' ? 'ATLAS Matrix' : 'ATT&CK Matrix'}
         titleAction={data && (
           <span className="inline-flex items-center gap-2 ml-3">
             {highlightLabel && highlightIds && (

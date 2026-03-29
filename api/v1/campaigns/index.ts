@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { query } from '../lib/db.js';
 import { withHandler } from '../lib/middleware.js';
 import { buildSearchCondition, buildPaginationClause, buildSortClause } from '../lib/queries.js';
-import { paginationSchema } from '../lib/validate.js';
+import { paginationSchema, domainSchema } from '../lib/validate.js';
 import { z } from 'zod';
 
 const ALLOWED_SORT = ['name', 'attack_id', 'first_seen', 'last_seen', 'stix_modified'];
@@ -10,7 +10,7 @@ const ALLOWED_SORT = ['name', 'attack_id', 'first_seen', 'last_seen', 'stix_modi
 const querySchema = paginationSchema.extend({
   search: z.string().min(3).max(200).optional(),
   sector: z.string().max(50).optional(),
-  domain: z.enum(['enterprise-attack', 'mobile-attack', 'ics-attack']).optional(),
+  domain: domainSchema,
   include_deprecated: z.coerce.boolean().default(false),
 });
 

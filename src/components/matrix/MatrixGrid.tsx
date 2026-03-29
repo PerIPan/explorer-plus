@@ -4,6 +4,7 @@ import type { MatrixData } from '../../lib/types';
 import { MatrixCell } from './MatrixCell';
 import type { CellOverlay } from './MatrixCell';
 import { MatrixLegend } from './MatrixLegend';
+import { getParentId } from '../../lib/getParentId';
 
 export interface ActorOverlay {
   /** CSS color values for each actor slot */
@@ -79,7 +80,7 @@ export function MatrixGrid({ data, filterText = '', actorOverlay, highlightIds }
                 const hasVisible = col.techniques.some((tech) => {
                   const co = overlayMap?.get(tech.attackId);
                   if (co?.mode === 'hidden') return false;
-                  if (hasHighlight) return highlightIds!.has(tech.attackId) || highlightIds!.has(tech.attackId.split('.')[0]);
+                  if (hasHighlight) return highlightIds!.has(tech.attackId) || highlightIds!.has(getParentId(tech.attackId));
                   if (normalizedFilter) {
                     return tech.name.toLowerCase().includes(normalizedFilter) || tech.attackId.toLowerCase().includes(normalizedFilter);
                   }
@@ -124,7 +125,7 @@ export function MatrixGrid({ data, filterText = '', actorOverlay, highlightIds }
                     const visibleCells = col.techniques.filter((tech) => {
                       const co = overlayMap?.get(tech.attackId);
                       if (co?.mode === 'hidden') return false;
-                      if (hasHighlight && !highlightIds!.has(tech.attackId) && !highlightIds!.has(tech.attackId.split('.')[0])) return false;
+                      if (hasHighlight && !highlightIds!.has(tech.attackId) && !highlightIds!.has(getParentId(tech.attackId))) return false;
                       if (normalizedFilter) {
                         const isMatch = tech.name.toLowerCase().includes(normalizedFilter) || tech.attackId.toLowerCase().includes(normalizedFilter);
                         if (!isMatch) return false;

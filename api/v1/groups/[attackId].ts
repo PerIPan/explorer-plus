@@ -1,10 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { query } from '../lib/db.js';
 import { withHandler } from '../lib/middleware.js';
-import { attackIdSchema } from '../lib/validate.js';
-import { z } from 'zod';
-
-const optionalDomain = z.enum(['enterprise-attack', 'mobile-attack', 'ics-attack']).optional();
+import { attackIdSchema, domainSchema } from '../lib/validate.js';
 
 async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   const parsed = attackIdSchema.safeParse(req.query.attackId);
@@ -13,7 +10,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     return;
   }
   const attackId = parsed.data;
-  const domainParsed = optionalDomain.safeParse(req.query.domain);
+  const domainParsed = domainSchema.safeParse(req.query.domain);
   const domain = domainParsed.success ? domainParsed.data ?? null : null;
 
   const groupResult = await query<{

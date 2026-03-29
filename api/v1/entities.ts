@@ -1,10 +1,11 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { query } from './lib/db.js';
 import { withHandler } from './lib/middleware.js';
+import { domainSchema } from './lib/validate.js';
 import { z } from 'zod';
 
 const querySchema = z.object({
-  domain: z.enum(['enterprise-attack', 'mobile-attack', 'ics-attack']).optional(),
+  domain: domainSchema,
 });
 
 /**

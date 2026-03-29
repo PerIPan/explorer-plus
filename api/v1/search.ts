@@ -1,12 +1,12 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { query } from './lib/db.js';
 import { withHandler } from './lib/middleware.js';
-import { searchSchema } from './lib/validate.js';
+import { searchSchema, domainSchema } from './lib/validate.js';
 import { z } from 'zod';
 
 const querySchema = z.object({
   q: searchSchema,
-  domain: z.enum(['enterprise-attack', 'mobile-attack', 'ics-attack']).optional(),
+  domain: domainSchema,
 });
 
 const FTS = `to_tsvector('english', COALESCE(name, '') || ' ' || COALESCE(description, '')) @@ plainto_tsquery('english', $1)`;

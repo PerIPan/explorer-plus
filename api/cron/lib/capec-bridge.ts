@@ -5,6 +5,7 @@
  */
 
 import { query } from '../../v1/lib/db.js';
+import { getParentId } from '../../v1/lib/getParentId.js';
 
 const CAPEC_STIX_URL =
   'https://raw.githubusercontent.com/mitre/cti/master/capec/2.1/stix-capec.json';
@@ -41,7 +42,7 @@ async function loadBridge(): Promise<Map<string, Set<string>>> {
     for (const cwe of cwes) {
       if (!result.has(cwe)) result.set(cwe, new Set());
       for (const tid of attackIds) {
-        result.get(cwe)!.add(tid.split('.')[0]); // normalize to parent
+        result.get(cwe)!.add(getParentId(tid)); // normalize to parent
       }
     }
   }

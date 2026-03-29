@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { query } from '../lib/db.js';
 import { withHandler } from '../lib/middleware.js';
 import { buildSearchCondition, buildPaginationClause, buildSortClause } from '../lib/queries.js';
-import { paginationSchema, softwareTypeSchema, platformSchema } from '../lib/validate.js';
+import { paginationSchema, softwareTypeSchema, platformSchema, domainSchema } from '../lib/validate.js';
 import { z } from 'zod';
 
 const ALLOWED_SORT = ['name', 'attack_id', 'type', 'stix_modified'];
@@ -12,7 +12,7 @@ const querySchema = paginationSchema.extend({
   type: softwareTypeSchema.optional(),
   platform: platformSchema.optional(),
   sector: z.string().max(50).optional(),
-  domain: z.enum(['enterprise-attack', 'mobile-attack', 'ics-attack']).optional(),
+  domain: domainSchema,
   include_deprecated: z.coerce.boolean().default(false),
 });
 

@@ -10,6 +10,7 @@ import { ctidCloudUrl, ctidVerisUrl } from '../../lib/urlSafety';
 import { ExternalLinksButton } from '../shared/ExternalLinksButton';
 import type { GroupTechnique, GroupSoftware, GroupCampaign, GroupSector, ExternalActor } from '../../lib/types';
 import { DiamondLoader } from '../shared/FoldingDiamond';
+import { getParentId } from '../../lib/getParentId';
 
 // ── Collapsible section ────────────────────────────────────────────────────────
 
@@ -184,7 +185,7 @@ function TechniquesByTactic({ techniques }: { techniques: GroupTechnique[] }) {
   const subs = sorted.filter((t) => t.attackId.includes('.'));
   const subsByParent = new Map<string, GroupTechnique[]>();
   for (const sub of subs) {
-    const parentId = sub.attackId.split('.')[0];
+    const parentId = getParentId(sub.attackId);
     const existing = subsByParent.get(parentId) ?? [];
     existing.push(sub);
     subsByParent.set(parentId, existing);
@@ -192,7 +193,7 @@ function TechniquesByTactic({ techniques }: { techniques: GroupTechnique[] }) {
 
   // Collect standalone subs whose parent isn't in group technique list
   const parentIds = new Set(parents.map((t) => t.attackId));
-  const orphanSubs = subs.filter((s) => !parentIds.has(s.attackId.split('.')[0]));
+  const orphanSubs = subs.filter((s) => !parentIds.has(getParentId(s.attackId)));
 
   const displayList = [...parents, ...orphanSubs];
 

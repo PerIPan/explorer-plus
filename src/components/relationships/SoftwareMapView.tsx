@@ -5,6 +5,7 @@ import { Badge } from '../shared/Badge';
 import { sanitize, sanitizeMarkdown } from '../../lib/sanitize';
 import { ExternalLinksButton } from '../shared/ExternalLinksButton';
 import { DiamondLoader } from '../shared/FoldingDiamond';
+import { getParentId } from '../../lib/getParentId';
 
 // ── Local types for detail-endpoint extras ─────────────────────────────────────
 
@@ -137,14 +138,14 @@ function TechniqueTree({ techniques }: { techniques: SoftwareTechnique[] }) {
 
   const subsByParent = new Map<string, SoftwareTechnique[]>();
   for (const sub of subs) {
-    const parentId = sub.attackId.split('.')[0];
+    const parentId = getParentId(sub.attackId);
     const existing = subsByParent.get(parentId) ?? [];
     existing.push(sub);
     subsByParent.set(parentId, existing);
   }
 
   const parentIds = new Set(parents.map((t) => t.attackId));
-  const orphanSubs = subs.filter((s) => !parentIds.has(s.attackId.split('.')[0]));
+  const orphanSubs = subs.filter((s) => !parentIds.has(getParentId(s.attackId)));
 
   const displayList = [...parents, ...orphanSubs];
 

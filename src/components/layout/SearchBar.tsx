@@ -10,6 +10,7 @@ const DOMAIN_SHORT: Record<string, string> = {
   'enterprise-attack': 'Enterprise',
   'mobile-attack': 'Mobile',
   'ics-attack': 'ICS',
+  'atlas-attack': 'ATLAS',
 };
 
 interface EntityEntry {

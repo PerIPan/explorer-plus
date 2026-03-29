@@ -1,6 +1,9 @@
 import { z } from 'zod';
 
-export const attackIdSchema = z.string().regex(/^(TA|T|G|S|M|C|DS)\d{4}(\.\d{3})?$/);
+export const VALID_DOMAINS = ['enterprise-attack', 'mobile-attack', 'ics-attack', 'atlas-attack'] as const;
+export const domainSchema = z.enum(VALID_DOMAINS).optional();
+
+export const attackIdSchema = z.string().regex(/^(AML\.)?(TA|T|G|S|M|C|DS)\d{4}(\.\d{3})?$/);
 export const slugSchema = z.string().regex(/^[a-z0-9-]+$/);
 export const searchSchema = z.string().min(3).max(200);
 

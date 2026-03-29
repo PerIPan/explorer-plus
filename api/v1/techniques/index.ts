@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { query } from '../lib/db.js';
 import { withHandler } from '../lib/middleware.js';
 import { buildSearchCondition, buildPaginationClause, buildSortClause } from '../lib/queries.js';
-import { paginationSchema, platformSchema } from '../lib/validate.js';
+import { paginationSchema, platformSchema, domainSchema } from '../lib/validate.js';
 import { z } from 'zod';
 
 // Map frontend sort keys to qualified SQL columns (avoids ambiguity with JOINs)
@@ -17,7 +17,7 @@ const querySchema = paginationSchema.extend({
   tactic: z.string().optional(),
   platform: platformSchema.optional(),
   sector: z.string().max(50).optional(),
-  domain: z.enum(['enterprise-attack', 'mobile-attack', 'ics-attack']).optional(),
+  domain: domainSchema,
   include_deprecated: z.coerce.boolean().default(false),
   include_subtechniques: z.coerce.boolean().default(false),
 });

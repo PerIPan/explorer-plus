@@ -2,11 +2,12 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { query } from '../lib/db.js';
 import { withHandler } from '../lib/middleware.js';
 import { buildSearchCondition } from '../lib/queries.js';
+import { domainSchema } from '../lib/validate.js';
 import { z } from 'zod';
 
 const querySchema = z.object({
   search: z.string().min(3).max(200).optional(),
-  domain: z.enum(['enterprise-attack', 'mobile-attack', 'ics-attack']).optional(),
+  domain: domainSchema,
 });
 
 async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {

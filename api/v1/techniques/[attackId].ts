@@ -1,11 +1,10 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { query } from '../lib/db.js';
 import { withHandler } from '../lib/middleware.js';
-import { attackIdSchema } from '../lib/validate.js';
+import { attackIdSchema, domainSchema } from '../lib/validate.js';
 import { z } from 'zod';
 
 const optionalSector = z.string().max(50).optional();
-const optionalDomain = z.enum(['enterprise-attack', 'mobile-attack', 'ics-attack']).optional();
 
 async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   const parsed = attackIdSchema.safeParse(req.query.attackId);
@@ -16,7 +15,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   const attackId = parsed.data;
   const sectorParsed = optionalSector.safeParse(req.query.sector);
   const sector = sectorParsed.success ? sectorParsed.data ?? null : null;
-  const domainParsed = optionalDomain.safeParse(req.query.domain);
+  const domainParsed = domainSchema.safeParse(req.query.domain);
   const domain = domainParsed.success ? domainParsed.data ?? null : null;
 
   // Fetch main technique (optionally scoped by domain)

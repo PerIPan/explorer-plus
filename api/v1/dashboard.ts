@@ -1,11 +1,12 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { query } from './lib/db.js';
 import { withHandler } from './lib/middleware.js';
+import { domainSchema } from './lib/validate.js';
 import { z } from 'zod';
 
 const querySchema = z.object({
   sector: z.string().max(50).optional(),
-  domain: z.enum(['enterprise-attack', 'mobile-attack', 'ics-attack']).optional(),
+  domain: domainSchema,
 });
 
 async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
