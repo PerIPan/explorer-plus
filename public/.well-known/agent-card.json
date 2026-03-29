@@ -118,6 +118,83 @@
         "What entities match 'remote code execution'?"
       ],
       "tags": ["search", "entity", "cross-domain"]
+    },
+    {
+      "id": "software-analysis",
+      "name": "Malware & Tool Analysis",
+      "description": "Search and profile 914 malware families and attacker tools. Get techniques, groups using them, campaigns, and platform coverage.",
+      "examples": [
+        "What techniques does Cobalt Strike use?",
+        "Search for ransomware tools",
+        "Which groups use Mimikatz?"
+      ],
+      "tags": ["malware", "tool", "software", "cobalt-strike"]
+    },
+    {
+      "id": "campaign-intelligence",
+      "name": "Campaign Intelligence",
+      "description": "Search and analyze 56 named campaigns with timelines, techniques, software, and threat groups involved.",
+      "examples": [
+        "What was Operation ShadowHammer?",
+        "Show campaigns targeting the financial sector",
+        "List recent campaigns by APT29"
+      ],
+      "tags": ["campaign", "operation", "timeline"]
+    },
+    {
+      "id": "mitigation-guidance",
+      "name": "Mitigation Guidance",
+      "description": "Search 369 mitigations and get specific countermeasure guidance for ATT&CK techniques.",
+      "examples": [
+        "How do I mitigate T1059 Command and Scripting?",
+        "What mitigations exist for credential theft?",
+        "Show me network-based mitigations"
+      ],
+      "tags": ["mitigation", "defense", "countermeasure"]
+    },
+    {
+      "id": "ioc-feed",
+      "name": "IOC Feed Search",
+      "description": "Search 5,800+ IOCs (IPs, domains, hashes, URLs, CVEs) with VirusTotal verdicts and malware family attribution. Sources: OTX, ThreatFox, MalwareBazaar, CISA KEV.",
+      "examples": [
+        "Show me IOCs from the last 24 hours",
+        "Search for Emotet IOCs",
+        "What malicious hashes were reported today?"
+      ],
+      "tags": ["ioc", "indicator", "hash", "ip", "domain", "virustotal"]
+    },
+    {
+      "id": "sigma-rules",
+      "name": "Sigma Detection Rules",
+      "description": "Search 3,100+ Sigma rules by keyword, technique, or severity. Get YAML rule details for SIEM deployment.",
+      "examples": [
+        "Sigma rules for credential dumping",
+        "Show critical Sigma rules for T1059",
+        "Find Sigma rules for PowerShell abuse"
+      ],
+      "tags": ["sigma", "detection", "siem", "rule"]
+    },
+    {
+      "id": "atomic-red-team",
+      "name": "Atomic Red Team Tests",
+      "description": "Search 1,770+ Atomic Red Team tests for adversary emulation. Filter by technique, platform, and executor type.",
+      "examples": [
+        "Atomic tests for T1059 on Windows",
+        "Show me Linux persistence tests",
+        "What tests exist for lateral movement?"
+      ],
+      "tags": ["atomic", "red-team", "emulation", "testing"]
+    },
+    {
+      "id": "external-actors",
+      "name": "External Threat Actor Profiles",
+      "description": "Search 514 threat actors from ETDA/ThaiCERT with country attribution, state sponsors, motivation, suspected victims, and MITRE ATT&CK group mappings.",
+      "examples": [
+        "Show me Russian state-sponsored actors",
+        "What is known about Lazarus Group?",
+        "List actors targeting critical infrastructure"
+      ],
+      "tags": ["actor", "attribution", "country", "state-sponsor"]
     }
   ],
   "extensions": {

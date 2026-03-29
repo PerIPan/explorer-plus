@@ -200,6 +200,162 @@ const TOOL_DECLARATIONS = [
       },
     },
   },
+  // ── New tools ─────────────────────────────────────────────────────────────
+  {
+    name: 'get_software_detail',
+    description: 'Get malware or tool profile: techniques it uses, groups that use it, campaigns, platforms. Covers 914 ATT&CK software entries.',
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        attack_id: { type: "STRING", description: 'Software ATT&CK ID, e.g. S0154 for Cobalt Strike' },
+      },
+      required: ['attack_id'],
+    },
+  },
+  {
+    name: 'search_software',
+    description: 'Search malware and tools by name. Returns software ID, name, type (malware/tool), and technique count.',
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        search: { type: "STRING", description: 'Search keyword (minimum 3 characters)' },
+        sector: { type: "STRING", description: 'Filter by sector slug' },
+        limit: { type: "NUMBER", description: 'Max results (default 10)' },
+      },
+    },
+  },
+  {
+    name: 'get_campaign_detail',
+    description: 'Get campaign details: techniques used, software deployed, groups involved, timeline.',
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        attack_id: { type: "STRING", description: 'Campaign ATT&CK ID, e.g. C0028' },
+      },
+      required: ['attack_id'],
+    },
+  },
+  {
+    name: 'search_campaigns',
+    description: 'Search named campaigns. Returns campaign ID, name, dates, and linked groups.',
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        search: { type: "STRING", description: 'Search keyword (minimum 3 characters)' },
+        sector: { type: "STRING", description: 'Filter by sector slug' },
+        limit: { type: "NUMBER", description: 'Max results (default 10)' },
+      },
+    },
+  },
+  {
+    name: 'get_mitigation_detail',
+    description: 'Get mitigation details: description, techniques it addresses, domain coverage.',
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        attack_id: { type: "STRING", description: 'Mitigation ATT&CK ID, e.g. M1036' },
+      },
+      required: ['attack_id'],
+    },
+  },
+  {
+    name: 'search_mitigations',
+    description: 'Search mitigations by name or description. Returns mitigation ID, name, and technique count.',
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        search: { type: "STRING", description: 'Search keyword (minimum 3 characters)' },
+        limit: { type: "NUMBER", description: 'Max results (default 10)' },
+      },
+    },
+  },
+  {
+    name: 'search_iocs',
+    description: 'Search Indicators of Compromise: IPs, domains, hashes, URLs, CVEs. Includes VirusTotal verdicts and malware families. Sources: OTX, ThreatFox, MalwareBazaar, CISA KEV.',
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        q: { type: "STRING", description: 'Search query (IOC value, keyword)' },
+        type: { type: "STRING", description: 'IOC type: ip, domain, url, hash, cve, email' },
+        source: { type: "STRING", description: 'Source filter: otx, threatfox, malwarebazaar, cisa_kev' },
+        malware: { type: "STRING", description: 'Filter by malware family name' },
+        since: { type: "STRING", description: 'ISO date — only IOCs seen after this date' },
+        limit: { type: "NUMBER", description: 'Max results (default 20)' },
+      },
+    },
+  },
+  {
+    name: 'search_sigma_rules',
+    description: 'Search Sigma detection rules by keyword, technique, or severity level. 3,100+ rules from SigmaHQ.',
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        q: { type: "STRING", description: 'Search keyword in title/description' },
+        technique: { type: "STRING", description: 'Filter by ATT&CK technique ID, e.g. T1059' },
+        level: { type: "STRING", description: 'Severity level: critical, high, medium, low, informational' },
+        limit: { type: "NUMBER", description: 'Max results (default 20)' },
+      },
+    },
+  },
+  {
+    name: 'search_atomic_tests',
+    description: 'Search Atomic Red Team tests by keyword, technique, or platform. 1,770+ tests for adversary emulation.',
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        q: { type: "STRING", description: 'Search keyword' },
+        technique: { type: "STRING", description: 'Filter by ATT&CK technique ID' },
+        platform: { type: "STRING", description: 'Platform filter: windows, linux, macos' },
+        limit: { type: "NUMBER", description: 'Max results (default 20)' },
+      },
+    },
+  },
+  {
+    name: 'get_external_actor',
+    description: 'Get external threat actor profile from ETDA/ThaiCERT: country, motivation, state sponsor, suspected victims, MITRE group mapping.',
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        name: { type: "STRING", description: 'Actor name, e.g. APT28, Lazarus Group' },
+      },
+      required: ['name'],
+    },
+  },
+  {
+    name: 'search_external_actors',
+    description: 'Search 514 external threat actors by name, country, or category. Includes state sponsors, motivation, and MITRE ATT&CK group mappings.',
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        search: { type: "STRING", description: 'Search keyword (minimum 2 characters)' },
+        country: { type: "STRING", description: 'Country filter, e.g. Russia, China, Iran' },
+        category: { type: "STRING", description: 'Category filter' },
+        limit: { type: "NUMBER", description: 'Max results (default 20)' },
+      },
+    },
+  },
+  {
+    name: 'get_tactic_detail',
+    description: 'Get tactic details: description, all techniques under this tactic, domain.',
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        attack_id: { type: "STRING", description: 'Tactic ATT&CK ID, e.g. TA0001 for Initial Access' },
+      },
+      required: ['attack_id'],
+    },
+  },
+  {
+    name: 'get_data_source_detail',
+    description: 'Get data source details: description, data components, techniques it can detect.',
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        attack_id: { type: "STRING", description: 'Data source ATT&CK ID, e.g. DS0009 for Process' },
+      },
+      required: ['attack_id'],
+    },
+  },
 ];
 
 const SYSTEM_INSTRUCTION = `You are the MITRE Explorer threat intelligence agent. You help security professionals, SOC analysts, and AI agents query the MITRE ATT&CK knowledge base, CVE vulnerabilities, and application security data.
@@ -316,6 +472,106 @@ async function executeTool(name: string, args: Record<string, unknown>): Promise
       const params = new URLSearchParams();
       params.set('limit', String(Math.min(Math.max(Number(args.limit) || 10, 1), 50)));
       return callInternalApi(`/feed/reports?${params}`);
+    }
+    // ── New tools ──────────────────────────────────────────────────────────
+    case 'get_software_detail': {
+      const id = validateAttackId(args.attack_id);
+      if (!id) return { error: 'Invalid software ID format' };
+      return callInternalApi(`/software/${id}`);
+    }
+    case 'search_software': {
+      const params = new URLSearchParams();
+      const s = sanitizeSearch(args.search);
+      if (s.length >= 3) params.set('search', s);
+      const sec = validateSector(args.sector);
+      if (sec) params.set('sector', sec);
+      params.set('limit', String(Math.min(Math.max(Number(args.limit) || 10, 1), 50)));
+      return callInternalApi(`/software?${params}`);
+    }
+    case 'get_campaign_detail': {
+      const id = validateAttackId(args.attack_id);
+      if (!id) return { error: 'Invalid campaign ID format' };
+      return callInternalApi(`/campaigns/${id}`);
+    }
+    case 'search_campaigns': {
+      const params = new URLSearchParams();
+      const s = sanitizeSearch(args.search);
+      if (s.length >= 3) params.set('search', s);
+      const sec = validateSector(args.sector);
+      if (sec) params.set('sector', sec);
+      params.set('limit', String(Math.min(Math.max(Number(args.limit) || 10, 1), 50)));
+      return callInternalApi(`/campaigns?${params}`);
+    }
+    case 'get_mitigation_detail': {
+      const id = validateAttackId(args.attack_id);
+      if (!id) return { error: 'Invalid mitigation ID format' };
+      return callInternalApi(`/mitigations/${id}`);
+    }
+    case 'search_mitigations': {
+      const params = new URLSearchParams();
+      const s = sanitizeSearch(args.search);
+      if (s.length >= 3) params.set('search', s);
+      params.set('limit', String(Math.min(Math.max(Number(args.limit) || 10, 1), 50)));
+      return callInternalApi(`/mitigations?${params}`);
+    }
+    case 'search_iocs': {
+      const params = new URLSearchParams();
+      if (args.q) params.set('q', sanitizeSearch(args.q));
+      if (args.type) params.set('type', String(args.type));
+      if (args.source) params.set('source', String(args.source));
+      if (args.malware) params.set('malware', sanitizeSearch(args.malware));
+      if (args.since) {
+        const d = new Date(String(args.since));
+        if (!isNaN(d.getTime())) params.set('since', d.toISOString());
+      }
+      params.set('limit', String(Math.min(Math.max(Number(args.limit) || 20, 1), 100)));
+      return callInternalApi(`/feed/iocs?${params}`);
+    }
+    case 'search_sigma_rules': {
+      const params = new URLSearchParams();
+      if (args.q) params.set('q', sanitizeSearch(args.q));
+      if (args.technique) {
+        const tid = validateAttackId(args.technique);
+        if (tid) params.set('technique', tid);
+      }
+      if (args.level) params.set('level', String(args.level).toLowerCase());
+      params.set('limit', String(Math.min(Math.max(Number(args.limit) || 20, 1), 100)));
+      return callInternalApi(`/feed/sigma?${params}`);
+    }
+    case 'search_atomic_tests': {
+      const params = new URLSearchParams();
+      if (args.q) params.set('q', sanitizeSearch(args.q));
+      if (args.technique) {
+        const tid = validateAttackId(args.technique);
+        if (tid) params.set('technique', tid);
+      }
+      if (args.platform) params.set('platform', String(args.platform).toLowerCase());
+      params.set('limit', String(Math.min(Math.max(Number(args.limit) || 20, 1), 100)));
+      return callInternalApi(`/feed/atomic?${params}`);
+    }
+    case 'get_external_actor': {
+      const n = sanitizeSearch(args.name);
+      if (n.length < 2) return { error: 'Actor name must be at least 2 characters' };
+      return callInternalApi(`/external-actors/${encodeURIComponent(n)}`);
+    }
+    case 'search_external_actors': {
+      const params = new URLSearchParams();
+      const s = sanitizeSearch(args.search);
+      if (s.length >= 2) params.set('search', s);
+      if (args.country) params.set('country', String(args.country));
+      if (args.category) params.set('category', String(args.category));
+      params.set('limit', String(Math.min(Math.max(Number(args.limit) || 20, 1), 100)));
+      return callInternalApi(`/external-actors?${params}`);
+    }
+    case 'get_tactic_detail': {
+      const id = validateAttackId(args.attack_id);
+      if (!id) return { error: 'Invalid tactic ID format' };
+      return callInternalApi(`/tactics/${id}`);
+    }
+    case 'get_data_source_detail': {
+      const id = validateAttackId(args.attack_id);
+      if (!id) return { error: 'Invalid data source ID format' };
+      return callInternalApi(`/data-sources/${id}`);
     }
     default:
       return { error: `Unknown tool: ${name}` };
