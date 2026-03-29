@@ -208,14 +208,15 @@ Use the available tools to answer questions. Always call a tool before answering
 
 When responding:
 - Be concise and factual
+- For EVERY CVE mentioned, always include: CVE ID, CVSS score, severity (CRITICAL/HIGH/MEDIUM/LOW), published date, and linked ATT&CK techniques if available
 - Include clickable markdown links to MITRE Explorer for every entity mentioned:
   - CVEs: [CVE-2024-3400](https://mitre-explorer.org/cti/cves/CVE-2024-3400)
   - Techniques: [T1059](https://mitre-explorer.org/techniques/T1059)
   - Groups: [APT29](https://mitre-explorer.org/?entity=G0016&tab=actor)
   - Applications: [LiteLLM](https://mitre-explorer.org/?entity=litellm%2Flitellm&tab=application-map)
-- Mention severity levels for CVEs (CRITICAL/HIGH/MEDIUM/LOW)
 - Use tables for structured data when listing multiple items
-- Reference specific data counts when available`;
+- Always mention total result count (e.g. "Showing 10 of 47 results")
+- Keep a consistent schema per entity type — do not change column layout between responses`;
 
 // ── Internal API caller ──────────────────────────────────────────────────────
 
@@ -452,6 +453,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       let finalText: string;
       const skillsUsed: string[] = [];
       let totalTokens = response.usageMetadata?.totalTokenCount ?? 0;
+      let rawToolData: Record<string, unknown>[] = [];
 
       if (functionCalls.length > 0) {
         // Execute all tool calls in parallel
@@ -461,9 +463,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             const toolArgs = (fc.functionCall!.args ?? {}) as Record<string, unknown>;
             skillsUsed.push(toolName);
             const result = await executeTool(toolName, toolArgs);
-            return { name: toolName, id: fc.functionCall!.id, result };
+            return { name: toolName, id: fc.functionCall!.id, args: toolArgs, result };
           }),
         );
+
+        // Capture raw API results for structured artifact
+        rawToolData = toolResults.map((tr) => ({ tool: tr.name, args: tr.args, data: tr.result }));
 
         // Build follow-up: pass original model parts verbatim to preserve function call IDs
         const followUp = await ai.models.generateContent({
@@ -492,6 +497,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       const taskId = `task-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
       const now = new Date().toISOString();
+
+      // Build artifacts: text summary + structured JSON data
+      const artifacts: Array<Record<string, unknown>> = [];
+      if (skillsUsed.length > 0) {
+        // Human-readable summary
+        artifacts.push({
+          artifactId: `${taskId}-summary`,
+          name: 'summary',
+          description: 'Human-readable response with markdown links',
+          parts: [{ text: finalText }],
+        });
+        // Structured API data — machine-parseable
+        artifacts.push({
+          artifactId: `${taskId}-data`,
+          name: 'structured_data',
+          description: 'Raw API results as structured JSON for downstream parsing',
+          parts: [{ data: rawToolData, mediaType: 'application/json' }],
+        });
+      }
+
       res.status(200).json({
         jsonrpc: '2.0',
         id: reqId,
@@ -507,11 +532,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             { role: 'user', parts: [{ text: userText }] },
             { role: 'agent', parts: [{ text: finalText }] },
           ],
-          artifacts: skillsUsed.length > 0 ? [{
-            artifactId: `art-${taskId}`,
-            name: skillsUsed.join(', '),
-            parts: [{ text: finalText }],
-          }] : [],
+          artifacts,
           metadata: { tokensUsed: totalTokens, toolsCalled: skillsUsed },
           createdAt: now,
           updatedAt: now,
