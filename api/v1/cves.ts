@@ -23,23 +23,10 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   const { page, limit, severity, source, q, order, sector, since } = parsed.data;
   const offset = (page - 1) * limit;
 
-  // Build base query: distinct CVE IDs from ioc_entries joined with cve_details
+  // Primary source: cve_details (CVElistV5 + NVD + CISA KEV)
+  // Secondary: ioc_entries for source badges and technique links
   const params: unknown[] = [];
-  const conditions: string[] = ["i.type = 'cve'"];
-
-  if (sector) {
-    params.push(sector);
-    conditions.push(`(
-      i.id IN (
-        SELECT ti2.ioc_id FROM technique_iocs ti2
-        JOIN group_techniques gt ON gt.technique_id = ti2.technique_id
-        JOIN group_sectors gs ON gs.group_id = gt.group_id
-        JOIN sectors s ON s.id = gs.sector_id
-        WHERE s.slug = $${params.length}
-      )
-      OR NOT EXISTS (SELECT 1 FROM technique_iocs ti3 WHERE ti3.ioc_id = i.id)
-    )`);
-  }
+  const conditions: string[] = [];
 
   if (severity) {
     params.push(severity.toUpperCase());
@@ -48,13 +35,13 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
 
   if (source) {
     params.push(source);
-    conditions.push(`i.source = $${params.length}`);
+    conditions.push(`EXISTS (SELECT 1 FROM ioc_entries i WHERE i.type = 'cve' AND i.value = cd.cve_id AND i.source = $${params.length})`);
   }
 
   if (q) {
     params.push(`%${escapeLikePattern(q)}%`);
     conditions.push(
-      `(i.value ILIKE $${params.length} OR cd.description ILIKE $${params.length} OR cd.cwe_id ILIKE $${params.length})`,
+      `(cd.cve_id ILIKE $${params.length} OR cd.description ILIKE $${params.length} OR cd.cwe_id ILIKE $${params.length})`,
     );
   }
 
@@ -66,20 +53,31 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     }
   }
 
+  if (sector) {
+    params.push(sector);
+    conditions.push(`EXISTS (
+      SELECT 1 FROM affected_products ap
+      JOIN app_technique_groups atg ON atg.application_id = ap.application_id
+      JOIN group_sectors gs ON gs.group_id = (
+        SELECT tg.id FROM threat_groups tg WHERE tg.attack_id = atg.group_attack_id LIMIT 1
+      )
+      JOIN sectors s ON s.id = gs.sector_id
+      WHERE ap.cve_id = cd.cve_id AND s.slug = $${params.length}
+    )`);
+  }
+
   const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
   const effectiveOrder = req.query.order ? order : 'desc';
   const sortDir = effectiveOrder === 'asc' ? 'ASC' : 'DESC';
 
-  // Count distinct CVEs
+  // Count
   const countResult = await query<{ count: string }>(
-    `SELECT COUNT(DISTINCT i.value) FROM ioc_entries i
-     LEFT JOIN cve_details cd ON cd.cve_id = i.value
-     ${whereClause}`,
+    `SELECT COUNT(*) FROM cve_details cd ${whereClause}`,
     params,
   );
   const total = parseInt(countResult.rows[0].count, 10);
 
-  // Fetch CVE list with aggregated sources and technique count
+  // Fetch with sources + technique count from ioc_entries path
   params.push(limit, offset);
   const dataResult = await query<{
     cve_id: string;
@@ -88,31 +86,25 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     cvss_severity: string | null;
     cwe_id: string | null;
     published_at: string | null;
-    sources: string;
+    sources: string | null;
     technique_count: string;
   }>(
     `SELECT
-       i_agg.cve_id,
+       cd.cve_id,
        cd.description,
        cd.cvss_score,
        cd.cvss_severity,
        cd.cwe_id,
        cd.published_at,
-       i_agg.sources,
-       i_agg.technique_count
-     FROM (
-       SELECT
-         i.value AS cve_id,
-         STRING_AGG(DISTINCT i.source, ',') AS sources,
-         COUNT(DISTINCT ti.technique_id) AS technique_count
-       FROM ioc_entries i
-       LEFT JOIN technique_iocs ti ON ti.ioc_id = i.id
-       LEFT JOIN cve_details cd ON cd.cve_id = i.value
-       ${whereClause}
-       GROUP BY i.value
-     ) i_agg
-     LEFT JOIN cve_details cd ON cd.cve_id = i_agg.cve_id
-     ORDER BY cd.published_at ${sortDir} NULLS LAST, i_agg.cve_id DESC
+       (SELECT STRING_AGG(DISTINCT i.source, ',')
+        FROM ioc_entries i WHERE i.type = 'cve' AND i.value = cd.cve_id) AS sources,
+       (SELECT COUNT(DISTINCT ti.technique_id)
+        FROM ioc_entries i
+        JOIN technique_iocs ti ON ti.ioc_id = i.id
+        WHERE i.type = 'cve' AND i.value = cd.cve_id)::text AS technique_count
+     FROM cve_details cd
+     ${whereClause}
+     ORDER BY cd.published_at ${sortDir} NULLS LAST, cd.cve_id DESC
      LIMIT $${params.length - 1} OFFSET $${params.length}`,
     params,
   );
