@@ -589,7 +589,7 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
                   className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs bg-[var(--surface-card)] border border-[var(--border-color)] hover:border-[var(--teal-dim)] transition-colors"
                 >
                   <span className="text-[var(--text-primary)]">{app.vendor} / {app.product}</span>
-                  <Badge label={String(app.cveCount)} variant="blue" />
+                  <Badge label={String(app.cveCount)} variant="pink" />
                 </a>
               ))}
             </div>
