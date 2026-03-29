@@ -144,6 +144,22 @@ export function ApplicationMapView({ appSlug }: { appSlug: string }) {
         </MapCard>
       )}
 
+      {/* THREAT ACTORS */}
+      <MapCard label="Threat Actors" icon={IconPeople} count={data.groups.length}>
+        {data.groups.length > 0 ? (
+          <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto" tabIndex={0} aria-label="Threat actors list">
+            {data.groups.map((g) => (
+              <div key={g.attackId} className="flex items-center gap-1">
+                <EntityLink type="group" attackId={g.attackId} name={g.name} useMap />
+                <span className="text-[9px] text-[var(--text-secondary)]">({g.techniqueCount})</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-xs text-[var(--text-secondary)]">No threat groups linked.</p>
+        )}
+      </MapCard>
+
       {/* ATTACK SURFACE — techniques */}
       <MapCard label="Attack Surface" icon={IconTechnique} count={data.techniques.length}>
         {data.techniques.length > 0 ? (
@@ -159,22 +175,6 @@ export function ApplicationMapView({ appSlug }: { appSlug: string }) {
           </div>
         ) : (
           <p className="text-xs text-[var(--text-secondary)]">No techniques linked.</p>
-        )}
-      </MapCard>
-
-      {/* THREAT ACTORS */}
-      <MapCard label="Threat Actors" icon={IconPeople} count={data.groups.length}>
-        {data.groups.length > 0 ? (
-          <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto" tabIndex={0} aria-label="Threat actors list">
-            {data.groups.map((g) => (
-              <div key={g.attackId} className="flex items-center gap-1">
-                <EntityLink type="group" attackId={g.attackId} name={g.name} useMap />
-                <span className="text-[9px] text-[var(--text-secondary)]">({g.techniqueCount})</span>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-xs text-[var(--text-secondary)]">No threat groups linked.</p>
         )}
       </MapCard>
     </div>
