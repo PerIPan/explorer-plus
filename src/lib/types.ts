@@ -522,6 +522,7 @@ export interface CveEntry {
   publishedAt: string | null;
   sources: string[];
   techniqueCount: number;
+  techniques: string[];
   applications: string;
 }
 

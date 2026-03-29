@@ -216,7 +216,10 @@ When responding:
   - Applications: [LiteLLM](https://mitre-explorer.org/?entity=litellm%2Flitellm&tab=application-map)
 - Use tables for structured data when listing multiple items
 - Always mention total result count (e.g. "Showing 10 of 47 results")
-- Keep a consistent schema per entity type — do not change column layout between responses`;
+- Keep a consistent schema per entity type — do not change column layout between responses
+- Do not truncate CVE descriptions mid-sentence — include the full description or summarize it cleanly
+- When reporting CVEs, add this note at the end: "NVD typically adds CPE entries days after CVE publication — recent CVEs may show empty until enriched."
+- For each CVE with linked techniques, list the technique IDs (e.g. T1190, T1059) — these are the bridge between a vulnerability and the actual attack behaviour it enables`;
 
 // ── Internal API caller ──────────────────────────────────────────────────────
 

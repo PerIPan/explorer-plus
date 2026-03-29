@@ -112,6 +112,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     published_at: string | null;
     sources: string | null;
     technique_count: string;
+    technique_ids: string | null;
     app_names: string | null;
   }>(
     `WITH page AS (
@@ -128,13 +129,18 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
        GROUP BY i.value
      ),
      tech AS (
-       SELECT cve_id, COUNT(DISTINCT technique_id)::text AS technique_count FROM (
-         SELECT i.value AS cve_id, ti.technique_id
+       SELECT cve_id,
+         COUNT(DISTINCT technique_id)::text AS technique_count,
+         STRING_AGG(DISTINCT attack_id, ',' ORDER BY attack_id) AS technique_ids
+       FROM (
+         SELECT i.value AS cve_id, ti.technique_id, t.attack_id
          FROM ioc_entries i JOIN technique_iocs ti ON ti.ioc_id = i.id
+         JOIN techniques t ON t.id = ti.technique_id
          WHERE i.type = 'cve' AND i.value IN (SELECT cve_id FROM page)
          UNION
-         SELECT cw.cve_id, cm.technique_id
+         SELECT cw.cve_id, cm.technique_id, t.attack_id
          FROM cve_weaknesses cw JOIN capec_mappings cm ON cm.cwe_id = cw.cwe_id AND cm.technique_id IS NOT NULL
+         JOIN techniques t ON t.id = cm.technique_id
          WHERE cw.cve_id IN (SELECT cve_id FROM page)
        ) sub GROUP BY cve_id
      ),
@@ -146,7 +152,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
        GROUP BY ap.cve_id
      )
      SELECT p.*, s.sources, COALESCE(t.technique_count, '0') AS technique_count,
-            a.app_names
+            t.technique_ids, a.app_names
      FROM page p
      LEFT JOIN src s ON s.cve_id = p.cve_id
      LEFT JOIN tech t ON t.cve_id = p.cve_id
@@ -164,6 +170,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     publishedAt: r.published_at,
     sources: r.sources ? r.sources.split(',') : [],
     techniqueCount: parseInt(r.technique_count, 10),
+    techniques: r.technique_ids ? r.technique_ids.split(',') : [],
     applications: r.app_names ?? '',
   }));
 
