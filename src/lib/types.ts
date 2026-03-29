@@ -522,6 +522,7 @@ export interface CveEntry {
   publishedAt: string | null;
   sources: string[];
   techniqueCount: number;
+  applications: string;
 }
 
 export interface CveDetail extends Omit<CveEntry, 'sources' | 'techniqueCount'> {

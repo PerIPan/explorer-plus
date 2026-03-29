@@ -12,6 +12,7 @@ const querySchema = paginationSchema.extend({
   sector: z.string().max(50).optional(),
   since: z.string().optional(),
   technique: z.string().regex(/^(AML\.)?(T|TA)\d{4}(\.\d{3})?$/).optional(),
+  app: z.string().min(1).max(200).optional(),
 });
 
 async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
@@ -21,7 +22,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     return;
   }
 
-  const { page, limit, severity, source, q, order, sector, since, technique } = parsed.data;
+  const { page, limit, severity, source, q, order, sector, since, technique, app } = parsed.data;
   const offset = (page - 1) * limit;
 
   // Primary source: cve_details (CVElistV5 + NVD + CISA KEV)
@@ -68,6 +69,15 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     )`);
   }
 
+  if (app) {
+    params.push(`%${escapeLikePattern(app)}%`);
+    conditions.push(`cd.cve_id IN (
+      SELECT ap.cve_id FROM affected_products ap
+      JOIN applications a ON a.id = ap.application_id
+      WHERE a.vendor ILIKE $${params.length} OR a.product ILIKE $${params.length}
+    )`);
+  }
+
   if (sector) {
     params.push(sector);
     conditions.push(`cd.cve_id IN (
@@ -102,6 +112,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     published_at: string | null;
     sources: string | null;
     technique_count: string;
+    app_names: string | null;
   }>(
     `WITH page AS (
        SELECT cd.cve_id, cd.description, cd.cvss_score, cd.cvss_severity, cd.cwe_id, cd.published_at
@@ -126,11 +137,20 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
          FROM cve_weaknesses cw JOIN capec_mappings cm ON cm.cwe_id = cw.cwe_id AND cm.technique_id IS NOT NULL
          WHERE cw.cve_id IN (SELECT cve_id FROM page)
        ) sub GROUP BY cve_id
+     ),
+     apps AS (
+       SELECT ap.cve_id, STRING_AGG(DISTINCT a.vendor || ' ' || a.product, ' | ' ORDER BY a.vendor || ' ' || a.product) AS app_names
+       FROM affected_products ap
+       JOIN applications a ON a.id = ap.application_id
+       WHERE ap.cve_id IN (SELECT cve_id FROM page)
+       GROUP BY ap.cve_id
      )
-     SELECT p.*, s.sources, COALESCE(t.technique_count, '0') AS technique_count
+     SELECT p.*, s.sources, COALESCE(t.technique_count, '0') AS technique_count,
+            a.app_names
      FROM page p
      LEFT JOIN src s ON s.cve_id = p.cve_id
      LEFT JOIN tech t ON t.cve_id = p.cve_id
+     LEFT JOIN apps a ON a.cve_id = p.cve_id
      ORDER BY p.published_at ${sortDir} NULLS LAST, p.cve_id DESC`,
     params,
   );
@@ -144,6 +164,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     publishedAt: r.published_at,
     sources: r.sources ? r.sources.split(',') : [],
     techniqueCount: parseInt(r.technique_count, 10),
+    applications: r.app_names ?? '',
   }));
 
   res.status(200).json({

@@ -170,6 +170,19 @@ const columns: ColumnDef<CveEntry>[] = [
       ),
   },
   {
+    key: 'applications',
+    header: 'Applications',
+    tooltip: 'Affected vendor products from CVElistV5 CPE data',
+    render: (row) =>
+      row.applications ? (
+        <span className="text-[10px] text-[var(--accent-blue)] max-w-[200px] line-clamp-2 block leading-relaxed">
+          {row.applications}
+        </span>
+      ) : (
+        <span className="text-[var(--text-secondary)] text-xs">—</span>
+      ),
+  },
+  {
     key: 'cvssScore',
     header: 'CVSS',
     tooltip: 'Common Vulnerability Scoring System v3.1 base score (0–10)',
@@ -197,19 +210,22 @@ const columns: ColumnDef<CveEntry>[] = [
     header: 'Sources',
     tooltip: 'Feed sources that reported this CVE (OTX, CISA KEV)',
     width: '140px',
-    render: (row) => (
-      <div className="flex flex-wrap gap-1">
-        {row.sources.map((s) => (
-          <Badge key={s} label={s} variant={SOURCE_VARIANTS[s] ?? 'neutral'} />
-        ))}
-      </div>
-    ),
+    render: (row) => {
+      const srcs = row.sources.length > 0 ? row.sources : ['NVD'];
+      return (
+        <div className="flex flex-wrap gap-1">
+          {srcs.map((s) => (
+            <Badge key={s} label={s} variant={SOURCE_VARIANTS[s] ?? 'neutral'} />
+          ))}
+        </div>
+      );
+    },
   },
   {
     key: 'techniqueCount',
     header: 'Techniques',
-    tooltip: 'ATT&CK techniques linked via OTX threat intelligence',
-    width: '100px',
+    tooltip: 'ATT&CK techniques linked via CAPEC bridge + IOC feeds',
+    width: '90px',
     align: 'center',
     render: (row) =>
       row.techniqueCount > 0 ? (
@@ -217,6 +233,17 @@ const columns: ColumnDef<CveEntry>[] = [
       ) : (
         <span className="text-[var(--text-secondary)] text-xs">—</span>
       ),
+  },
+  {
+    key: 'publishedAt',
+    header: 'Published',
+    tooltip: 'CVE publication date',
+    width: '100px',
+    render: (row) => (
+      <span className="text-[10px] text-[var(--text-secondary)] shrink-0">
+        {row.publishedAt ? formatDate(row.publishedAt) : '—'}
+      </span>
+    ),
   },
 ];
 
@@ -231,6 +258,7 @@ export function CvesList() {
   const source = searchParams.get('source') ?? '';
   const q = searchParams.get('q') ?? '';
   const technique = searchParams.get('technique') ?? '';
+  const app = searchParams.get('app') ?? '';
   const defaultSince = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
   const since = searchParams.has('since') ? (searchParams.get('since') ?? '') : defaultSince;
 
@@ -254,10 +282,12 @@ export function CvesList() {
 
   const [qInput, setQInput] = useState(q);
   const [techInput, setTechInput] = useState(technique);
+  const [appInput, setAppInput] = useState(app);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const techDebounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   useEffect(() => { setQInput(q); }, [q]);
   useEffect(() => { setTechInput(technique); }, [technique]);
+  useEffect(() => { setAppInput(app); }, [app]);
   const handleQChange = useCallback((value: string) => {
     setQInput(value);
     clearTimeout(debounceRef.current);
@@ -268,13 +298,20 @@ export function CvesList() {
     clearTimeout(techDebounceRef.current);
     techDebounceRef.current = setTimeout(() => setParam('technique', value.trim()), 500);
   }, [setParam]);
-  useEffect(() => () => { clearTimeout(debounceRef.current); clearTimeout(techDebounceRef.current); }, []);
+  const appDebounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const handleAppChange = useCallback((value: string) => {
+    setAppInput(value);
+    clearTimeout(appDebounceRef.current);
+    appDebounceRef.current = setTimeout(() => setParam('app', value.trim()), 500);
+  }, [setParam]);
+  useEffect(() => () => { clearTimeout(debounceRef.current); clearTimeout(techDebounceRef.current); clearTimeout(appDebounceRef.current); }, []);
 
   const params: Record<string, string> = { page: String(page), limit: '100', ...sectorParam };
   if (severity) params.severity = severity;
   if (source) params.source = source;
   if (q) params.q = q;
   if (technique) params.technique = technique;
+  if (app) params.app = app;
   if (since) params.since = since;
 
   const { data, isLoading } = useCves(params);
@@ -309,10 +346,17 @@ export function CvesList() {
         />
         <input
           type="text"
-          placeholder="Technique (T1190)"
+          placeholder="Technique"
           value={techInput}
           onChange={(e) => handleTechChange(e.target.value)}
-          className="min-w-[140px] px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--accent-teal)] placeholder-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent-teal)] font-mono"
+          className="min-w-[120px] max-w-[140px] px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent-teal)]"
+        />
+        <input
+          type="text"
+          placeholder="Application"
+          value={appInput}
+          onChange={(e) => handleAppChange(e.target.value)}
+          className="min-w-[140px] px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent-teal)]"
         />
         <select
           value={severity}
