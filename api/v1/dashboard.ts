@@ -105,14 +105,27 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
                 JOIN techniques at2 ON at2.id = ax.atlas_technique_id AND at2.domain = $1
                 JOIN group_techniques gt2 ON gt2.technique_id = ax.attack_technique_id
               )) AS "groupCount",
-             (SELECT count(*) FROM attack_software
-              WHERE is_revoked = false AND is_deprecated = false AND domain = $1) AS "softwareCount",
+             (SELECT count(DISTINCT sw.id) FROM attack_software sw
+              WHERE sw.is_revoked = false AND sw.is_deprecated = false
+              AND sw.id IN (
+                SELECT id FROM attack_software WHERE domain = $1
+                UNION
+                SELECT st.software_id FROM atlas_xrefs ax
+                JOIN techniques at2 ON at2.id = ax.atlas_technique_id AND at2.domain = $1
+                JOIN software_techniques st ON st.technique_id = ax.attack_technique_id
+              )) AS "softwareCount",
              (SELECT count(*) FROM mitigations
               WHERE is_revoked = false AND is_deprecated = false AND domain = $1) AS "mitigationCount",
              (SELECT count(DISTINCT c.id) FROM campaigns c
-              JOIN campaign_techniques ct ON ct.campaign_id = c.id
-              JOIN techniques t ON t.id = ct.technique_id AND t.domain = $1
-              WHERE c.is_revoked = false AND c.is_deprecated = false) AS "campaignCount",
+              WHERE c.is_revoked = false AND c.is_deprecated = false
+              AND c.id IN (
+                SELECT ct.campaign_id FROM campaign_techniques ct
+                JOIN techniques t ON t.id = ct.technique_id AND t.domain = $1
+                UNION
+                SELECT ct2.campaign_id FROM atlas_xrefs ax
+                JOIN techniques at2 ON at2.id = ax.atlas_technique_id AND at2.domain = $1
+                JOIN campaign_techniques ct2 ON ct2.technique_id = ax.attack_technique_id
+              )) AS "campaignCount",
              (SELECT count(*) FROM data_sources
               WHERE is_revoked = false AND domain = $1) AS "dataSourceCount"`,
           [domain],
