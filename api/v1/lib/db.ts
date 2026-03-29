@@ -10,8 +10,8 @@ function getPool(): Pool {
     }
     const isProduction = connectionString.includes('neon') || connectionString.includes('vercel');
     // Enforce verify-full to silence pg v9 deprecation warning
-    const connStr = isProduction && !connectionString.includes('sslmode=')
-      ? connectionString.replace('?', '?sslmode=verify-full&').replace('&&', '&')
+    const connStr = isProduction
+      ? connectionString.replace('sslmode=require', 'sslmode=verify-full')
       : connectionString;
     pool = new Pool({
       connectionString: connStr,
