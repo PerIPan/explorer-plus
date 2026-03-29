@@ -96,9 +96,15 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
              (SELECT count(*) FROM techniques
               WHERE is_revoked = false AND is_deprecated = false AND domain = $1) AS "techniqueCount",
              (SELECT count(DISTINCT tg.id) FROM threat_groups tg
-              JOIN group_techniques gt ON gt.group_id = tg.id
-              JOIN techniques t ON t.id = gt.technique_id AND t.domain = $1
-              WHERE tg.is_revoked = false AND tg.is_deprecated = false) AS "groupCount",
+              WHERE tg.is_revoked = false AND tg.is_deprecated = false
+              AND tg.id IN (
+                SELECT gt.group_id FROM group_techniques gt
+                JOIN techniques t ON t.id = gt.technique_id AND t.domain = $1
+                UNION
+                SELECT gt2.group_id FROM atlas_xrefs ax
+                JOIN techniques at2 ON at2.id = ax.atlas_technique_id AND at2.domain = $1
+                JOIN group_techniques gt2 ON gt2.technique_id = ax.attack_technique_id
+              )) AS "groupCount",
              (SELECT count(*) FROM attack_software
               WHERE is_revoked = false AND is_deprecated = false AND domain = $1) AS "softwareCount",
              (SELECT count(*) FROM mitigations
@@ -156,12 +162,19 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
         );
       }
       if (domain) {
+        // 1st order: groups with techniques in this domain
+        // + 2nd order for ATLAS: groups via atlas_xrefs → ATT&CK techniques
         return query<{ attackId: string; name: string; techniqueCount: string }>(
-          `SELECT tg.attack_id AS "attackId", tg.name, COUNT(gt.technique_id) AS "techniqueCount"
+          `SELECT tg.attack_id AS "attackId", tg.name, COUNT(DISTINCT gt.technique_id) AS "techniqueCount"
            FROM threat_groups tg
            JOIN group_techniques gt ON gt.group_id = tg.id
-           JOIN techniques tq ON tq.id = gt.technique_id AND tq.domain = $1
            WHERE tg.is_revoked = false AND tg.is_deprecated = false
+             AND gt.technique_id IN (
+               SELECT id FROM techniques WHERE domain = $1
+               UNION
+               SELECT ax.attack_technique_id FROM atlas_xrefs ax
+               JOIN techniques at2 ON at2.id = ax.atlas_technique_id AND at2.domain = $1
+             )
            GROUP BY tg.id, tg.attack_id, tg.name
            ORDER BY "techniqueCount" DESC LIMIT 10`,
           [domain],
@@ -275,12 +288,21 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
         );
       }
       if (domain) {
+        // 1st order: techniques in this domain used by groups
+        // + 2nd order for ATLAS: ATLAS techniques whose ATT&CK xrefs are used by groups
         return query<{ attackId: string; name: string; groupCount: string }>(
-          `SELECT t.attack_id AS "attackId", t.name, COUNT(DISTINCT gt.group_id) AS "groupCount"
+          `SELECT t.attack_id AS "attackId", t.name, COUNT(DISTINCT g.group_id) AS "groupCount"
            FROM techniques t
-           JOIN group_techniques gt ON gt.technique_id = t.id
-           WHERE t.is_revoked = false AND t.is_deprecated = false
-             AND t.is_subtechnique = false AND t.domain = $1
+           JOIN (
+             SELECT gt.technique_id, gt.group_id FROM group_techniques gt
+             WHERE gt.technique_id IN (SELECT id FROM techniques WHERE domain = $1)
+             UNION
+             SELECT ax.atlas_technique_id AS technique_id, gt2.group_id
+             FROM atlas_xrefs ax
+             JOIN group_techniques gt2 ON gt2.technique_id = ax.attack_technique_id
+             JOIN techniques at2 ON at2.id = ax.atlas_technique_id AND at2.domain = $1
+           ) g ON g.technique_id = t.id
+           WHERE t.is_revoked = false AND t.is_deprecated = false AND t.is_subtechnique = false
            GROUP BY t.id, t.attack_id, t.name
            ORDER BY "groupCount" DESC LIMIT 10`,
           [domain],
