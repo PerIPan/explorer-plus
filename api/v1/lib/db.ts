@@ -9,8 +9,12 @@ function getPool(): Pool {
       throw new Error('DATABASE_URL or POSTGRES_URL environment variable must be set');
     }
     const isProduction = connectionString.includes('neon') || connectionString.includes('vercel');
+    // Enforce verify-full to silence pg v9 deprecation warning
+    const connStr = isProduction && !connectionString.includes('sslmode=')
+      ? connectionString.replace('?', '?sslmode=verify-full&').replace('&&', '&')
+      : connectionString;
     pool = new Pool({
-      connectionString,
+      connectionString: connStr,
       statement_timeout: 5000,
       connectionTimeoutMillis: 3000,
       idle_in_transaction_session_timeout: 10000,
