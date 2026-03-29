@@ -136,6 +136,7 @@ export function Dashboard() {
   const { sectorParam } = useSector();
   const { domain, domainParam } = useDomain();
   const isAllDomains = domain === 'all';
+  const isAtlas = domain === 'atlas-attack';
   const { data, isLoading, error } = useDashboard({ ...sectorParam, ...domainParam });
   const { data: reportsData, isLoading: reportsLoading } = useReports({
     limit: '5',
@@ -288,7 +289,7 @@ export function Dashboard() {
           label="Groups"
           value={stats.groupCount}
           accent="text-[var(--accent-orange)]"
-          href="/groups"
+          href={isAtlas ? undefined : '/groups'}
           hoverBorder="hover:border-[#f97316]"
           hoverBg="hover:bg-[#f9731606]"
           icon={<IconUsers />}
@@ -298,7 +299,7 @@ export function Dashboard() {
           label="Software"
           value={stats.softwareCount}
           accent="text-[var(--accent-purple)]"
-          href="/software"
+          href={isAtlas ? undefined : '/software'}
           hoverBorder="hover:border-[#a78bfa]"
           hoverBg="hover:bg-[#a78bfa06]"
           icon={<IconCode />}
@@ -308,7 +309,7 @@ export function Dashboard() {
           label="Campaigns"
           value={stats.campaignCount}
           accent="text-[var(--accent-blue)]"
-          href="/campaigns"
+          href={isAtlas ? undefined : '/campaigns'}
           hoverBorder="hover:border-[#60a5fa]"
           hoverBg="hover:bg-[#60a5fa06]"
           icon={<IconFlag />}
@@ -343,7 +344,7 @@ export function Dashboard() {
         <div className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg p-5">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-semibold text-[var(--text-primary)]">Top 10 Groups</h2>
-            <Link to="/groups" className="text-xs text-[var(--accent-orange)] hover:underline">View all</Link>
+            {!isAtlas && <Link to="/groups" className="text-xs text-[var(--accent-orange)] hover:underline">View all</Link>}
           </div>
           {topGroups.length > 0 ? (
             <div className="space-y-1">
@@ -353,7 +354,7 @@ export function Dashboard() {
                     <span className={`text-xs font-bold font-mono w-5 text-right shrink-0 ${i === 0 ? 'text-[var(--accent-yellow)]' : i === 1 ? 'text-[var(--text-secondary)]' : i === 2 ? 'text-[var(--accent-orange)]' : 'text-[var(--text-secondary)]'}`}>
                       {i + 1}
                     </span>
-                    <EntityLink type="group" attackId={g.attackId} name={g.name} />
+                    <EntityLink type="group" attackId={g.attackId} name={g.name} useMap />
                   </div>
                   <span className="ml-2 text-sm font-semibold text-[var(--accent-orange)] tabular-nums shrink-0">{g.techniqueCount}</span>
                 </div>
@@ -372,7 +373,7 @@ export function Dashboard() {
             <h2 className="text-sm font-semibold text-[var(--text-primary)]">
               Most Targeted Techniques
             </h2>
-            <Link to="/techniques" className="text-xs text-[var(--accent-teal)] hover:underline">View all</Link>
+            {!isAtlas && <Link to="/techniques" className="text-xs text-[var(--accent-teal)] hover:underline">View all</Link>}
           </div>
           {topTechniques.length > 0 ? (
             <div className="space-y-1">
@@ -394,6 +395,7 @@ export function Dashboard() {
                       type="technique"
                       attackId={t.attackId}
                       name={t.name}
+                      useMap
                     />
                   </div>
                   <span className="ml-2 text-sm font-semibold text-[var(--accent-teal)] tabular-nums shrink-0">
