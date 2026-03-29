@@ -299,6 +299,13 @@ export function CvesList() {
           onChange={(e) => handleQChange(e.target.value)}
           className="min-w-[200px] px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent-teal)]"
         />
+        <input
+          type="text"
+          placeholder="Technique (T1190)"
+          value={technique}
+          onChange={(e) => setParam('technique', e.target.value.trim())}
+          className="min-w-[140px] px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--accent-teal)] placeholder-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent-teal)] font-mono"
+        />
         <select
           value={severity}
           onChange={(e) => setParam('severity', e.target.value)}
