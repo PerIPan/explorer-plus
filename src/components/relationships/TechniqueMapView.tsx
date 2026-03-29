@@ -38,36 +38,50 @@ interface MapCardProps {
   icon: React.ReactNode;
   count?: number;
   defaultOpen?: boolean;
+  actionHref?: string;
+  actionLabel?: string;
   children: React.ReactNode;
 }
 
-function MapCard({ label, icon, count, defaultOpen = true, children }: MapCardProps) {
+function MapCard({ label, icon, count, defaultOpen = true, actionHref, actionLabel, children }: MapCardProps) {
   const [open, setOpen] = useState(defaultOpen);
 
   return (
     <div className="border border-[var(--border-color)] rounded-lg overflow-hidden">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between px-4 py-3 bg-[var(--surface-card)] hover:bg-[var(--surface-base)] transition-colors text-left gap-3"
-      >
-        <div className="flex items-center gap-2">
-          <span className="text-[var(--accent-teal)] w-4 h-4 shrink-0">{icon}</span>
-          <span className="text-sm font-bold text-[var(--text-secondary)] uppercase tracking-wider">{label}</span>
-          {count !== undefined && (
-            <span className="text-xs text-[var(--text-secondary)]">({count})</span>
-          )}
-        </div>
-        <svg
-          className={`w-4 h-4 text-[var(--text-secondary)] shrink-0 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
+      <div className="flex items-center justify-between px-4 py-3 bg-[var(--surface-card)]">
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          className="flex items-center gap-3 flex-1 hover:opacity-80 transition-opacity text-left"
         >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
+          <div className="flex items-center gap-2">
+            <span className="text-[var(--accent-teal)] w-4 h-4 shrink-0">{icon}</span>
+            <span className="text-sm font-bold text-[var(--text-secondary)] uppercase tracking-wider">{label}</span>
+            {count !== undefined && (
+              <span className="text-xs text-[var(--text-secondary)]">({count})</span>
+            )}
+        </div>
+          <svg
+            className={`w-4 h-4 text-[var(--text-secondary)] shrink-0 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        {actionHref && (
+          <a
+            href={actionHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[10px] text-[var(--accent-teal)] hover:underline shrink-0 ml-2"
+          >
+            {actionLabel ?? 'View all →'}
+          </a>
+        )}
+      </div>
       {open && (
         <div className="px-4 py-4 bg-[var(--surface-alt)] space-y-5">
           {children}
@@ -446,7 +460,9 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
 
 
       {/* THREAT INTELLIGENCE — reports + CVEs */}
-      <MapCard label="Threat Intelligence" icon={IconResponse} count={reports.length + cves.length}>
+      <MapCard label="Threat Intelligence" icon={IconResponse} count={reports.length + cves.length}
+        actionHref={`/cti/cves?q=${encodeURIComponent(attackId)}&since=`} actionLabel="All CVEs →"
+      >
         {reports.length > 0 ? (
           <div className="space-y-1.5">
             {reports.slice(0, 3).map((r) => (
@@ -495,6 +511,12 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
         {/* CVEs */}
         {cves.length > 0 && (
           <div className="space-y-1.5">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Latest CVEs</span>
+              {(intel?.affectedApps ?? []).length > 0 && (
+                <Badge label={`${intel!.affectedApps.length} apps affected`} variant="blue" />
+              )}
+            </div>
             {cves.map((cve) => {
               const sevColor = cve.cvss_severity === 'CRITICAL' ? 'pink' : cve.cvss_severity === 'HIGH' ? 'orange' : 'neutral';
               const desc = cve.description ?? cve.cve_id;
