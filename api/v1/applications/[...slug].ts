@@ -64,7 +64,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
        FROM affected_products ap
        JOIN cve_details cd ON cd.cve_id = ap.cve_id
        WHERE ap.application_id = $1
-       ORDER BY cd.cvss_score DESC NULLS LAST, cd.published_at DESC NULLS LAST
+       ORDER BY cd.published_at DESC NULLS LAST, cd.cvss_score DESC NULLS LAST
        LIMIT $2 OFFSET $3`,
       [app.id, limit, offset],
     ),
