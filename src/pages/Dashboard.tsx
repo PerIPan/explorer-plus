@@ -235,7 +235,7 @@ export function Dashboard() {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <span className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wide">
-                ATT&CK Version
+                {attackVersion.domain === 'atlas-attack' ? 'ATLAS Version' : 'ATT&CK Version'}
               </span>
               <span className="text-sm font-bold text-[var(--accent-teal)] tabular-nums">
                 {isAllDomains ? '—' : `v${attackVersion.attackVersion}`}
@@ -261,12 +261,12 @@ export function Dashboard() {
             </div>
           </div>
           <a
-            href="https://attack.mitre.org/"
+            href={attackVersion.domain === 'atlas-attack' ? 'https://atlas.mitre.org/' : 'https://attack.mitre.org/'}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)] hover:text-[var(--accent-teal)] transition-colors"
           >
-            MITRE ATT&CK
+            {attackVersion.domain === 'atlas-attack' ? 'MITRE ATLAS' : 'MITRE ATT&CK'}
             <IconExternalLink />
           </a>
         </div>
@@ -327,10 +327,10 @@ export function Dashboard() {
         <StatCard
           label="Data Sources"
           value={stats.dataSourceCount}
-          accent="text-[var(--accent-pink)]"
+          accent="text-[var(--accent-neutral)]"
           href="/data-sources"
-          hoverBorder="hover:border-[#f472b6]"
-          hoverBg="hover:bg-[#f472b606]"
+          hoverBorder="hover:border-[#94a3b8]"
+          hoverBg="hover:bg-[#94a3b806]"
           icon={<IconDatabase />}
           description="Detection sources"
         />
@@ -360,7 +360,9 @@ export function Dashboard() {
               ))}
             </div>
           ) : (
-            <p className="text-[var(--text-secondary)] text-sm">No group data available.</p>
+            <p className="text-[var(--text-secondary)] text-sm">
+              {domain === 'atlas-attack' ? 'ATLAS does not track threat groups.' : 'No group data available.'}
+            </p>
           )}
         </div>
 
