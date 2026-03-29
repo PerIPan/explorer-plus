@@ -144,6 +144,17 @@ export function exportMatrixHtml(data: MatrixData, options: ExportOptions): stri
     ${columns}
   </div>
 </div>
+<div style="position:fixed;bottom:12px;right:20px;display:flex;align-items:center;gap:6px;opacity:0.5;">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="16" height="16">
+    <g transform="translate(16,16) rotate(45) translate(-11,-11)">
+      <rect x="0" y="0" width="10.8" height="10.8" fill="#0d9488" opacity="0.6"/>
+      <rect x="11.2" y="0" width="10.8" height="10.8" fill="#0d9488" opacity="0.75"/>
+      <rect x="11.2" y="11.2" width="10.8" height="10.8" fill="#0d9488" opacity="0.88"/>
+      <rect x="0" y="11.2" width="10.8" height="10.8" fill="#0d9488" opacity="1"/>
+    </g>
+  </svg>
+  <span style="font-size:10px;color:${textSecondary};font-weight:600;letter-spacing:0.03em;">mitre-explorer.org</span>
+</div>
 </body>
 </html>`;
 }

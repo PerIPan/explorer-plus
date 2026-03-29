@@ -150,6 +150,21 @@ function Layout() {
             <Outlet />
           </ErrorBoundary>
         </main>
+
+        {/* Print-only watermark — bottom right */}
+        <div className="print-watermark hidden fixed bottom-4 right-6 items-center gap-2 opacity-60" style={{ zIndex: 9999 }}>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="18" height="18">
+            <g transform="translate(16,16) rotate(45) translate(-11,-11)">
+              <rect x="0" y="0" width="10.8" height="10.8" fill="#0d9488" opacity="0.6"/>
+              <rect x="11.2" y="0" width="10.8" height="10.8" fill="#0d9488" opacity="0.75"/>
+              <rect x="11.2" y="11.2" width="10.8" height="10.8" fill="#0d9488" opacity="0.88"/>
+              <rect x="0" y="11.2" width="10.8" height="10.8" fill="#0d9488" opacity="1"/>
+            </g>
+          </svg>
+          <span style={{ fontSize: '10px', color: '#64748b', fontWeight: 600, letterSpacing: '0.03em' }}>
+            mitre-explorer.org
+          </span>
+        </div>
       </div>
       <Analytics />
 

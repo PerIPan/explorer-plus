@@ -149,4 +149,9 @@ body {
   .lg\:ml-60 {
     margin-left: 0 !important;
   }
+
+  /* Show print-only watermark */
+  .print-watermark {
+    display: flex !important;
+  }
 }
