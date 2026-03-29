@@ -193,7 +193,11 @@ export function SectorMapView({ sectorSlug }: SectorMapViewProps) {
       {data.cves.length > 0 && (
         <MapCard label="Related CVEs" icon={IconShield} count={data.cves.length}>
           <div className="space-y-1.5">
-            {data.cves.map((cve) => (
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Latest CVEs</span>
+              <a href={`/cti/cves?sector=${encodeURIComponent(sectorSlug)}&since=`} target="_blank" rel="noopener noreferrer" className="ml-auto text-[10px] text-[var(--accent-teal)] hover:underline">View CVEs →</a>
+            </div>
+            {data.cves.slice(0, 7).map((cve) => (
               <div
                 key={cve.cveId}
                 className="flex items-center gap-2 py-1.5 px-3 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)]"

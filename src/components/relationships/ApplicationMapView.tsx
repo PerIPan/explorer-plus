@@ -99,7 +99,11 @@ export function ApplicationMapView({ appSlug }: { appSlug: string }) {
       <MapCard label="Vulnerabilities" icon={IconShield} count={data.cvePagination.total} defaultOpen={false}>
         {data.cves.length > 0 ? (
           <div className="space-y-1.5">
-            {data.cves.map((cve) => (
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Latest CVEs</span>
+              <a href={`/cti/cves?app=${encodeURIComponent(data.product)}&since=`} target="_blank" rel="noopener noreferrer" className="ml-auto text-[10px] text-[var(--accent-teal)] hover:underline">View CVEs →</a>
+            </div>
+            {data.cves.slice(0, 7).map((cve) => (
               <div key={cve.cveId} className="flex items-center gap-2 py-1.5 px-3 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)]">
                 <a
                   href={`/cti/cves?q=${encodeURIComponent(cve.cveId)}&since=`}
@@ -116,11 +120,6 @@ export function ApplicationMapView({ appSlug }: { appSlug: string }) {
                 {cve.publishedAt && <span className="text-[10px] text-[var(--text-secondary)] shrink-0">{formatDate(cve.publishedAt)}</span>}
               </div>
             ))}
-            {data.cvePagination.totalPages > 1 && (
-              <p className="text-[10px] text-[var(--text-secondary)] px-3">
-                Showing {data.cves.length} of {data.cvePagination.total} CVEs
-              </p>
-            )}
           </div>
         ) : (
           <p className="text-xs text-[var(--text-secondary)]">No CVEs linked.</p>
