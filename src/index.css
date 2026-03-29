@@ -106,7 +106,7 @@ body {
   background: var(--teal-dim);
 }
 
-/* Global styled tooltips — replace native title attr */
+/* Global styled tooltips — absolute positioning, escapes overflow via overflow-visible on map cards */
 [data-tooltip] {
   position: relative;
 }
@@ -116,8 +116,8 @@ body {
   left: 0;
   bottom: 100%;
   margin-bottom: 6px;
-  z-index: 9999;
-  max-width: 360px;
+  z-index: 99999;
+  max-width: 380px;
   padding: 8px 12px;
   border-radius: 8px;
   background: #1a1a2e;
@@ -131,7 +131,7 @@ body {
   pointer-events: none;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.2s 0.3s, visibility 0.2s 0.3s;
+  transition: opacity 0.15s 0.4s, visibility 0.15s 0.4s;
 }
 [data-tooltip]:hover::after {
   opacity: 1;

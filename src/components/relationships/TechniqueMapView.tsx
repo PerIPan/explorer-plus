@@ -47,7 +47,7 @@ function MapCard({ label, icon, count, defaultOpen = true, actionHref, actionLab
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div className="border border-[var(--border-color)] rounded-lg overflow-hidden">
+    <div className="border border-[var(--border-color)] rounded-lg overflow-visible">
       <div className="flex items-center justify-between px-4 py-3 bg-[var(--surface-card)]">
         <button
           type="button"
