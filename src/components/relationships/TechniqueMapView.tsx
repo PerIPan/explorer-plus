@@ -460,11 +460,13 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
 
 
       {/* THREAT INTELLIGENCE — reports + CVEs */}
-      <MapCard label="Threat Intelligence" icon={IconResponse} count={reports.length + cves.length}
-        actionHref="/cti/reports" actionLabel="All Reports →"
-      >
+      <MapCard label="Threat Intelligence" icon={IconResponse} count={reports.length + cves.length}>
         {reports.length > 0 ? (
           <div className="space-y-1.5">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Reports</span>
+              <a href="/cti/reports" target="_blank" rel="noopener noreferrer" className="ml-auto text-[10px] text-[var(--accent-teal)] hover:underline">All Reports →</a>
+            </div>
             {reports.slice(0, 3).map((r) => (
               <div
                 key={r.id}
@@ -517,7 +519,7 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
                 <Badge label={`${intel!.affectedApps.length} apps affected`} variant="blue" />
               )}
               <a
-                href={`/techniques/${attackId}`}
+                href={`/cti/cves?technique=${encodeURIComponent(attackId)}&since=`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="ml-auto text-[10px] text-[var(--accent-teal)] hover:underline"

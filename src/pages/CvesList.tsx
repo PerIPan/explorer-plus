@@ -162,10 +162,7 @@ const columns: ColumnDef<CveEntry>[] = [
     tooltip: 'Vulnerability description from NVD',
     render: (row) =>
       row.description ? (
-        <span
-          className="text-xs text-[var(--text-secondary)] max-w-[320px] truncate block"
-          title={row.description}
-        >
+        <span className="text-xs text-[var(--text-secondary)] max-w-[400px] line-clamp-2 block leading-relaxed">
           {row.description}
         </span>
       ) : (
@@ -233,6 +230,7 @@ export function CvesList() {
   const severity = searchParams.get('severity') ?? '';
   const source = searchParams.get('source') ?? '';
   const q = searchParams.get('q') ?? '';
+  const technique = searchParams.get('technique') ?? '';
   const defaultSince = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
   const since = searchParams.has('since') ? (searchParams.get('since') ?? '') : defaultSince;
 
@@ -268,6 +266,7 @@ export function CvesList() {
   if (severity) params.severity = severity;
   if (source) params.source = source;
   if (q) params.q = q;
+  if (technique) params.technique = technique;
   if (since) params.since = since;
 
   const { data, isLoading } = useCves(params);
@@ -276,8 +275,20 @@ export function CvesList() {
     <div className="space-y-4">
       <PageHeader
         title="Vulnerabilities"
-        subtitle="Known CVEs from OTX and CISA KEV, enriched with NVD metadata"
+        subtitle={technique ? `CVEs linked to technique ${technique}` : 'Known CVEs from OTX and CISA KEV, enriched with NVD metadata'}
       />
+
+      {technique && (
+        <div className="flex items-center gap-2">
+          <Badge label={`Technique: ${technique}`} variant="teal" />
+          <button
+            onClick={() => setParam('technique', '')}
+            className="text-xs text-[var(--text-secondary)] hover:text-[var(--accent-teal)]"
+          >
+            Clear filter
+          </button>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3">

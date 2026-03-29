@@ -11,6 +11,7 @@ const querySchema = paginationSchema.extend({
   q: z.string().min(1).max(200).optional(),
   sector: z.string().max(50).optional(),
   since: z.string().optional(),
+  technique: z.string().regex(/^(AML\.)?(T|TA)\d{4}(\.\d{3})?$/).optional(),
 });
 
 async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
@@ -20,7 +21,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     return;
   }
 
-  const { page, limit, severity, source, q, order, sector, since } = parsed.data;
+  const { page, limit, severity, source, q, order, sector, since, technique } = parsed.data;
   const offset = (page - 1) * limit;
 
   // Primary source: cve_details (CVElistV5 + NVD + CISA KEV)
@@ -51,6 +52,20 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
       params.push(d.toISOString());
       conditions.push(`cd.published_at >= $${params.length}`);
     }
+  }
+
+  if (technique) {
+    params.push(technique);
+    conditions.push(`cd.cve_id IN (
+      SELECT cw.cve_id FROM cve_weaknesses cw
+      JOIN capec_mappings cm ON cm.cwe_id = cw.cwe_id
+      JOIN techniques t ON t.id = cm.technique_id AND t.attack_id = $${params.length}
+      UNION
+      SELECT i.value FROM ioc_entries i
+      JOIN technique_iocs ti ON ti.ioc_id = i.id
+      JOIN techniques t ON t.id = ti.technique_id AND t.attack_id = $${params.length}
+      WHERE i.type = 'cve'
+    )`);
   }
 
   if (sector) {
