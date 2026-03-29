@@ -284,7 +284,7 @@ export function CveDetail() {
                   key={t.attackId}
                   className="flex items-center justify-between gap-3 py-2 px-3 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)]"
                 >
-                  <EntityLink type="technique" attackId={t.attackId} name={t.name} />
+                  <EntityLink type="technique" attackId={t.attackId} name={t.name} newTab />
                   <div className="flex flex-wrap gap-1 shrink-0">
                     {(t.sources ?? []).map((s) => (
                       <Badge key={s} label={TECHNIQUE_SOURCE_LABELS[s] ?? s} variant={s === 'ctid' ? 'green' : s === 'capec' ? 'blue' : 'neutral'} />

@@ -8,6 +8,8 @@ interface EntityLinkProps {
   className?: string;
   /** Link to 360 map view instead of detail page */
   useMap?: boolean;
+  /** Open in new tab */
+  newTab?: boolean;
 }
 
 const entityConfig: Record<
@@ -71,7 +73,7 @@ const MAP_TABS: Record<EntityType, string> = {
 /**
  * Color-coded pill that links to an entity's detail page or 360 map view.
  */
-export function EntityLink({ type, attackId, name, className = '', useMap }: EntityLinkProps) {
+export function EntityLink({ type, attackId, name, className = '', useMap, newTab }: EntityLinkProps) {
   const { color, bg, border, path } = entityConfig[type];
   const href = useMap
     ? `/?entity=${encodeURIComponent(attackId)}&tab=${MAP_TABS[type]}`
@@ -80,6 +82,7 @@ export function EntityLink({ type, attackId, name, className = '', useMap }: Ent
     <Link
       to={href}
       title={`${attackId} — ${name}`}
+      {...(newTab ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
       className={`
         inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium
         border ${color} ${bg} ${border}
