@@ -36,7 +36,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   if (search) {
     params.push(search);
     const { clause } = buildSearchCondition(search);
-    conditions.push(clause.replace('name', 'g.name').replace('description', 'g.description').replace('$PARAM', `$${params.length}`));
+    conditions.push(clause.replaceAll('name', 'g.name').replaceAll('description', 'g.description').replace('$PARAM', `$${params.length}`));
   }
 
   if (sector) {
