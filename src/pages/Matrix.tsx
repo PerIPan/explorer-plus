@@ -190,6 +190,8 @@ export function Matrix() {
       actorLookup: actorOverlay?.lookup,
       actorColors: resolvedActorColors,
       theme,
+      highlightIds,
+      highlightLabel: highlightLabel ?? undefined,
     });
     const blob = new Blob([html], { type: 'text/html' });
     const url = URL.createObjectURL(blob);

@@ -7,6 +7,10 @@ interface ExportOptions {
   actorLookup?: Map<string, Set<number>>;
   actorColors?: string[];
   theme?: 'dark' | 'light';
+  /** Entity filter — only include these technique IDs */
+  highlightIds?: Set<string>;
+  /** Label for the entity filter badge */
+  highlightLabel?: string;
 }
 
 /**
@@ -14,7 +18,7 @@ interface ExportOptions {
  * Preserves grid layout, cell colors, heatmap, and actor overlay.
  */
 export function exportMatrixHtml(data: MatrixData, options: ExportOptions): string {
-  const { domain, sector, actors, actorLookup, actorColors, theme = 'dark' } = options;
+  const { domain, sector, actors, actorLookup, actorColors, theme = 'dark', highlightIds, highlightLabel } = options;
   const isDark = theme === 'dark';
 
   const bg = isDark ? '#0f172a' : '#f8fafc';
@@ -59,6 +63,9 @@ export function exportMatrixHtml(data: MatrixData, options: ExportOptions): stri
   }
 
   const filteredData = data.filter((col) => {
+    if (highlightIds && highlightIds.size > 0) {
+      return col.techniques.some((t) => highlightIds.has(t.attackId));
+    }
     if (actorLookup && actorLookup.size > 0) {
       return col.techniques.some((t) => actorLookup.has(t.attackId));
     }
@@ -66,10 +73,13 @@ export function exportMatrixHtml(data: MatrixData, options: ExportOptions): stri
   });
 
   const columns = filteredData.map((col) => {
-    // When actors selected, only show techniques used by at least one actor
-    const visibleTechniques = actorLookup && actorLookup.size > 0
-      ? col.techniques.filter((t) => actorLookup.has(t.attackId))
-      : col.techniques;
+    // Filter techniques by entity highlight or actor selection
+    let visibleTechniques = col.techniques;
+    if (highlightIds && highlightIds.size > 0) {
+      visibleTechniques = visibleTechniques.filter((t) => highlightIds.has(t.attackId));
+    } else if (actorLookup && actorLookup.size > 0) {
+      visibleTechniques = visibleTechniques.filter((t) => actorLookup.has(t.attackId));
+    }
 
     const cells = visibleTechniques.map((t) => {
       const background = cellBg(t.attackId, t.subTechniques.length);
@@ -110,6 +120,9 @@ export function exportMatrixHtml(data: MatrixData, options: ExportOptions): stri
   const actorPills = actors && actors.length > 0
     ? actors.map((a) => `<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;background:${isDark ? '#1a1a2e' : '#f5f3ff'};color:${textPrimary};border:1px solid ${escapeHtml(a.color)}60;margin-left:4px;"><span style="width:8px;height:8px;border-radius:50%;background:${escapeHtml(a.color)};display:inline-block;"></span>${escapeHtml(a.name)}</span>`).join('')
     : '';
+  const entityPill = highlightLabel
+    ? `<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;background:${isDark ? '#0c4a6e' : '#e0f2fe'};color:${isDark ? '#38bdf8' : '#0284c7'};border:1px solid ${isDark ? '#38bdf8' : '#0284c7'}40;margin-left:4px;">⬦ ${escapeHtml(highlightLabel)}</span>`
+    : '';
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -131,7 +144,7 @@ export function exportMatrixHtml(data: MatrixData, options: ExportOptions): stri
     <div>
       <div style="display:flex;align-items:center;flex-wrap:wrap;">
         <a href="https://mitre-explorer.org/matrix" target="_blank" style="font-size:18px;font-weight:700;color:${textPrimary};">ATT&amp;CK Matrix</a>
-        ${domainPill}${sectorPill}${actorPills}
+        ${domainPill}${sectorPill}${entityPill}${actorPills}
       </div>
       <p style="font-size:12px;color:${textSecondary};margin-top:4px;">Exported ${dateStr} from <a href="https://mitre-explorer.org" target="_blank" style="color:${tealAccent};">mitre-explorer.org</a></p>
     </div>
