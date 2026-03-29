@@ -6,7 +6,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   const { attackId } = req.query;
   const id = Array.isArray(attackId) ? attackId[0] : attackId ?? '';
 
-  if (!id || !/^T\d{4}(\.\d{3})?$/.test(id)) {
+  if (!id || !/^(AML\.)?T\d{4}(\.\d{3})?$/.test(id)) {
     res.status(400).json({ error: 'Invalid ATT&CK ID', code: 'VALIDATION_ERROR' });
     return;
   }

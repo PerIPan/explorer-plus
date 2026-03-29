@@ -27,7 +27,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     description: string | null; url: string | null; platforms: string[] | null;
     isSubtechnique: boolean; detection: string | null; isRevoked: boolean;
     isDeprecated: boolean; domain: string | null; stixCreated: string | null;
-    stixModified: string | null;
+    stixModified: string | null; maturity: string | null;
   }>(
     `SELECT
        id, attack_id AS "attackId", stix_id AS "stixId", name, description, url,
