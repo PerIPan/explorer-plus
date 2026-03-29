@@ -55,14 +55,13 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
 
   if (sector) {
     params.push(sector);
-    conditions.push(`EXISTS (
-      SELECT 1 FROM affected_products ap
+    conditions.push(`cd.cve_id IN (
+      SELECT ap.cve_id FROM affected_products ap
       JOIN app_technique_groups atg ON atg.application_id = ap.application_id
-      JOIN group_sectors gs ON gs.group_id = (
-        SELECT tg.id FROM threat_groups tg WHERE tg.attack_id = atg.group_attack_id LIMIT 1
-      )
+      JOIN threat_groups tg ON tg.attack_id = atg.group_attack_id
+      JOIN group_sectors gs ON gs.group_id = tg.id
       JOIN sectors s ON s.id = gs.sector_id
-      WHERE ap.cve_id = cd.cve_id AND s.slug = $${params.length}
+      WHERE s.slug = $${params.length}
     )`);
   }
 
@@ -89,28 +88,35 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     sources: string | null;
     technique_count: string;
   }>(
-    `SELECT
-       cd.cve_id,
-       cd.description,
-       cd.cvss_score,
-       cd.cvss_severity,
-       cd.cwe_id,
-       cd.published_at,
-       (SELECT STRING_AGG(DISTINCT i.source, ',')
-        FROM ioc_entries i WHERE i.type = 'cve' AND i.value = cd.cve_id) AS sources,
-       (SELECT COUNT(DISTINCT t_id) FROM (
-          SELECT ti.technique_id AS t_id
-          FROM ioc_entries i JOIN technique_iocs ti ON ti.ioc_id = i.id
-          WHERE i.type = 'cve' AND i.value = cd.cve_id
-          UNION
-          SELECT cm.technique_id
-          FROM cve_weaknesses cw JOIN capec_mappings cm ON cm.cwe_id = cw.cwe_id AND cm.technique_id IS NOT NULL
-          WHERE cw.cve_id = cd.cve_id
-        ) sub)::text AS technique_count
-     FROM cve_details cd
-     ${whereClause}
-     ORDER BY cd.published_at ${sortDir} NULLS LAST, cd.cve_id DESC
-     LIMIT $${params.length - 1} OFFSET $${params.length}`,
+    `WITH page AS (
+       SELECT cd.cve_id, cd.description, cd.cvss_score, cd.cvss_severity, cd.cwe_id, cd.published_at
+       FROM cve_details cd
+       ${whereClause}
+       ORDER BY cd.published_at ${sortDir} NULLS LAST, cd.cve_id DESC
+       LIMIT $${params.length - 1} OFFSET $${params.length}
+     ),
+     src AS (
+       SELECT i.value AS cve_id, STRING_AGG(DISTINCT i.source, ',') AS sources
+       FROM ioc_entries i
+       WHERE i.type = 'cve' AND i.value IN (SELECT cve_id FROM page)
+       GROUP BY i.value
+     ),
+     tech AS (
+       SELECT cve_id, COUNT(DISTINCT technique_id)::text AS technique_count FROM (
+         SELECT i.value AS cve_id, ti.technique_id
+         FROM ioc_entries i JOIN technique_iocs ti ON ti.ioc_id = i.id
+         WHERE i.type = 'cve' AND i.value IN (SELECT cve_id FROM page)
+         UNION
+         SELECT cw.cve_id, cm.technique_id
+         FROM cve_weaknesses cw JOIN capec_mappings cm ON cm.cwe_id = cw.cwe_id AND cm.technique_id IS NOT NULL
+         WHERE cw.cve_id IN (SELECT cve_id FROM page)
+       ) sub GROUP BY cve_id
+     )
+     SELECT p.*, s.sources, COALESCE(t.technique_count, '0') AS technique_count
+     FROM page p
+     LEFT JOIN src s ON s.cve_id = p.cve_id
+     LEFT JOIN tech t ON t.cve_id = p.cve_id
+     ORDER BY p.published_at ${sortDir} NULLS LAST, p.cve_id DESC`,
     params,
   );
 

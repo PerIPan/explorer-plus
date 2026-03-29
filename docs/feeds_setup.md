@@ -210,7 +210,7 @@ After a full reseed, restore feeds in this order:
 
 ```sql
 -- Manual refresh
-REFRESH MATERIALIZED VIEW app_technique_groups;
+REFRESH MATERIALIZED VIEW CONCURRENTLY app_technique_groups;
 ```
 
 ## Full Database Restoration After Truncate
@@ -324,7 +324,7 @@ curl -s https://mitre-explorer.org/api/v1/frameworks/status | python3 -m json.to
 - The `CRON_SECRET` is in Vercel env vars (encrypted). Pull with: `npx vercel env pull`
 - CVElistV5 bulk ingestion must be run locally (zip too large for serverless)
 - CTID sync should be re-run after any CVElistV5 ingestion to catch newly matched CVEs
-- MV refresh is automatic in ingestion scripts; manual refresh: `REFRESH MATERIALIZED VIEW app_technique_groups`
+- MV refresh is automatic in ingestion scripts; manual refresh: `REFRESH MATERIALIZED VIEW CONCURRENTLY app_technique_groups`
 
 ## UI Color Conventions
 

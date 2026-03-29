@@ -306,7 +306,7 @@ async function main() {
     `SELECT 1 FROM pg_matviews WHERE matviewname = 'app_technique_groups'`
   );
   if (mvExists.rows.length > 0) {
-    await pool.query('REFRESH MATERIALIZED VIEW app_technique_groups');
+    await pool.query('REFRESH MATERIALIZED VIEW CONCURRENTLY app_technique_groups');
   } else {
     await pool.query(`
       CREATE MATERIALIZED VIEW app_technique_groups AS

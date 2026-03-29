@@ -77,23 +77,27 @@ export async function linkCveTechniquesViaCwe(): Promise<number> {
        )`,
   );
 
-  let linked = 0;
+  // Collect all (techId, iocId) pairs, then batch insert
+  const techIds: string[] = [];
+  const iocIds: string[] = [];
   for (const cve of cveResult.rows) {
     const techniques = bridge.get(cve.cwe_id);
     if (!techniques) continue;
-
     for (const tid of techniques) {
       const techId = techMap.get(tid);
       if (!techId) continue;
-
-      const result = await query(
-        `INSERT INTO technique_iocs (technique_id, ioc_id, confidence)
-         VALUES ($1, $2, 'inferred')
-         ON CONFLICT DO NOTHING`,
-        [techId, cve.ioc_id],
-      );
-      if (result.rowCount && result.rowCount > 0) linked++;
+      techIds.push(techId);
+      iocIds.push(cve.ioc_id);
     }
   }
-  return linked;
+
+  if (techIds.length === 0) return 0;
+
+  const result = await query(
+    `INSERT INTO technique_iocs (technique_id, ioc_id, confidence)
+     SELECT unnest($1::uuid[]), unnest($2::uuid[]), 'inferred'
+     ON CONFLICT DO NOTHING`,
+    [techIds, iocIds],
+  );
+  return result.rowCount ?? 0;
 }

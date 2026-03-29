@@ -12,7 +12,9 @@ function getPool(): Pool {
     pool = new Pool({
       connectionString,
       statement_timeout: 5000,
-      max: isProduction ? 1 : 10,
+      connectionTimeoutMillis: 3000,
+      idle_in_transaction_session_timeout: 10000,
+      max: isProduction ? 3 : 10,
       ssl: isProduction ? { rejectUnauthorized: true } : undefined,
     });
     pool.on('error', (err) => {
