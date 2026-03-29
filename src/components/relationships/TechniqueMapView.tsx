@@ -461,7 +461,7 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
 
       {/* THREAT INTELLIGENCE — reports + CVEs */}
       <MapCard label="Threat Intelligence" icon={IconResponse} count={reports.length + cves.length}
-        actionHref={`/cti/cves?q=${encodeURIComponent(attackId)}&since=`} actionLabel="All CVEs →"
+        actionHref="/cti/reports" actionLabel="All Reports →"
       >
         {reports.length > 0 ? (
           <div className="space-y-1.5">
@@ -516,6 +516,14 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
               {(intel?.affectedApps ?? []).length > 0 && (
                 <Badge label={`${intel!.affectedApps.length} apps affected`} variant="blue" />
               )}
+              <a
+                href={`/techniques/${attackId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="ml-auto text-[10px] text-[var(--accent-teal)] hover:underline"
+              >
+                All CVEs →
+              </a>
             </div>
             {cves.map((cve) => {
               const sevColor = cve.cvss_severity === 'CRITICAL' ? 'pink' : cve.cvss_severity === 'HIGH' ? 'orange' : 'neutral';
