@@ -15,6 +15,8 @@ interface Application {
   cpePrefix: string | null;
   cveCount: number;
   topSeverity: string | null;
+  techniqueCount: number;
+  groupCount: number;
 }
 
 interface PaginatedResponse {
@@ -61,6 +63,26 @@ const columns: ColumnDef<Application>[] = [
       ) : (
         <span className="text-[var(--text-secondary)] text-xs">—</span>
       ),
+  },
+  {
+    key: 'techniqueCount',
+    header: 'Techniques',
+    tooltip: 'ATT&CK techniques reachable via CVE→CWE→CAPEC chain',
+    width: '100px',
+    align: 'center',
+    render: (row) => (
+      <span className="text-xs text-[var(--accent-teal)] font-mono">{row.techniqueCount || '—'}</span>
+    ),
+  },
+  {
+    key: 'groupCount',
+    header: 'Groups',
+    tooltip: 'Threat groups using reachable techniques',
+    width: '80px',
+    align: 'center',
+    render: (row) => (
+      <span className="text-xs text-[var(--accent-orange)] font-mono">{row.groupCount || '—'}</span>
+    ),
   },
 ];
 

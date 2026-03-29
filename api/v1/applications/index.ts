@@ -58,6 +58,8 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     cpePrefix: string | null;
     cveCount: string;
     topSeverity: string | null;
+    techniqueCount: string;
+    groupCount: string;
   }>(
     `SELECT
        a.id, a.vendor, a.product, a.normalized, a.cpe_prefix AS "cpePrefix",
@@ -66,7 +68,9 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
         JOIN affected_products ap ON ap.cve_id = cd.cve_id AND ap.application_id = a.id
         WHERE cd.cvss_severity IS NOT NULL
         ORDER BY cd.cvss_score DESC NULLS LAST LIMIT 1
-       ) AS "topSeverity"
+       ) AS "topSeverity",
+       (SELECT COUNT(DISTINCT attack_technique_id) FROM app_technique_groups WHERE application_id = a.id)::text AS "techniqueCount",
+       (SELECT COUNT(DISTINCT group_attack_id) FROM app_technique_groups WHERE application_id = a.id)::text AS "groupCount"
      FROM applications a
      ${where}
      ORDER BY ${sortCol} ${sortDir}, a.vendor ASC, a.product ASC
@@ -78,6 +82,8 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     data: dataResult.rows.map((r) => ({
       ...r,
       cveCount: parseInt(r.cveCount, 10),
+      techniqueCount: parseInt(r.techniqueCount, 10),
+      groupCount: parseInt(r.groupCount, 10),
     })),
     pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
   });
