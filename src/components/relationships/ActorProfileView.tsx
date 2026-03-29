@@ -607,7 +607,7 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
                   href={ctidVerisUrl(v.verisId)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  title={`${v.count} techniques → ${v.verisId}`}
+                  data-tooltip={`${v.count} techniques → ${v.verisId}`}
                   className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium bg-[var(--purple-faint)] text-[var(--accent-purple)] border border-[var(--purple-dim)] hover:bg-[var(--purple-dim)] transition-colors"
                 >
                   {v.verisId} ↗
@@ -627,7 +627,7 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
                   href={ctidCloudUrl(c.provider, c.controlId)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  title={`${c.controlName} (${c.provider}) — ${c.count} techniques`}
+                  data-tooltip={`${c.controlName} (${c.provider}) — ${c.count} techniques`}
                   className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium bg-[var(--teal-faint)] text-[var(--accent-teal)] border border-[var(--teal-dim)] hover:bg-[var(--teal-dim)] transition-colors"
                 >
                   <span className="uppercase text-[8px] opacity-60">{c.provider}</span>
@@ -716,7 +716,7 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
         <CollapsibleSection title="Cloud Security Controls" count={fwResult.data.cloud.length} defaultOpen={false}>
           <div className="flex flex-wrap gap-1.5">
             {fwResult.data.cloud.map((c) => (
-              <a key={`${c.provider}-${c.controlId}`} href={ctidCloudUrl(c.provider, c.controlId)} target="_blank" rel="noopener noreferrer" title={`${c.controlName} (${c.provider})`} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium bg-[var(--teal-faint)] text-[var(--accent-teal)] border border-[var(--teal-dim)] hover:bg-[var(--teal-dim)] transition-colors">
+              <a key={`${c.provider}-${c.controlId}`} href={ctidCloudUrl(c.provider, c.controlId)} target="_blank" rel="noopener noreferrer" data-tooltip={`${c.controlName} (${c.provider})`} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium bg-[var(--teal-faint)] text-[var(--accent-teal)] border border-[var(--teal-dim)] hover:bg-[var(--teal-dim)] transition-colors">
                 <span className="uppercase text-[8px] opacity-60">{c.provider}</span>{c.controlId} ↗
               </a>
             ))}

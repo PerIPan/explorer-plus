@@ -104,7 +104,7 @@ export function ApplicationMapView({ appSlug }: { appSlug: string }) {
                 <a
                   href={`/cti/cves?q=${encodeURIComponent(cve.cveId)}&since=`}
                   className="text-xs text-[var(--text-primary)] hover:text-[var(--accent-teal)] truncate flex-1"
-                  title={cve.description ?? cve.cveId}
+                  data-tooltip={cve.description ?? cve.cveId}
                 >
                   {cve.description
                     ? (cve.description.length > 120 ? cve.description.slice(0, 120) + '...' : cve.description)

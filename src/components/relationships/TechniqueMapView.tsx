@@ -540,7 +540,7 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
                     <a
                       href={`/cti/cves?q=${encodeURIComponent(cve.cve_id)}&since=`}
                       className="text-xs text-[var(--text-primary)] hover:text-[var(--accent-teal)] truncate"
-                      title={desc}
+                      data-tooltip={desc}
                     >
                       {shortDesc}
                     </a>

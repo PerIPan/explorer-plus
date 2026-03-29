@@ -79,7 +79,7 @@ export function DataTable<T extends Record<string, any>>({
                     ${alignClass[col.align ?? 'left']}
                     ${col.sortKey ? 'cursor-pointer select-none hover:text-[var(--text-primary)] transition-colors duration-150' : ''}
                   `}
-                  title={col.tooltip}
+                  data-tooltip={col.tooltip}
                   onClick={col.sortKey && onSort ? () => onSort(col.sortKey!) : undefined}
                   aria-sort={
                     col.sortKey && sortBy === col.sortKey
