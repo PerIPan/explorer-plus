@@ -35,7 +35,7 @@ const TYPE_VARIANT: Record<string, 'teal' | 'orange' | 'purple' | 'blue' | 'gree
   software: 'purple',
   campaign: 'blue',
   mitigation: 'green',
-  data_source: 'pink',
+  data_source: 'neutral',
   tactic: 'yellow',
   external_actor: 'neutral',
   sector: 'green',
