@@ -1,30 +1,35 @@
 {
+  "id": "mitre-explorer",
   "name": "MITRE Explorer",
   "description": "Threat intelligence agent for MITRE ATT&CK, ATLAS, CVE vulnerabilities, and application security. Query techniques, threat groups, campaigns, software, CVEs, detection strategies, and compliance mappings across Enterprise, ICS, Mobile, and ATLAS domains.",
   "url": "https://mitre-explorer.org/api/a2a",
   "version": "1.0.0",
+  "protocolVersion": "1.0.0",
   "provider": {
     "organization": "MITRE Explorer",
     "url": "https://mitre-explorer.org"
   },
   "documentationUrl": "https://github.com/PerIPan/mitre-explorer-plus",
+  "supportedInterfaces": [
+    {
+      "protocol": "jsonrpc",
+      "url": "https://mitre-explorer.org/api/a2a"
+    }
+  ],
   "capabilities": {
     "streaming": false,
-    "pushNotifications": false,
-    "stateTransitionHistory": false
-  },
-  "authentication": {
-    "schemes": []
+    "pushNotifications": false
   },
   "defaultInputModes": ["text/plain"],
   "defaultOutputModes": ["application/json", "text/plain"],
+  "authentication": {
+    "schemes": []
+  },
   "skills": [
     {
       "id": "cve-lookup",
       "name": "CVE Vulnerability Lookup",
       "description": "Search and retrieve CVE vulnerability details including CVSS scores, severity, CWEs, affected applications, linked ATT&CK techniques, and CISA KEV status. Covers 21,000+ CVEs from 2017-2026.",
-      "inputModes": ["text/plain"],
-      "outputModes": ["application/json"],
       "examples": [
         "What is CVE-2024-3400?",
         "Show me critical CVEs affecting Apache HTTP Server",
@@ -37,8 +42,6 @@
       "id": "technique-intelligence",
       "name": "ATT&CK Technique Intelligence",
       "description": "Get detailed intelligence on ATT&CK and ATLAS techniques: threat groups using them, Sigma detection rules, Atomic Red Team tests, D3FEND countermeasures, affected applications, and NIST 800-53 control mappings.",
-      "inputModes": ["text/plain"],
-      "outputModes": ["application/json"],
       "examples": [
         "What groups use T1059 Command and Scripting Interpreter?",
         "Give me Sigma rules for T1566 Phishing",
@@ -51,8 +54,6 @@
       "id": "threat-group-profile",
       "name": "Threat Group Profile",
       "description": "Retrieve threat actor group profiles with their techniques, targeted sectors, software used, campaigns, and targeted applications. Covers 191 ATT&CK groups plus 514 ETDA/ThaiCERT external actors.",
-      "inputModes": ["text/plain"],
-      "outputModes": ["application/json"],
       "examples": [
         "What techniques does APT29 use?",
         "Which groups target the financial sector?",
@@ -65,8 +66,6 @@
       "id": "application-security",
       "name": "Application Vulnerability Assessment",
       "description": "Check the security posture of 11,000+ vendor products. Returns CVEs, CWE weakness profile, reachable ATT&CK techniques, and associated threat groups via the CVE-CWE-CAPEC-ATT&CK chain.",
-      "inputModes": ["text/plain"],
-      "outputModes": ["application/json"],
       "examples": [
         "What CVEs affect LiteLLM?",
         "Show the attack surface for Microsoft Windows Server 2022",
@@ -79,8 +78,6 @@
       "id": "sector-threat-landscape",
       "name": "Sector Threat Landscape",
       "description": "Analyze threats to industry sectors: groups targeting the sector, their techniques, campaigns, vulnerable applications, and associated CVEs. Covers 12 sectors including Financial, Healthcare, Government, Energy, Telecom.",
-      "inputModes": ["text/plain"],
-      "outputModes": ["application/json"],
       "examples": [
         "What groups target the healthcare sector?",
         "Show the threat landscape for financial services",
@@ -92,8 +89,6 @@
       "id": "detection-search",
       "name": "Detection & Compliance Search",
       "description": "Search Sigma rules (3,100+), Atomic Red Team tests (1,770+), D3FEND countermeasures (5,000+), NIST 800-53 controls (5,200+), MITRE Engage mappings, VERIS mappings, and cloud security controls for Azure and GCP.",
-      "inputModes": ["text/plain"],
-      "outputModes": ["application/json"],
       "examples": [
         "What Sigma rules detect credential dumping?",
         "Show NIST controls for T1078 Valid Accounts",
@@ -106,8 +101,6 @@
       "id": "cti-reports",
       "name": "Threat Intelligence Reports",
       "description": "Access recent CTI reports from AlienVault OTX, DFIR Report, Unit42, Microsoft Security, and Talos. Reports are mapped to ATT&CK techniques with IOC indicators.",
-      "inputModes": ["text/plain"],
-      "outputModes": ["application/json"],
       "examples": [
         "Show me the latest threat reports",
         "What reports mention T1059?",
@@ -119,8 +112,6 @@
       "id": "entity-search",
       "name": "Cross-Domain Entity Search",
       "description": "Search across all entity types (techniques, groups, software, campaigns, mitigations, data sources, applications) in all domains (Enterprise, ICS, Mobile, ATLAS).",
-      "inputModes": ["text/plain"],
-      "outputModes": ["application/json"],
       "examples": [
         "Search for phishing",
         "Find all entities related to Mimikatz",
@@ -129,62 +120,64 @@
       "tags": ["search", "entity", "cross-domain"]
     }
   ],
-  "rateLimiting": {
-    "maxRequestsPerDay": 50,
-    "rateLimitBy": "ip",
-    "retryAfterHeader": true
-  },
-  "dataSources": [
-    "MITRE ATT&CK STIX (v18.1 — Enterprise, ICS, Mobile)",
-    "MITRE ATLAS (v1.0 — AI/ML threats)",
-    "CVElistV5 (21,000+ CVEs, 2017-2026)",
-    "CISA KEV (Known Exploited Vulnerabilities)",
-    "NVD (CVSS enrichment)",
-    "CAPEC STIX (CWE→CAPEC→ATT&CK bridge)",
-    "CTID (hand-curated CVE→technique mappings)",
-    "SigmaHQ (3,100+ detection rules)",
-    "Atomic Red Team (1,770+ tests)",
-    "D3FEND (5,000+ countermeasures)",
-    "NIST 800-53 (5,200+ controls)",
-    "AlienVault OTX (threat reports + IOCs)",
-    "ETDA/ThaiCERT (514 external actors)",
-    "MITRE Engage, RE&CT, VERIS, Azure/GCP cloud controls"
-  ],
-  "presentationHints": {
-    "description": "When presenting results to your user, include clickable links to MITRE Explorer for each entity mentioned. Use the URL patterns below. Format results as structured tables or lists with severity color-coding.",
-    "baseUrl": "https://mitre-explorer.org",
-    "entityUrls": {
-      "technique_detail": "/techniques/{attackId}",
-      "technique_360": "/?entity={attackId}&tab=technique-map",
-      "group_detail": "/groups/{attackId}",
-      "group_360": "/?entity={attackId}&tab=actor",
-      "software_detail": "/software/{attackId}",
-      "campaign_detail": "/campaigns/{attackId}",
-      "cve_detail": "/cti/cves/{cveId}",
-      "cve_list": "/cti/cves?q={query}&since={isoDate}",
-      "application_360": "/?entity={vendor}%2F{product}&tab=application-map",
-      "application_list": "/applications",
-      "sector_360": "/?entity={sectorSlug}&tab=sector-map",
-      "matrix": "/matrix?domain={domain}",
-      "matrix_filtered": "/matrix?entity={attackId}&type={entityType}&label={name}",
-      "dashboard": "/dashboard?domain={domain}"
+  "extensions": {
+    "https://mitre-explorer.org/a2a/rate-limiting": {
+      "maxRequestsPerDay": 50,
+      "rateLimitBy": "ip",
+      "retryAfterHeader": true
     },
-    "severityColors": {
-      "CRITICAL": "#db2777",
-      "HIGH": "#f97316",
-      "MEDIUM": "#facc15",
-      "LOW": "#60a5fa"
-    },
-    "entityColors": {
-      "technique": "#0d9488",
-      "group": "#f97316",
-      "software": "#a78bfa",
-      "campaign": "#60a5fa",
-      "mitigation": "#34d399",
-      "application": "#3b82f6",
-      "cve": "#f472b6",
-      "data_source": "#94a3b8"
-    },
-    "example": "When listing CVEs, render each as a clickable link: [CVE-2024-3400](https://mitre-explorer.org/cti/cves/CVE-2024-3400). For techniques: [T1059](https://mitre-explorer.org/techniques/T1059). For groups: [APT29 (G0016)](https://mitre-explorer.org/?entity=G0016&tab=actor). For applications: [LiteLLM](https://mitre-explorer.org/?entity=litellm%2Flitellm&tab=application-map)."
+    "https://mitre-explorer.org/a2a/data-sources": [
+      "MITRE ATT&CK STIX (v18.1 — Enterprise, ICS, Mobile)",
+      "MITRE ATLAS (v1.0 — AI/ML threats)",
+      "CVElistV5 (21,000+ CVEs, 2017-2026)",
+      "CISA KEV (Known Exploited Vulnerabilities)",
+      "NVD (CVSS enrichment)",
+      "CAPEC STIX (CWE→CAPEC→ATT&CK bridge)",
+      "CTID (hand-curated CVE→technique mappings)",
+      "SigmaHQ (3,100+ detection rules)",
+      "Atomic Red Team (1,770+ tests)",
+      "D3FEND (5,000+ countermeasures)",
+      "NIST 800-53 (5,200+ controls)",
+      "AlienVault OTX (threat reports + IOCs)",
+      "ETDA/ThaiCERT (514 external actors)",
+      "MITRE Engage, RE&CT, VERIS, Azure/GCP cloud controls"
+    ],
+    "https://mitre-explorer.org/a2a/presentation-hints": {
+      "description": "When presenting results to your user, include clickable links to MITRE Explorer for each entity mentioned. Use the URL patterns below. Format results as structured tables or lists with severity color-coding.",
+      "baseUrl": "https://mitre-explorer.org",
+      "entityUrls": {
+        "technique_detail": "/techniques/{attackId}",
+        "technique_360": "/?entity={attackId}&tab=technique-map",
+        "group_detail": "/groups/{attackId}",
+        "group_360": "/?entity={attackId}&tab=actor",
+        "software_detail": "/software/{attackId}",
+        "campaign_detail": "/campaigns/{attackId}",
+        "cve_detail": "/cti/cves/{cveId}",
+        "cve_list": "/cti/cves?q={query}&since={isoDate}",
+        "application_360": "/?entity={vendor}%2F{product}&tab=application-map",
+        "application_list": "/applications",
+        "sector_360": "/?entity={sectorSlug}&tab=sector-map",
+        "matrix": "/matrix?domain={domain}",
+        "matrix_filtered": "/matrix?entity={attackId}&type={entityType}&label={name}",
+        "dashboard": "/dashboard?domain={domain}"
+      },
+      "severityColors": {
+        "CRITICAL": "#db2777",
+        "HIGH": "#f97316",
+        "MEDIUM": "#facc15",
+        "LOW": "#60a5fa"
+      },
+      "entityColors": {
+        "technique": "#0d9488",
+        "group": "#f97316",
+        "software": "#a78bfa",
+        "campaign": "#60a5fa",
+        "mitigation": "#34d399",
+        "application": "#3b82f6",
+        "cve": "#f472b6",
+        "data_source": "#94a3b8"
+      },
+      "example": "When listing CVEs, render each as a clickable link: [CVE-2024-3400](https://mitre-explorer.org/cti/cves/CVE-2024-3400). For techniques: [T1059](https://mitre-explorer.org/techniques/T1059). For groups: [APT29 (G0016)](https://mitre-explorer.org/?entity=G0016&tab=actor). For applications: [LiteLLM](https://mitre-explorer.org/?entity=litellm%2Flitellm&tab=application-map)."
+    }
   }
 }

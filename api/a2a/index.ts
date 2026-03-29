@@ -412,7 +412,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('X-RateLimit-Limit', DAILY_LIMIT);
   res.setHeader('X-RateLimit-Remaining', remaining);
 
-  if (body.method === 'message/send') {
+  // Accept both v1.0 (PascalCase) and v0.x (slash) method names
+  if (body.method === 'SendMessage' || body.method === 'message/send') {
     const message = body.params?.message as { role?: string; parts?: Array<{ text?: string }> } | undefined;
     let userText = message?.parts?.[0]?.text;
 
@@ -490,22 +491,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
 
       const taskId = `task-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      const now = new Date().toISOString();
       res.status(200).json({
         jsonrpc: '2.0',
         id: reqId,
         result: {
           id: taskId,
+          contextId: taskId,
           status: {
             state: 'completed',
             message: { role: 'agent', parts: [{ text: finalText }] },
-            timestamp: new Date().toISOString(),
+            timestamp: now,
           },
+          history: [
+            { role: 'user', parts: [{ text: userText }] },
+            { role: 'agent', parts: [{ text: finalText }] },
+          ],
           artifacts: skillsUsed.length > 0 ? [{
+            artifactId: `art-${taskId}`,
             name: skillsUsed.join(', '),
             parts: [{ text: finalText }],
-            index: 0,
-            lastChunk: true,
           }] : [],
+          metadata: { tokensUsed: totalTokens, toolsCalled: skillsUsed },
+          createdAt: now,
+          updatedAt: now,
         },
       });
     } catch (err) {
@@ -518,6 +527,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       res.status(500).json(jsonRpcError(reqId, -32603, 'Internal error processing request'));
     }
   } else {
-    res.status(400).json(jsonRpcError(reqId, -32601, 'Method not supported. Use message/send'));
+    res.status(400).json(jsonRpcError(reqId, -32601, 'Method not supported. Use SendMessage'));
   }
 }

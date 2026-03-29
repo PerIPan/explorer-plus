@@ -12,6 +12,8 @@ dist/
 .vercel/
 .superpowers/
 .vercel
+.claude/
+.env.neon
 .docs/superpowers
 docs/superpowers/specs/2026-03-23-virustotal-integration-research.md
 .gitignore
