@@ -36,8 +36,8 @@ async function main() {
     process.exit(1);
   }
 
-  // Parse with safe schema (prevents RCE via !!js/function)
-  const data = yaml.load(text, { schema: yaml.DEFAULT_SCHEMA });
+  // Parse with JSON schema — most restrictive, no custom YAML types
+  const data = yaml.load(text, { schema: yaml.JSON_SCHEMA });
   const matrix = data.matrices[0];
   const tactics = matrix.tactics ?? [];
   const techniques = matrix.techniques ?? [];

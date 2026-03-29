@@ -124,7 +124,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
          FROM atlas_xrefs ax
          JOIN techniques t ON t.id = ax.attack_technique_id
          WHERE ax.atlas_technique_id = $1
-         UNION ALL
+         UNION
          SELECT t.attack_id AS "attackId", t.name, t.domain
          FROM atlas_xrefs ax
          JOIN techniques t ON t.id = ax.atlas_technique_id

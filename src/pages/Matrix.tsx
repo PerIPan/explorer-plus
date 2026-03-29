@@ -69,8 +69,8 @@ export function Matrix() {
         return d.techniques?.map((t) => t.attackId) ?? [];
       }
       if (highlightType === 'sector') {
-        const d = await apiFetch<{ techniques: Array<{ attackId: string }> }>(`/sectors/${highlightEntity}/relationships`);
-        return d.techniques.map((t) => t.attackId);
+        const d = await apiFetch<{ techniques?: Array<{ attackId: string }> }>(`/sectors/${highlightEntity}/relationships`);
+        return d.techniques?.map((t) => t.attackId) ?? [];
       }
       if (highlightType === 'data_source') {
         const d = await apiFetch<{ techniques?: Array<{ attackId: string }> }>(`/data-sources/${highlightEntity}`);
