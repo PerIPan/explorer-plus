@@ -315,6 +315,8 @@ export function CveDetail() {
                   >
                     <Link
                       to={`/applications/${app.normalized}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="text-sm text-[var(--text-primary)] hover:text-[var(--accent-blue)] hover:underline"
                     >
                       <span className="text-[var(--text-secondary)]">{app.vendor}</span>
