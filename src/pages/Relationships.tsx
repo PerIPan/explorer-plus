@@ -439,42 +439,43 @@ export function Relationships() {
 
       {/* Instructions when nothing selected */}
       {!selectedId && (
-        <div className="relative min-h-[calc(100vh-200px)] overflow-visible rounded-lg">
-          {/* Under search field, centered */}
-          <div className="text-center mt-10 mb-4 z-10 relative">
-            <div className="text-3xl font-light text-[var(--text-secondary)] mb-2">
-              Select an entity
-            </div>
-            <p className="text-sm text-[var(--text-secondary)] opacity-70 mx-auto max-w-md">
-              Search for any technique, group, software, campaign, mitigation,
-              data source, tactic, sector, or application to explore its relationships.
-            </p>
+        <>
+        <div className="text-center mt-[74px] mb-2 max-w-2xl">
+          <div className="text-xl font-light text-[var(--text-secondary)] mb-1">
+            Select an entity
           </div>
+          <p className="text-sm text-[var(--text-secondary)] opacity-70 mx-auto max-w-md">
+            Search for any technique, group, software, campaign, mitigation,
+            data source, tactic, sector, or application to explore its relationships.
+          </p>
+        </div>
+        <div className="relative h-[calc(100vh-420px)] overflow-hidden rounded-lg">
 
           {/* Diamond + corner labels — exact same SVG as modal favicon, scaled 5x */}
-          <div className="absolute bottom-[10%] right-[22%] pointer-events-none select-none"
-               style={{ width: 260, height: 260 }}>
-            <img src="/diamond-favicon.svg" alt="" width={260} height={260} className="opacity-[0.55]" />
+          <div className="absolute bottom-[calc(10%+80px)] right-[22%] pointer-events-none select-none"
+               style={{ width: 234, height: 234 }}>
+            <img src="/diamond-favicon.svg" alt="" width={234} height={234} className="opacity-[0.55]" />
 
             {/* Labels at diamond corners */}
             <div className="absolute -top-10 left-1/2 -translate-x-1/2 text-center">
-              <div className="text-[11px] text-[var(--accent-orange)] opacity-50">actor</div>
-              <div className="text-[11px] text-[var(--accent-orange)] opacity-50">adversary</div>
+              <div className="text-xs font-medium text-[var(--accent-orange)] opacity-50">actor</div>
+              <div className="text-xs font-medium text-[var(--accent-orange)] opacity-50">adversary</div>
             </div>
             <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 text-center">
-              <div className="text-[11px] text-[var(--accent-green)] opacity-50">sector</div>
-              <div className="text-[11px] text-[var(--accent-green)] opacity-50">victim</div>
+              <div className="text-xs font-medium text-[var(--accent-green)] opacity-50">sector</div>
+              <div className="text-xs font-medium text-[var(--accent-green)] opacity-50">victim</div>
             </div>
             <div className="absolute top-1/2 -left-20 -translate-y-1/2 text-right">
-              <div className="text-[11px] text-[var(--accent-teal)] opacity-50">technique</div>
-              <div className="text-[11px] text-[var(--accent-teal)] opacity-50">capability</div>
+              <div className="text-xs font-medium text-[var(--accent-teal)] opacity-50">technique</div>
+              <div className="text-xs font-medium text-[var(--accent-teal)] opacity-50">capability</div>
             </div>
             <div className="absolute top-1/2 -right-24 -translate-y-1/2 text-center">
-              <div className="text-[11px] text-[var(--accent-blue)] opacity-50">application</div>
-              <div className="text-[11px] text-[var(--accent-blue)] opacity-50">infrastructure</div>
+              <div className="text-xs font-medium text-[var(--accent-blue)] opacity-50">application</div>
+              <div className="text-xs font-medium text-[var(--accent-blue)] opacity-50">infrastructure</div>
             </div>
           </div>
         </div>
+        </>
       )}
 
       {/* Loading */}
