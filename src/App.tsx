@@ -148,8 +148,6 @@ function Layout() {
             </svg>
           </button>
           <SearchBar />
-          <div className="flex-1" />
-          <VtBadge />
           <button
             type="button"
             onClick={() => setModelOpen(true)}
@@ -158,6 +156,8 @@ function Layout() {
           >
             Data Model
           </button>
+          <div className="flex-1" />
+          <VtBadge />
           <ThemeToggle />
           <button
             type="button"
