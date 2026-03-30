@@ -445,7 +445,7 @@ export function Relationships() {
             Select an entity
           </div>
           <p className="text-sm text-[var(--text-secondary)] opacity-70 mx-auto max-w-md">
-            Search for any technique, group, software, campaign, mitigation,
+            Search for any technique, actor, software, campaign, mitigation,
             data source, tactic, sector, or application to explore its relationships.
           </p>
         </div>
