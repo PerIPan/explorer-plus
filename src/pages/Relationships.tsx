@@ -439,25 +439,40 @@ export function Relationships() {
 
       {/* Instructions when nothing selected */}
       {!selectedId && (
-        <div className="flex items-center justify-center h-[500px] text-center">
-          <div>
-            <svg
-              className="w-12 h-12 text-[var(--text-secondary)] mx-auto mb-4"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={1.5}
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            <div className="text-4xl font-light text-[var(--text-secondary)] mb-3">
+        <div className="relative min-h-[calc(100vh-200px)] overflow-visible rounded-lg">
+          {/* Center-left: search prompt */}
+          <div className="absolute top-[28%] left-[22%] -translate-x-1/2 -translate-y-1/2 z-10">
+            <div className="text-3xl font-light text-[var(--text-secondary)] mb-2">
               Select an entity
             </div>
-            <p className="text-sm text-[var(--text-secondary)] max-w-sm">
-              Search for any technique, group, software, mitigation, data source, or tactic to explore
-              its relationships across dedicated map views and the graph.
+            <p className="text-sm text-[var(--text-secondary)] max-w-xs opacity-70">
+              Search for any technique, group, software, mitigation,
+              data source, or tactic to explore its relationships.
             </p>
+          </div>
+
+          {/* Diamond + corner labels — exact same SVG as modal favicon, scaled 5x */}
+          <div className="absolute bottom-[10%] right-[22%] pointer-events-none select-none"
+               style={{ width: 260, height: 260 }}>
+            <img src="/diamond-favicon.svg" alt="" width={260} height={260} className="opacity-[0.55]" />
+
+            {/* Labels at diamond corners */}
+            <div className="absolute -top-10 left-1/2 -translate-x-1/2 text-center">
+              <div className="text-[11px] text-[var(--accent-orange)] opacity-30">actor</div>
+              <div className="text-[11px] text-[var(--accent-orange)] opacity-30">adversary</div>
+            </div>
+            <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 text-center">
+              <div className="text-[11px] text-[var(--accent-green)] opacity-30">sector</div>
+              <div className="text-[11px] text-[var(--accent-green)] opacity-30">victim</div>
+            </div>
+            <div className="absolute top-1/2 -left-20 -translate-y-1/2 text-right">
+              <div className="text-[11px] text-[var(--accent-teal)] opacity-30">technique</div>
+              <div className="text-[11px] text-[var(--accent-teal)] opacity-30">capability</div>
+            </div>
+            <div className="absolute top-1/2 -right-24 -translate-y-1/2 text-center">
+              <div className="text-[11px] text-[var(--accent-blue)] opacity-30">application</div>
+              <div className="text-[11px] text-[var(--accent-blue)] opacity-30">infrastructure</div>
+            </div>
           </div>
         </div>
       )}
