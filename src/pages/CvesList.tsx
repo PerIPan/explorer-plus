@@ -327,7 +327,7 @@ export function CvesList() {
     <div className="space-y-4">
       <PageHeader
         title="Vulnerabilities"
-        subtitle={technique ? `CVEs linked to technique ${technique}` : 'Known CVEs enriched with NVD scoring and application mappings'}
+        subtitle={technique ? `CVEs linked to technique ${technique}` : 'Known CVEs from OTX and CISA KEV, enriched with NVD data. Application mappings are typically added days after publication.'}
       />
 
       {technique && (
