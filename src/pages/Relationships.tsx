@@ -38,7 +38,7 @@ const TYPE_VARIANT: Record<string, 'teal' | 'orange' | 'purple' | 'blue' | 'gree
   data_source: 'neutral',
   tactic: 'yellow',
   external_actor: 'neutral',
-  sector: 'green',
+  sector: 'neutral',
   application: 'blue',
 };
 
@@ -462,8 +462,8 @@ export function Relationships() {
               <div className="text-xs font-medium text-[var(--accent-orange)] opacity-50">adversary</div>
             </div>
             <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 text-center">
-              <div className="text-xs font-medium text-amber-500 opacity-50">sector</div>
-              <div className="text-xs font-medium text-amber-500 opacity-50">victim</div>
+              <div className="text-xs font-medium text-[var(--text-secondary)] opacity-50">sector</div>
+              <div className="text-xs font-medium text-[var(--text-secondary)] opacity-50">victim</div>
             </div>
             <div className="absolute top-1/2 -left-20 -translate-y-1/2 text-right">
               <div className="text-xs font-medium text-[var(--accent-teal)] opacity-50">technique</div>

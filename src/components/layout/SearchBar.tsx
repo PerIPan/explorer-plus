@@ -28,7 +28,7 @@ const TYPE_VARIANT: Record<string, 'teal' | 'orange' | 'purple' | 'blue' | 'gree
   mitigation: 'green',
   data_source: 'neutral',
   tactic: 'yellow',
-  sector: 'green',
+  sector: 'neutral',
   application: 'blue',
 };
 
