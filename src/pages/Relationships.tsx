@@ -453,8 +453,8 @@ export function Relationships() {
 
           {/* Diamond + corner labels — exact same SVG as modal favicon, scaled 5x */}
           <div className="absolute bottom-[calc(10%+80px)] right-[22%] pointer-events-none select-none"
-               style={{ width: 234, height: 234 }}>
-            <img src="/diamond-favicon.svg" alt="" width={234} height={234} className="opacity-[0.55]" />
+               style={{ width: 210, height: 210 }}>
+            <img src="/diamond-favicon.svg" alt="" width={210} height={210} className="opacity-[0.55]" />
 
             {/* Labels at diamond corners */}
             <div className="absolute -top-10 left-1/2 -translate-x-1/2 text-center">
@@ -462,8 +462,8 @@ export function Relationships() {
               <div className="text-xs font-medium text-[var(--accent-orange)] opacity-50">adversary</div>
             </div>
             <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 text-center">
-              <div className="text-xs font-medium text-[var(--accent-green)] opacity-50">sector</div>
-              <div className="text-xs font-medium text-[var(--accent-green)] opacity-50">victim</div>
+              <div className="text-xs font-medium text-amber-500 opacity-50">sector</div>
+              <div className="text-xs font-medium text-amber-500 opacity-50">victim</div>
             </div>
             <div className="absolute top-1/2 -left-20 -translate-y-1/2 text-right">
               <div className="text-xs font-medium text-[var(--accent-teal)] opacity-50">technique</div>

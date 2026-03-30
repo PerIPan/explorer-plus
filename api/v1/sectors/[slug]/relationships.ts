@@ -107,13 +107,15 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
 
     // Vulnerable applications (via groups → techniques → CAPEC → CVE → apps)
     query<{ normalized: string; vendor: string; product: string; cveCount: string }>(
-      `SELECT DISTINCT a.normalized, a.vendor, a.product, a.cve_count::text AS "cveCount"
-       FROM group_sectors gs
-       JOIN threat_groups tg ON tg.id = gs.group_id
-       JOIN app_technique_groups atg ON atg.group_attack_id = tg.attack_id
-       JOIN applications a ON a.id = atg.application_id
-       WHERE gs.sector_id = $1
-       ORDER BY a.cve_count DESC
+      `SELECT normalized, vendor, product, "cveCount" FROM (
+         SELECT DISTINCT a.normalized, a.vendor, a.product, a.cve_count::text AS "cveCount", a.cve_count
+         FROM group_sectors gs
+         JOIN threat_groups tg ON tg.id = gs.group_id
+         JOIN app_technique_groups atg ON atg.group_attack_id = tg.attack_id
+         JOIN applications a ON a.id = atg.application_id
+         WHERE gs.sector_id = $1
+       ) sub
+       ORDER BY cve_count DESC
        LIMIT 100`,
       [sectorId],
     ),
