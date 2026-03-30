@@ -440,14 +440,14 @@ export function Relationships() {
       {/* Instructions when nothing selected */}
       {!selectedId && (
         <div className="relative min-h-[calc(100vh-200px)] overflow-visible rounded-lg">
-          {/* Center-left: search prompt */}
-          <div className="absolute top-[28%] left-[22%] -translate-x-1/2 -translate-y-1/2 z-10">
+          {/* Under search field, centered */}
+          <div className="text-center mt-10 mb-4 z-10 relative">
             <div className="text-3xl font-light text-[var(--text-secondary)] mb-2">
               Select an entity
             </div>
-            <p className="text-sm text-[var(--text-secondary)] max-w-xs opacity-70">
-              Search for any technique, group, software, mitigation,
-              data source, or tactic to explore its relationships.
+            <p className="text-sm text-[var(--text-secondary)] opacity-70 mx-auto max-w-md">
+              Search for any technique, group, software, campaign, mitigation,
+              data source, tactic, sector, or application to explore its relationships.
             </p>
           </div>
 
@@ -458,20 +458,20 @@ export function Relationships() {
 
             {/* Labels at diamond corners */}
             <div className="absolute -top-10 left-1/2 -translate-x-1/2 text-center">
-              <div className="text-[11px] text-[var(--accent-orange)] opacity-30">actor</div>
-              <div className="text-[11px] text-[var(--accent-orange)] opacity-30">adversary</div>
+              <div className="text-[11px] text-[var(--accent-orange)] opacity-50">actor</div>
+              <div className="text-[11px] text-[var(--accent-orange)] opacity-50">adversary</div>
             </div>
             <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 text-center">
-              <div className="text-[11px] text-[var(--accent-green)] opacity-30">sector</div>
-              <div className="text-[11px] text-[var(--accent-green)] opacity-30">victim</div>
+              <div className="text-[11px] text-[var(--accent-green)] opacity-50">sector</div>
+              <div className="text-[11px] text-[var(--accent-green)] opacity-50">victim</div>
             </div>
             <div className="absolute top-1/2 -left-20 -translate-y-1/2 text-right">
-              <div className="text-[11px] text-[var(--accent-teal)] opacity-30">technique</div>
-              <div className="text-[11px] text-[var(--accent-teal)] opacity-30">capability</div>
+              <div className="text-[11px] text-[var(--accent-teal)] opacity-50">technique</div>
+              <div className="text-[11px] text-[var(--accent-teal)] opacity-50">capability</div>
             </div>
             <div className="absolute top-1/2 -right-24 -translate-y-1/2 text-center">
-              <div className="text-[11px] text-[var(--accent-blue)] opacity-30">application</div>
-              <div className="text-[11px] text-[var(--accent-blue)] opacity-30">infrastructure</div>
+              <div className="text-[11px] text-[var(--accent-blue)] opacity-50">application</div>
+              <div className="text-[11px] text-[var(--accent-blue)] opacity-50">infrastructure</div>
             </div>
           </div>
         </div>
