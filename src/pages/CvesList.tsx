@@ -172,7 +172,7 @@ const columns: ColumnDef<CveEntry>[] = [
   {
     key: 'applications',
     header: 'Applications',
-    tooltip: 'Affected products from NVD CPE data. NVD typically adds CPE entries days after CVE publication — recent CVEs may show empty until enriched.',
+    tooltip: 'Affected products from NVD. Application mappings are typically added days after CVE publication — recent CVEs may show empty until enriched.',
     render: (row) =>
       row.applications ? (
         <span className="text-[10px] text-[var(--accent-blue)] max-w-[200px] line-clamp-2 block leading-relaxed">
@@ -327,7 +327,7 @@ export function CvesList() {
     <div className="space-y-4">
       <PageHeader
         title="Vulnerabilities"
-        subtitle={technique ? `CVEs linked to technique ${technique}` : 'Known CVEs from OTX and CISA KEV, enriched with NVD metadata'}
+        subtitle={technique ? `CVEs linked to technique ${technique}` : 'Known CVEs enriched with NVD scoring and application mappings'}
       />
 
       {technique && (
