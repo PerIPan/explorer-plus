@@ -9,7 +9,7 @@
     "organization": "MITRE Explorer",
     "url": "https://mitre-explorer.org"
   },
-  "documentationUrl": "https://github.com/PerIPan/mitre-explorer-plus",
+  "documentationUrl": "https://mitre-explorer.org",
   "supportedInterfaces": [
     {
       "protocol": "jsonrpc",

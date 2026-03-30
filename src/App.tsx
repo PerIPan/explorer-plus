@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense, useState, useEffect } from 'react';
 import { Routes, Route, Outlet } from 'react-router-dom';
 import { Sidebar } from './components/layout/Sidebar';
 import { SearchBar } from './components/layout/SearchBar';
@@ -53,6 +53,31 @@ const ExternalActors  = lazy(() => import('./pages/ExternalActors').then((m) => 
 /** Simple spinner used as Suspense fallback */
 function LoadingSpinner() {
   return <DiamondLoader text="Loading..." />;
+}
+
+/** VirusTotal trust badge */
+function VtBadge() {
+  const [data, setData] = useState<{ malicious: number; total: number; reportUrl: string } | null>(null);
+  useEffect(() => {
+    fetch('/api/v1/site-health').then(r => r.json()).then(d => {
+      if (d.available) setData({ malicious: d.malicious, total: d.total, reportUrl: d.reportUrl });
+    }).catch(() => {});
+  }, []);
+  if (!data) return null;
+  return (
+    <a
+      href={data.reportUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1 text-[10px] rounded-md border border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 hover:border-emerald-400 transition-colors"
+      title={`VirusTotal: ${data.malicious}/${data.total} detections — click to view full report`}
+    >
+      <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+      </svg>
+      {data.malicious}/{data.total}
+    </a>
+  );
 }
 
 /** Theme toggle — sun/moon icon */
@@ -124,6 +149,7 @@ function Layout() {
           </button>
           <SearchBar />
           <div className="flex-1" />
+          <VtBadge />
           <button
             type="button"
             onClick={() => setModelOpen(true)}
