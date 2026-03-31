@@ -161,9 +161,9 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           }}
           className="group text-left"
         >
-          <div className="flex items-baseline gap-1.5">
+          <div className="flex items-baseline gap-1">
             <span className="text-[var(--accent-teal)] font-bold text-xs tracking-widest uppercase group-hover:text-[var(--accent-teal-light)] transition-colors">MITRE EXPLORER</span>
-            <span className="text-[var(--text-secondary)] text-[11px] font-semibold group-hover:text-[var(--text-primary)] transition-colors">Plus</span>
+            <span className="text-[var(--text-secondary)] text-[10px] font-semibold group-hover:text-[var(--text-primary)] transition-colors align-super">Plus</span>
           </div>
         </button>
         {/* Close button — visible only below lg */}
@@ -216,37 +216,23 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       <div className="mx-4 border-t border-[var(--border-color)]" />
 
       {/* Assets Section */}
-      <div className="px-2 py-4">
-        <div className="px-3 mb-2 ml-1 border-l-2 border-[var(--teal-muted)] pl-2 text-[11px] font-bold text-[var(--accent-teal)] uppercase tracking-widest">
-          Assets
-        </div>
-        <div className="space-y-0.5">
-          {assetsNav.map((item) => (
-            <NavItemLink key={item.path} path={item.path} label={item.label} tooltip={item.tooltip} />
-          ))}
-        </div>
+      <div className="px-2 py-3">
+        <CollapsibleNavSection label="Assets" items={assetsNav} defaultOpen />
       </div>
 
       {/* Separator */}
       <div className="mx-4 border-t border-[var(--border-color)]" />
 
       {/* CTI Section */}
-      <div className="px-2 py-4">
-        <div className="px-3 mb-2 ml-1 border-l-2 border-[var(--teal-muted)] pl-2 text-[11px] font-bold text-[var(--accent-teal)] uppercase tracking-widest">
-          CTI
-        </div>
-        <div className="space-y-0.5">
-          {ctiNav.map((item) => (
-            <NavItemLink key={item.path} path={item.path} label={item.label} tooltip={item.tooltip} />
-          ))}
-        </div>
+      <div className="px-2 py-3">
+        <CollapsibleNavSection label="CTI" items={ctiNav} defaultOpen />
       </div>
 
       {/* Separator */}
       <div className="mx-4 border-t border-[var(--border-color)]" />
 
-      {/* Frameworks Section (collapsible) */}
-      <div className="px-2 py-4">
+      {/* Frameworks Section */}
+      <div className="px-2 py-3">
         <CollapsibleNavSection label="Frameworks" items={frameworksNav} defaultOpen={false} title="Not filtered by sector" />
       </div>
 
@@ -254,15 +240,8 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       <div className="mx-4 border-t border-[var(--border-color)]" />
 
       {/* Extended Intel Section */}
-      <div className="px-2 py-4">
-        <div className="px-3 mb-2 ml-1 border-l-2 border-[var(--teal-muted)] pl-2 text-[11px] font-bold text-[var(--accent-teal)] uppercase tracking-widest">
-          Extended Intel
-        </div>
-        <div className="space-y-0.5">
-          {extendedIntelNav.map((item) => (
-            <NavItemLink key={item.path} path={item.path} label={item.label} tooltip={item.tooltip} />
-          ))}
-        </div>
+      <div className="px-2 py-3">
+        <CollapsibleNavSection label="Extended Intel" items={extendedIntelNav} defaultOpen={false} />
       </div>
 
       {/* A2A Agent Discovery */}
