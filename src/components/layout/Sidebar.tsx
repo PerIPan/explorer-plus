@@ -87,7 +87,7 @@ function NavItemLink({ path, label, tooltip, end }: NavItem & { end?: boolean })
       title={tooltip}
       className={({ isActive }) =>
         [
-          'block px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150',
+          'block px-3 py-2.5 rounded-md text-sm font-medium transition-colors duration-150',
           isActive
             ? 'text-[var(--accent-teal)] bg-[var(--teal-faint)] border-l-2 border-[var(--accent-teal)]'
             : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--hover-overlay)]',

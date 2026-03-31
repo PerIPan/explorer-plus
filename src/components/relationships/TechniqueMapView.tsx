@@ -95,7 +95,7 @@ function MapCard({ label, icon, count, defaultOpen = true, actionHref, actionLab
 function MapRow({ prefix, prefixUrl, children }: { prefix: string; prefixUrl?: string; children: React.ReactNode }) {
   return (
     <div className="flex gap-3">
-      <span className="text-xs text-[var(--text-secondary)] w-32 shrink-0 pt-0.5">
+      <span className="text-xs text-[var(--text-secondary)] w-20 md:w-32 shrink-0 pt-0.5">
         {prefixUrl ? (
           <a href={prefixUrl} target="_blank" rel="noopener noreferrer" className="hover:text-[var(--accent-teal)] transition-colors" aria-label={`${prefix} (opens in new tab)`}>
             {prefix} <span aria-hidden="true">↗</span>

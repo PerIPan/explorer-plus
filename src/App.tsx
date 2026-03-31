@@ -157,7 +157,7 @@ function Layout() {
             Data Model
           </button>
           <div className="flex-1" />
-          <div className="hidden sm:block"><VtBadge /></div>
+          <div className="hidden md:block"><VtBadge /></div>
           <ThemeToggle />
           <button
             type="button"
@@ -171,7 +171,7 @@ function Layout() {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 px-6 py-6 overflow-auto">
+        <main className="flex-1 px-3 md:px-6 py-4 md:py-6 overflow-auto">
           <ErrorBoundary>
             <Outlet />
           </ErrorBoundary>
