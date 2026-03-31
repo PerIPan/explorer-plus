@@ -1,0 +1,1505 @@
+- generic [ref=e3]:
+  - complementary "Main navigation" [ref=e4]:
+    - generic [ref=e5]:
+      - button "MITRE EXPLORER Plus" [ref=e6]:
+        - generic [ref=e7]:
+          - generic [ref=e8]: MITRE EXPLORER
+          - generic [ref=e9]: Plus
+      - button "Close navigation menu" [ref=e10]:
+        - img [ref=e11]
+    - generic [ref=e13]:
+      - generic [ref=e14]:
+        - generic [ref=e15]: Domain
+        - generic [ref=e16]:
+          - combobox "Switch ATT&CK domain" [ref=e17] [cursor=pointer]:
+            - option "Enterprise" [selected]
+            - option "Mobile"
+            - option "ICS"
+            - option "ATLAS"
+            - option "All"
+          - img
+      - generic [ref=e18]:
+        - generic [ref=e19]: Sector
+        - generic [ref=e20]:
+          - combobox "Filter by industry sector" [ref=e21] [cursor=pointer]:
+            - option "All" [selected]
+            - option "Defense (44)"
+            - option "Education (37)"
+            - option "Energy (17)"
+            - option "Financial (43)"
+            - option "Government (79)"
+            - option "Healthcare (24)"
+            - option "Manufacturing (27)"
+            - option "Media (14)"
+            - option "Retail (6)"
+            - option "Technology (77)"
+            - option "Telco (23)"
+            - option "Transportation (5)"
+          - img
+    - navigation [ref=e22]:
+      - generic [ref=e23]:
+        - link "360 Views" [ref=e24] [cursor=pointer]:
+          - /url: /
+        - link "Matrix" [ref=e25] [cursor=pointer]:
+          - /url: /matrix
+        - link "Overview" [ref=e26] [cursor=pointer]:
+          - /url: /dashboard
+      - button "Threat Actors" [ref=e29]:
+        - img [ref=e30]
+        - text: Threat Actors
+      - button "Offensive" [ref=e34]:
+        - img [ref=e35]
+        - text: Offensive
+      - button "Defensive" [ref=e39]:
+        - img [ref=e40]
+        - text: Defensive
+    - generic [ref=e44]:
+      - button "Assets" [ref=e45]:
+        - img [ref=e46]
+        - text: Assets
+      - link "Applications" [ref=e49] [cursor=pointer]:
+        - /url: /applications
+    - generic [ref=e52]:
+      - button "CTI" [ref=e53]:
+        - img [ref=e54]
+        - text: CTI
+      - generic [ref=e56]:
+        - link "Reports" [ref=e57] [cursor=pointer]:
+          - /url: /cti/reports
+        - link "CVEs" [ref=e58] [cursor=pointer]:
+          - /url: /cti/cves
+        - link "IOCs" [ref=e59] [cursor=pointer]:
+          - /url: /cti/iocs
+        - link "Feed Status" [ref=e60] [cursor=pointer]:
+          - /url: /cti/feed-status
+    - button "Frameworks" [ref=e64]:
+      - img [ref=e65]
+      - text: Frameworks
+    - button "Extended Intel" [ref=e70]:
+      - img [ref=e71]
+      - text: Extended Intel
+    - link "A2A Agent Protocol v1.0" [ref=e74] [cursor=pointer]:
+      - /url: /.well-known/agent-card.json
+      - img [ref=e75]
+      - generic [ref=e78]: A2A Agent Protocol
+      - generic [ref=e79]: v1.0
+  - generic [ref=e80]:
+    - banner [ref=e81]:
+      - button "Open navigation menu" [ref=e82]:
+        - img [ref=e83]
+      - search [ref=e85]:
+        - generic:
+          - img
+        - searchbox "Search MITRE ATT&CK entities" [ref=e86]
+        - generic [ref=e87]: /
+      - button "Switch to dark theme" [ref=e88]:
+        - img [ref=e89]
+      - button "?" [ref=e91]
+    - main [ref=e92]:
+      - generic [ref=e100]:
+        - generic [ref=e102]:
+          - generic [ref=e103]:
+            - heading "Relationships Map" [level=1] [ref=e105]
+            - paragraph [ref=e106]: Map 360 Views for every entity type — select an entity to start, domain filtered search
+          - button "Export PDF" [ref=e108]
+        - generic [ref=e110]:
+          - img [ref=e111]
+          - generic [ref=e113]: technique
+          - textbox "Search for another entity..." [ref=e114]: T1059
+          - button "Clear" [ref=e115]
+        - generic [ref=e117]:
+          - button "Technique Map" [ref=e118]
+          - button "Graph" [ref=e119]
+        - generic [ref=e121]:
+          - generic [ref=e122]:
+            - generic [ref=e123]:
+              - heading "Command and Scripting Interpreter" [level=2] [ref=e124]
+              - button "External references" [ref=e126]:
+                - img [ref=e127]
+                - text: ext
+            - generic [ref=e129]:
+              - generic [ref=e130]: T1059
+              - generic [ref=e131]: enterprise
+              - generic [ref=e132]: Execution
+              - generic [ref=e133]: ESXi
+              - generic [ref=e134]: IaaS
+              - generic [ref=e135]: Identity Provider
+              - generic [ref=e136]: Linux
+              - generic [ref=e137]: macOS
+              - generic [ref=e138]: Network Devices
+              - generic [ref=e139]: Office Suite
+              - generic [ref=e140]: Windows
+              - 'link "ATLAS: AML.T0050 ↗" [ref=e141] [cursor=pointer]':
+                - /url: /?entity=AML.T0050&tab=technique-map
+          - paragraph [ref=e143]: "Adversaries may abuse command and script interpreters to execute commands, scripts, or binaries. These interfaces and languages provide ways of interacting with computer systems and are a common feature across many different platforms. Most systems come with some built-in command-line interface and scripting capabilities, for example, macOS and Linux distributions include some flavor of Unix Shell while Windows installations include the Windows Command Shell and PowerShell. There are also cross-platform interpreters such as Python, as well as those commonly associated with client applications such as JavaScript and Visual Basic. Adversaries may abuse these technologies in various ways as a means of executing arbitrary commands. Commands and scripts can be embedded in Initial Access payloads delivered to victims as lure documents or as secondary payloads downloaded from an existing C2. Adversaries may also execute commands through interactive terminals/shells, as well as utilize various Remote Services in order to achieve remote Execution.(Citation: Powershell Remote Commands)(Citation: Cisco IOS Software Integrity Assurance - Command History)(Citation: Remote Shell Execution in Python)"
+          - generic [ref=e144]:
+            - button "Threat Intelligence (9)" [ref=e146]:
+              - generic [ref=e147]:
+                - img [ref=e149]
+                - generic [ref=e151]: Threat Intelligence
+                - generic [ref=e152]: (9)
+              - img [ref=e153]
+            - generic [ref=e155]:
+              - generic [ref=e156]:
+                - generic [ref=e157]:
+                  - generic [ref=e158]: Reports
+                  - link "All Reports →" [ref=e159] [cursor=pointer]:
+                    - /url: /cti/reports
+                - generic [ref=e160]:
+                  - generic [ref=e161]:
+                    - link "TeamPCP’s Telnyx Attack Marks a Shift in Tactics Beyond LiteLLM" [ref=e162] [cursor=pointer]:
+                      - /url: https://otx.alienvault.com/pulse/69cabb96c63dbeb412355267
+                    - button "Show 10 linked techniques" [ref=e164] [cursor=pointer]: "10"
+                  - generic [ref=e165]: otx
+                  - generic [ref=e166]: Mar 30, 2026
+                - generic [ref=e167]:
+                  - generic [ref=e168]:
+                    - 'link "EtherRAT & SYS_INFO Module: C2 on Ethereum (EtherHiding), Target Selection, CDN-Like Beacons" [ref=e169] [cursor=pointer]':
+                      - /url: https://otx.alienvault.com/pulse/69c5a04382b357bdc81343b4
+                    - button "Show 18 linked techniques" [ref=e171] [cursor=pointer]: "18"
+                  - generic [ref=e172]: otx
+                  - generic [ref=e173]: Mar 26, 2026
+                - generic [ref=e174]:
+                  - generic [ref=e175]:
+                    - link "ClickFix Campaigns Targeting Windows and macOS" [ref=e176] [cursor=pointer]:
+                      - /url: https://otx.alienvault.com/pulse/69c458219c8e6f0a874e9161
+                    - button "Show 19 linked techniques" [ref=e178] [cursor=pointer]: "19"
+                  - generic [ref=e179]: otx
+                  - generic [ref=e180]: Mar 25, 2026
+              - generic [ref=e181]:
+                - generic [ref=e182]:
+                  - generic [ref=e183]: Latest CVEs
+                  - generic [ref=e184]: 4 apps affected
+                  - link "All CVEs →" [ref=e185] [cursor=pointer]:
+                    - /url: /cti/cves?technique=T1059&since=
+                - generic [ref=e186]:
+                  - generic [ref=e187]:
+                    - link "An issue was discovered in SaltStack Salt before 2019.2.4 and 3000 before 3000.2. The salt-master process ClearFuncs class does not properly validate ..." [ref=e188] [cursor=pointer]:
+                      - /url: /cti/cves?q=CVE-2020-11651&since=
+                    - generic [ref=e189]: KEV
+                  - generic [ref=e190]: CRITICAL
+                  - generic [ref=e191]: CVE-2020-11651
+                  - generic [ref=e192]: Apr 30, 2020
+                - generic [ref=e193]:
+                  - generic [ref=e194]:
+                    - link "In jQuery versions greater than or equal to 1.0.3 and before 3.5.0, passing HTML containing <option> elements from untrusted sources - even after sani..." [ref=e195] [cursor=pointer]:
+                      - /url: /cti/cves?q=CVE-2020-11023&since=
+                    - generic [ref=e196]: KEV
+                  - generic [ref=e197]: MEDIUM
+                  - generic [ref=e198]: CVE-2020-11023
+                  - generic [ref=e199]: Apr 29, 2020
+                - generic [ref=e200]:
+                  - generic [ref=e201]:
+                    - link "Zoho ManageEngine Desktop Central before 10.0.474 allows remote code execution because of deserialization of untrusted data in getChartImage in the Fi..." [ref=e202] [cursor=pointer]:
+                      - /url: /cti/cves?q=CVE-2020-10189&since=
+                    - generic [ref=e203]: KEV
+                  - generic [ref=e204]: CRITICAL
+                  - generic [ref=e205]: CVE-2020-10189
+                  - generic [ref=e206]: Mar 6, 2020
+                - generic [ref=e207]:
+                  - generic [ref=e208]:
+                    - link "An elevation of privilege vulnerability exists in Windows when the Win32k component fails to properly handle objects in memory, aka 'Win32k Elevation ..." [ref=e209] [cursor=pointer]:
+                      - /url: /cti/cves?q=CVE-2019-1458&since=
+                    - generic [ref=e210]: KEV
+                  - generic [ref=e211]: HIGH
+                  - generic [ref=e212]: CVE-2019-1458
+                  - generic [ref=e213]: Dec 10, 2019
+          - generic [ref=e214]:
+            - button "Who Uses It (125)" [ref=e216]:
+              - generic [ref=e217]:
+                - img [ref=e219]
+                - generic [ref=e221]: Who Uses It
+                - generic [ref=e222]: (125)
+              - img [ref=e223]
+            - generic [ref=e225]:
+              - generic [ref=e226]:
+                - generic [ref=e227]: Groups
+                - generic [ref=e229]:
+                  - link "G0099 APT-C-36" [ref=e230] [cursor=pointer]:
+                    - /url: /?entity=G0099&tab=actor
+                    - generic [ref=e231]: G0099
+                    - generic [ref=e232]: APT-C-36
+                  - link "G0006 APT1" [ref=e233] [cursor=pointer]:
+                    - /url: /?entity=G0006&tab=actor
+                    - generic [ref=e234]: G0006
+                    - generic [ref=e235]: APT1
+                  - link "G0026 APT18" [ref=e236] [cursor=pointer]:
+                    - /url: /?entity=G0026&tab=actor
+                    - generic [ref=e237]: G0026
+                    - generic [ref=e238]: APT18
+                  - link "G0073 APT19" [ref=e239] [cursor=pointer]:
+                    - /url: /?entity=G0073&tab=actor
+                    - generic [ref=e240]: G0073
+                    - generic [ref=e241]: APT19
+                  - link "G0007 APT28" [ref=e242] [cursor=pointer]:
+                    - /url: /?entity=G0007&tab=actor
+                    - generic [ref=e243]: G0007
+                    - generic [ref=e244]: APT28
+                  - link "G0016 APT29" [ref=e245] [cursor=pointer]:
+                    - /url: /?entity=G0016&tab=actor
+                    - generic [ref=e246]: G0016
+                    - generic [ref=e247]: APT29
+                  - link "G0022 APT3" [ref=e248] [cursor=pointer]:
+                    - /url: /?entity=G0022&tab=actor
+                    - generic [ref=e249]: G0022
+                    - generic [ref=e250]: APT3
+                  - link "G0050 APT32" [ref=e251] [cursor=pointer]:
+                    - /url: /?entity=G0050&tab=actor
+                    - generic [ref=e252]: G0050
+                    - generic [ref=e253]: APT32
+                  - link "G0064 APT33" [ref=e254] [cursor=pointer]:
+                    - /url: /?entity=G0064&tab=actor
+                    - generic [ref=e255]: G0064
+                    - generic [ref=e256]: APT33
+                  - link "G0067 APT37" [ref=e257] [cursor=pointer]:
+                    - /url: /?entity=G0067&tab=actor
+                    - generic [ref=e258]: G0067
+                    - generic [ref=e259]: APT37
+                  - link "G0082 APT38" [ref=e260] [cursor=pointer]:
+                    - /url: /?entity=G0082&tab=actor
+                    - generic [ref=e261]: G0082
+                    - generic [ref=e262]: APT38
+                  - link "G0087 APT39" [ref=e263] [cursor=pointer]:
+                    - /url: /?entity=G0087&tab=actor
+                    - generic [ref=e264]: G0087
+                    - generic [ref=e265]: APT39
+                  - link "G0096 APT41" [ref=e266] [cursor=pointer]:
+                    - /url: /?entity=G0096&tab=actor
+                    - generic [ref=e267]: G0096
+                    - generic [ref=e268]: APT41
+                  - link "G1044 APT42" [ref=e269] [cursor=pointer]:
+                    - /url: /?entity=G1044&tab=actor
+                    - generic [ref=e270]: G1044
+                    - generic [ref=e271]: APT42
+                  - link "G1023 APT5" [ref=e272] [cursor=pointer]:
+                    - /url: /?entity=G1023&tab=actor
+                    - generic [ref=e273]: G1023
+                    - generic [ref=e274]: APT5
+                  - link "G1030 Agrius" [ref=e275] [cursor=pointer]:
+                    - /url: /?entity=G1030&tab=actor
+                    - generic [ref=e276]: G1030
+                    - generic [ref=e277]: Agrius
+                  - link "G1024 Akira" [ref=e278] [cursor=pointer]:
+                    - /url: /?entity=G1024&tab=actor
+                    - generic [ref=e279]: G1024
+                    - generic [ref=e280]: Akira
+                  - link "G0143 Aquatic Panda" [ref=e281] [cursor=pointer]:
+                    - /url: /?entity=G0143&tab=actor
+                    - generic [ref=e282]: G0143
+                    - generic [ref=e283]: Aquatic Panda
+                  - link "G0060 BRONZE BUTLER" [ref=e284] [cursor=pointer]:
+                    - /url: /?entity=G0060&tab=actor
+                    - generic [ref=e285]: G0060
+                    - generic [ref=e286]: BRONZE BUTLER
+                  - link "G1043 BlackByte" [ref=e287] [cursor=pointer]:
+                    - /url: /?entity=G1043&tab=actor
+                    - generic [ref=e288]: G1043
+                    - generic [ref=e289]: BlackByte
+                  - link "G0108 Blue Mockingbird" [ref=e290] [cursor=pointer]:
+                    - /url: /?entity=G0108&tab=actor
+                    - generic [ref=e291]: G0108
+                    - generic [ref=e292]: Blue Mockingbird
+                  - link "G1012 CURIUM" [ref=e293] [cursor=pointer]:
+                    - /url: /?entity=G1012&tab=actor
+                    - generic [ref=e294]: G1012
+                    - generic [ref=e295]: CURIUM
+                  - link "G0114 Chimera" [ref=e296] [cursor=pointer]:
+                    - /url: /?entity=G0114&tab=actor
+                    - generic [ref=e297]: G0114
+                    - generic [ref=e298]: Chimera
+                  - link "G1021 Cinnamon Tempest" [ref=e299] [cursor=pointer]:
+                    - /url: /?entity=G1021&tab=actor
+                    - generic [ref=e300]: G1021
+                    - generic [ref=e301]: Cinnamon Tempest
+                  - link "G0080 Cobalt Group" [ref=e302] [cursor=pointer]:
+                    - /url: /?entity=G0080&tab=actor
+                    - generic [ref=e303]: G0080
+                    - generic [ref=e304]: Cobalt Group
+                  - link "G0142 Confucius" [ref=e305] [cursor=pointer]:
+                    - /url: /?entity=G0142&tab=actor
+                    - generic [ref=e306]: G0142
+                    - generic [ref=e307]: Confucius
+                  - link "G1052 Contagious Interview" [ref=e308] [cursor=pointer]:
+                    - /url: /?entity=G1052&tab=actor
+                    - generic [ref=e309]: G1052
+                    - generic [ref=e310]: Contagious Interview
+                  - link "G0052 CopyKittens" [ref=e311] [cursor=pointer]:
+                    - /url: /?entity=G0052&tab=actor
+                    - generic [ref=e312]: G0052
+                    - generic [ref=e313]: CopyKittens
+                  - link "G1034 Daggerfly" [ref=e314] [cursor=pointer]:
+                    - /url: /?entity=G1034&tab=actor
+                    - generic [ref=e315]: G1034
+                    - generic [ref=e316]: Daggerfly
+                  - link "G0070 Dark Caracal" [ref=e317] [cursor=pointer]:
+                    - /url: /?entity=G0070&tab=actor
+                    - generic [ref=e318]: G0070
+                    - generic [ref=e319]: Dark Caracal
+                  - link "G0079 DarkHydrus" [ref=e320] [cursor=pointer]:
+                    - /url: /?entity=G0079&tab=actor
+                    - generic [ref=e321]: G0079
+                    - generic [ref=e322]: DarkHydrus
+                  - link "G0105 DarkVishnya" [ref=e323] [cursor=pointer]:
+                    - /url: /?entity=G0105&tab=actor
+                    - generic [ref=e324]: G0105
+                    - generic [ref=e325]: DarkVishnya
+                  - link "G0012 Darkhotel" [ref=e326] [cursor=pointer]:
+                    - /url: /?entity=G0012&tab=actor
+                    - generic [ref=e327]: G0012
+                    - generic [ref=e328]: Darkhotel
+                  - link "G0009 Deep Panda" [ref=e329] [cursor=pointer]:
+                    - /url: /?entity=G0009&tab=actor
+                    - generic [ref=e330]: G0009
+                    - generic [ref=e331]: Deep Panda
+                  - link "G0035 Dragonfly" [ref=e332] [cursor=pointer]:
+                    - /url: /?entity=G0035&tab=actor
+                    - generic [ref=e333]: G0035
+                    - generic [ref=e334]: Dragonfly
+                  - link "G1006 Earth Lusca" [ref=e335] [cursor=pointer]:
+                    - /url: /?entity=G1006&tab=actor
+                    - generic [ref=e336]: G1006
+                    - generic [ref=e337]: Earth Lusca
+                  - link "G1003 Ember Bear" [ref=e338] [cursor=pointer]:
+                    - /url: /?entity=G1003&tab=actor
+                    - generic [ref=e339]: G1003
+                    - generic [ref=e340]: Ember Bear
+                  - link "G0120 Evilnum" [ref=e341] [cursor=pointer]:
+                    - /url: /?entity=G0120&tab=actor
+                    - generic [ref=e342]: G0120
+                    - generic [ref=e343]: Evilnum
+                  - link "G0051 FIN10" [ref=e344] [cursor=pointer]:
+                    - /url: /?entity=G0051&tab=actor
+                    - generic [ref=e345]: G0051
+                    - generic [ref=e346]: FIN10
+                  - link "G1016 FIN13" [ref=e347] [cursor=pointer]:
+                    - /url: /?entity=G1016&tab=actor
+                    - generic [ref=e348]: G1016
+                    - generic [ref=e349]: FIN13
+                  - link "G0085 FIN4" [ref=e350] [cursor=pointer]:
+                    - /url: /?entity=G0085&tab=actor
+                    - generic [ref=e351]: G0085
+                    - generic [ref=e352]: FIN4
+                  - link "G0053 FIN5" [ref=e353] [cursor=pointer]:
+                    - /url: /?entity=G0053&tab=actor
+                    - generic [ref=e354]: G0053
+                    - generic [ref=e355]: FIN5
+                  - link "G0037 FIN6" [ref=e356] [cursor=pointer]:
+                    - /url: /?entity=G0037&tab=actor
+                    - generic [ref=e357]: G0037
+                    - generic [ref=e358]: FIN6
+                  - link "G0046 FIN7" [ref=e359] [cursor=pointer]:
+                    - /url: /?entity=G0046&tab=actor
+                    - generic [ref=e360]: G0046
+                    - generic [ref=e361]: FIN7
+                  - link "G0061 FIN8" [ref=e362] [cursor=pointer]:
+                    - /url: /?entity=G0061&tab=actor
+                    - generic [ref=e363]: G0061
+                    - generic [ref=e364]: FIN8
+                  - link "G0117 Fox Kitten" [ref=e365] [cursor=pointer]:
+                    - /url: /?entity=G0117&tab=actor
+                    - generic [ref=e366]: G0117
+                    - generic [ref=e367]: Fox Kitten
+                  - link "G0093 GALLIUM" [ref=e368] [cursor=pointer]:
+                    - /url: /?entity=G0093&tab=actor
+                    - generic [ref=e369]: G0093
+                    - generic [ref=e370]: GALLIUM
+                  - link "G0115 GOLD SOUTHFIELD" [ref=e371] [cursor=pointer]:
+                    - /url: /?entity=G0115&tab=actor
+                    - generic [ref=e372]: G0115
+                    - generic [ref=e373]: GOLD SOUTHFIELD
+                  - link "G0084 Gallmaker" [ref=e374] [cursor=pointer]:
+                    - /url: /?entity=G0084&tab=actor
+                    - generic [ref=e375]: G0084
+                    - generic [ref=e376]: Gallmaker
+                  - link "G0047 Gamaredon Group" [ref=e377] [cursor=pointer]:
+                    - /url: /?entity=G0047&tab=actor
+                    - generic [ref=e378]: G0047
+                    - generic [ref=e379]: Gamaredon Group
+                  - link "G0078 Gorgon Group" [ref=e380] [cursor=pointer]:
+                    - /url: /?entity=G0078&tab=actor
+                    - generic [ref=e381]: G0078
+                    - generic [ref=e382]: Gorgon Group
+                  - link "G0125 HAFNIUM" [ref=e383] [cursor=pointer]:
+                    - /url: /?entity=G0125&tab=actor
+                    - generic [ref=e384]: G0125
+                    - generic [ref=e385]: HAFNIUM
+                  - link "G1001 HEXANE" [ref=e386] [cursor=pointer]:
+                    - /url: /?entity=G1001&tab=actor
+                    - generic [ref=e387]: G1001
+                    - generic [ref=e388]: HEXANE
+                  - link "G0126 Higaisa" [ref=e389] [cursor=pointer]:
+                    - /url: /?entity=G0126&tab=actor
+                    - generic [ref=e390]: G0126
+                    - generic [ref=e391]: Higaisa
+                  - link "G1032 INC Ransom" [ref=e392] [cursor=pointer]:
+                    - /url: /?entity=G1032&tab=actor
+                    - generic [ref=e393]: G1032
+                    - generic [ref=e394]: INC Ransom
+                  - link "G0100 Inception" [ref=e395] [cursor=pointer]:
+                    - /url: /?entity=G0100&tab=actor
+                    - generic [ref=e396]: G0100
+                    - generic [ref=e397]: Inception
+                  - link "G0119 Indrik Spider" [ref=e398] [cursor=pointer]:
+                    - /url: /?entity=G0119&tab=actor
+                    - generic [ref=e399]: G0119
+                    - generic [ref=e400]: Indrik Spider
+                  - link "G0004 Ke3chang" [ref=e401] [cursor=pointer]:
+                    - /url: /?entity=G0004&tab=actor
+                    - generic [ref=e402]: G0004
+                    - generic [ref=e403]: Ke3chang
+                  - link "G0094 Kimsuky" [ref=e404] [cursor=pointer]:
+                    - /url: /?entity=G0094&tab=actor
+                    - generic [ref=e405]: G0094
+                    - generic [ref=e406]: Kimsuky
+                  - link "G0032 Lazarus Group" [ref=e407] [cursor=pointer]:
+                    - /url: /?entity=G0032&tab=actor
+                    - generic [ref=e408]: G0032
+                    - generic [ref=e409]: Lazarus Group
+                  - link "G0140 LazyScripter" [ref=e410] [cursor=pointer]:
+                    - /url: /?entity=G0140&tab=actor
+                    - generic [ref=e411]: G0140
+                    - generic [ref=e412]: LazyScripter
+                  - link "G0077 Leafminer" [ref=e413] [cursor=pointer]:
+                    - /url: /?entity=G0077&tab=actor
+                    - generic [ref=e414]: G0077
+                    - generic [ref=e415]: Leafminer
+                  - link "G0065 Leviathan" [ref=e416] [cursor=pointer]:
+                    - /url: /?entity=G0065&tab=actor
+                    - generic [ref=e417]: G0065
+                    - generic [ref=e418]: Leviathan
+                  - link "G0095 Machete" [ref=e419] [cursor=pointer]:
+                    - /url: /?entity=G0095&tab=actor
+                    - generic [ref=e420]: G0095
+                    - generic [ref=e421]: Machete
+                  - link "G0059 Magic Hound" [ref=e422] [cursor=pointer]:
+                    - /url: /?entity=G0059&tab=actor
+                    - generic [ref=e423]: G0059
+                    - generic [ref=e424]: Magic Hound
+                  - link "G1026 Malteiro" [ref=e425] [cursor=pointer]:
+                    - /url: /?entity=G1026&tab=actor
+                    - generic [ref=e426]: G1026
+                    - generic [ref=e427]: Malteiro
+                  - link "G1051 Medusa Group" [ref=e428] [cursor=pointer]:
+                    - /url: /?entity=G1051&tab=actor
+                    - generic [ref=e429]: G1051
+                    - generic [ref=e430]: Medusa Group
+                  - link "G1013 Metador" [ref=e431] [cursor=pointer]:
+                    - /url: /?entity=G1013&tab=actor
+                    - generic [ref=e432]: G1013
+                    - generic [ref=e433]: Metador
+                  - link "G0021 Molerats" [ref=e434] [cursor=pointer]:
+                    - /url: /?entity=G0021&tab=actor
+                    - generic [ref=e435]: G0021
+                    - generic [ref=e436]: Molerats
+                  - link "G1019 MoustachedBouncer" [ref=e437] [cursor=pointer]:
+                    - /url: /?entity=G1019&tab=actor
+                    - generic [ref=e438]: G1019
+                    - generic [ref=e439]: MoustachedBouncer
+                  - link "G0069 MuddyWater" [ref=e440] [cursor=pointer]:
+                    - /url: /?entity=G0069&tab=actor
+                    - generic [ref=e441]: G0069
+                    - generic [ref=e442]: MuddyWater
+                  - link "G0129 Mustang Panda" [ref=e443] [cursor=pointer]:
+                    - /url: /?entity=G0129&tab=actor
+                    - generic [ref=e444]: G0129
+                    - generic [ref=e445]: Mustang Panda
+                  - link "G0133 Nomadic Octopus" [ref=e446] [cursor=pointer]:
+                    - /url: /?entity=G0133&tab=actor
+                    - generic [ref=e447]: G0133
+                    - generic [ref=e448]: Nomadic Octopus
+                  - link "G0049 OilRig" [ref=e449] [cursor=pointer]:
+                    - /url: /?entity=G0049&tab=actor
+                    - generic [ref=e450]: G0049
+                    - generic [ref=e451]: OilRig
+                  - link "G0040 Patchwork" [ref=e452] [cursor=pointer]:
+                    - /url: /?entity=G0040&tab=actor
+                    - generic [ref=e453]: G0040
+                    - generic [ref=e454]: Patchwork
+                  - link "G1040 Play" [ref=e455] [cursor=pointer]:
+                    - /url: /?entity=G1040&tab=actor
+                    - generic [ref=e456]: G1040
+                    - generic [ref=e457]: Play
+                  - link "G0033 Poseidon Group" [ref=e458] [cursor=pointer]:
+                    - /url: /?entity=G0033&tab=actor
+                    - generic [ref=e459]: G0033
+                    - generic [ref=e460]: Poseidon Group
+                  - link "G0075 Rancor" [ref=e461] [cursor=pointer]:
+                    - /url: /?entity=G0075&tab=actor
+                    - generic [ref=e462]: G0075
+                    - generic [ref=e463]: Rancor
+                  - link "G1039 RedCurl" [ref=e464] [cursor=pointer]:
+                    - /url: /?entity=G1039&tab=actor
+                    - generic [ref=e465]: G1039
+                    - generic [ref=e466]: RedCurl
+                  - link "G0106 Rocke" [ref=e467] [cursor=pointer]:
+                    - /url: /?entity=G0106&tab=actor
+                    - generic [ref=e468]: G0106
+                    - generic [ref=e469]: Rocke
+                  - link "G1031 Saint Bear" [ref=e470] [cursor=pointer]:
+                    - /url: /?entity=G1031&tab=actor
+                    - generic [ref=e471]: G1031
+                    - generic [ref=e472]: Saint Bear
+                  - link "G0034 Sandworm Team" [ref=e473] [cursor=pointer]:
+                    - /url: /?entity=G0034&tab=actor
+                    - generic [ref=e474]: G0034
+                    - generic [ref=e475]: Sandworm Team
+                  - link "G1015 Scattered Spider" [ref=e476] [cursor=pointer]:
+                    - /url: /?entity=G1015&tab=actor
+                    - generic [ref=e477]: G1015
+                    - generic [ref=e478]: Scattered Spider
+                  - link "G1041 Sea Turtle" [ref=e479] [cursor=pointer]:
+                    - /url: /?entity=G1041&tab=actor
+                    - generic [ref=e480]: G1041
+                    - generic [ref=e481]: Sea Turtle
+                  - link "G1008 SideCopy" [ref=e482] [cursor=pointer]:
+                    - /url: /?entity=G1008&tab=actor
+                    - generic [ref=e483]: G1008
+                    - generic [ref=e484]: SideCopy
+                  - link "G0121 Sidewinder" [ref=e485] [cursor=pointer]:
+                    - /url: /?entity=G0121&tab=actor
+                    - generic [ref=e486]: G0121
+                    - generic [ref=e487]: Sidewinder
+                  - link "G0091 Silence" [ref=e488] [cursor=pointer]:
+                    - /url: /?entity=G0091&tab=actor
+                    - generic [ref=e489]: G0091
+                    - generic [ref=e490]: Silence
+                  - link "G0054 Sowbug" [ref=e491] [cursor=pointer]:
+                    - /url: /?entity=G0054&tab=actor
+                    - generic [ref=e492]: G0054
+                    - generic [ref=e493]: Sowbug
+                  - link "G1033 Star Blizzard" [ref=e494] [cursor=pointer]:
+                    - /url: /?entity=G1033&tab=actor
+                    - generic [ref=e495]: G1033
+                    - generic [ref=e496]: Star Blizzard
+                  - link "G0038 Stealth Falcon" [ref=e497] [cursor=pointer]:
+                    - /url: /?entity=G0038&tab=actor
+                    - generic [ref=e498]: G0038
+                    - generic [ref=e499]: Stealth Falcon
+                  - link "G1053 Storm-0501" [ref=e500] [cursor=pointer]:
+                    - /url: /?entity=G1053&tab=actor
+                    - generic [ref=e501]: G1053
+                    - generic [ref=e502]: Storm-0501
+                  - link "G1046 Storm-1811" [ref=e503] [cursor=pointer]:
+                    - /url: /?entity=G1046&tab=actor
+                    - generic [ref=e504]: G1046
+                    - generic [ref=e505]: Storm-1811
+                  - link "G0039 Suckfly" [ref=e506] [cursor=pointer]:
+                    - /url: /?entity=G0039&tab=actor
+                    - generic [ref=e507]: G0039
+                    - generic [ref=e508]: Suckfly
+                  - link "G1018 TA2541" [ref=e509] [cursor=pointer]:
+                    - /url: /?entity=G1018&tab=actor
+                    - generic [ref=e510]: G1018
+                    - generic [ref=e511]: TA2541
+                  - link "G0062 TA459" [ref=e512] [cursor=pointer]:
+                    - /url: /?entity=G0062&tab=actor
+                    - generic [ref=e513]: G0062
+                    - generic [ref=e514]: TA459
+                  - link "G0092 TA505" [ref=e515] [cursor=pointer]:
+                    - /url: /?entity=G0092&tab=actor
+                    - generic [ref=e516]: G0092
+                    - generic [ref=e517]: TA505
+                  - link "G0127 TA551" [ref=e518] [cursor=pointer]:
+                    - /url: /?entity=G0127&tab=actor
+                    - generic [ref=e519]: G0127
+                    - generic [ref=e520]: TA551
+                  - link "G1037 TA577" [ref=e521] [cursor=pointer]:
+                    - /url: /?entity=G1037&tab=actor
+                    - generic [ref=e522]: G1037
+                    - generic [ref=e523]: TA577
+                  - link "G1038 TA578" [ref=e524] [cursor=pointer]:
+                    - /url: /?entity=G1038&tab=actor
+                    - generic [ref=e525]: G1038
+                    - generic [ref=e526]: TA578
+                  - link "G0088 TEMP.Veles" [ref=e527] [cursor=pointer]:
+                    - /url: /?entity=G0088&tab=actor
+                    - generic [ref=e528]: G0088
+                    - generic [ref=e529]: TEMP.Veles
+                  - link "G0139 TeamTNT" [ref=e530] [cursor=pointer]:
+                    - /url: /?entity=G0139&tab=actor
+                    - generic [ref=e531]: G0139
+                    - generic [ref=e532]: TeamTNT
+                  - link "G0028 Threat Group-1314" [ref=e533] [cursor=pointer]:
+                    - /url: /?entity=G0028&tab=actor
+                    - generic [ref=e534]: G0028
+                    - generic [ref=e535]: Threat Group-1314
+                  - link "G0027 Threat Group-3390" [ref=e536] [cursor=pointer]:
+                    - /url: /?entity=G0027&tab=actor
+                    - generic [ref=e537]: G0027
+                    - generic [ref=e538]: Threat Group-3390
+                  - link "G0076 Thrip" [ref=e539] [cursor=pointer]:
+                    - /url: /?entity=G0076&tab=actor
+                    - generic [ref=e540]: G0076
+                    - generic [ref=e541]: Thrip
+                  - link "G1022 ToddyCat" [ref=e542] [cursor=pointer]:
+                    - /url: /?entity=G1022&tab=actor
+                    - generic [ref=e543]: G1022
+                    - generic [ref=e544]: ToddyCat
+                  - link "G0131 Tonto Team" [ref=e545] [cursor=pointer]:
+                    - /url: /?entity=G0131&tab=actor
+                    - generic [ref=e546]: G0131
+                    - generic [ref=e547]: Tonto Team
+                  - link "G0134 Transparent Tribe" [ref=e548] [cursor=pointer]:
+                    - /url: /?entity=G0134&tab=actor
+                    - generic [ref=e549]: G0134
+                    - generic [ref=e550]: Transparent Tribe
+                  - link "G0081 Tropic Trooper" [ref=e551] [cursor=pointer]:
+                    - /url: /?entity=G0081&tab=actor
+                    - generic [ref=e552]: G0081
+                    - generic [ref=e553]: Tropic Trooper
+                  - link "G0010 Turla" [ref=e554] [cursor=pointer]:
+                    - /url: /?entity=G0010&tab=actor
+                    - generic [ref=e555]: G0010
+                    - generic [ref=e556]: Turla
+                  - link "G1048 UNC3886" [ref=e557] [cursor=pointer]:
+                    - /url: /?entity=G1048&tab=actor
+                    - generic [ref=e558]: G1048
+                    - generic [ref=e559]: UNC3886
+                  - link "G1047 Velvet Ant" [ref=e560] [cursor=pointer]:
+                    - /url: /?entity=G1047&tab=actor
+                    - generic [ref=e561]: G1047
+                    - generic [ref=e562]: Velvet Ant
+                  - link "G1017 Volt Typhoon" [ref=e563] [cursor=pointer]:
+                    - /url: /?entity=G1017&tab=actor
+                    - generic [ref=e564]: G1017
+                    - generic [ref=e565]: Volt Typhoon
+                  - link "G0090 WIRTE" [ref=e566] [cursor=pointer]:
+                    - /url: /?entity=G0090&tab=actor
+                    - generic [ref=e567]: G0090
+                    - generic [ref=e568]: WIRTE
+                  - link "G0107 Whitefly" [ref=e569] [cursor=pointer]:
+                    - /url: /?entity=G0107&tab=actor
+                    - generic [ref=e570]: G0107
+                    - generic [ref=e571]: Whitefly
+                  - link "G0124 Windigo" [ref=e572] [cursor=pointer]:
+                    - /url: /?entity=G0124&tab=actor
+                    - generic [ref=e573]: G0124
+                    - generic [ref=e574]: Windigo
+                  - link "G0112 Windshift" [ref=e575] [cursor=pointer]:
+                    - /url: /?entity=G0112&tab=actor
+                    - generic [ref=e576]: G0112
+                    - generic [ref=e577]: Windshift
+                  - link "G1035 Winter Vivern" [ref=e578] [cursor=pointer]:
+                    - /url: /?entity=G1035&tab=actor
+                    - generic [ref=e579]: G1035
+                    - generic [ref=e580]: Winter Vivern
+                  - link "G0102 Wizard Spider" [ref=e581] [cursor=pointer]:
+                    - /url: /?entity=G0102&tab=actor
+                    - generic [ref=e582]: G0102
+                    - generic [ref=e583]: Wizard Spider
+                  - link "G0128 ZIRCONIUM" [ref=e584] [cursor=pointer]:
+                    - /url: /?entity=G0128&tab=actor
+                    - generic [ref=e585]: G0128
+                    - generic [ref=e586]: ZIRCONIUM
+                  - link "G0018 admin@338" [ref=e587] [cursor=pointer]:
+                    - /url: /?entity=G0018&tab=actor
+                    - generic [ref=e588]: G0018
+                    - generic [ref=e589]: admin@338
+                  - link "G0045 menuPass" [ref=e590] [cursor=pointer]:
+                    - /url: /?entity=G0045&tab=actor
+                    - generic [ref=e591]: G0045
+                    - generic [ref=e592]: menuPass
+              - generic [ref=e593]:
+                - generic [ref=e594]: Campaigns
+                - generic [ref=e595]:
+                  - link "C0046 ArcaneDoor" [ref=e596] [cursor=pointer]:
+                    - /url: /?entity=C0046&tab=actor
+                    - generic [ref=e597]: C0046
+                    - generic [ref=e598]: ArcaneDoor
+                  - link "C0029 Cutting Edge" [ref=e599] [cursor=pointer]:
+                    - /url: /?entity=C0029&tab=actor
+                    - generic [ref=e600]: C0029
+                    - generic [ref=e601]: Cutting Edge
+                  - link "C0053 FLORAHOX Activity" [ref=e602] [cursor=pointer]:
+                    - /url: /?entity=C0053&tab=actor
+                    - generic [ref=e603]: C0053
+                    - generic [ref=e604]: FLORAHOX Activity
+                  - link "C0005 Operation Spalax" [ref=e605] [cursor=pointer]:
+                    - /url: /?entity=C0005&tab=actor
+                    - generic [ref=e606]: C0005
+                    - generic [ref=e607]: Operation Spalax
+          - generic [ref=e608]:
+            - button "How to Detect (71)" [ref=e610]:
+              - generic [ref=e611]:
+                - img [ref=e613]
+                - generic [ref=e616]: How to Detect
+                - generic [ref=e617]: (71)
+              - img [ref=e618]
+            - generic [ref=e620]:
+              - generic [ref=e621]:
+                - generic [ref=e622]: Data Sources
+                - generic [ref=e623]:
+                  - generic [ref=e624]:
+                    - link "DS0017 Command" [ref=e625] [cursor=pointer]:
+                      - /url: /?entity=DS0017&tab=data-source-map
+                      - generic [ref=e626]: DS0017
+                      - generic [ref=e627]: Command
+                    - generic [ref=e628]: Command Execution
+                  - generic [ref=e629]:
+                    - link "DS0009 Process" [ref=e630] [cursor=pointer]:
+                      - /url: /?entity=DS0009&tab=data-source-map
+                      - generic [ref=e631]: DS0009
+                      - generic [ref=e632]: Process
+                    - generic [ref=e633]: Process Creation
+                  - generic [ref=e634]:
+                    - link "DS0002 User Account" [ref=e635] [cursor=pointer]:
+                      - /url: /?entity=DS0002&tab=data-source-map
+                      - generic [ref=e636]: DS0002
+                      - generic [ref=e637]: User Account
+                    - generic [ref=e638]: User Account Authentication
+              - generic [ref=e639]:
+                - generic [ref=e640]: Detection Strategies (14)
+                - group [ref=e641]:
+                  - generic "DET0063 Cross-Platform Behavioral Detection of Python Execution 4 analytics" [ref=e642] [cursor=pointer]:
+                    - img [ref=e643]
+                    - link "DET0063" [ref=e645]:
+                      - /url: https://attack.mitre.org/detectionstrategies/DET0063/
+                    - generic [ref=e646]: Cross-Platform Behavioral Detection of Python Execution
+                    - generic [ref=e647]: 4 analytics
+                - group [ref=e648]:
+                  - generic "DET0076 Behavioral Detection of Visual Basic Execution (VBS/VBA/VBScript) 3 analytics" [ref=e649] [cursor=pointer]:
+                    - img [ref=e650]
+                    - link "DET0076" [ref=e652]:
+                      - /url: https://attack.mitre.org/detectionstrategies/DET0076/
+                    - generic [ref=e653]: Behavioral Detection of Visual Basic Execution (VBS/VBA/VBScript)
+                    - generic [ref=e654]: 3 analytics
+                - group [ref=e655]:
+                  - generic "DET0078 Behavioral Detection of Malicious Cloud API Scripting 1 analytics" [ref=e656] [cursor=pointer]:
+                    - img [ref=e657]
+                    - link "DET0078" [ref=e659]:
+                      - /url: https://attack.mitre.org/detectionstrategies/DET0078/
+                    - generic [ref=e660]: Behavioral Detection of Malicious Cloud API Scripting
+                    - generic [ref=e661]: 1 analytics
+                - group [ref=e662]:
+                  - generic "DET0083 Container CLI and API Abuse via Docker/Kubernetes (T1059.013) 1 analytics" [ref=e663] [cursor=pointer]:
+                    - img [ref=e664]
+                    - link "DET0083" [ref=e666]:
+                      - /url: https://attack.mitre.org/detectionstrategies/DET0083/
+                    - generic [ref=e667]: Container CLI and API Abuse via Docker/Kubernetes (T1059.013)
+                    - generic [ref=e668]: 1 analytics
+                - group [ref=e669]:
+                  - generic "DET0101 Lua Scripting Abuse 4 analytics" [ref=e670] [cursor=pointer]:
+                    - img [ref=e671]
+                    - link "DET0101" [ref=e673]:
+                      - /url: https://attack.mitre.org/detectionstrategies/DET0101/
+                    - generic [ref=e674]: Lua Scripting Abuse
+                    - generic [ref=e675]: 4 analytics
+                - group [ref=e676]:
+                  - generic "DET0142 Behavioral Detection of CLI Abuse on Network Devices 1 analytics" [ref=e677] [cursor=pointer]:
+                    - img [ref=e678]
+                    - link "DET0142" [ref=e680]:
+                      - /url: https://attack.mitre.org/detectionstrategies/DET0142/
+                    - generic [ref=e681]: Behavioral Detection of CLI Abuse on Network Devices
+                    - generic [ref=e682]: 1 analytics
+                - group [ref=e683]:
+                  - generic "DET0202 Behavioral Detection of Windows Command Shell Execution 1 analytics" [ref=e684] [cursor=pointer]:
+                    - img [ref=e685]
+                    - link "DET0202" [ref=e687]:
+                      - /url: https://attack.mitre.org/detectionstrategies/DET0202/
+                    - generic [ref=e688]: Behavioral Detection of Windows Command Shell Execution
+                    - generic [ref=e689]: 1 analytics
+                - group [ref=e690]:
+                  - generic "DET0264 Cross-Platform Detection of JavaScript Execution Abuse 3 analytics" [ref=e691] [cursor=pointer]:
+                    - img [ref=e692]
+                    - link "DET0264" [ref=e694]:
+                      - /url: https://attack.mitre.org/detectionstrategies/DET0264/
+                    - generic [ref=e695]: Cross-Platform Detection of JavaScript Execution Abuse
+                    - generic [ref=e696]: 3 analytics
+                - group [ref=e697]:
+                  - generic "DET0332 AutoHotKey & AutoIT Abuse 1 analytics" [ref=e698] [cursor=pointer]:
+                    - img [ref=e699]
+                    - link "DET0332" [ref=e701]:
+                      - /url: https://attack.mitre.org/detectionstrategies/DET0332/
+                    - generic [ref=e702]: AutoHotKey & AutoIT Abuse
+                    - generic [ref=e703]: 1 analytics
+                - group [ref=e704]:
+                  - generic "DET0384 Behavioral Detection of Unix Shell Execution 4 analytics" [ref=e705] [cursor=pointer]:
+                    - img [ref=e706]
+                    - link "DET0384" [ref=e708]:
+                      - /url: https://attack.mitre.org/detectionstrategies/DET0384/
+                    - generic [ref=e709]: Behavioral Detection of Unix Shell Execution
+                    - generic [ref=e710]: 4 analytics
+                - group [ref=e711]:
+                  - generic "DET0414 Detection of AppleScript-Based Execution on macOS 1 analytics" [ref=e712] [cursor=pointer]:
+                    - img [ref=e713]
+                    - link "DET0414" [ref=e715]:
+                      - /url: https://attack.mitre.org/detectionstrategies/DET0414/
+                    - generic [ref=e716]: Detection of AppleScript-Based Execution on macOS
+                    - generic [ref=e717]: 1 analytics
+                - group [ref=e718]:
+                  - generic "DET0455 Abuse of PowerShell for Arbitrary Execution 1 analytics" [ref=e719] [cursor=pointer]:
+                    - img [ref=e720]
+                    - link "DET0455" [ref=e722]:
+                      - /url: https://attack.mitre.org/detectionstrategies/DET0455/
+                    - generic [ref=e723]: Abuse of PowerShell for Arbitrary Execution
+                    - generic [ref=e724]: 1 analytics
+                - group [ref=e725]:
+                  - generic "DET0516 Behavioral Detection of Command and Scripting Interpreter Abuse 5 analytics" [ref=e726] [cursor=pointer]:
+                    - img [ref=e727]
+                    - link "DET0516" [ref=e729]:
+                      - /url: https://attack.mitre.org/detectionstrategies/DET0516/
+                    - generic [ref=e730]: Behavioral Detection of Command and Scripting Interpreter Abuse
+                    - generic [ref=e731]: 5 analytics
+                - group [ref=e732]:
+                  - generic "DET0558 ESXi Hypervisor CLI Abuse 1 analytics" [ref=e733] [cursor=pointer]:
+                    - img [ref=e734]
+                    - link "DET0558" [ref=e736]:
+                      - /url: https://attack.mitre.org/detectionstrategies/DET0558/
+                    - generic [ref=e737]: ESXi Hypervisor CLI Abuse
+                    - generic [ref=e738]: 1 analytics
+              - generic [ref=e739]:
+                - generic [ref=e740]: Sigma Rules
+                - generic [ref=e742]:
+                  - generic [ref=e743]: 68 rules
+                  - generic [ref=e744]:
+                    - generic [ref=e745]: "1"
+                    - generic [ref=e746]: critical
+                  - generic [ref=e747]:
+                    - generic [ref=e748]: "35"
+                    - generic [ref=e749]: high
+                  - generic [ref=e750]:
+                    - generic [ref=e751]: "32"
+                    - generic [ref=e752]: medium
+              - generic [ref=e753]:
+                - link "critical HackTool - Sliver C2 Implant Activity Pattern" [ref=e754] [cursor=pointer]:
+                  - /url: /cti/sigma?technique=T1059
+                  - generic [ref=e755]: critical
+                  - generic [ref=e756]: HackTool - Sliver C2 Implant Activity Pattern
+                - link "high Abusable DLL Potential Sideloading From Suspicious Location" [ref=e757] [cursor=pointer]:
+                  - /url: /cti/sigma?technique=T1059
+                  - generic [ref=e758]: high
+                  - generic [ref=e759]: Abusable DLL Potential Sideloading From Suspicious Location
+                - link "high Add Insecure Download Source To Winget" [ref=e760] [cursor=pointer]:
+                  - /url: /cti/sigma?technique=T1059
+                  - generic [ref=e761]: high
+                  - generic [ref=e762]: Add Insecure Download Source To Winget
+                - link "high Capsh Shell Invocation - Linux" [ref=e763] [cursor=pointer]:
+                  - /url: /cti/sigma?technique=T1059
+                  - generic [ref=e764]: high
+                  - generic [ref=e765]: Capsh Shell Invocation - Linux
+                - link "high HackTool - Stracciatella Execution" [ref=e766] [cursor=pointer]:
+                  - /url: /cti/sigma?technique=T1059
+                  - generic [ref=e767]: high
+                  - generic [ref=e768]: HackTool - Stracciatella Execution
+                - link "+63 more rules" [ref=e769] [cursor=pointer]:
+                  - /url: /cti/sigma?technique=T1059
+          - generic [ref=e770]:
+            - button "How to Prevent (32)" [ref=e772]:
+              - generic [ref=e773]:
+                - img [ref=e775]
+                - generic [ref=e777]: How to Prevent
+                - generic [ref=e778]: (32)
+              - img [ref=e779]
+            - generic [ref=e781]:
+              - generic [ref=e782]:
+                - generic [ref=e783]: Mitigations
+                - generic [ref=e784]:
+                  - link "M1049 Antivirus/Antimalware" [ref=e785] [cursor=pointer]:
+                    - /url: /?entity=M1049&tab=mitigation-map
+                    - generic [ref=e786]: M1049
+                    - generic [ref=e787]: Antivirus/Antimalware
+                  - link "M1047 Audit" [ref=e788] [cursor=pointer]:
+                    - /url: /?entity=M1047&tab=mitigation-map
+                    - generic [ref=e789]: M1047
+                    - generic [ref=e790]: Audit
+                  - link "M1040 Behavior Prevention on Endpoint" [ref=e791] [cursor=pointer]:
+                    - /url: /?entity=M1040&tab=mitigation-map
+                    - generic [ref=e792]: M1040
+                    - generic [ref=e793]: Behavior Prevention on Endpoint
+                  - link "M1045 Code Signing" [ref=e794] [cursor=pointer]:
+                    - /url: /?entity=M1045&tab=mitigation-map
+                    - generic [ref=e795]: M1045
+                    - generic [ref=e796]: Code Signing
+                  - link "M1042 Disable or Remove Feature or Program" [ref=e797] [cursor=pointer]:
+                    - /url: /?entity=M1042&tab=mitigation-map
+                    - generic [ref=e798]: M1042
+                    - generic [ref=e799]: Disable or Remove Feature or Program
+                  - link "M1038 Execution Prevention" [ref=e800] [cursor=pointer]:
+                    - /url: /?entity=M1038&tab=mitigation-map
+                    - generic [ref=e801]: M1038
+                    - generic [ref=e802]: Execution Prevention
+                  - link "M1033 Limit Software Installation" [ref=e803] [cursor=pointer]:
+                    - /url: /?entity=M1033&tab=mitigation-map
+                    - generic [ref=e804]: M1033
+                    - generic [ref=e805]: Limit Software Installation
+                  - link "M1026 Privileged Account Management" [ref=e806] [cursor=pointer]:
+                    - /url: /?entity=M1026&tab=mitigation-map
+                    - generic [ref=e807]: M1026
+                    - generic [ref=e808]: Privileged Account Management
+                  - link "M1021 Restrict Web-Based Content" [ref=e809] [cursor=pointer]:
+                    - /url: /?entity=M1021&tab=mitigation-map
+                    - generic [ref=e810]: M1021
+                    - generic [ref=e811]: Restrict Web-Based Content
+              - generic [ref=e812]:
+                - generic [ref=e813]: NIST 800-53
+                - generic [ref=e815]:
+                  - link "AC-02 Account Management (Access Control) ↗" [ref=e816] [cursor=pointer]:
+                    - /url: https://csf.tools/reference/nist-sp-800-53/r5/ac/ac-2/
+                    - generic [ref=e817]: AC-02
+                    - generic [ref=e818]: Account Management
+                    - generic [ref=e819]: (Access Control)
+                    - generic [ref=e820]: ↗
+                  - link "AC-03 Access Enforcement (Access Control) ↗" [ref=e821] [cursor=pointer]:
+                    - /url: https://csf.tools/reference/nist-sp-800-53/r5/ac/ac-3/
+                    - generic [ref=e822]: AC-03
+                    - generic [ref=e823]: Access Enforcement
+                    - generic [ref=e824]: (Access Control)
+                    - generic [ref=e825]: ↗
+                  - link "AC-05 Separation of Duties (Access Control) ↗" [ref=e826] [cursor=pointer]:
+                    - /url: https://csf.tools/reference/nist-sp-800-53/r5/ac/ac-5/
+                    - generic [ref=e827]: AC-05
+                    - generic [ref=e828]: Separation of Duties
+                    - generic [ref=e829]: (Access Control)
+                    - generic [ref=e830]: ↗
+                  - link "AC-06 Least Privilege (Access Control) ↗" [ref=e831] [cursor=pointer]:
+                    - /url: https://csf.tools/reference/nist-sp-800-53/r5/ac/ac-6/
+                    - generic [ref=e832]: AC-06
+                    - generic [ref=e833]: Least Privilege
+                    - generic [ref=e834]: (Access Control)
+                    - generic [ref=e835]: ↗
+                  - link "AC-17 Remote Access (Access Control) ↗" [ref=e836] [cursor=pointer]:
+                    - /url: https://csf.tools/reference/nist-sp-800-53/r5/ac/ac-17/
+                    - generic [ref=e837]: AC-17
+                    - generic [ref=e838]: Remote Access
+                    - generic [ref=e839]: (Access Control)
+                    - generic [ref=e840]: ↗
+                  - link "CA-07 Continuous Monitoring (Assessment, Authorization, and Monitoring) ↗" [ref=e841] [cursor=pointer]:
+                    - /url: https://csf.tools/reference/nist-sp-800-53/r5/ca/ca-7/
+                    - generic [ref=e842]: CA-07
+                    - generic [ref=e843]: Continuous Monitoring
+                    - generic [ref=e844]: (Assessment, Authorization, and Monitoring)
+                    - generic [ref=e845]: ↗
+                  - link "CM-02 Baseline Configuration (Configuration Management) ↗" [ref=e846] [cursor=pointer]:
+                    - /url: https://csf.tools/reference/nist-sp-800-53/r5/cm/cm-2/
+                    - generic [ref=e847]: CM-02
+                    - generic [ref=e848]: Baseline Configuration
+                    - generic [ref=e849]: (Configuration Management)
+                    - generic [ref=e850]: ↗
+                  - link "CM-05 Access Restrictions for Change (Configuration Management) ↗" [ref=e851] [cursor=pointer]:
+                    - /url: https://csf.tools/reference/nist-sp-800-53/r5/cm/cm-5/
+                    - generic [ref=e852]: CM-05
+                    - generic [ref=e853]: Access Restrictions for Change
+                    - generic [ref=e854]: (Configuration Management)
+                    - generic [ref=e855]: ↗
+                  - link "CM-06 Configuration Settings (Configuration Management) ↗" [ref=e856] [cursor=pointer]:
+                    - /url: https://csf.tools/reference/nist-sp-800-53/r5/cm/cm-6/
+                    - generic [ref=e857]: CM-06
+                    - generic [ref=e858]: Configuration Settings
+                    - generic [ref=e859]: (Configuration Management)
+                    - generic [ref=e860]: ↗
+                  - link "CM-07 Least Functionality (Configuration Management) ↗" [ref=e861] [cursor=pointer]:
+                    - /url: https://csf.tools/reference/nist-sp-800-53/r5/cm/cm-7/
+                    - generic [ref=e862]: CM-07
+                    - generic [ref=e863]: Least Functionality
+                    - generic [ref=e864]: (Configuration Management)
+                    - generic [ref=e865]: ↗
+                  - link "CM-08 System Component Inventory (Configuration Management) ↗" [ref=e866] [cursor=pointer]:
+                    - /url: https://csf.tools/reference/nist-sp-800-53/r5/cm/cm-8/
+                    - generic [ref=e867]: CM-08
+                    - generic [ref=e868]: System Component Inventory
+                    - generic [ref=e869]: (Configuration Management)
+                    - generic [ref=e870]: ↗
+                  - link "CM-11 User-installed Software (Configuration Management) ↗" [ref=e871] [cursor=pointer]:
+                    - /url: https://csf.tools/reference/nist-sp-800-53/r5/cm/cm-11/
+                    - generic [ref=e872]: CM-11
+                    - generic [ref=e873]: User-installed Software
+                    - generic [ref=e874]: (Configuration Management)
+                    - generic [ref=e875]: ↗
+                  - link "IA-02 Identification and Authentication (Organizational Users) (Identification and Authentication) ↗" [ref=e876] [cursor=pointer]:
+                    - /url: https://csf.tools/reference/nist-sp-800-53/r5/ia/ia-2/
+                    - generic [ref=e877]: IA-02
+                    - generic [ref=e878]: Identification and Authentication (Organizational Users)
+                    - generic [ref=e879]: (Identification and Authentication)
+                    - generic [ref=e880]: ↗
+                  - link "IA-08 Identification and Authentication (Non-Organizational Users) (Identification and Authentication) ↗" [ref=e881] [cursor=pointer]:
+                    - /url: https://csf.tools/reference/nist-sp-800-53/r5/ia/ia-8/
+                    - generic [ref=e882]: IA-08
+                    - generic [ref=e883]: Identification and Authentication (Non-Organizational Users)
+                    - generic [ref=e884]: (Identification and Authentication)
+                    - generic [ref=e885]: ↗
+                  - link "IA-09 Service Identification and Authentication (Identification and Authentication) ↗" [ref=e886] [cursor=pointer]:
+                    - /url: https://csf.tools/reference/nist-sp-800-53/r5/ia/ia-9/
+                    - generic [ref=e887]: IA-09
+                    - generic [ref=e888]: Service Identification and Authentication
+                    - generic [ref=e889]: (Identification and Authentication)
+                    - generic [ref=e890]: ↗
+                  - link "RA-05 Vulnerability Monitoring and Scanning (Risk Assessment) ↗" [ref=e891] [cursor=pointer]:
+                    - /url: https://csf.tools/reference/nist-sp-800-53/r5/ra/ra-5/
+                    - generic [ref=e892]: RA-05
+                    - generic [ref=e893]: Vulnerability Monitoring and Scanning
+                    - generic [ref=e894]: (Risk Assessment)
+                    - generic [ref=e895]: ↗
+                  - link "SC-18 Mobile Code (System and Communications Protection) ↗" [ref=e896] [cursor=pointer]:
+                    - /url: https://csf.tools/reference/nist-sp-800-53/r5/sc/sc-18/
+                    - generic [ref=e897]: SC-18
+                    - generic [ref=e898]: Mobile Code
+                    - generic [ref=e899]: (System and Communications Protection)
+                    - generic [ref=e900]: ↗
+                  - link "SI-02 Flaw Remediation (System and Information Integrity) ↗" [ref=e901] [cursor=pointer]:
+                    - /url: https://csf.tools/reference/nist-sp-800-53/r5/si/si-2/
+                    - generic [ref=e902]: SI-02
+                    - generic [ref=e903]: Flaw Remediation
+                    - generic [ref=e904]: (System and Information Integrity)
+                    - generic [ref=e905]: ↗
+                  - link "SI-03 Malicious Code Protection (System and Information Integrity) ↗" [ref=e906] [cursor=pointer]:
+                    - /url: https://csf.tools/reference/nist-sp-800-53/r5/si/si-3/
+                    - generic [ref=e907]: SI-03
+                    - generic [ref=e908]: Malicious Code Protection
+                    - generic [ref=e909]: (System and Information Integrity)
+                    - generic [ref=e910]: ↗
+                  - link "SI-04 System Monitoring (System and Information Integrity) ↗" [ref=e911] [cursor=pointer]:
+                    - /url: https://csf.tools/reference/nist-sp-800-53/r5/si/si-4/
+                    - generic [ref=e912]: SI-04
+                    - generic [ref=e913]: System Monitoring
+                    - generic [ref=e914]: (System and Information Integrity)
+                    - generic [ref=e915]: ↗
+                  - link "SI-07 Software, Firmware, and Information Integrity (System and Information Integrity) ↗" [ref=e916] [cursor=pointer]:
+                    - /url: https://csf.tools/reference/nist-sp-800-53/r5/si/si-7/
+                    - generic [ref=e917]: SI-07
+                    - generic [ref=e918]: Software, Firmware, and Information Integrity
+                    - generic [ref=e919]: (System and Information Integrity)
+                    - generic [ref=e920]: ↗
+                  - link "SI-10 Information Input Validation (System and Information Integrity) ↗" [ref=e921] [cursor=pointer]:
+                    - /url: https://csf.tools/reference/nist-sp-800-53/r5/si/si-10/
+                    - generic [ref=e922]: SI-10
+                    - generic [ref=e923]: Information Input Validation
+                    - generic [ref=e924]: (System and Information Integrity)
+                    - generic [ref=e925]: ↗
+                  - link "SI-16 Memory Protection (System and Information Integrity) ↗" [ref=e926] [cursor=pointer]:
+                    - /url: https://csf.tools/reference/nist-sp-800-53/r5/si/si-16/
+                    - generic [ref=e927]: SI-16
+                    - generic [ref=e928]: Memory Protection
+                    - generic [ref=e929]: (System and Information Integrity)
+                    - generic [ref=e930]: ↗
+          - generic [ref=e931]:
+            - button "How to Respond (22)" [ref=e933]:
+              - generic [ref=e934]:
+                - img [ref=e936]
+                - generic [ref=e938]: How to Respond
+                - generic [ref=e939]: (22)
+              - img [ref=e940]
+            - generic [ref=e942]:
+              - generic [ref=e943]:
+                - link "MITRE Engage (opens in new tab)" [ref=e945] [cursor=pointer]:
+                  - /url: https://engage.mitre.org/
+                  - text: MITRE Engage ↗
+                - generic [ref=e946]:
+                  - generic [ref=e947]:
+                    - generic [ref=e948]: EAC0014
+                    - generic [ref=e949]: Software Manipulation
+                    - generic [ref=e950]: Expose
+                  - generic [ref=e951]:
+                    - generic [ref=e952]: EAC0018
+                    - generic [ref=e953]: Security Controls
+                    - generic [ref=e954]: Affect
+                  - generic [ref=e955]:
+                    - generic [ref=e956]: EAC0022
+                    - generic [ref=e957]: Artifact Diversity
+                    - generic [ref=e958]: Elicit
+                  - generic [ref=e959]:
+                    - generic [ref=e960]: EAV0013
+                    - generic [ref=e961]: When adversaries rely on specific resources to be enabled, accessible, and/or vulnerable, they are vulnerable to their operations being disrupted if the resources are disabled, removed, or otherwise made invulnerable.
+                  - generic [ref=e962]:
+                    - generic [ref=e963]: EAV0016
+                    - generic [ref=e964]: When adversaries utilize or abuse system features, software, or other resources, they may be vulnerable to monitoring or Man-in-the-Middle manipulation.
+                  - generic [ref=e965]:
+                    - generic [ref=e966]: EAV0017
+                    - generic [ref=e967]: When adversaries discover enabled, accessible, or intentionally weakened/overly permissive resources in the environment, they are vulnerable to revealing additional or more advanced capabilities when exploiting or using said resource.
+                  - generic [ref=e968]:
+                    - generic [ref=e969]: EAV0019
+                    - generic [ref=e970]: When adversaries discover a diverse set of accessible resources and decoy artifacts on the target, they are vulnerable to revealing their targeting preferences and capabilities.
+              - generic [ref=e971]:
+                - link "D3FEND (opens in new tab)" [ref=e973] [cursor=pointer]:
+                  - /url: https://d3fend.mitre.org/
+                  - text: D3FEND ↗
+                - generic [ref=e974]:
+                  - generic [ref=e975]:
+                    - generic [ref=e976]: D3-CF
+                    - generic [ref=e977]: Content Filtering
+                    - generic [ref=e978]: Isolate
+                  - generic [ref=e979]:
+                    - generic [ref=e980]: D3-CM
+                    - generic [ref=e981]: Content Modification
+                    - generic [ref=e982]: Isolate
+                  - generic [ref=e983]:
+                    - generic [ref=e984]: D3-CQ
+                    - generic [ref=e985]: Content Quarantine
+                    - generic [ref=e986]: Isolate
+                  - generic [ref=e987]:
+                    - generic [ref=e988]: D3-DF
+                    - generic [ref=e989]: Decoy File
+                    - generic [ref=e990]: Deceive
+                  - generic [ref=e991]:
+                    - generic [ref=e992]: D3-DA
+                    - generic [ref=e993]: Dynamic Analysis
+                    - generic [ref=e994]: Detect
+                  - generic [ref=e995]:
+                    - generic [ref=e996]: D3-EFA
+                    - generic [ref=e997]: Emulated File Analysis
+                    - generic [ref=e998]: Detect
+                  - generic [ref=e999]:
+                    - generic [ref=e1000]: D3-EAL
+                    - generic [ref=e1001]: Executable Allowlisting
+                    - generic [ref=e1002]: Isolate
+                  - generic [ref=e1003]:
+                    - generic [ref=e1004]: D3-EDL
+                    - generic [ref=e1005]: Executable Denylisting
+                    - generic [ref=e1006]: Isolate
+                  - generic [ref=e1007]:
+                    - generic [ref=e1008]: D3-FA
+                    - generic [ref=e1009]: File Analysis
+                    - generic [ref=e1010]: Detect
+                  - generic [ref=e1011]:
+                    - generic [ref=e1012]: D3-FE
+                    - generic [ref=e1013]: File Encryption
+                    - generic [ref=e1014]: Harden
+                  - generic [ref=e1015]:
+                    - generic [ref=e1016]: D3-FEV
+                    - generic [ref=e1017]: File Eviction
+                    - generic [ref=e1018]: Evict
+                  - generic [ref=e1019]:
+                    - generic [ref=e1020]: D3-FIM
+                    - generic [ref=e1021]: File Integrity Monitoring
+                    - generic [ref=e1022]: Detect
+                  - generic [ref=e1023]:
+                    - generic [ref=e1024]: D3-LFP
+                    - generic [ref=e1025]: Local File Permissions
+                    - generic [ref=e1026]: Isolate
+                  - generic [ref=e1027]:
+                    - generic [ref=e1028]: D3-RFAM
+                    - generic [ref=e1029]: Remote File Access Mediation
+                    - generic [ref=e1030]: Isolate
+                  - generic [ref=e1031]:
+                    - generic [ref=e1032]: D3-RF
+                    - generic [ref=e1033]: Restore File
+                    - generic [ref=e1034]: Restore
+              - generic [ref=e1035]:
+                - generic [ref=e1036]: RE&CT
+                - link "Browse response actions" [ref=e1038] [cursor=pointer]:
+                  - /url: /frameworks/react
+          - button "Procedures (121)" [ref=e1041]:
+            - generic [ref=e1042]:
+              - img [ref=e1044]
+              - generic [ref=e1046]: Procedures
+              - generic [ref=e1047]: (121)
+            - img [ref=e1048]
+          - generic [ref=e1050]:
+            - button "How to Test (57)" [ref=e1052]:
+              - generic [ref=e1053]:
+                - img [ref=e1055]
+                - generic [ref=e1057]: How to Test
+                - generic [ref=e1058]: (57)
+              - img [ref=e1059]
+            - generic [ref=e1061]:
+              - generic [ref=e1062]:
+                - generic [ref=e1063]: Atomic Red Team
+                - generic [ref=e1064]:
+                  - link "view all ↗" [ref=e1065] [cursor=pointer]:
+                    - /url: /frameworks/atomic?q=T1059
+                  - generic [ref=e1066]: 57 tests
+                  - generic [ref=e1067]: macos
+                  - generic [ref=e1068]: windows
+                  - generic [ref=e1069]: linux
+              - generic [ref=e1070]:
+                - generic [ref=e1071]:
+                  - generic [ref=e1072]: "#1"
+                  - generic [ref=e1073]: AppleScript
+                  - generic [ref=e1074]: sh
+                - generic [ref=e1075]:
+                  - generic [ref=e1076]: "#1"
+                  - generic [ref=e1077]: AutoIt Script Execution
+                  - generic [ref=e1078]: powershell
+                - generic [ref=e1079]:
+                  - generic [ref=e1080]: "#1"
+                  - generic [ref=e1081]: Create and Execute Batch Script
+                  - generic [ref=e1082]: powershell
+                - generic [ref=e1083]:
+                  - generic [ref=e1084]: "#1"
+                  - generic [ref=e1085]: Create and Execute Bash Shell Script
+                  - generic [ref=e1086]: sh
+                - generic [ref=e1087]:
+                  - generic [ref=e1088]: "#1"
+                  - generic [ref=e1089]: Execute shell script via python's command mode arguement
+                  - generic [ref=e1090]: sh
+                - generic [ref=e1091]:
+                  - generic [ref=e1092]: "#1"
+                  - generic [ref=e1093]: Mimikatz
+                  - generic [ref=e1094]: command_prompt
+                - generic [ref=e1095]:
+                  - generic [ref=e1096]: "#1"
+                  - generic [ref=e1097]: JScript execution to gather local computer information via cscript
+                  - generic [ref=e1098]: command_prompt
+                - generic [ref=e1099]:
+                  - generic [ref=e1100]: "#1"
+                  - generic [ref=e1101]: AutoHotKey script execution
+                  - generic [ref=e1102]: powershell
+                - generic [ref=e1103]:
+                  - generic [ref=e1104]: "#1"
+                  - generic [ref=e1105]: Visual Basic script execution to gather local computer information
+                  - generic [ref=e1106]: powershell
+                - generic [ref=e1107]:
+                  - generic [ref=e1108]: "#2"
+                  - generic [ref=e1109]: Encoded VBS code execution
+                  - generic [ref=e1110]: powershell
+                - generic [ref=e1111]:
+                  - generic [ref=e1112]: "#2"
+                  - generic [ref=e1113]: Writes text to a file and displays it.
+                  - generic [ref=e1114]: command_prompt
+                - generic [ref=e1115]:
+                  - generic [ref=e1116]: "#2"
+                  - generic [ref=e1117]: Run BloodHound from local disk
+                  - generic [ref=e1118]: powershell
+                - generic [ref=e1119]:
+                  - generic [ref=e1120]: "#2"
+                  - generic [ref=e1121]: JScript execution to gather local computer information via wscript
+                  - generic [ref=e1122]: command_prompt
+                - generic [ref=e1123]:
+                  - generic [ref=e1124]: "#2"
+                  - generic [ref=e1125]: Execute Python via scripts
+                  - generic [ref=e1126]: sh
+                - generic [ref=e1127]:
+                  - generic [ref=e1128]: "#2"
+                  - generic [ref=e1129]: Command-Line Interface
+                  - generic [ref=e1130]: sh
+                - generic [ref=e1131]:
+                  - generic [ref=e1132]: "#3"
+                  - generic [ref=e1133]: Extract Memory via VBA
+                  - generic [ref=e1134]: powershell
+                - generic [ref=e1135]:
+                  - generic [ref=e1136]: "#3"
+                  - generic [ref=e1137]: Run Bloodhound from Memory using Download Cradle
+                  - generic [ref=e1138]: powershell
+                - generic [ref=e1139]:
+                  - generic [ref=e1140]: "#3"
+                  - generic [ref=e1141]: Suspicious Execution via Windows Command Shell
+                  - generic [ref=e1142]: command_prompt
+                - generic [ref=e1143]:
+                  - generic [ref=e1144]: "#3"
+                  - generic [ref=e1145]: Execute Python via Python executables
+                  - generic [ref=e1146]: sh
+                - generic [ref=e1147]:
+                  - generic [ref=e1148]: "#3"
+                  - generic [ref=e1149]: Harvest SUID executable files
+                  - generic [ref=e1150]: sh
+                - generic [ref=e1151]:
+                  - generic [ref=e1152]: "#4"
+                  - generic [ref=e1153]: LinEnum tool execution
+                  - generic [ref=e1154]: sh
+                - generic [ref=e1155]:
+                  - generic [ref=e1156]: "#4"
+                  - generic [ref=e1157]: Python pty module and spawn function used to spawn sh or bash
+                  - generic [ref=e1158]: sh
+                - generic [ref=e1159]:
+                  - generic [ref=e1160]: "#4"
+                  - generic [ref=e1161]: Simulate BlackByte Ransomware Print Bombing
+                  - generic [ref=e1162]: powershell
+                - generic [ref=e1163]:
+                  - generic [ref=e1164]: "#4"
+                  - generic [ref=e1165]: Mimikatz - Cradlecraft PsSendKeys
+                  - generic [ref=e1166]: powershell
+                - generic [ref=e1167]:
+                  - generic [ref=e1168]: "#5"
+                  - generic [ref=e1169]: Invoke-AppPathBypass
+                  - generic [ref=e1170]: command_prompt
+                - generic [ref=e1171]:
+                  - generic [ref=e1172]: "#5"
+                  - generic [ref=e1173]: Command Prompt read contents from CMD file and execute
+                  - generic [ref=e1174]: command_prompt
+                - generic [ref=e1175]:
+                  - generic [ref=e1176]: "#5"
+                  - generic [ref=e1177]: New script file in the tmp directory
+                  - generic [ref=e1178]: sh
+                - generic [ref=e1179]:
+                  - generic [ref=e1180]: "#6"
+                  - generic [ref=e1181]: Command prompt writing script to file then executes it
+                  - generic [ref=e1182]: command_prompt
+                - generic [ref=e1183]:
+                  - generic [ref=e1184]: "#6"
+                  - generic [ref=e1185]: Powershell MsXml COM object - with prompt
+                  - generic [ref=e1186]: command_prompt
+                - generic [ref=e1187]:
+                  - generic [ref=e1188]: "#6"
+                  - generic [ref=e1189]: What shell is running
+                  - generic [ref=e1190]: sh
+                - generic [ref=e1191]:
+                  - generic [ref=e1192]: "#7"
+                  - generic [ref=e1193]: What shells are available
+                  - generic [ref=e1194]: sh
+                - generic [ref=e1195]:
+                  - generic [ref=e1196]: "#7"
+                  - generic [ref=e1197]: Powershell XML requests
+                  - generic [ref=e1198]: command_prompt
+                - generic [ref=e1199]:
+                  - generic [ref=e1200]: "#8"
+                  - generic [ref=e1201]: Command line scripts
+                  - generic [ref=e1202]: sh
+                - generic [ref=e1203]:
+                  - generic [ref=e1204]: "#8"
+                  - generic [ref=e1205]: Powershell invoke mshta.exe download
+                  - generic [ref=e1206]: command_prompt
+                - generic [ref=e1207]:
+                  - generic [ref=e1208]: "#9"
+                  - generic [ref=e1209]: Obfuscated command line scripts
+                  - generic [ref=e1210]: sh
+                - generic [ref=e1211]:
+                  - generic [ref=e1212]: "#9"
+                  - generic [ref=e1213]: Powershell Invoke-DownloadCradle
+                  - generic [ref=e1214]: manual
+                - generic [ref=e1215]:
+                  - generic [ref=e1216]: "#10"
+                  - generic [ref=e1217]: PowerShell Fileless Script Execution
+                  - generic [ref=e1218]: powershell
+                - generic [ref=e1219]:
+                  - generic [ref=e1220]: "#10"
+                  - generic [ref=e1221]: Change login shell
+                  - generic [ref=e1222]: bash
+                - generic [ref=e1223]:
+                  - generic [ref=e1224]: "#11"
+                  - generic [ref=e1225]: NTFS Alternate Data Stream Access
+                  - generic [ref=e1226]: powershell
+                - generic [ref=e1227]:
+                  - generic [ref=e1228]: "#11"
+                  - generic [ref=e1229]: Environment variable scripts
+                  - generic [ref=e1230]: sh
+                - generic [ref=e1231]:
+                  - generic [ref=e1232]: "#12"
+                  - generic [ref=e1233]: Detecting pipe-to-shell
+                  - generic [ref=e1234]: sh
+                - generic [ref=e1235]:
+                  - generic [ref=e1236]: "#12"
+                  - generic [ref=e1237]: PowerShell Session Creation and Use
+                  - generic [ref=e1238]: powershell
+                - generic [ref=e1239]:
+                  - generic [ref=e1240]: "#13"
+                  - generic [ref=e1241]: Current kernel information enumeration
+                  - generic [ref=e1242]: sh
+                - generic [ref=e1243]:
+                  - generic [ref=e1244]: "#13"
+                  - generic [ref=e1245]: ATHPowerShellCommandLineParameter -Command parameter variations
+                  - generic [ref=e1246]: powershell
+                - generic [ref=e1247]:
+                  - generic [ref=e1248]: "#14"
+                  - generic [ref=e1249]: Shell Creation using awk command
+                  - generic [ref=e1250]: sh
+                - generic [ref=e1251]:
+                  - generic [ref=e1252]: "#14"
+                  - generic [ref=e1253]: ATHPowerShellCommandLineParameter -Command parameter variations with encoded arguments
+                  - generic [ref=e1254]: powershell
+                - generic [ref=e1255]:
+                  - generic [ref=e1256]: "#15"
+                  - generic [ref=e1257]: Creating shell using cpan command
+                  - generic [ref=e1258]: sh
+                - generic [ref=e1259]:
+                  - generic [ref=e1260]: "#15"
+                  - generic [ref=e1261]: ATHPowerShellCommandLineParameter -EncodedCommand parameter variations
+                  - generic [ref=e1262]: powershell
+                - generic [ref=e1263]:
+                  - generic [ref=e1264]: "#16"
+                  - generic [ref=e1265]: Shell Creation using busybox command
+                  - generic [ref=e1266]: sh
+                - generic [ref=e1267]:
+                  - generic [ref=e1268]: "#16"
+                  - generic [ref=e1269]: ATHPowerShellCommandLineParameter -EncodedCommand parameter variations with encoded arguments
+                  - generic [ref=e1270]: powershell
+                - generic [ref=e1271]:
+                  - generic [ref=e1272]: "#17"
+                  - generic [ref=e1273]: PowerShell Command Execution
+                  - generic [ref=e1274]: command_prompt
+                - generic [ref=e1275]:
+                  - generic [ref=e1276]: "#17"
+                  - generic [ref=e1277]: emacs spawning an interactive system shell
+                  - generic [ref=e1278]: sh
+                - generic [ref=e1279]:
+                  - generic [ref=e1280]: "#18"
+                  - generic [ref=e1281]: PowerShell Invoke Known Malicious Cmdlets
+                  - generic [ref=e1282]: powershell
+                - generic [ref=e1283]:
+                  - generic [ref=e1284]: "#19"
+                  - generic [ref=e1285]: PowerUp Invoke-AllChecks
+                  - generic [ref=e1286]: powershell
+                - generic [ref=e1287]:
+                  - generic [ref=e1288]: "#20"
+                  - generic [ref=e1289]: Abuse Nslookup with DNS Records
+                  - generic [ref=e1290]: powershell
+                - generic [ref=e1291]:
+                  - generic [ref=e1292]: "#21"
+                  - generic [ref=e1293]: SOAPHound - Dump BloodHound Data
+                  - generic [ref=e1294]: powershell
+                - generic [ref=e1295]:
+                  - generic [ref=e1296]: "#22"
+                  - generic [ref=e1297]: SOAPHound - Build Cache
+                  - generic [ref=e1298]: powershell
+              - generic [ref=e1299]:
+                - link "MITRE Caldera (opens in new tab)" [ref=e1301] [cursor=pointer]:
+                  - /url: https://caldera.mitre.org/
+                  - text: MITRE Caldera ↗
+                - generic [ref=e1303]: adversary emulation platform
+          - button "Affected Applications (4)" [ref=e1306]:
+            - generic [ref=e1307]:
+              - img [ref=e1309]
+              - generic [ref=e1311]: Affected Applications
+              - generic [ref=e1312]: (4)
+            - img [ref=e1313]
+          - generic [ref=e1315]:
+            - button "VirusTotal Sandboxing Report (5)" [ref=e1317]:
+              - generic [ref=e1318]:
+                - img [ref=e1320]
+                - generic [ref=e1322]: VirusTotal Sandboxing Report
+                - generic [ref=e1323]: (5)
+              - img [ref=e1324]
+            - generic [ref=e1327]:
+              - generic [ref=e1328]:
+                - generic [ref=e1329]: 12/75
+                - generic [ref=e1330]: sandbox
+                - generic [ref=e1331]: unknown_stealer
+                - generic "Powershell" [ref=e1332]
+                - generic "563ae5a1263eaa065b1a193870343637cc7650ccf0d8f6ff75f47906f3e85c0f" [ref=e1333]: 563ae5a1263e...e85c0f
+                - button "VirusTotal lookup" [ref=e1334]:
+                  - img [ref=e1336]
+                - generic [ref=e1338]: Mar 28, 2026
+              - generic [ref=e1339]:
+                - generic [ref=e1340]: 5/75
+                - generic [ref=e1341]: sandbox
+                - generic [ref=e1342]: unknown_stealer
+                - generic "Powershell" [ref=e1343]
+                - generic "371d72144e3862bbb3ce66821e47232c8a08eba166f13cade5bfaad1e1a6ab7d" [ref=e1344]: 371d72144e38...a6ab7d
+                - button "VirusTotal lookup" [ref=e1345]:
+                  - img [ref=e1347]
+                - generic [ref=e1349]: Mar 28, 2026
+              - generic [ref=e1350]:
+                - generic [ref=e1351]: 22/75
+                - generic [ref=e1352]: sandbox
+                - generic [ref=e1353]: unknown_stealer
+                - generic "Win32 EXE" [ref=e1354]
+                - generic "c22d94a2652a4689a73d845e127157de986b72669aabf1c4fefc0f789646895b" [ref=e1355]: c22d94a2652a...46895b
+                - button "VirusTotal lookup" [ref=e1356]:
+                  - img [ref=e1358]
+                - generic [ref=e1360]: Mar 28, 2026
+              - generic [ref=e1361]:
+                - generic [ref=e1362]: 37/76
+                - generic [ref=e1363]: sandbox
+                - generic "Win32 EXE" [ref=e1364]
+                - generic "9f2445970118960bddeafa3020b5c7f6e07ed53d" [ref=e1365]: 9f2445970118...7ed53d
+                - button "VirusTotal lookup" [ref=e1366]:
+                  - img [ref=e1368]
+                - generic [ref=e1370]: Mar 27, 2026
+              - generic [ref=e1371]:
+                - generic [ref=e1372]: 37/76
+                - generic [ref=e1373]: sandbox
+                - generic "Win32 EXE" [ref=e1374]
+                - generic "19c4e403846640def976af31f03105ae" [ref=e1375]: 19c4e4038466...3105ae
+                - button "VirusTotal lookup" [ref=e1376]:
+                  - img [ref=e1378]
+                - generic [ref=e1380]: Mar 27, 2026
+          - button "VERIS Categories (3)" [ref=e1383]:
+            - generic [ref=e1384]:
+              - img [ref=e1386]
+              - generic [ref=e1388]: VERIS Categories
+              - generic [ref=e1389]: (3)
+            - img [ref=e1390]
+          - button "Cloud Security Controls (6)" [ref=e1394]:
+            - generic [ref=e1395]:
+              - img [ref=e1397]
+              - generic [ref=e1399]: Cloud Security Controls
+              - generic [ref=e1400]: (6)
+            - img [ref=e1401]

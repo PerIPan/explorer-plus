@@ -389,7 +389,7 @@ export function Relationships() {
               }
             }}
             placeholder={selectedId ? 'Search for another entity...' : 'Phishing, APT29, PowerShell, T1059, Linux 7...'}
-            className="flex-1 bg-transparent text-sm text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none"
+            className="flex-1 bg-transparent text-[16px] md:text-sm text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none"
           />
           {searchInput && (
             <button

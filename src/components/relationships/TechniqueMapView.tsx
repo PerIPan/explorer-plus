@@ -410,7 +410,7 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
 
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 max-w-full overflow-hidden">
       {/* Technique header */}
       <div className="pb-1">
         <div className="flex items-center gap-2">
@@ -450,9 +450,9 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
 
       {/* Description */}
       {technique.description && (
-        <div className="bg-[var(--surface-deep)] border border-[var(--border-color)] rounded-lg p-4">
+        <div className="bg-[var(--surface-deep)] border border-[var(--border-color)] rounded-lg p-4 overflow-hidden">
           <p
-            className="text-sm text-[var(--text-secondary)] leading-relaxed whitespace-pre-wrap"
+            className="text-sm text-[var(--text-secondary)] leading-relaxed whitespace-pre-wrap break-words"
             dangerouslySetInnerHTML={{ __html: sanitize(sanitizeMarkdown(technique.description)) }}
           />
         </div>
@@ -831,7 +831,7 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
                     <EntityLink type="group" attackId={g.attackId} name={g.name} useMap />
                   </div>
                   <p
-                    className="text-[11px] text-[var(--text-secondary)] leading-relaxed"
+                    className="text-[11px] text-[var(--text-secondary)] leading-relaxed break-words"
                     dangerouslySetInnerHTML={{ __html: sanitize(sanitizeMarkdown(g.procedure ?? '')) }}
                   />
                 </div>

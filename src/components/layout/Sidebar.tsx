@@ -102,7 +102,8 @@ function NavItemLink({ path, label, tooltip, end }: NavItem & { end?: boolean })
 function CollapsibleNavSection({ label, items, defaultOpen = false, title }: { label: string; items: NavItem[]; defaultOpen?: boolean; title?: string }) {
   const location = useLocation();
   const isActiveRoute = items.some((item) => location.pathname.startsWith(item.path));
-  const [open, setOpen] = useState(defaultOpen || isActiveRoute);
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
+  const [open, setOpen] = useState(isMobile ? isActiveRoute : (defaultOpen || isActiveRoute));
 
   // Auto-expand when navigating to a route inside this section
   useEffect(() => {

@@ -161,7 +161,7 @@ export function SearchBar() {
         placeholder="Search techniques, groups, software, applications — all domains..."
         aria-label="Search MITRE ATT&CK entities"
         className="
-          w-full pl-9 pr-16 py-2 rounded-md text-sm
+          w-full pl-9 pr-16 py-2 rounded-md text-[16px] md:text-sm
           bg-[var(--surface-card)] border border-[var(--border-color)]
           text-[var(--text-primary)] placeholder-[var(--text-secondary)]
           focus:outline-none focus:border-[var(--accent-teal)] focus:ring-1 focus:ring-[#64ffda33]

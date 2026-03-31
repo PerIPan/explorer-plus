@@ -162,7 +162,7 @@ export function DataSourceMapView({ attackId }: DataSourceMapViewProps) {
       {dataSource.description && (
         <div className="bg-[var(--surface-deep)] border border-[var(--border-color)] rounded-lg p-4">
           <p
-            className="text-sm text-[var(--text-secondary)] leading-relaxed whitespace-pre-wrap"
+            className="text-sm text-[var(--text-secondary)] leading-relaxed whitespace-pre-wrap break-words"
             dangerouslySetInnerHTML={{
               __html: sanitize(sanitizeMarkdown(dataSource.description)),
             }}

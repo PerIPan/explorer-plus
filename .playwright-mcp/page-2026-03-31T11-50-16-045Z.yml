@@ -1,0 +1,88 @@
+- generic [ref=e3]:
+  - complementary "Main navigation" [ref=e4]:
+    - generic [ref=e5]:
+      - button "MITRE EXPLORER Plus" [ref=e6]:
+        - generic [ref=e7]:
+          - generic [ref=e8]: MITRE EXPLORER
+          - generic [ref=e9]: Plus
+      - button "Close navigation menu" [ref=e10]:
+        - img [ref=e11]
+    - generic [ref=e13]:
+      - generic [ref=e14]:
+        - generic [ref=e15]: Domain
+        - generic [ref=e16]:
+          - combobox "Switch ATT&CK domain" [ref=e17] [cursor=pointer]:
+            - option "Enterprise" [selected]
+            - option "Mobile"
+            - option "ICS"
+            - option "ATLAS"
+            - option "All"
+          - img
+      - generic [ref=e18]:
+        - generic [ref=e19]: Sector
+        - generic [ref=e20]:
+          - combobox "Filter by industry sector" [ref=e21] [cursor=pointer]:
+            - option "All" [selected]
+          - img
+    - navigation [ref=e22]:
+      - generic [ref=e23]:
+        - link "360 Views" [ref=e24] [cursor=pointer]:
+          - /url: /
+        - link "Matrix" [ref=e25] [cursor=pointer]:
+          - /url: /matrix
+        - link "Overview" [ref=e26] [cursor=pointer]:
+          - /url: /dashboard
+      - button "Threat Actors" [ref=e29]:
+        - img [ref=e30]
+        - text: Threat Actors
+      - button "Offensive" [ref=e34]:
+        - img [ref=e35]
+        - text: Offensive
+      - button "Defensive" [ref=e39]:
+        - img [ref=e40]
+        - text: Defensive
+    - generic [ref=e44]:
+      - button "Assets" [ref=e45]:
+        - img [ref=e46]
+        - text: Assets
+      - link "Applications" [ref=e49] [cursor=pointer]:
+        - /url: /applications
+    - generic [ref=e52]:
+      - button "CTI" [ref=e53]:
+        - img [ref=e54]
+        - text: CTI
+      - generic [ref=e56]:
+        - link "Reports" [ref=e57] [cursor=pointer]:
+          - /url: /cti/reports
+        - link "CVEs" [ref=e58] [cursor=pointer]:
+          - /url: /cti/cves
+        - link "IOCs" [ref=e59] [cursor=pointer]:
+          - /url: /cti/iocs
+        - link "Feed Status" [ref=e60] [cursor=pointer]:
+          - /url: /cti/feed-status
+    - button "Frameworks" [ref=e64]:
+      - img [ref=e65]
+      - text: Frameworks
+    - button "Extended Intel" [ref=e70]:
+      - img [ref=e71]
+      - text: Extended Intel
+    - link "A2A Agent Protocol v1.0" [ref=e74] [cursor=pointer]:
+      - /url: /.well-known/agent-card.json
+      - img [ref=e75]
+      - generic [ref=e78]: A2A Agent Protocol
+      - generic [ref=e79]: v1.0
+  - generic [ref=e80]:
+    - banner [ref=e81]:
+      - button "Open navigation menu" [ref=e82]:
+        - img [ref=e83]
+      - search [ref=e85]:
+        - generic:
+          - img
+        - searchbox "Search MITRE ATT&CK entities" [ref=e86]
+        - generic [ref=e87]: /
+      - button "Switch to dark theme" [ref=e88]:
+        - img [ref=e89]
+      - button "?" [ref=e91]
+    - main [ref=e92]:
+      - status [ref=e93]:
+        - generic [ref=e99]: Loading...
