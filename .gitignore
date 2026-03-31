@@ -17,3 +17,4 @@ dist/
 .docs/superpowers
 docs/superpowers/specs/2026-03-23-virustotal-integration-research.md
 .gitignore
+.playwright-mcp/
