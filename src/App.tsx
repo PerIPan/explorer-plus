@@ -171,7 +171,7 @@ function Layout() {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 px-3 md:px-6 py-4 md:py-6 overflow-auto">
+        <main className="flex-1 px-3 md:px-6 py-4 md:py-6 overflow-y-auto overflow-x-hidden">
           <ErrorBoundary>
             <Outlet />
           </ErrorBoundary>
