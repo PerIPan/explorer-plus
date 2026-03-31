@@ -146,7 +146,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       className={[
         'fixed top-0 left-0 h-screen w-52 bg-[var(--surface-card)] border-r border-[var(--border-color)] flex flex-col z-50 overflow-y-auto',
         'transition-transform duration-200 ease-in-out',
-        open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
+        open ? 'translate-x-0' : '-translate-x-full pointer-events-none lg:translate-x-0 lg:pointer-events-auto',
       ].join(' ')}
       aria-label="Main navigation"
     >
