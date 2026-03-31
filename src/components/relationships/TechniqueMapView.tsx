@@ -47,7 +47,7 @@ function MapCard({ label, icon, count, defaultOpen = true, actionHref, actionLab
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div className="border border-[var(--border-color)] rounded-lg overflow-visible">
+    <div className="border border-[var(--border-color)] rounded-lg overflow-hidden">
       <div className="flex items-center justify-between px-4 py-3 bg-[var(--surface-card)]">
         <button
           type="button"
@@ -83,7 +83,7 @@ function MapCard({ label, icon, count, defaultOpen = true, actionHref, actionLab
         )}
       </div>
       {open && (
-        <div className="px-4 py-4 bg-[var(--surface-alt)] space-y-5 overflow-x-auto break-words">
+        <div className="px-3 md:px-4 py-4 bg-[var(--surface-alt)] space-y-5 overflow-hidden break-words">
           {children}
         </div>
       )}
@@ -102,7 +102,7 @@ function MapRow({ prefix, prefixUrl, children }: { prefix: string; prefixUrl?: s
           </a>
         ) : prefix}
       </span>
-      <div className="flex-1 flex flex-wrap gap-1.5">{children}</div>
+      <div className="flex-1 min-w-0 flex flex-wrap gap-1.5">{children}</div>
     </div>
   );
 }
@@ -410,7 +410,7 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
 
 
   return (
-    <div className="space-y-3 max-w-full overflow-hidden">
+    <div className="space-y-3 min-w-0 w-full overflow-hidden">
       {/* Technique header */}
       <div className="pb-1">
         <div className="flex items-center gap-2">

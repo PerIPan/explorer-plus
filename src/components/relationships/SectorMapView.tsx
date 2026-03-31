@@ -32,7 +32,7 @@ interface MapCardProps {
 function MapCard({ label, icon, count, defaultOpen = true, children }: MapCardProps) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="border border-[var(--border-color)] rounded-lg overflow-visible">
+    <div className="border border-[var(--border-color)] rounded-lg overflow-hidden">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}

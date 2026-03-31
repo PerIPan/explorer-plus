@@ -26,7 +26,7 @@ function CollapsibleSection({ title, count, badge, defaultOpen = false, children
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div className="border border-[var(--border-color)] rounded-lg overflow-visible">
+    <div className="border border-[var(--border-color)] rounded-lg overflow-hidden">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
