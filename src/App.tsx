@@ -128,7 +128,7 @@ function Layout() {
       {/* Main area pushed right of the fixed sidebar on lg+ */}
       <div className="flex-1 flex flex-col lg:ml-52 min-h-screen">
         {/* Top header bar */}
-        <header className="sticky top-0 z-30 flex items-center gap-4 px-6 py-3 bg-[var(--surface-card)] shadow-sm border-b border-[var(--border-color)]">
+        <header className="sticky top-0 z-30 flex items-center gap-2 md:gap-4 px-3 md:px-6 py-2 md:py-3 bg-[var(--surface-card)] shadow-sm border-b border-[var(--border-color)]">
           {/* Hamburger — visible only below lg */}
           <button
             type="button"
@@ -151,13 +151,13 @@ function Layout() {
           <button
             type="button"
             onClick={() => setModelOpen(true)}
-            className="flex-shrink-0 px-3 py-1.5 text-xs rounded-md border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--accent-teal)] hover:border-[var(--teal-dim)] transition-colors"
+            className="hidden md:block flex-shrink-0 px-3 py-1.5 text-xs rounded-md border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--accent-teal)] hover:border-[var(--teal-dim)] transition-colors"
             title="ATT&CK data model — entity relationships"
           >
             Data Model
           </button>
           <div className="flex-1" />
-          <VtBadge />
+          <div className="hidden sm:block"><VtBadge /></div>
           <ThemeToggle />
           <button
             type="button"

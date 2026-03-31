@@ -440,18 +440,24 @@ export function Relationships() {
       {/* Instructions when nothing selected */}
       {!selectedId && (
         <>
-        <div className="text-center mt-[74px] mb-2 max-w-2xl">
-          <div className="text-xl font-light text-[var(--text-secondary)] mb-1">
+        <div className="text-center mt-10 md:mt-[74px] mb-2 max-w-2xl px-4">
+          <div className="text-lg md:text-xl font-light text-[var(--text-secondary)] mb-1">
             Select an entity
           </div>
-          <p className="text-sm text-[var(--text-secondary)] opacity-70 mx-auto max-w-md">
+          <p className="text-xs md:text-sm text-[var(--text-secondary)] opacity-70 mx-auto max-w-md">
             Search for any technique, actor, software, campaign, mitigation,
             data source, tactic, sector, or application to explore its relationships.
           </p>
         </div>
-        <div className="relative h-[calc(100vh-420px)] overflow-hidden rounded-lg">
+        {/* Small centered diamond on mobile */}
+        {/* Mobile diamond — centered below text, no labels */}
+        <div className="flex md:hidden justify-center mt-12 opacity-40 pointer-events-none">
+          <img src="/diamond-favicon.svg" alt="" width={140} height={140} />
+        </div>
 
-          {/* Diamond + corner labels — exact same SVG as modal favicon, scaled 5x */}
+        <div className="relative h-[calc(100vh-420px)] overflow-hidden rounded-lg hidden md:block">
+
+          {/* Diamond + corner labels — desktop only */}
           <div className="absolute bottom-[calc(10%+80px)] right-[22%] pointer-events-none select-none"
                style={{ width: 210, height: 210 }}>
             <img src="/diamond-favicon.svg" alt="" width={210} height={210} className="opacity-[0.55]" />
@@ -492,8 +498,8 @@ export function Relationships() {
 
       {/* Tab bar — shown once entity is selected and data is ready */}
       {selectedId && graphReady && (
-        <div className="border-b border-[var(--border-color)]">
-          <div className="flex gap-1">
+        <div className="border-b border-[var(--border-color)] overflow-x-auto">
+          <div className="flex gap-1 min-w-max">
             {visibleTabs.map((tab) => (
               <button
                 key={tab.id}

@@ -83,7 +83,7 @@ function MapCard({ label, icon, count, defaultOpen = true, actionHref, actionLab
         )}
       </div>
       {open && (
-        <div className="px-4 py-4 bg-[var(--surface-alt)] space-y-5">
+        <div className="px-4 py-4 bg-[var(--surface-alt)] space-y-5 overflow-x-auto break-words">
           {children}
         </div>
       )}
