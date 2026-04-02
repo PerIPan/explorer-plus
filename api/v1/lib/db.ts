@@ -14,7 +14,7 @@ function getPool(): Pool {
     pool = new Pool({
       connectionString: connStr,
       statement_timeout: 5000,
-      connectionTimeoutMillis: isProduction ? 10000 : 3000,
+      connectionTimeoutMillis: isProduction ? 20000 : 3000,
       idle_in_transaction_session_timeout: 10000,
       max: isProduction ? 3 : 10,
       ssl: isProduction ? { rejectUnauthorized: true } : undefined,
@@ -31,5 +31,15 @@ export async function query<T extends QueryResultRow = QueryResultRow>(
   params?: unknown[],
 ): Promise<QueryResult<T>> {
   const client = getPool();
-  return client.query<T>(text, params);
+  try {
+    return await client.query<T>(text, params);
+  } catch (err) {
+    // Retry once on connection errors (Neon cold-start)
+    const msg = err instanceof Error ? err.message : '';
+    if (msg.includes('Connection terminated') || msg.includes('connection timeout')) {
+      await new Promise((r) => setTimeout(r, 2000));
+      return client.query<T>(text, params);
+    }
+    throw err;
+  }
 }
