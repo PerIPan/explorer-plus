@@ -55,7 +55,7 @@ function sanitizeSearch(q: unknown): string {
 const TOOL_DECLARATIONS = [
   {
     name: 'search_cves',
-    description: 'Search CVE vulnerabilities by keyword, severity, or date range. Returns CVE ID, CVSS score, severity, description, and linked techniques.',
+    description: 'Search CVE vulnerabilities by keyword, severity, or date range. Returns CVE ID, CVSS score, severity, description, linked ATT&CK technique IDs, and affected applications.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -388,6 +388,7 @@ When responding:
 - Do not truncate CVE descriptions mid-sentence — include the full description or summarize it cleanly
 - When reporting CVEs, add this note at the end: "NVD typically adds CPE entries days after CVE publication — recent CVEs may show empty until enriched."
 - For each CVE with linked techniques, list the technique IDs (e.g. T1190, T1059) — these are the bridge between a vulnerability and the actual attack behaviour it enables
+- For each CVE, include the affected applications if available (the "applications" field in the response) — this tells the user which products are impacted
 - When showing date ranges in your response, always confirm the actual dates used (e.g. "CVEs published between 2026-03-22 and 2026-03-29")`;
 }
 
