@@ -765,7 +765,7 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
       {(() => {
         const owaspCats = frameworks?.owasp ?? [];
         return (
-          <MapCard label="OWASP Risk Categories" icon={IconShield} count={owaspCats.length} defaultOpen={false}>
+          <MapCard label="OWASP Risk Categories" icon={IconShield} count={owaspCats.length}>
             {owaspCats.length > 0 ? (
               <MapRow prefix="OWASP">
                 <div className="flex flex-wrap gap-1.5">

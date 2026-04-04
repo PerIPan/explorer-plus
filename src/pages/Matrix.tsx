@@ -76,6 +76,10 @@ export function Matrix() {
         const d = await apiFetch<{ techniques?: Array<{ attackId: string }> }>(`/data-sources/${highlightEntity}`);
         return d.techniques?.map((t) => t.attackId) ?? [];
       }
+      if (highlightType === 'owasp') {
+        const d = await apiFetch<{ techniques?: Array<{ attackId: string }> }>(`/frameworks/owasp/${highlightEntity}`);
+        return d.techniques?.map((t) => t.attackId) ?? [];
+      }
       return [];
     },
     enabled: Boolean(highlightEntity) && Boolean(highlightType),
