@@ -28,7 +28,7 @@
 | **CVEs** | 21K+ vulnerabilities from CVElistV5 + NVD enrichment + CISA KEV, with technique IDs and affected apps |
 | **IOCs** | 5,800+ indicators (IPs, domains, hashes, URLs) from OTX, ThreatFox, MalwareBazaar, enriched with VirusTotal verdicts |
 | **Detection** | 3,100+ Sigma rules, 1,770+ Atomic Red Team tests, 5,000+ D3FEND countermeasures, detection strategies + analytics |
-| **Frameworks** | NIST 800-53, MITRE Engage, RE&CT, VERIS, Azure + GCP cloud controls — all mapped per technique |
+| **Frameworks** | OWASP Top 10 (Web 2021, ML 2023, LLM 2025), NIST 800-53, MITRE Engage, RE&CT, VERIS, Azure + GCP cloud controls — all mapped per technique |
 | **Threat actors** | 191 ATT&CK groups + 514 ThaiCERT/ETDA external actors with country, motivation, state sponsor attribution |
 | **Sector intelligence** | 12 industry verticals with threat landscape — groups, techniques, campaigns, CVEs, vulnerable apps |
 | **A2A Agent Protocol v1.0** | 26 tools, 16 skills — AI agents query this knowledge base via JSON-RPC 2.0, powered by Gemini |
@@ -65,6 +65,7 @@ React SPA (Vite + TypeScript + Tailwind)
 | D3FEND | Defensive countermeasures | 5,036 | Cron |
 | NIST 800-53 | Compliance controls | 5,264 | Seed |
 | ThaiCERT/ETDA | External threat actor profiles | 514 | Seed |
+| OWASP Top 10 | Web (2021), ML (2023), LLM (2025) security risks via CWE + ATLAS | 30 | Seed |
 | MITRE Engage, RE&CT, VERIS | Deception, response, incident classification | 2,400+ | Seed |
 | Azure + GCP | Cloud security controls | 1,454 | Seed |
 | RSS feeds | DFIR Report, Unit42, Microsoft Security, Talos | 80+ reports | Cron |
