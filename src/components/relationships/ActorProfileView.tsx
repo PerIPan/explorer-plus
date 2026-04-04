@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useGroup, useCampaign, useExternalActorByGroup, useExternalActorByName, useFrameworksByTechniques } from '../../hooks/useApi';
+import { apiFetch } from '../../lib/api';
 import { useDomain } from '../../contexts/DomainContext';
 import { useSector } from '../../contexts/SectorContext';
 import { EntityLink } from '../shared/EntityLink';
@@ -11,6 +13,20 @@ import { ExternalLinksButton } from '../shared/ExternalLinksButton';
 import type { GroupTechnique, GroupSoftware, GroupCampaign, GroupSector, ExternalActor } from '../../lib/types';
 import { DiamondLoader } from '../shared/FoldingDiamond';
 import { getParentId } from '../../lib/getParentId';
+
+interface OwaspCategory {
+  categoryId: string;
+  name: string;
+  framework: string;
+}
+
+function useOwaspCategories() {
+  return useQuery({
+    queryKey: ['owasp-top10-all'],
+    queryFn: () => apiFetch<{ data: OwaspCategory[]; frameworks: string[] }>('/frameworks/owasp'),
+    staleTime: 60 * 60 * 1000,
+  });
+}
 
 // ── Collapsible section ────────────────────────────────────────────────────────
 
@@ -277,6 +293,7 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
   const techniqueIds = (entityType === 'group' ? groupResult.data?.techniques : campaignResult.data?.techniques)
     ?.map((t: { attackId: string }) => t.attackId) ?? [];
   const fwResult = useFrameworksByTechniques(techniqueIds);
+  const owaspResult = useOwaspCategories();
 
   // ── External actor profile (ThaiCERT / ETDA) ───────────────────────────
   if (entityType === 'external_actor') {
@@ -638,6 +655,23 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
           </CollapsibleSection>
         )}
 
+        {/* OWASP Risk Categories — collapsed */}
+        {owaspResult.data?.data && owaspResult.data.data.length > 0 && (
+          <CollapsibleSection title="OWASP Risk Categories" count={owaspResult.data.data.length} defaultOpen={false}>
+            <div className="flex flex-wrap gap-1.5">
+              {owaspResult.data.data.map((cat) => (
+                <EntityLink
+                  key={`${cat.categoryId}-${cat.framework}`}
+                  type="owasp"
+                  attackId={cat.categoryId}
+                  name={`${cat.name} (${cat.framework})`}
+                  useMap
+                />
+              ))}
+            </div>
+          </CollapsibleSection>
+        )}
+
         {/* Techniques — last, largest section */}
         {techniques.length > 0 && (
           <CollapsibleSection title="Techniques" count={techniques.length} defaultOpen>
@@ -719,6 +753,23 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
               <a key={`${c.provider}-${c.controlId}`} href={ctidCloudUrl(c.provider, c.controlId)} target="_blank" rel="noopener noreferrer" title={`${c.controlName} (${c.provider})`} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium bg-[var(--teal-faint)] text-[var(--accent-teal)] border border-[var(--teal-dim)] hover:bg-[var(--teal-dim)] transition-colors">
                 <span className="uppercase text-[8px] opacity-60">{c.provider}</span>{c.controlId} ↗
               </a>
+            ))}
+          </div>
+        </CollapsibleSection>
+      )}
+
+      {/* OWASP Risk Categories — collapsed */}
+      {owaspResult.data?.data && owaspResult.data.data.length > 0 && (
+        <CollapsibleSection title="OWASP Risk Categories" count={owaspResult.data.data.length} defaultOpen={false}>
+          <div className="flex flex-wrap gap-1.5">
+            {owaspResult.data.data.map((cat) => (
+              <EntityLink
+                key={`${cat.categoryId}-${cat.framework}`}
+                type="owasp"
+                attackId={cat.categoryId}
+                name={`${cat.name} (${cat.framework})`}
+                useMap
+              />
             ))}
           </div>
         </CollapsibleSection>

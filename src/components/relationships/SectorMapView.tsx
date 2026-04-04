@@ -6,6 +6,12 @@ import { Badge } from '../shared/Badge';
 import { formatDate } from '../../lib/formatDate';
 import { DiamondLoader } from '../shared/FoldingDiamond';
 
+interface OwaspCategory {
+  categoryId: string;
+  name: string;
+  framework: string;
+}
+
 // ── Types ────────────────────────────────────────────────────────────────────
 
 interface SectorRelationships {
@@ -110,6 +116,14 @@ export function SectorMapView({ sectorSlug }: SectorMapViewProps) {
     enabled: Boolean(sectorSlug),
     staleTime: 2 * 60 * 1000,
   });
+
+  const owaspResult = useQuery({
+    queryKey: ['owasp-top10-all'],
+    queryFn: () => apiFetch<{ data: OwaspCategory[]; frameworks: string[] }>('/frameworks/owasp'),
+    staleTime: 60 * 60 * 1000,
+  });
+
+  const owaspCategories = owaspResult.data?.data ?? [];
 
   if (isLoading) {
     return <DiamondLoader text="Loading sector map..." />;
@@ -245,6 +259,23 @@ export function SectorMapView({ sectorSlug }: SectorMapViewProps) {
           <p className="text-xs text-[var(--text-secondary)]">No techniques linked yet.</p>
         )}
       </MapCard>
+
+      {/* OWASP RISK CATEGORIES */}
+      {owaspCategories.length > 0 && (
+        <MapCard label="OWASP Risk Categories" icon={IconShield} count={owaspCategories.length} defaultOpen={false}>
+          <div className="flex flex-wrap gap-1.5">
+            {owaspCategories.map((cat) => (
+              <EntityLink
+                key={`${cat.categoryId}-${cat.framework}`}
+                type="owasp"
+                attackId={cat.categoryId}
+                name={`${cat.name} (${cat.framework})`}
+                useMap
+              />
+            ))}
+          </div>
+        </MapCard>
+      )}
     </div>
   );
 }

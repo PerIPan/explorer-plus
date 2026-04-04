@@ -19,7 +19,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   const domainWhere = domain ? ` AND domain = $1` : '';
   const domainParams = domain ? [domain] : [];
 
-  const [techniques, groups, software, campaigns, mitigations, tactics, externalActors, sectors, applications] = await Promise.all([
+  const [techniques, groups, software, campaigns, mitigations, tactics, externalActors, sectors, applications, owaspCategories] = await Promise.all([
     query<{ attackId: string; name: string; domain: string | null }>(
       `SELECT attack_id AS "attackId", name, domain FROM techniques
        WHERE is_revoked = false AND is_deprecated = false AND is_subtechnique = false${domainWhere}
@@ -68,6 +68,11 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
       SELECT normalized AS "attackId", vendor || ' / ' || product AS name, NULL as domain
       FROM applications WHERE cve_count > 0 ORDER BY cve_count DESC LIMIT 500
     `),
+    // OWASP categories — all frameworks
+    query<{ attackId: string; name: string; domain: string | null }>(`
+      SELECT category_id AS "attackId", category_id || ' ' || name AS name, NULL as domain
+      FROM owasp_top10 ORDER BY framework, category_id
+    `),
   ]);
 
   const entities = [
@@ -80,6 +85,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     ...externalActors.rows.map(r => ({ ...r, type: 'external_actor' })),
     ...sectors.rows.map(r => ({ ...r, type: 'sector' })),
     ...applications.rows.map(r => ({ ...r, type: 'application' })),
+    ...owaspCategories.rows.map(r => ({ ...r, type: 'owasp' })),
   ];
 
   res.status(200).json({ data: entities, total: entities.length });

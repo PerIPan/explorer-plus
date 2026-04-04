@@ -91,7 +91,7 @@ const TAB_FOR_TYPE: Record<string, TabId> = {
   owasp: 'owasp-map',
 };
 
-const TAB_TYPE_HINT: Record<string, string> = { 'sector-map': 'sector', 'application-map': 'application' };
+const TAB_TYPE_HINT: Record<string, string> = { 'sector-map': 'sector', 'application-map': 'application', 'owasp-map': 'owasp' };
 
 /** Derive the entity type from the graph center node or from search suggestions */
 function inferEntityType(
@@ -179,7 +179,7 @@ export function Relationships() {
     if (domain === 'all') return results.slice(0, 12);
     // Filter by domain: include entities matching the active domain + domain-agnostic entities (groups, sectors, apps, external actors)
     return results
-      .filter(s => !s.domain || s.domain === domain || ['group', 'sector', 'application', 'external_actor'].includes(s.type))
+      .filter(s => !s.domain || s.domain === domain || ['group', 'sector', 'application', 'external_actor', 'owasp'].includes(s.type))
       .slice(0, 12);
   }, [fuse, searchInput, domain]);
 
@@ -189,7 +189,7 @@ export function Relationships() {
     ?? null;
 
   const isSector = entityType === 'sector';
-  const isNonGraphEntity = isSector || entityType === 'application';
+  const isNonGraphEntity = isSector || entityType === 'application' || entityType === 'owasp';
 
   /** Sector relationships — fetch only for sectors, build graph from it */
   const { data: sectorRel } = useQuery({

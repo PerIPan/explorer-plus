@@ -53,17 +53,16 @@ function severityVariant(severity: string | null): 'orange' | 'yellow' | 'blue' 
 
 /** Whether this framework uses community-mapped CWEs (ML / LLM families) */
 function isCommunityMapped(framework: string): boolean {
-  return framework === 'ml-owasp' || framework === 'llm-owasp';
+  return framework === 'ml-2023' || framework === 'llm-2025';
 }
 
 /** Human-readable framework label */
 function frameworkLabel(framework: string): string {
   switch (framework) {
-    case 'web-owasp':   return 'OWASP Web Top 10';
-    case 'ml-owasp':    return 'OWASP ML Top 10';
-    case 'llm-owasp':   return 'OWASP LLM Top 10';
-    case 'api-owasp':   return 'OWASP API Top 10';
-    default:            return framework;
+    case 'web-2021':   return 'OWASP Web Top 10 (2021)';
+    case 'ml-2023':    return 'OWASP ML Top 10 (2023)';
+    case 'llm-2025':   return 'OWASP LLM Top 10 (2025)';
+    default:           return framework;
   }
 }
 
