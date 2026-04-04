@@ -40,7 +40,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
       `SELECT DISTINCT cm.attack_technique_id AS "attackId", t.name, cm.cwe_id AS "cweId"
        FROM capec_mappings cm
        JOIN techniques t ON t.id = cm.technique_id
-       WHERE cm.technique_id IS NOT NULL AND cm.cwe_id = ANY($1)
+       WHERE cm.technique_id IS NOT NULL AND cm.cwe_id = ANY($1::text[])
        ORDER BY cm.attack_technique_id`,
       [cat.cwe_ids],
     ),
@@ -56,7 +56,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
               cd.published_at AS "publishedAt", COALESCE(cd.is_kev, false) AS "isKev"
        FROM cve_details cd
        JOIN cve_weaknesses cw ON cw.cve_id = cd.cve_id
-       WHERE cw.cwe_id = ANY($1)
+       WHERE cw.cwe_id = ANY($1::text[])
        ORDER BY cd.cvss_score DESC NULLS LAST, cd.published_at DESC NULLS LAST
        LIMIT 20`,
       [cat.cwe_ids],
@@ -70,7 +70,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
          SELECT DISTINCT ap.application_id
          FROM affected_products ap
          JOIN cve_weaknesses cw ON cw.cve_id = ap.cve_id
-         WHERE cw.cwe_id = ANY($1)
+         WHERE cw.cwe_id = ANY($1::text[])
        )
        ORDER BY a.cve_count DESC
        LIMIT 50`,
@@ -81,7 +81,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     query<{ attackId: string; name: string }>(
       `SELECT attack_id AS "attackId", name
        FROM techniques
-       WHERE attack_id = ANY($1) AND domain = 'atlas-attack'
+       WHERE attack_id = ANY($1::text[]) AND domain = 'atlas-attack'
        ORDER BY attack_id`,
       [cat.atlas_technique_ids],
     ),
@@ -91,7 +91,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
       `SELECT category_id AS "categoryId", name, framework
        FROM owasp_top10
        WHERE category_id != $1 AND framework != $2
-         AND (cwe_ids && $3 OR atlas_technique_ids && $4)
+         AND (cwe_ids && $3::text[] OR atlas_technique_ids && $4::text[])
        ORDER BY framework, category_id`,
       [categoryId, cat.framework, cat.cwe_ids, cat.atlas_technique_ids],
     ),
