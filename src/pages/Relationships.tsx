@@ -270,7 +270,8 @@ export function Relationships() {
   }, [isApp, appDetail, selectedId]);
 
   const effectiveGraphData = isSector ? sectorGraphData : isApp ? appGraphData : graphData;
-  const graphReady = isNonGraphEntity ? Boolean(isSector ? sectorGraphData : appGraphData) : (!isLoading && !error && Boolean(graphData));
+  const isOwasp = entityType === 'owasp';
+  const graphReady = isOwasp ? true : isNonGraphEntity ? Boolean(isSector ? sectorGraphData : appGraphData) : (!isLoading && !error && Boolean(graphData));
 
   /** Determine which tabs are visible for the current entity */
   const visibleTabs = TABS.filter(
@@ -448,8 +449,8 @@ export function Relationships() {
             Select an entity
           </div>
           <p className="text-xs md:text-sm text-[var(--text-secondary)] opacity-70 mx-auto max-w-md">
-            Search for any technique, actor, software, campaign, mitigation,
-            data source, tactic, sector, application, or OWASP category to explore its relationships.
+            Search for any Technique, Actor, Software, Campaign, Mitigation,
+            Data Source, Tactic, Sector, Application, or OWASP category to explore its relationships.
           </p>
         </div>
         {/* Small centered diamond on mobile */}

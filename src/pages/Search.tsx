@@ -26,7 +26,7 @@ const ENTITY_COLOR: Record<EntityType, string> = {
   campaign: 'text-[var(--accent-blue)]',
   data_source: 'text-[var(--accent-neutral)]',
   tactic: 'text-[var(--accent-yellow)]',
-  owasp: 'text-[var(--accent-orange)]',
+  owasp: 'text-[#059669]',
 };
 
 const EXAMPLE_CHIPS = ['APT29', 'T1059', 'Mimikatz', 'Phishing'];
@@ -186,7 +186,7 @@ export function Search() {
               <Badge label={`${data.data_sources.length} Data Sources`} variant="neutral" />
             )}
             {data.owasp && data.owasp.length > 0 && (
-              <Badge label={`${data.owasp.length} OWASP`} variant="orange" />
+              <Badge label={`${data.owasp.length} OWASP`} variant="green" />
             )}
           </div>
 

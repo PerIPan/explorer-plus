@@ -314,6 +314,7 @@ export function useExternalActorByName(name: string) {
 interface AggregatedFrameworks {
   veris: Array<{ verisId: string; count: number }>;
   cloud: Array<{ provider: string; controlId: string; controlName: string; mappingType: string | null; count: number }>;
+  owasp?: Array<{ categoryId: string; name: string; framework: string }>;
 }
 
 export function useFrameworksByTechniques(techniqueIds: string[]) {

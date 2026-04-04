@@ -17,7 +17,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     return;
   }
 
-  const [verisResult, cloudResult] = await Promise.all([
+  const [verisResult, cloudResult, owaspResult] = await Promise.all([
     query<{ verisId: string; count: string }>(
       `SELECT veris_id AS "verisId", COUNT(*)::text AS count
        FROM veris_mappings
@@ -39,11 +39,21 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
        ORDER BY provider, COUNT(*) DESC`,
       [ids],
     ),
+    // OWASP categories via CWE overlap with techniques' CAPEC mappings
+    query<{ categoryId: string; name: string; framework: string }>(
+      `SELECT DISTINCT o.category_id AS "categoryId", o.name, o.framework
+       FROM owasp_top10 o
+       JOIN capec_mappings cm ON cm.cwe_id = ANY(o.cwe_ids)
+       WHERE cm.attack_technique_id = ANY($1::text[]) AND cm.technique_id IS NOT NULL
+       ORDER BY o.framework, o.category_id`,
+      [ids],
+    ),
   ]);
 
   res.status(200).json({
     veris: verisResult.rows.map((r) => ({ ...r, count: parseInt(r.count, 10) })),
     cloud: cloudResult.rows.map((r) => ({ ...r, count: parseInt(r.count, 10) })),
+    owasp: owaspResult.rows,
   });
 }
 

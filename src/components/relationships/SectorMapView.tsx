@@ -1,16 +1,11 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '../../lib/api';
+import { useFrameworksByTechniques } from '../../hooks/useApi';
 import { EntityLink } from '../shared/EntityLink';
 import { Badge } from '../shared/Badge';
 import { formatDate } from '../../lib/formatDate';
 import { DiamondLoader } from '../shared/FoldingDiamond';
-
-interface OwaspCategory {
-  categoryId: string;
-  name: string;
-  framework: string;
-}
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -117,13 +112,10 @@ export function SectorMapView({ sectorSlug }: SectorMapViewProps) {
     staleTime: 2 * 60 * 1000,
   });
 
-  const owaspResult = useQuery({
-    queryKey: ['owasp-top10-all'],
-    queryFn: () => apiFetch<{ data: OwaspCategory[]; frameworks: string[] }>('/frameworks/owasp'),
-    staleTime: 60 * 60 * 1000,
-  });
-
-  const owaspCategories = owaspResult.data?.data ?? [];
+  // Derive technique IDs for framework lookup (after data loads)
+  const sectorTechniqueIds = data?.techniques?.map(t => t.attackId) ?? [];
+  const fwResult = useFrameworksByTechniques(sectorTechniqueIds);
+  const owaspCategories = fwResult.data?.owasp ?? [];
 
   if (isLoading) {
     return <DiamondLoader text="Loading sector map..." />;

@@ -59,9 +59,9 @@ const entityConfig: Record<
     path: 'tactics',
   },
   owasp: {
-    color: 'text-[var(--accent-orange)]',
-    bg: 'bg-[var(--orange-faint)]',
-    border: 'border-[var(--orange-dim)]',
+    color: 'text-[#059669]',
+    bg: 'bg-[#059669]/10',
+    border: 'border-[#059669]/30',
     path: 'frameworks/owasp',
   },
 };

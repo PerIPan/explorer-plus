@@ -227,7 +227,7 @@ export function OwaspTop10() {
                                     {cve.cvssSeverity}
                                   </span>
                                 )}
-                                {cve.cvssScore && (
+                                {cve.cvssScore !== null && (
                                   <span className="text-[10px] text-[var(--text-secondary)]">{cve.cvssScore}</span>
                                 )}
                                 {cve.isKev && <Badge label="KEV" variant="pink" />}
