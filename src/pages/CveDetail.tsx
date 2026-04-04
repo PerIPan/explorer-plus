@@ -220,6 +220,25 @@ export function CveDetail() {
               </section>
             )}
 
+            {/* OWASP Categories */}
+            {data.owaspCategories && data.owaspCategories.length > 0 && (
+              <div>
+                <h4 className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2">
+                  OWASP Categories
+                </h4>
+                <div className="flex flex-wrap gap-1.5">
+                  {data.owaspCategories.map((cat) => (
+                    <EntityLink
+                      key={`${cat.categoryId}-${cat.framework}`}
+                      type="owasp"
+                      attackId={cat.categoryId}
+                      name={cat.name}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Sources */}
             <section>
               <h3 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-2">

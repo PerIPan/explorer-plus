@@ -15,6 +15,7 @@ const ENTITY_PATH: Record<EntityType, string> = {
   campaign: 'campaigns',
   data_source: 'data-sources',
   tactic: 'tactics',
+  owasp: 'frameworks/owasp',
 };
 
 const ENTITY_COLOR: Record<EntityType, string> = {
@@ -25,6 +26,7 @@ const ENTITY_COLOR: Record<EntityType, string> = {
   campaign: 'text-[var(--accent-blue)]',
   data_source: 'text-[var(--accent-neutral)]',
   tactic: 'text-[var(--accent-yellow)]',
+  owasp: 'text-[var(--accent-orange)]',
 };
 
 const EXAMPLE_CHIPS = ['APT29', 'T1059', 'Mimikatz', 'Phishing'];
@@ -88,7 +90,8 @@ export function Search() {
     (data?.software.length ?? 0) +
     (data?.mitigations.length ?? 0) +
     (data?.campaigns.length ?? 0) +
-    (data?.data_sources.length ?? 0);
+    (data?.data_sources.length ?? 0) +
+    (data?.owasp?.length ?? 0);
 
   function setQuery(term: string) {
     navigate(`/search?q=${encodeURIComponent(term)}`);
@@ -181,6 +184,9 @@ export function Search() {
             )}
             {data.data_sources.length > 0 && (
               <Badge label={`${data.data_sources.length} Data Sources`} variant="neutral" />
+            )}
+            {data.owasp && data.owasp.length > 0 && (
+              <Badge label={`${data.owasp.length} OWASP`} variant="orange" />
             )}
           </div>
 
@@ -283,6 +289,24 @@ export function Search() {
                     attackId={ds.attackId}
                     name={ds.name}
                     type="data_source"
+                  />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* OWASP Categories */}
+          {data.owasp && data.owasp.length > 0 && (
+            <section>
+              <SectionHeader label="OWASP Categories" count={data.owasp.length} />
+              <div className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg divide-y divide-[var(--border-color)]">
+                {data.owasp.map((cat) => (
+                  <ResultRow
+                    key={cat.categoryId}
+                    attackId={cat.categoryId}
+                    name={`${cat.name} (${cat.framework})`}
+                    type="owasp"
+                    context={cat.isDraft ? 'DRAFT' : undefined}
                   />
                 ))}
               </div>

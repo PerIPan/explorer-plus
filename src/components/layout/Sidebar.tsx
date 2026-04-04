@@ -67,6 +67,7 @@ const ctiNav: NavItem[] = [
 ];
 
 const frameworksNav: NavItem[] = [
+  { path: '/frameworks/owasp', label: 'OWASP Top 10', tooltip: 'web, ML, and LLM security risks mapped to ATT&CK + ATLAS via CWE' },
   { path: '/frameworks/nist', label: 'NIST 800-53', tooltip: 'compliance controls mapped to techniques' },
   { path: '/frameworks/react', label: 'RE&CT', tooltip: 'incident response actions and playbooks' },
   { path: '/frameworks/veris', label: 'VERIS', tooltip: 'incident classification categories (Verizon DBIR standard)' },

@@ -421,7 +421,8 @@ function FrameworksTab({ attackId }: { attackId: string }) {
     data.nist.length === 0 &&
     data.engage.length === 0 &&
     (data.verisCategories?.length ?? 0) === 0 &&
-    (data.cloudControls?.length ?? 0) === 0;
+    (data.cloudControls?.length ?? 0) === 0 &&
+    (data.owasp?.length ?? 0) === 0;
 
   if (isEmpty) {
     return (
@@ -575,6 +576,30 @@ function FrameworksTab({ attackId }: { attackId: string }) {
       {/* Cloud Controls */}
       {(data.cloudControls?.length ?? 0) > 0 && (
         <CloudControlsSection controls={data.cloudControls!} />
+      )}
+
+      {/* OWASP Categories */}
+      {data.owasp && data.owasp.length > 0 && (
+        <section>
+          <h3 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-3">
+            OWASP Categories ({data.owasp.length})
+          </h3>
+          <div className="flex flex-wrap gap-1.5">
+            {data.owasp.map((cat) => (
+              <EntityLink
+                key={`${cat.categoryId}-${cat.framework}`}
+                type="owasp"
+                attackId={cat.categoryId}
+                name={cat.name}
+              />
+            ))}
+          </div>
+          <div className="pt-2">
+            <Link to="/frameworks/owasp" className="text-xs text-[var(--accent-teal)] hover:underline">
+              Browse all OWASP categories
+            </Link>
+          </div>
+        </section>
       )}
     </div>
   );

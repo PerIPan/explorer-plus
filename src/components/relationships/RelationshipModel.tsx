@@ -39,7 +39,8 @@ function makeNodes(c: ReturnType<typeof useThemeColors>): ModelNode[] {
     { id: 'mitigation', label: 'Mitigation', x: 1000, y: 140, color: c.accentGreen, bg: alpha(c.accentGreen, '18'), path: '/mitigations', description: 'Countermeasures to prevent techniques', category: 'defensive' },
     { id: 'sigma', label: 'Sigma Rules', x: 1000, y: 400, color: '#c084fc', bg: '#c084fc18', path: '/cti/sigma', description: 'Detection signatures from SigmaHQ mapped to techniques', category: 'defensive' },
     // Compliance & frameworks
-    { id: 'nist', label: 'NIST 800-53', x: 1240, y: 140, color: '#38bdf8', bg: '#38bdf818', path: '/frameworks/nist', description: 'Federal security controls mapped to ATT&CK techniques', category: 'compliance' },
+    { id: 'owasp', label: 'OWASP Top 10', x: 1240, y: 50, color: '#f97316', bg: '#f9731618', path: '/frameworks/owasp', description: 'Web, ML, and LLM security risks mapped to techniques via CWE + ATLAS', category: 'compliance' },
+    { id: 'nist', label: 'NIST 800-53', x: 1240, y: 180, color: '#38bdf8', bg: '#38bdf818', path: '/frameworks/nist', description: 'Federal security controls mapped to ATT&CK techniques', category: 'compliance' },
     { id: 'engage', label: 'MITRE Engage', x: 1240, y: 310, color: '#fb923c', bg: '#fb923c18', path: '/frameworks/engage', description: 'Adversary deception & engagement activities per technique', category: 'compliance' },
     { id: 'react', label: 'RE&CT', x: 1240, y: 490, color: '#4ade80', bg: '#4ade8018', path: '/frameworks/react', description: 'Incident response playbooks and actions per technique', category: 'compliance' },
     { id: 'veris', label: 'VERIS', x: 1420, y: 140, color: '#e879f9', bg: '#e879f918', path: '/techniques', description: 'Incident classification categories mapped to ATT&CK techniques', category: 'compliance', scale: 0.85 },
@@ -96,6 +97,9 @@ const EDGES: ModelEdge[] = [
   { from: 'ics', to: 'technique', label: 'contains', style: 'dashed' },
   { from: 'mobile', to: 'technique', label: 'contains', style: 'dashed' },
   { from: 'atlas', to: 'technique', label: 'cross-references', style: 'dashed' },
+  { from: 'owasp', to: 'technique', label: 'maps via CWE', style: 'dashed' },
+  { from: 'owasp', to: 'atlas', label: 'AI risks', style: 'dashed' },
+  { from: 'owasp', to: 'cve', label: 'categorizes', style: 'dashed' },
 ];
 
 function getEdgePath(from: ModelNode, to: ModelNode): { path: string; midX: number; midY: number; angle: number } {

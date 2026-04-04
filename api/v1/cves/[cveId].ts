@@ -11,7 +11,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     return;
   }
 
-  const [detailResult, sourcesResult, cwesResult, appsResult, techIocResult, techCapecResult, reportsResult] =
+  const [detailResult, sourcesResult, cwesResult, appsResult, techIocResult, techCapecResult, reportsResult, owaspResult] =
     await Promise.all([
       // CVE metadata
       query<{
@@ -120,6 +120,16 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
          LIMIT 20`,
         [id],
       ),
+
+      // OWASP categories via CWE overlap
+      query<{ categoryId: string; name: string; framework: string }>(
+        `SELECT DISTINCT o.category_id AS "categoryId", o.name, o.framework
+         FROM owasp_top10 o
+         JOIN cve_weaknesses cw ON cw.cwe_id = ANY(o.cwe_ids)
+         WHERE cw.cve_id = $1
+         ORDER BY o.framework, o.category_id`,
+        [id],
+      ),
     ]);
 
   if (!detailResult.rows[0] && !sourcesResult.rows.length) {
@@ -175,6 +185,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
       source: r.source,
       publishedAt: r.published_at,
     })),
+    owaspCategories: owaspResult.rows,
   });
 }
 

@@ -199,6 +199,7 @@ export interface SearchResponse {
   mitigations: Mitigation[];
   campaigns: Campaign[];
   data_sources: DataSource[];
+  owasp: OwaspSearchResult[];
 }
 
 export interface GraphNode {
@@ -293,7 +294,28 @@ export type EntityType =
   | 'campaign'
   | 'mitigation'
   | 'data_source'
-  | 'tactic';
+  | 'tactic'
+  | 'owasp';
+
+export interface OwaspCategory {
+  categoryId: string;
+  name: string;
+  description: string | null;
+  url: string | null;
+  framework: string;
+  isDraft: boolean;
+  cweCount: number;
+  techniqueCount: number;
+  atlasCount: number;
+  cveCount: number;
+}
+
+export interface OwaspSearchResult {
+  categoryId: string;
+  name: string;
+  framework: string;
+  isDraft: boolean;
+}
 
 // ── Framework Types ────────────────────────────────────────────────────────────
 
@@ -356,6 +378,7 @@ export interface FrameworkData {
   engage: EngageMapping[];
   verisCategories?: VerisMapping[];
   cloudControls?: CloudControl[];
+  owasp?: Array<{ categoryId: string; name: string; framework: string }>;
 }
 
 // ── CTI Feed Types ─────────────────────────────────────────────────────────────
@@ -534,4 +557,5 @@ export interface CveDetail extends Omit<CveEntry, 'sources' | 'techniqueCount' |
   techniques: Array<{ attackId: string; name: string; tactics: string[]; sources: string[] }>;
   affectedApps: Array<{ normalized: string; vendor: string; product: string; versionStart: string | null; versionEnd: string | null; cveCount: number }>;
   reports: Array<{ id: string; title: string; url: string | null; source: string | null; publishedAt: string | null }>;
+  owaspCategories?: Array<{ categoryId: string; name: string; framework: string }>;
 }

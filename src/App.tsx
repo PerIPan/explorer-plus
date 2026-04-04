@@ -43,6 +43,7 @@ const NistControls    = lazy(() => import('./pages/NistControls').then((m) => ({
 const EngageActivities = lazy(() => import('./pages/EngageActivities').then((m) => ({ default: m.EngageActivities })));
 const ReactActions    = lazy(() => import('./pages/ReactActions').then((m) => ({ default: m.ReactActions })));
 const VerisCategories = lazy(() => import('./pages/VerisCategories').then((m) => ({ default: m.VerisCategories })));
+const OwaspTop10      = lazy(() => import('./pages/OwaspTop10').then((m) => ({ default: m.OwaspTop10 })));
 const CloudControls   = lazy(() => import('./pages/CloudControls').then((m) => ({ default: m.CloudControls })));
 const AtomicTests     = lazy(() => import('./pages/AtomicTests').then((m) => ({ default: m.AtomicTests })));
 const DetectionStrategies = lazy(() => import('./pages/DetectionStrategies').then((m) => ({ default: m.DetectionStrategies })));
@@ -225,7 +226,7 @@ function Layout() {
                 <li><strong>Actor comparison</strong> — select up to 3 threat actors on the Matrix, see technique overlap color-coded, export as HTML</li>
                 <li><strong>360 Views</strong> — search any entity, explore via Technique Map, Actor Profile, Software Map, Application Map, Sector Map, or D3 force graph</li>
                 <li><strong>Applications</strong> — 7K+ vendor products linked to CVEs → CWE → CAPEC → ATT&CK techniques → threat groups. See which apps your adversaries target</li>
-                <li><strong>Frameworks</strong> — NIST 800-53, MITRE Engage, D3FEND, RE&CT, VERIS incident classification, Azure + GCP cloud controls</li>
+                <li><strong>Frameworks</strong> — OWASP Top 10 (Web 2021, ML 2023, LLM 2025), NIST 800-53, MITRE Engage, D3FEND, RE&CT, VERIS incident classification, Azure + GCP cloud controls</li>
                 <li><strong>CVEs</strong> — since 2017, CISA KEV + NVD enrichment (CVSS scores), linked to ATT&CK techniques via CWE→CAPEC bridge + CTID hand-curated mappings</li>
                 <li><strong>IOCs</strong> — OTX + ThreatFox + MalwareBazaar, enriched with VirusTotal verdicts and sandbox-derived techniques</li>
                 <li><strong>Detection</strong> — Detection Strategies + Analytics (ATT&CK v18), SigmaHQ rules, Atomic Red Team tests, MITRE Caldera, D3FEND countermeasures</li>
@@ -325,6 +326,7 @@ export default function App() {
           <Route path="frameworks/nist" element={<NistControls />} />
           <Route path="frameworks/engage" element={<EngageActivities />} />
           <Route path="frameworks/detection" element={<DetectionStrategies />} />
+          <Route path="frameworks/owasp" element={<OwaspTop10 />} />
           <Route path="applications" element={<ApplicationsList />} />
           <Route path="frameworks/react" element={<ReactActions />} />
           <Route path="frameworks/veris" element={<VerisCategories />} />

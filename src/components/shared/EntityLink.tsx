@@ -58,6 +58,12 @@ const entityConfig: Record<
     border: 'border-[var(--yellow-dim)]',
     path: 'tactics',
   },
+  owasp: {
+    color: 'text-[var(--accent-orange)]',
+    bg: 'bg-[var(--orange-faint)]',
+    border: 'border-[var(--orange-dim)]',
+    path: 'frameworks/owasp',
+  },
 };
 
 const MAP_TABS: Record<EntityType, string> = {
@@ -68,6 +74,7 @@ const MAP_TABS: Record<EntityType, string> = {
   campaign: 'actor',
   data_source: 'data-source-map',
   tactic: 'tactic-map',
+  owasp: 'technique-map',
 };
 
 /**
