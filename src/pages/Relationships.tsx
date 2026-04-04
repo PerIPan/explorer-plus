@@ -150,7 +150,7 @@ export function Relationships() {
   }, []);
 
   const { data: graphData, isLoading, error } = useRelationships(
-    (tabParam === 'sector-map' || tabParam === 'application-map' || !selectedId) ? '' : selectedId,
+    (tabParam === 'sector-map' || tabParam === 'application-map' || tabParam === 'owasp-map' || !selectedId) ? '' : selectedId,
   );
 
   /** Load ALL entity names cross-domain for Fuse.js — shared cache with SearchBar */
