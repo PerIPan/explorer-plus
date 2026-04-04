@@ -761,6 +761,37 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
         )}
       </MapCard>
 
+      {/* OWASP RISK CATEGORIES */}
+      {(() => {
+        const owaspCats = frameworks?.owasp ?? [];
+        return (
+          <MapCard label="OWASP Risk Categories" icon={IconShield} count={owaspCats.length} defaultOpen={false}>
+            {owaspCats.length > 0 ? (
+              <MapRow prefix="OWASP">
+                <div className="flex flex-wrap gap-1.5">
+                  {owaspCats.map((cat) => (
+                    <EntityLink
+                      key={`${cat.categoryId}-${cat.framework}`}
+                      type="owasp"
+                      attackId={cat.categoryId}
+                      name={`${cat.name} (${cat.framework})`}
+                    />
+                  ))}
+                </div>
+              </MapRow>
+            ) : fwLoading ? (
+              <MapRow prefix="OWASP">
+                <span className="text-xs text-[var(--text-secondary)] italic">Loading...</span>
+              </MapRow>
+            ) : (
+              <MapRow prefix="OWASP">
+                <span className="text-xs text-[var(--text-secondary)]">No OWASP categories mapped.</span>
+              </MapRow>
+            )}
+          </MapCard>
+        );
+      })()}
+
       {/* HOW TO RESPOND */}
       <MapCard label="How to Respond" icon={IconResponse}
         count={engageActivities.length + d3fendMappings.length}

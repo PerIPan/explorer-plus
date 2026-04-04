@@ -26,6 +26,7 @@ const mainSections: NavSection[] = [
       { path: '/', label: '360 Views', tooltip: 'explore entity connections — graph and dedicated map views for every entity type' },
       { path: '/matrix', label: 'Matrix', tooltip: 'att&ck technique matrix heatmap — tactics vs techniques' },
       { path: '/dashboard', label: 'Overview', tooltip: 'summary stats, charts, and top threat groups' },
+      { path: '/cti/feed-status', label: 'Feed Status', tooltip: 'CTI feed ingestion health and manual sync controls' },
     ],
   },
   {
@@ -63,7 +64,6 @@ const ctiNav: NavItem[] = [
   { path: '/cti/reports', label: 'Reports', tooltip: 'threat intelligence reports from OTX, RSS feeds' },
   { path: '/cti/cves', label: 'CVEs', tooltip: 'known vulnerabilities from OTX, CISA KEV, enriched via NVD' },
   { path: '/cti/iocs', label: 'IOCs', tooltip: 'hashes, domains, IPs, URLs from AlienVault OTX, CISA KEV' },
-  { path: '/cti/feed-status', label: 'Feed Status', tooltip: 'CTI feed ingestion health and manual sync controls' },
 ];
 
 const frameworksNav: NavItem[] = [
@@ -227,7 +227,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
       {/* CTI Section */}
       <div className="px-2 py-3">
-        <CollapsibleNavSection label="CTI" items={ctiNav} defaultOpen />
+        <CollapsibleNavSection label="CTI" items={ctiNav} />
       </div>
 
       {/* Separator */}

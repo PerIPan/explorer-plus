@@ -17,6 +17,7 @@ import { DataSourceMapView } from '../components/relationships/DataSourceMapView
 import { TacticMapView } from '../components/relationships/TacticMapView';
 import { SectorMapView } from '../components/relationships/SectorMapView';
 import { ApplicationMapView } from '../components/relationships/ApplicationMapView';
+import { OwaspMapView } from '../components/relationships/OwaspMapView';
 import type { GraphNode, GraphData } from '../lib/types';
 import { DiamondLoader } from '../components/shared/FoldingDiamond';
 
@@ -55,7 +56,7 @@ function typeLabel(type: string): string {
 
 // ── Tab definitions ────────────────────────────────────────────────────────────
 
-type TabId = 'graph' | 'actor' | 'technique-map' | 'software-map' | 'mitigation-map' | 'data-source-map' | 'tactic-map' | 'sector-map' | 'application-map';
+type TabId = 'graph' | 'actor' | 'technique-map' | 'software-map' | 'mitigation-map' | 'data-source-map' | 'tactic-map' | 'sector-map' | 'application-map' | 'owasp-map';
 
 interface TabDef {
   id: TabId;
@@ -73,6 +74,7 @@ const TABS: TabDef[] = [
   { id: 'tactic-map', label: 'Tactic Map', forTypes: ['tactic'] },
   { id: 'sector-map', label: 'Sector Map', forTypes: ['sector'] },
   { id: 'application-map', label: 'Application Map', forTypes: ['application'] },
+  { id: 'owasp-map', label: 'OWASP Map', forTypes: ['owasp'] },
   { id: 'graph', label: 'Graph' },
 ];
 
@@ -86,6 +88,7 @@ const TAB_FOR_TYPE: Record<string, TabId> = {
   tactic: 'tactic-map',
   sector: 'sector-map',
   application: 'application-map',
+  owasp: 'owasp-map',
 };
 
 const TAB_TYPE_HINT: Record<string, string> = { 'sector-map': 'sector', 'application-map': 'application' };
@@ -446,7 +449,7 @@ export function Relationships() {
           </div>
           <p className="text-xs md:text-sm text-[var(--text-secondary)] opacity-70 mx-auto max-w-md">
             Search for any technique, actor, software, campaign, mitigation,
-            data source, tactic, sector, or application to explore its relationships.
+            data source, tactic, sector, application, or OWASP category to explore its relationships.
           </p>
         </div>
         {/* Small centered diamond on mobile */}
@@ -621,6 +624,11 @@ export function Relationships() {
           {/* Application Map tab */}
           {activeTab === 'application-map' && entityType === 'application' && (
             <ApplicationMapView appSlug={selectedId} />
+          )}
+
+          {/* OWASP Map tab */}
+          {activeTab === 'owasp-map' && entityType === 'owasp' && (
+            <OwaspMapView categoryId={selectedId} />
           )}
         </div>
       )}

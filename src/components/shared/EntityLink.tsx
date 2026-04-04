@@ -74,7 +74,7 @@ const MAP_TABS: Record<EntityType, string> = {
   campaign: 'actor',
   data_source: 'data-source-map',
   tactic: 'tactic-map',
-  owasp: 'technique-map',
+  owasp: 'owasp-map',
 };
 
 /**

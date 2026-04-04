@@ -66,12 +66,28 @@ const SEVERITY_VARIANTS: Record<string, 'pink' | 'orange' | 'yellow' | 'blue' | 
 
 // ── Component ────────────────────────────────────────────────────────────────
 
+interface OwaspListItem {
+  categoryId: string;
+  name: string;
+  framework: string;
+  cweIds: string[];
+}
+
+const IconOwasp = (<svg fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>);
+
 export function ApplicationMapView({ appSlug }: { appSlug: string }) {
   const { data, isLoading, error } = useQuery({
     queryKey: ['application-detail', appSlug],
     queryFn: () => apiFetch<ApplicationDetail>(`/applications/${appSlug}`),
     enabled: Boolean(appSlug),
     staleTime: 2 * 60 * 1000,
+  });
+
+  // Fetch OWASP categories to match against app CWEs
+  const { data: owaspData } = useQuery({
+    queryKey: ['owasp-top10-list'],
+    queryFn: () => apiFetch<{ data: OwaspListItem[] }>('/frameworks/owasp'),
+    staleTime: 60 * 60 * 1000,
   });
 
   if (isLoading) {
@@ -143,6 +159,30 @@ export function ApplicationMapView({ appSlug }: { appSlug: string }) {
           </div>
         </MapCard>
       )}
+
+      {/* OWASP RISK CATEGORIES — derived from CWE overlap */}
+      {(() => {
+        const appCwes = new Set(data.weaknesses.map((w) => w.cweId));
+        const matchedOwasp = (owaspData?.data ?? []).filter(
+          (cat) => cat.cweIds.some((cwe) => appCwes.has(cwe))
+        );
+        if (matchedOwasp.length === 0) return null;
+        return (
+          <MapCard label="OWASP Risk Categories" icon={IconOwasp} count={matchedOwasp.length} defaultOpen={false}>
+            <div className="flex flex-wrap gap-1.5">
+              {matchedOwasp.map((cat) => (
+                <EntityLink
+                  key={`${cat.categoryId}-${cat.framework}`}
+                  type="owasp"
+                  attackId={cat.categoryId}
+                  name={`${cat.name} (${cat.framework})`}
+                  useMap
+                />
+              ))}
+            </div>
+          </MapCard>
+        );
+      })()}
 
       {/* THREAT ACTORS */}
       <MapCard label="Threat Actors" icon={IconPeople} count={data.groups.length}>
