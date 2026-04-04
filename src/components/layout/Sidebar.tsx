@@ -219,7 +219,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
       {/* Assets Section */}
       <div className="px-2 py-3">
-        <CollapsibleNavSection label="Assets" items={assetsNav} defaultOpen />
+        <CollapsibleNavSection label="Assets" items={assetsNav} />
       </div>
 
       {/* Separator */}
