@@ -271,7 +271,7 @@ export function OwaspMapView({ categoryId }: { categoryId: string }) {
                 )}
                 {cve.cvssScore !== null && (
                   <span className="text-xs text-[var(--text-secondary)]">
-                    CVSS {cve.cvssScore.toFixed(1)}
+                    CVSS {Number(cve.cvssScore).toFixed(1)}
                   </span>
                 )}
                 {cve.isKev && <Badge label="KEV" variant="orange" />}
