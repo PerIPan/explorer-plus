@@ -75,7 +75,12 @@ export function OwaspTop10() {
   return (
     <div className="space-y-4">
       <PageHeader
-        title="OWASP Top 10 (2021)"
+        title={
+          framework === 'ml-2023' ? 'OWASP Top 10 for ML (2023)'
+          : framework === 'llm-2025' ? 'OWASP Top 10 for LLM (2025)'
+          : framework === 'web-2021' ? 'OWASP Top 10 (2021)'
+          : 'OWASP Top 10'
+        }
         subtitle={
           framework === 'ml-2023' ? 'Machine learning security risks mapped to ATLAS techniques'
           : framework === 'llm-2025' ? 'LLM application security risks mapped to ATT&CK + ATLAS techniques'

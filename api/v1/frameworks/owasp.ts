@@ -41,9 +41,9 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     url: r.url,
     framework: r.framework,
     isDraft: r.is_draft,
-    cweCount: r.cwe_ids.length,
+    cweCount: (r.cwe_ids ?? []).length,
     techniqueCount: parseInt(r.technique_count, 10),
-    atlasCount: r.atlas_technique_ids.length,
+    atlasCount: (r.atlas_technique_ids ?? []).length,
     cveCount: parseInt(r.cve_count, 10),
   }));
 
