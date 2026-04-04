@@ -64,11 +64,14 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
 
     // Affected applications
     query<{ normalized: string; vendor: string; product: string; cveCount: string }>(
-      `SELECT DISTINCT a.normalized, a.vendor, a.product, a.cve_count::text AS "cveCount"
-       FROM affected_products ap
-       JOIN applications a ON a.id = ap.application_id
-       JOIN cve_weaknesses cw ON cw.cve_id = ap.cve_id
-       WHERE cw.cwe_id = ANY($1)
+      `SELECT a.normalized, a.vendor, a.product, a.cve_count::text AS "cveCount"
+       FROM applications a
+       WHERE a.id IN (
+         SELECT DISTINCT ap.application_id
+         FROM affected_products ap
+         JOIN cve_weaknesses cw ON cw.cve_id = ap.cve_id
+         WHERE cw.cwe_id = ANY($1)
+       )
        ORDER BY a.cve_count DESC
        LIMIT 50`,
       [cat.cwe_ids],
