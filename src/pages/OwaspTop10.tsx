@@ -129,6 +129,14 @@ export function OwaspTop10() {
                   </span>
                   {cat.isDraft && <Badge label="DRAFT" variant="neutral" />}
                   {cat.atlasCount > 0 && <Badge label={`${cat.atlasCount} ATLAS`} variant="purple" />}
+                  <a
+                    href={`/?entity=${encodeURIComponent(cat.categoryId)}&tab=owasp-map`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-[10px] text-[#059669] hover:underline shrink-0"
+                    title="Open 360 map view"
+                  >
+                    360 →
+                  </a>
                 </div>
                 <svg
                   className={`w-4 h-4 text-[var(--text-secondary)] shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
