@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '../lib/api';
 import { usePageTitle } from '../hooks/usePageTitle';
@@ -45,8 +46,14 @@ const SEVERITY_COLOR: Record<string, string> = {
 
 export function OwaspTop10() {
   usePageTitle('OWASP Top 10');
-  const [expanded, setExpanded] = useState<string | null>(null);
+  const { categoryId: urlCategoryId } = useParams<{ categoryId?: string }>();
+  const [expanded, setExpanded] = useState<string | null>(urlCategoryId?.toUpperCase() ?? null);
   const [framework, setFramework] = useState<string | null>(null);
+
+  // Auto-expand when navigating via URL param (e.g. /frameworks/owasp/A01)
+  useEffect(() => {
+    if (urlCategoryId) setExpanded(urlCategoryId.toUpperCase());
+  }, [urlCategoryId]);
 
   const { data, isLoading } = useQuery({
     queryKey: ['owasp-top10', framework],
@@ -56,7 +63,7 @@ export function OwaspTop10() {
   });
 
   const { data: detail, isLoading: detailLoading } = useQuery({
-    queryKey: ['owasp-detail', expanded],
+    queryKey: ['owasp-detail', expanded, framework],
     queryFn: () => apiFetch<OwaspDetail>(`/frameworks/owasp/${expanded}`),
     enabled: !!expanded,
   });

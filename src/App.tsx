@@ -327,6 +327,7 @@ export default function App() {
           <Route path="frameworks/engage" element={<EngageActivities />} />
           <Route path="frameworks/detection" element={<DetectionStrategies />} />
           <Route path="frameworks/owasp" element={<OwaspTop10 />} />
+          <Route path="frameworks/owasp/:categoryId" element={<OwaspTop10 />} />
           <Route path="applications" element={<ApplicationsList />} />
           <Route path="frameworks/react" element={<ReactActions />} />
           <Route path="frameworks/veris" element={<VerisCategories />} />
