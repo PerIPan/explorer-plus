@@ -145,6 +145,7 @@ export function RelationshipModel({ open, onClose }: Props) {
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
   const [hoveredEdge, setHoveredEdge] = useState<number | null>(null);
   const [allActive, setAllActive] = useState(false);
+  const [hiddenCategories, setHiddenCategories] = useState<Set<string>>(new Set());
 
   const NODES = makeNodes(c);
   const CATEGORIES = [
@@ -153,6 +154,18 @@ export function RelationshipModel({ open, onClose }: Props) {
     { key: 'compliance', label: 'Frameworks & Compliance', color: '#38bdf8' },
     { key: 'intelligence', label: 'Threat Intelligence', color: c.accentOrange },
   ];
+
+  const toggleCategory = (key: string) => {
+    setHiddenCategories(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  const visibleNodes = NODES.filter(n => !hiddenCategories.has(n.category));
+  const visibleNodeIds = new Set(visibleNodes.map(n => n.id));
 
   useEffect(() => {
     if (open) {
@@ -164,7 +177,8 @@ export function RelationshipModel({ open, onClose }: Props) {
 
   if (!open) return null;
 
-  const nodeMap = Object.fromEntries(NODES.map(n => [n.id, n]));
+  const nodeMap = Object.fromEntries(visibleNodes.map(n => [n.id, n]));
+  const visibleEdges = EDGES.filter(e => visibleNodeIds.has(e.from) && visibleNodeIds.has(e.to));
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={onClose}>
@@ -201,7 +215,7 @@ export function RelationshipModel({ open, onClose }: Props) {
             </defs>
 
             {/* Edges */}
-            {EDGES.map((edge, i) => {
+            {visibleEdges.map((edge, i) => {
               const from = nodeMap[edge.from];
               const to = nodeMap[edge.to];
               if (!from || !to) return null;
@@ -247,7 +261,7 @@ export function RelationshipModel({ open, onClose }: Props) {
             })}
 
             {/* Nodes */}
-            {NODES.map((node) => {
+            {visibleNodes.map((node) => {
               const isHovered = hoveredNode === node.id;
               return (
                 <g
@@ -334,12 +348,26 @@ export function RelationshipModel({ open, onClose }: Props) {
         {/* Legend */}
         <div className="px-6 py-3 border-t border-[var(--border-color)] flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-4">
-            {CATEGORIES.map(cat => (
-              <div key={cat.key} className="flex items-center gap-1.5">
-                <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: cat.color, opacity: 0.7 }} />
-                <span className="text-[10px] text-[var(--text-secondary)]">{cat.label}</span>
-              </div>
-            ))}
+            {CATEGORIES.map(cat => {
+              const isHidden = hiddenCategories.has(cat.key);
+              return (
+                <button
+                  key={cat.key}
+                  type="button"
+                  onClick={() => toggleCategory(cat.key)}
+                  className={`flex items-center gap-1.5 transition-opacity ${isHidden ? 'opacity-30' : 'opacity-100'} hover:opacity-80`}
+                  title={isHidden ? `Show ${cat.label}` : `Hide ${cat.label}`}
+                >
+                  <div
+                    className="w-2.5 h-2.5 rounded-full transition-all"
+                    style={{ backgroundColor: cat.color, opacity: isHidden ? 0.3 : 0.7 }}
+                  />
+                  <span className={`text-[10px] ${isHidden ? 'line-through text-[var(--text-secondary)]' : 'text-[var(--text-secondary)]'}`}>
+                    {cat.label}
+                  </span>
+                </button>
+              );
+            })}
           </div>
           <div className="flex items-center gap-4 text-[10px] text-[var(--text-secondary)]">
             <span className="flex items-center gap-1.5">

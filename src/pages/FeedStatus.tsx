@@ -166,6 +166,7 @@ export function FeedStatus() {
 }
 
 const FRAMEWORK_TABLES = [
+  { key: 'owasp_top10', label: 'OWASP Top 10 (Web, ML, LLM)' },
   { key: 'nist_controls', label: 'NIST 800-53' },
   { key: 'engage_mappings', label: 'MITRE Engage' },
   { key: 'defensive_mappings', label: 'D3FEND' },
