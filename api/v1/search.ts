@@ -27,7 +27,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   const domainCond = domain ? ` AND domain = $2` : '';
   const domainParams = domain ? [q, domain] : [q];
 
-  const [techResult, groupResult, softResult, mitResult, campResult, dsResult] = await Promise.all([
+  const [techResult, groupResult, softResult, mitResult, campResult, dsResult, owaspResult] = await Promise.all([
     query<{ attackId: string; name: string; description: string | null; platforms: string[] | null }>(
       `SELECT attack_id AS "attackId", name, description, platforms
        FROM techniques
@@ -71,6 +71,15 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
        ORDER BY name ASC LIMIT 20`,
       domainParams,
     ),
+    // OWASP categories — not domain-filtered
+    query<{ categoryId: string; name: string; framework: string; isDraft: boolean }>(
+      `SELECT category_id AS "categoryId", name, framework, is_draft AS "isDraft"
+       FROM owasp_top10
+       WHERE to_tsvector('english', name || ' ' || COALESCE(description, '')) @@ plainto_tsquery('english', $1)
+          OR UPPER(category_id) = UPPER($1)
+       ORDER BY framework, category_id LIMIT 20`,
+      [q],
+    ),
   ]);
 
   res.status(200).json({
@@ -81,6 +90,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     mitigations: mitResult.rows,
     campaigns: campResult.rows,
     data_sources: dsResult.rows,
+    owasp: owaspResult.rows,
   });
 }
 

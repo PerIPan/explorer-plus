@@ -356,6 +356,27 @@ const TOOL_DECLARATIONS = [
       required: ['attack_id'],
     },
   },
+  {
+    name: 'get_owasp_top10',
+    description: 'Get OWASP Top 10 categories for Web (2021), ML (2023), and LLM (2025) with CWE counts, technique counts, ATLAS counts, and CVE counts.',
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        framework: { type: "STRING", description: 'Filter by framework: web-2021, ml-2023, or llm-2025. Omit for all.' },
+      },
+    },
+  },
+  {
+    name: 'get_owasp_category',
+    description: 'Get details for a specific OWASP category: CWEs, ATT&CK techniques, ATLAS techniques, top CVEs, affected applications, and related categories across frameworks.',
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        category_id: { type: "STRING", description: 'OWASP category ID: A01-A10 (Web), ML01-ML10, or LLM01-LLM10' },
+      },
+      required: ['category_id'],
+    },
+  },
 ];
 
 // Dynamic system instruction — injects current date so Gemini calculates relative dates correctly
@@ -372,6 +393,8 @@ Tool selection rules:
 - When asked about a SPECIFIC technique: use get_technique_detail for description + get_technique_intelligence for feeds
 - When asked about a SPECIFIC software/malware: use search_software to find the ID, then get_software_detail
 - "search_" tools return summaries/lists; "get_" tools return full profiles — always prefer the full profile for specific entities
+- For OWASP categories: use get_owasp_top10 (optionally filtered by framework: web-2021, ml-2023, llm-2025), then get_owasp_category for details
+- OWASP links: [A01 Broken Access Control](https://mitre-explorer.org/frameworks/owasp/A01)
 - You MUST generate a human-readable summary from the tool results — never return empty or "No response generated"
 
 When responding:
@@ -618,6 +641,16 @@ async function executeTool(name: string, args: Record<string, unknown>): Promise
       const id = validateAttackId(args.attack_id);
       if (!id) return { error: 'Invalid data source ID format' };
       return callInternalApi(`/data-sources/${id}`);
+    }
+    case 'get_owasp_top10': {
+      const fw = args.framework ? String(args.framework) : '';
+      const qs = fw ? `?framework=${encodeURIComponent(fw)}` : '';
+      return callInternalApi(`/frameworks/owasp${qs}`);
+    }
+    case 'get_owasp_category': {
+      const cat = String(args.category_id ?? '').toUpperCase();
+      if (!/^(A|ML|LLM)\d{2}$/.test(cat)) return { error: 'Invalid category ID (A01-A10, ML01-ML10, LLM01-LLM10)' };
+      return callInternalApi(`/frameworks/owasp/${cat}`);
     }
     default:
       return { error: `Unknown tool: ${name}` };

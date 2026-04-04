@@ -195,6 +195,21 @@
         "List actors targeting critical infrastructure"
       ],
       "tags": ["actor", "attribution", "country", "state-sponsor"]
+    },
+    {
+      "id": "owasp-top10",
+      "name": "OWASP Top 10 Analysis",
+      "description": "Get OWASP Top 10 categories for Web (2021), ML (2023), and LLM (2025) security risks mapped to ATT&CK + ATLAS techniques via CWE.",
+      "examples": [
+        "Show me the OWASP Top 10 categories",
+        "What techniques relate to OWASP A01 Broken Access Control?",
+        "Which CVEs are linked to OWASP Injection (A03)?",
+        "Map OWASP A07 Authentication Failures to ATT&CK",
+        "Show me the ML Top 10 AI security risks",
+        "Which ATLAS techniques map to LLM01 Prompt Injection?",
+        "Compare Web and LLM OWASP supply chain risks"
+      ],
+      "tags": ["owasp", "top10", "web-security", "appsec", "compliance", "ml-security", "llm-security", "ai-risks"]
     }
   ],
   "extensions": {

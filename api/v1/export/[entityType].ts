@@ -43,6 +43,9 @@ const ENTITY_QUERIES: Record<string, string> = {
     FROM tactics ORDER BY sort_order ASC NULLS LAST LIMIT 10000`,
   sectors: `
     SELECT name, slug FROM sectors ORDER BY name ASC LIMIT 10000`,
+  owasp: `
+    SELECT category_id, name, description, url, framework, cwe_ids, atlas_technique_ids, is_draft
+    FROM owasp_top10 ORDER BY framework, category_id ASC LIMIT 10000`,
 };
 
 async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
@@ -53,7 +56,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
 
   if (!parsed.success) {
     res.status(400).json({
-      error: 'Invalid entityType or format. entityType must be one of: techniques, groups, software, mitigations, campaigns, data_sources, tactics, sectors. format must be csv or json.',
+      error: 'Invalid entityType or format. entityType must be one of: techniques, groups, software, mitigations, campaigns, data_sources, tactics, sectors, owasp. format must be csv or json.',
       code: 'VALIDATION_ERROR',
       details: parsed.error.flatten(),
     });

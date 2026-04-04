@@ -53,6 +53,7 @@ export const exportSchema = z.object({
     'data_sources',
     'tactics',
     'sectors',
+    'owasp',
   ]),
   format: z.enum(['csv', 'json']).default('json'),
 });

@@ -11,7 +11,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   }
   const attackId = parsed.data;
 
-  const [nistResult, engageResult, verisResult, cloudResult] = await Promise.all([
+  const [nistResult, engageResult, verisResult, cloudResult, owaspCweResult, owaspAtlasResult] = await Promise.all([
     query<{
       controlId: string;
       controlName: string | null;
@@ -75,7 +75,28 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
        ORDER BY provider ASC, control_id ASC`,
       [attackId],
     ),
+    // OWASP categories via CWE overlap (for ATT&CK techniques)
+    query<{ categoryId: string; name: string; framework: string }>(
+      `SELECT DISTINCT o.category_id AS "categoryId", o.name, o.framework
+       FROM owasp_top10 o
+       JOIN capec_mappings cm ON cm.cwe_id = ANY(o.cwe_ids)
+       WHERE cm.attack_technique_id = $1 AND cm.technique_id IS NOT NULL
+       ORDER BY o.framework, o.category_id`,
+      [attackId],
+    ),
+    // OWASP categories via ATLAS (for ATLAS techniques)
+    query<{ categoryId: string; name: string; framework: string }>(
+      `SELECT category_id AS "categoryId", name, framework
+       FROM owasp_top10
+       WHERE $1 = ANY(atlas_technique_ids)
+       ORDER BY framework, category_id`,
+      [attackId],
+    ),
   ]);
+
+  const owaspRows = [...owaspCweResult.rows, ...owaspAtlasResult.rows];
+  const owaspMap = new Map(owaspRows.map(r => [`${r.categoryId}-${r.framework}`, r]));
+  const owasp = [...owaspMap.values()];
 
   res.status(200).json({
     attackId,
@@ -83,6 +104,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
     engage: engageResult.rows,
     verisCategories: verisResult.rows,
     cloudControls: cloudResult.rows,
+    owasp,
   });
 }
 
