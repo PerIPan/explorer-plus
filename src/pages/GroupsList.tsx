@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+'use client';
+import { useState, useCallback } from 'react';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useGroups } from '../hooks/useApi';
 import { useSector } from '../contexts/SectorContext';
 import { useDomain } from '../contexts/DomainContext';
@@ -14,8 +15,17 @@ const FUSE_KEYS = ['name', 'attackId', 'description'];
 
 export function GroupsList() {
 
-  const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const setSearchParams = useCallback(
+    (updater: (prev: URLSearchParams) => URLSearchParams) => {
+      const next = updater(new URLSearchParams(searchParams.toString()));
+      router.replace(`${pathname}?${next.toString()}`);
+    },
+    [router, pathname, searchParams],
+  );
   const { sectorParam } = useSector();
   const { domainParam } = useDomain();
 
@@ -103,7 +113,7 @@ export function GroupsList() {
         sortBy={sortBy}
         sortDir={sortDir}
         onSort={handleSort}
-        onRowClick={(row) => navigate(`/groups/${row.attackId}`)}
+        onRowClick={(row) => router.push(`/groups/${row.attackId}`)}
         rowKey={(row) => row.attackId}
         emptyMessage="No groups found."
       />

@@ -1,5 +1,6 @@
+'use client';
 import { useState, useCallback } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useTechniques, useTactics } from '../hooks/useApi';
 import { useFuseFilter } from '../hooks/useFuseFilter';
 import { useSector } from '../contexts/SectorContext';
@@ -42,8 +43,17 @@ const FUSE_KEYS = ['name', 'attackId', 'description'];
 
 export function TechniquesList() {
 
-  const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const setSearchParams = useCallback(
+    (updater: (prev: URLSearchParams) => URLSearchParams) => {
+      const next = updater(new URLSearchParams(searchParams.toString()));
+      router.replace(`${pathname}?${next.toString()}`);
+    },
+    [router, pathname, searchParams],
+  );
   const { sectorParam } = useSector();
   const { domainParam } = useDomain();
 
@@ -258,7 +268,7 @@ export function TechniquesList() {
         sortBy={sortBy}
         sortDir={sortDir}
         onSort={handleSort}
-        onRowClick={(row) => navigate(`/techniques/${row.attackId}`)}
+        onRowClick={(row) => router.push(`/techniques/${row.attackId}`)}
         rowKey={(row) => row.attackId}
         emptyMessage="No techniques found."
       />
