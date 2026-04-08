@@ -1,5 +1,4 @@
 import { useParams, Link } from 'react-router-dom';
-import { usePageTitle } from '../hooks/usePageTitle';
 import { useSoftwareDetail } from '../hooks/useApi';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Badge } from '../components/shared/Badge';
@@ -10,7 +9,6 @@ import { DiamondLoader } from '../components/shared/FoldingDiamond';
 export function SoftwareDetail() {
   const { attackId } = useParams<{ attackId: string }>();
   const { data, isLoading, error } = useSoftwareDetail(attackId ?? '');
-  usePageTitle(data ? `${data.name} ${data.attackId}` : 'Software');
 
   if (isLoading) {
     return <DiamondLoader text="Loading..." />;

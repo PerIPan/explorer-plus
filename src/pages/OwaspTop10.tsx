@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '../lib/api';
-import { usePageTitle } from '../hooks/usePageTitle';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Badge } from '../components/shared/Badge';
 import { EntityLink } from '../components/shared/EntityLink';
@@ -45,7 +44,6 @@ const SEVERITY_COLOR: Record<string, string> = {
 };
 
 export function OwaspTop10() {
-  usePageTitle('OWASP Top 10');
   const { categoryId: urlCategoryId } = useParams<{ categoryId?: string }>();
   const [expanded, setExpanded] = useState<string | null>(urlCategoryId?.toUpperCase() ?? null);
   const [framework, setFramework] = useState<string | null>(null);

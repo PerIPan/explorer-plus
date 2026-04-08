@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { usePageTitle } from '../hooks/usePageTitle';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useCves } from '../hooks/useApi';
@@ -255,7 +254,6 @@ const columns: ColumnDef<CveEntry>[] = [
 ];
 
 export function CvesList() {
-  usePageTitle('CVEs');
 
   const [searchParams, setSearchParams] = useSearchParams();
   const { sectorParam } = useSector();

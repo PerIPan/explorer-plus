@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { usePageTitle } from '../hooks/usePageTitle';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { isSafeUrl, ctidCloudUrl, ctidVerisUrl } from '../lib/urlSafety';
 import { useTechnique, useIntelligence, useFrameworks } from '../hooks/useApi';
@@ -609,7 +608,6 @@ export function TechniqueDetail() {
   const { attackId } = useParams<{ attackId: string }>();
   const [searchParams] = useSearchParams();
   const { data, isLoading, error } = useTechnique(attackId ?? '');
-  usePageTitle(data ? `${data.name} ${data.attackId}` : 'Technique');
   const tabParam = searchParams.get('tab') as TabId | null;
   const validTabs = new Set<string>(TABS.map((t) => t.id));
   const [activeTab, setActiveTab] = useState<TabId>(tabParam && validTabs.has(tabParam) ? tabParam : 'overview');

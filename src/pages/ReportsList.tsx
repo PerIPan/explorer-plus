@@ -1,6 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { usePageTitle } from '../hooks/usePageTitle';
 import { isSafeUrl } from '../lib/urlSafety';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -156,7 +155,6 @@ const columns: ColumnDef<ThreatReport>[] = [
 ];
 
 export function ReportsList() {
-  usePageTitle('CTI Reports');
 
   const [searchParams, setSearchParams] = useSearchParams();
   const { sectorParam } = useSector();

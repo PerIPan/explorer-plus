@@ -1,12 +1,10 @@
 import { useNavigate } from 'react-router-dom';
-import { usePageTitle } from '../hooks/usePageTitle';
 import { useSectors } from '../hooks/useApi';
 import { PageHeader } from '../components/layout/PageHeader';
 import { DataTable, type ColumnDef } from '../components/shared/DataTable';
 import type { Sector } from '../lib/types';
 
 export function SectorsList() {
-  usePageTitle('Sectors');
 
   const navigate = useNavigate();
 

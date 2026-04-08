@@ -1,5 +1,4 @@
 import { useParams, Link } from 'react-router-dom';
-import { usePageTitle } from '../hooks/usePageTitle';
 import { useCampaign } from '../hooks/useApi';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Badge } from '../components/shared/Badge';
@@ -19,7 +18,6 @@ function fmtDate(d: string | null) {
 export function CampaignDetail() {
   const { attackId } = useParams<{ attackId: string }>();
   const { data, isLoading, error } = useCampaign(attackId ?? '');
-  usePageTitle(data ? `${data.name} ${data.attackId}` : 'Campaign');
 
   if (isLoading) {
     return <DiamondLoader text="Loading..." />;

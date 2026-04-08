@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { usePageTitle } from '../hooks/usePageTitle';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useGroups } from '../hooks/useApi';
 import { useSector } from '../contexts/SectorContext';
@@ -14,7 +13,6 @@ import type { Group } from '../lib/types';
 const FUSE_KEYS = ['name', 'attackId', 'description'];
 
 export function GroupsList() {
-  usePageTitle('Threat Groups');
 
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();

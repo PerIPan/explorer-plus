@@ -1,5 +1,4 @@
 import { useCallback } from 'react';
-import { usePageTitle } from '../hooks/usePageTitle';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '../lib/api';
@@ -27,7 +26,6 @@ interface PaginatedResponse {
 }
 
 export function DetectionStrategies() {
-  usePageTitle('Detection Strategies');
 
   const [searchParams, setSearchParams] = useSearchParams();
   const page = parseInt(searchParams.get('page') ?? '1', 10);

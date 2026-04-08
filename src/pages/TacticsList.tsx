@@ -1,5 +1,4 @@
 import { useMemo } from 'react';
-import { usePageTitle } from '../hooks/usePageTitle';
 import { useNavigate } from 'react-router-dom';
 import { useTactics } from '../hooks/useApi';
 import { useSector } from '../contexts/SectorContext';
@@ -10,7 +9,6 @@ import { EntityLink } from '../components/shared/EntityLink';
 import type { Tactic } from '../lib/types';
 
 export function TacticsList() {
-  usePageTitle('Tactics');
 
   const navigate = useNavigate();
   const { sectorParam } = useSector();

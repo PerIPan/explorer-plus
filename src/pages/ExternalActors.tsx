@@ -1,5 +1,4 @@
 import React from "react";
-import { usePageTitle } from '../hooks/usePageTitle';
 import { useState, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useExternalActors } from '../hooks/useApi';
@@ -149,7 +148,6 @@ function ActorDetailModal({ actor, onClose }: { actor: ExternalActor; onClose: (
 
 
 export function ExternalActors() {
-  usePageTitle('Threat Actors (ETDA)');
 
   const [searchParams, setSearchParams] = useSearchParams();
   const [modalActor, setModalActor] = useState<ExternalActor | null>(null);

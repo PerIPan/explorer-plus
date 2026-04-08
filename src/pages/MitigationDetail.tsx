@@ -1,5 +1,4 @@
 import { useParams, Link } from 'react-router-dom';
-import { usePageTitle } from '../hooks/usePageTitle';
 import { useMitigation } from '../hooks/useApi';
 import { PageHeader } from '../components/layout/PageHeader';
 import { DeprecatedBadge } from '../components/shared/DeprecatedBadge';
@@ -9,7 +8,6 @@ import { DiamondLoader } from '../components/shared/FoldingDiamond';
 export function MitigationDetail() {
   const { attackId } = useParams<{ attackId: string }>();
   const { data, isLoading, error } = useMitigation(attackId ?? '');
-  usePageTitle(data ? `${data.name} ${data.attackId}` : 'Mitigation');
 
   if (isLoading) {
     return <DiamondLoader text="Loading..." />;

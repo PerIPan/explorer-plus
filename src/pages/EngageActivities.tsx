@@ -1,5 +1,4 @@
 import { useCallback, useState } from 'react';
-import { usePageTitle } from '../hooks/usePageTitle';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useEngageActivities } from '../hooks/useApi';
@@ -136,7 +135,6 @@ const columns: ColumnDef<EngageSummary>[] = [
 ];
 
 export function EngageActivities() {
-  usePageTitle('MITRE Engage');
 
   const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState(searchParams.get('q') ?? '');

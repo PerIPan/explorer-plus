@@ -1,5 +1,4 @@
 import { useParams, Link } from 'react-router-dom';
-import { usePageTitle } from '../hooks/usePageTitle';
 import { useDataSource } from '../hooks/useApi';
 import { PageHeader } from '../components/layout/PageHeader';
 import { sanitize, sanitizeMarkdown } from '../lib/sanitize';
@@ -8,7 +7,6 @@ import { DiamondLoader } from '../components/shared/FoldingDiamond';
 export function DataSourceDetail() {
   const { attackId } = useParams<{ attackId: string }>();
   const { data, isLoading, error } = useDataSource(attackId ?? '');
-  usePageTitle(data ? `${data.name} ${data.attackId}` : 'Data Source');
 
   if (isLoading) {
     return <DiamondLoader text="Loading..." />;

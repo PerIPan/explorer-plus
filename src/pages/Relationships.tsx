@@ -1,5 +1,4 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import { usePageTitle } from '../hooks/usePageTitle';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import Fuse from 'fuse.js';
@@ -107,7 +106,6 @@ function inferEntityType(
 // ── Page component ─────────────────────────────────────────────────────────────
 
 export function Relationships() {
-  usePageTitle('360 Views');
 
   const navigate = useNavigate();
   const { domain } = useDomain();

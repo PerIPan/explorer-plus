@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { usePageTitle } from '../hooks/usePageTitle';
 import { isSafeUrl } from '../lib/urlSafety';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -124,7 +123,6 @@ function TechniquePopover({ iocId, count }: { iocId: string; count: number }) {
 // ── Columns + Page ─────────────────────────────────────────────────────────────
 
 export function IocsList() {
-  usePageTitle('IOCs');
 
   const [searchParams, setSearchParams] = useSearchParams();
   const { sectorParam } = useSector();

@@ -1,5 +1,4 @@
 import { useState, useCallback } from 'react';
-import { usePageTitle } from '../hooks/usePageTitle';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useMitigations } from '../hooks/useApi';
 import { useFuseFilter } from '../hooks/useFuseFilter';
@@ -13,7 +12,6 @@ import type { Mitigation } from '../lib/types';
 const FUSE_KEYS = ['name', 'attackId', 'description'];
 
 export function MitigationsList() {
-  usePageTitle('Mitigations');
 
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();

@@ -1,5 +1,4 @@
 import { useState, useMemo } from 'react';
-import { usePageTitle } from '../hooks/usePageTitle';
 import { useParams, Link } from 'react-router-dom';
 import { useTactic } from '../hooks/useApi';
 import { PageHeader } from '../components/layout/PageHeader';
@@ -10,7 +9,6 @@ import { DiamondLoader } from '../components/shared/FoldingDiamond';
 export function TacticDetail() {
   const { attackId } = useParams<{ attackId: string }>();
   const { data, isLoading, error } = useTactic(attackId ?? '');
-  usePageTitle(data ? `${data.name} ${data.attackId}` : 'Tactic');
   const [techFilter, setTechFilter] = useState('');
 
   const allTechniques = data?.techniques ?? [];

@@ -1,5 +1,4 @@
 import { useCallback } from 'react';
-import { usePageTitle } from '../hooks/usePageTitle';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '../lib/api';
@@ -37,7 +36,6 @@ const EXECUTOR_COLORS: Record<string, 'teal' | 'orange' | 'purple' | 'blue' | 'g
 const PLATFORMS = ['windows', 'linux', 'macos'];
 
 export function AtomicTests() {
-  usePageTitle('Atomic Red Team');
 
   const [searchParams, setSearchParams] = useSearchParams();
   const q = searchParams.get('q') ?? '';

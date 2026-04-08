@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { usePageTitle } from '../hooks/usePageTitle';
 import { useQueries, useQuery } from '@tanstack/react-query';
 import { useMatrix, useGroups } from '../hooks/useApi';
 import { apiFetch } from '../lib/api';
@@ -21,7 +20,6 @@ export function Matrix() {
   const [searchParams] = useSearchParams();
   const { sectorParam, sector } = useSector();
   const { domain, domainParam } = useDomain();
-  usePageTitle(domain === 'atlas-attack' ? 'ATLAS Matrix' : 'ATT&CK Matrix');
   const { theme } = useTheme();
   const isAllDomains = domain === 'all';
   const { data, isLoading, error } = useMatrix(isAllDomains ? sectorParam : { ...sectorParam, ...domainParam });

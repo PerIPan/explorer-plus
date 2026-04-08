@@ -1,5 +1,4 @@
 import { useParams } from 'react-router-dom';
-import { usePageTitle } from '../hooks/usePageTitle';
 import { useGroups } from '../hooks/useApi';
 import { PageHeader } from '../components/layout/PageHeader';
 import { EntityLink } from '../components/shared/EntityLink';
@@ -12,7 +11,6 @@ export function SectorDetail() {
   const { data, isLoading, error } = useGroups(
     decodedName ? { sector: decodedName, limit: '500' } : {}
   );
-  usePageTitle(decodedName ? `${decodedName} Sector` : 'Sector');
 
   if (isLoading) {
     return <DiamondLoader text="Loading..." />;

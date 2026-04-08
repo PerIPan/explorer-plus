@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import { usePageTitle } from '../hooks/usePageTitle';
 import { useQuery } from '@tanstack/react-query';
 import { useFeedStatus } from '../hooks/useApi';
 import { apiFetch } from '../lib/api';
@@ -114,7 +113,6 @@ function EmptyFeedCard({ source }: { source: string }) {
 const ALL_SOURCES = ['otx', 'abuse_ch', 'cisa_kev', 'rss', 'nvd', 'virustotal'];
 
 export function FeedStatus() {
-  usePageTitle('Feed Status');
 
   const { data, refetch } = useFeedStatus();
 

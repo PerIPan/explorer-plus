@@ -1,5 +1,4 @@
 import { useCallback, useState } from 'react';
-import { usePageTitle } from '../hooks/usePageTitle';
 import { useSearchParams } from 'react-router-dom';
 import { useReactActions } from '../hooks/useApi';
 import { useFuseFilter } from '../hooks/useFuseFilter';
@@ -125,7 +124,6 @@ function ActionCard({
 }
 
 export function ReactActions() {
-  usePageTitle('RE\u0026CT Actions');
 
   const [searchParams, setSearchParams] = useSearchParams();
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());

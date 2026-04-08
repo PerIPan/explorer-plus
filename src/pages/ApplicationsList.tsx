@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { usePageTitle } from '../hooks/usePageTitle';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '../lib/api';
@@ -87,7 +86,6 @@ const columns: ColumnDef<Application>[] = [
 ];
 
 export function ApplicationsList() {
-  usePageTitle('Applications');
 
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();

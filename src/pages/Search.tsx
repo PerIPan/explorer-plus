@@ -1,5 +1,4 @@
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
-import { usePageTitle } from '../hooks/usePageTitle';
 import { useSearch } from '../hooks/useApi';
 import { useDomain } from '../contexts/DomainContext';
 import { PageHeader } from '../components/layout/PageHeader';
@@ -75,7 +74,6 @@ function ResultRow({
 }
 
 export function Search() {
-  usePageTitle('Search');
 
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
