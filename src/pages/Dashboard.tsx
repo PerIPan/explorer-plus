@@ -1,3 +1,4 @@
+'use client';
 import { useNavigate, Link } from 'react-router-dom';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { useDashboard, useReports } from '../hooks/useApi';
