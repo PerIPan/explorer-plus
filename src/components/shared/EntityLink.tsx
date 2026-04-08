@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import type { EntityType } from '../../lib/types';
 
 interface EntityLinkProps {
@@ -87,7 +87,7 @@ export function EntityLink({ type, attackId, name, className = '', useMap, newTa
     : `/${path}/${attackId}`;
   return (
     <Link
-      to={href}
+      href={href}
       title={`${attackId} — ${name}`}
       {...(newTab ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
       className={`
