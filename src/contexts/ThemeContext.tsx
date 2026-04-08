@@ -16,15 +16,19 @@ export function useTheme() {
   return useContext(ThemeContext);
 }
 
-function getInitialTheme(): Theme {
-  if (typeof window === 'undefined') return 'light';
-  const stored = localStorage.getItem('theme') as Theme | null;
-  if (stored === 'light' || stored === 'dark') return stored;
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-}
-
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<Theme>(getInitialTheme);
+  const [theme, setTheme] = useState<Theme>('light');
+
+  // Sync from localStorage on mount (SSR-safe — layout.tsx blocking script
+  // already sets the CSS class, so there's no flash)
+  useEffect(() => {
+    const stored = localStorage.getItem('theme') as Theme | null;
+    if (stored === 'light' || stored === 'dark') {
+      setTheme(stored);
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      setTheme('dark');
+    }
+  }, []);
 
   useEffect(() => {
     const root = document.documentElement;

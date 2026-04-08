@@ -1,6 +1,7 @@
 import './globals.css';
 import { headers } from 'next/headers';
 import type { Metadata } from 'next';
+import { Providers } from './providers';
 
 const THEME_SCRIPT = `(function(){
   try {
@@ -27,7 +28,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <script nonce={nonce} dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>
       <body className="bg-[var(--surface-deep)] text-[var(--text-primary)]">
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

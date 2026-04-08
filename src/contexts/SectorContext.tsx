@@ -1,5 +1,5 @@
 import { createContext, useContext, useCallback, useMemo, useEffect, useState, type ReactNode } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 
 interface SectorContextValue {
   /** Active sector slug, or null for "All Sectors" */
@@ -20,7 +20,10 @@ const EMPTY_PARAM: Record<string, string> = {};
 const STORAGE_KEY = 'mitre-sector';
 
 export function SectorProvider({ children }: { children: ReactNode }) {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
   const urlSector = searchParams.get('sector') || null;
 
   // Derive sector: URL takes priority, sessionStorage as fallback
@@ -37,16 +40,8 @@ export function SectorProvider({ children }: { children: ReactNode }) {
     }
   }, [urlSector]);
 
-  // Re-inject sector into URL when navigating to a page that lost it
-  useEffect(() => {
-    if (sector && !urlSector) {
-      setSearchParams((prev) => {
-        const next = new URLSearchParams(prev);
-        next.set('sector', sector);
-        return next;
-      }, { replace: true });
-    }
-  }, [sector, urlSector, setSearchParams]);
+  // NOTE: "re-inject sector into URL" effect removed — handled by UrlSyncEffect
+  // in providers.tsx to avoid race conditions with DomainContext
 
   const setSector = useCallback(
     (slug: string | null) => {
@@ -56,17 +51,17 @@ export function SectorProvider({ children }: { children: ReactNode }) {
         sessionStorage.removeItem(STORAGE_KEY);
       }
       setStoredSector(slug);
-      setSearchParams((prev) => {
-        const next = new URLSearchParams(prev);
-        if (slug) {
-          next.set('sector', slug);
-        } else {
-          next.delete('sector');
-        }
-        return next;
-      });
+
+      const params = new URLSearchParams(searchParams.toString());
+      if (slug) {
+        params.set('sector', slug);
+      } else {
+        params.delete('sector');
+      }
+      const qs = params.toString();
+      router.push(qs ? `${pathname}?${qs}` : pathname);
     },
-    [setSearchParams],
+    [searchParams, router, pathname],
   );
 
   const sectorParam = useMemo<Record<string, string>>(
