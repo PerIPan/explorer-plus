@@ -1,13 +1,4 @@
 {
-  "framework": "vite",
-  "buildCommand": "npx vite build",
-  "outputDirectory": "dist",
-  "functions": {
-    "api/**/*.ts": {
-      "includeFiles": "api/**",
-      "maxDuration": 300
-    }
-  },
   "crons": [
     { "path": "/api/cron/ingest-otx", "schedule": "0 */3 * * *" },
     { "path": "/api/cron/ingest-abuse-ch", "schedule": "0 2 * * *" },
@@ -19,10 +10,6 @@
     { "path": "/api/cron/ingest-cve-delta", "schedule": "0 4 * * *" },
     { "path": "/api/cron/scan-site-health", "schedule": "0 12 * * *" }
   ],
-  "rewrites": [
-    { "source": "/api/v1/applications/:vendor/:product", "destination": "/api/v1/applications/[...slug]" },
-    { "source": "/((?!api/).*)", "destination": "/index.html" }
-  ],
   "headers": [
     {
       "source": "/(.*)",
@@ -32,8 +19,7 @@
         { "key": "X-XSS-Protection", "value": "0" },
         { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
         { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" },
-        { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains; preload" },
-        { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self' 'sha256-cfgPhqVpeGVQv9wol6gQsCjkA86LFo/4KpiHd8Z6CvI=' https://va.vercel-scripts.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://va.vercel-scripts.com https://vitals.vercel-insights.com" }
+        { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains; preload" }
       ]
     }
   ]
