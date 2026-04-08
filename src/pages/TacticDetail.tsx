@@ -1,5 +1,7 @@
+'use client';
 import { useState, useMemo } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'next/navigation';
+import Link from 'next/link';
 import { useTactic } from '../hooks/useApi';
 import { PageHeader } from '../components/layout/PageHeader';
 import { EntityLink } from '../components/shared/EntityLink';

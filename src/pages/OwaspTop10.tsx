@@ -1,5 +1,6 @@
+'use client';
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '../lib/api';
 import { PageHeader } from '../components/layout/PageHeader';

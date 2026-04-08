@@ -1,5 +1,7 @@
+'use client';
 import { useState, useEffect } from 'react';
-import { useParams, useSearchParams, Link } from 'react-router-dom';
+import { useParams, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { isSafeUrl, ctidCloudUrl, ctidVerisUrl } from '../lib/urlSafety';
 import { useTechnique, useIntelligence, useFrameworks } from '../hooks/useApi';
 import { formatDate } from '../lib/formatDate';
@@ -606,7 +608,7 @@ function FrameworksTab({ attackId }: { attackId: string }) {
 
 export function TechniqueDetail() {
   const { attackId } = useParams<{ attackId: string }>();
-  const [searchParams] = useSearchParams();
+  const searchParams = useSearchParams();
   const { data, isLoading, error } = useTechnique(attackId ?? '');
   const tabParam = searchParams.get('tab') as TabId | null;
   const validTabs = new Set<string>(TABS.map((t) => t.id));

@@ -1,4 +1,5 @@
-import { useParams } from 'react-router-dom';
+'use client';
+import { useParams } from 'next/navigation';
 import { useGroups } from '../hooks/useApi';
 import { PageHeader } from '../components/layout/PageHeader';
 import { EntityLink } from '../components/shared/EntityLink';

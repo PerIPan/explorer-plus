@@ -1,0 +1,28 @@
+import { notFound } from 'next/navigation';
+import { Suspense } from 'react';
+import { fetchMitigation } from '../../lib/data';
+import { DiamondLoader } from '../../../src/components/shared/FoldingDiamond';
+import { MitigationDetail } from '../../../src/pages/MitigationDetail';
+
+export async function generateMetadata({ params }: { params: Promise<{ attackId: string }> }) {
+  const { attackId } = await params;
+  const data = await fetchMitigation(attackId);
+  if (!data) return { title: 'Not Found' };
+  return {
+    title: `${data.attack_id} ${data.name}`,
+    description: data.description?.slice(0, 160) ?? `Details for ${data.attack_id} ${data.name}`,
+  };
+}
+
+export const revalidate = 3600;
+
+export default async function Page({ params }: { params: Promise<{ attackId: string }> }) {
+  const { attackId } = await params;
+  const data = await fetchMitigation(attackId);
+  if (!data) notFound();
+  return (
+    <Suspense fallback={<DiamondLoader text="Loading..." />}>
+      <MitigationDetail />
+    </Suspense>
+  );
+}

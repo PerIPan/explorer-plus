@@ -1,4 +1,6 @@
-import { useParams, Link } from 'react-router-dom';
+'use client';
+import { useParams } from 'next/navigation';
+import Link from 'next/link';
 import { useMitigation } from '../hooks/useApi';
 import { PageHeader } from '../components/layout/PageHeader';
 import { DeprecatedBadge } from '../components/shared/DeprecatedBadge';

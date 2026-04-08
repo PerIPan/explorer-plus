@@ -1,5 +1,7 @@
+'use client';
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'next/navigation';
+import Link from 'next/link';
 import { isSafeUrl } from '../lib/urlSafety';
 import { useCveDetail } from '../hooks/useApi';
 import { formatDate } from '../lib/formatDate';
