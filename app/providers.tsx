@@ -7,6 +7,7 @@ import { ThemeProvider } from '../src/contexts/ThemeContext';
 import { DomainProvider, DEFAULT_DOMAIN } from '../src/contexts/DomainContext';
 import { SectorProvider } from '../src/contexts/SectorContext';
 import { DiamondLoader } from '../src/components/shared/FoldingDiamond';
+import { AppShell } from '../src/components/layout/AppShell';
 import { Analytics } from '@vercel/analytics/react';
 
 /**
@@ -63,7 +64,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           <DomainProvider>
             <SectorProvider>
               <UrlSyncEffect />
-              {children}
+              <AppShell>{children}</AppShell>
             </SectorProvider>
           </DomainProvider>
         </Suspense>
