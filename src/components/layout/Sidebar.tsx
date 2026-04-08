@@ -1,5 +1,8 @@
+'use client';
+
 import { useState, useEffect } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { DomainDropdown } from './DomainDropdown';
 import { SectorDropdown } from './SectorDropdown';
 
@@ -81,30 +84,35 @@ const extendedIntelNav: NavItem[] = [
 ];
 
 function NavItemLink({ path, label, tooltip, end }: NavItem & { end?: boolean }) {
+  const pathname = usePathname();
+  const isActive = end
+    ? pathname === path
+    : pathname === path || pathname.startsWith(path + '/');
   return (
-    <NavLink
-      to={path}
-      end={end}
+    <Link
+      href={path}
       title={tooltip}
-      className={({ isActive }) =>
-        [
-          'block px-3 py-2.5 rounded-md text-sm font-medium transition-colors duration-150',
-          isActive
-            ? 'text-[var(--accent-teal)] bg-[var(--teal-faint)] border-l-2 border-[var(--accent-teal)]'
-            : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--hover-overlay)]',
-        ].join(' ')
-      }
+      className={[
+        'block px-3 py-2.5 rounded-md text-sm font-medium transition-colors duration-150',
+        isActive
+          ? 'text-[var(--accent-teal)] bg-[var(--teal-faint)] border-l-2 border-[var(--accent-teal)]'
+          : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--hover-overlay)]',
+      ].join(' ')}
     >
       {label}
-    </NavLink>
+    </Link>
   );
 }
 
 function CollapsibleNavSection({ label, items, defaultOpen = false, title }: { label: string; items: NavItem[]; defaultOpen?: boolean; title?: string }) {
-  const location = useLocation();
-  const isActiveRoute = items.some((item) => location.pathname.startsWith(item.path));
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
-  const [open, setOpen] = useState(isMobile ? isActiveRoute : (defaultOpen || isActiveRoute));
+  const pathname = usePathname();
+  const isActiveRoute = items.some((item) => pathname.startsWith(item.path));
+  const [open, setOpen] = useState(defaultOpen || isActiveRoute);
+
+  // Collapse non-active sections on mobile after hydration
+  useEffect(() => {
+    if (window.innerWidth < 1024 && !isActiveRoute) setOpen(false);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Auto-expand when navigating to a route inside this section
   useEffect(() => {
