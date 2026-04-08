@@ -101,7 +101,7 @@ export function CveDetail() {
         <PageHeader title={cveId ?? 'CVE'} subtitle="Vulnerability Details" />
         <p className="text-[var(--text-secondary)] text-sm py-6">
           CVE not found or not yet enriched.{' '}
-          <Link to="/cti/cves" className="text-[var(--accent-teal)] hover:underline">
+          <Link href="/cti/cves" className="text-[var(--accent-teal)] hover:underline">
             Back to CVEs
           </Link>
         </p>
@@ -341,7 +341,7 @@ export function CveDetail() {
                     className="flex items-center justify-between gap-3 py-2 px-3 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)]"
                   >
                     <Link
-                      to={`/?entity=${encodeURIComponent(app.normalized)}&tab=application-map`}
+                      href={`/?entity=${encodeURIComponent(app.normalized)}&tab=application-map`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-sm text-[var(--text-primary)] hover:text-[var(--accent-blue)] hover:underline"

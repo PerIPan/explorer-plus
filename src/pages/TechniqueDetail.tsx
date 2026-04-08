@@ -100,7 +100,7 @@ function IntelligenceTab({ attackId }: IntelligenceTabProps) {
     return (
       <p className="text-[var(--text-secondary)] text-sm py-6">
         No intelligence data found for this technique. Trigger a feed sync from{' '}
-        <Link to="/cti/feed-status" className="text-[var(--accent-teal)] hover:underline">
+        <Link href="/cti/feed-status" className="text-[var(--accent-teal)] hover:underline">
           Feed Status
         </Link>
         .
@@ -259,7 +259,7 @@ function IntelligenceTab({ attackId }: IntelligenceTabProps) {
                       {(() => {
                         if (ioc.type === 'cve') {
                           return (
-                            <Link to={`/cti/cves/${ioc.value}`} className="text-[var(--accent-teal)] hover:underline">{ioc.value}</Link>
+                            <Link href={`/cti/cves/${ioc.value}`} className="text-[var(--accent-teal)] hover:underline">{ioc.value}</Link>
                           );
                         }
                         const link = otxUrl(ioc.type, ioc.value);
@@ -480,7 +480,7 @@ function FrameworksTab({ attackId }: { attackId: string }) {
           </div>
           <div className="pt-2">
             <Link
-              to="/frameworks/nist"
+              href="/frameworks/nist"
               className="text-xs text-[var(--accent-teal)] hover:underline"
             >
               Browse all NIST 800-53 controls
@@ -523,7 +523,7 @@ function FrameworksTab({ attackId }: { attackId: string }) {
           </div>
           <div className="pt-2">
             <Link
-              to="/frameworks/engage"
+              href="/frameworks/engage"
               className="text-xs text-[var(--accent-teal)] hover:underline"
             >
               Browse all Engage activities
@@ -543,7 +543,7 @@ function FrameworksTab({ attackId }: { attackId: string }) {
         </p>
         <div className="pt-2">
           <Link
-            to="/frameworks/react"
+            href="/frameworks/react"
             className="text-xs text-[var(--accent-teal)] hover:underline"
           >
             Browse RE&CT response actions
@@ -596,7 +596,7 @@ function FrameworksTab({ attackId }: { attackId: string }) {
             ))}
           </div>
           <div className="pt-2">
-            <Link to="/frameworks/owasp" className="text-xs text-[var(--accent-teal)] hover:underline">
+            <Link href="/frameworks/owasp" className="text-xs text-[var(--accent-teal)] hover:underline">
               Browse all OWASP categories
             </Link>
           </div>
@@ -651,7 +651,7 @@ export function TechniqueDetail() {
           { label: data.attackId },
         ]}
         titleAction={
-          <Link to={`/?entity=${data.attackId}&tab=technique-map`} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-medium text-[var(--text-secondary)] hover:text-[var(--accent-teal)] transition-colors" title="View in 360 Views">360 →</Link>
+          <Link href={`/?entity=${data.attackId}&tab=technique-map`} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-medium text-[var(--text-secondary)] hover:text-[var(--accent-teal)] transition-colors" title="View in 360 Views">360 →</Link>
         }
         actions={
           <div className="flex items-center gap-2">
@@ -849,7 +849,7 @@ export function TechniqueDetail() {
             )}
             <div className="pt-2">
               <Link
-                to={`/relationships?entity=${data.attackId}&tab=technique-map`}
+                href={`/relationships?entity=${data.attackId}&tab=technique-map`}
                 className="text-xs text-[var(--accent-teal)] hover:underline"
               >
                 View technique map
@@ -877,7 +877,7 @@ export function TechniqueDetail() {
             )}
             <div className="pt-2">
               <Link
-                to={`/relationships?entity=${data.attackId}&tab=technique-map`}
+                href={`/relationships?entity=${data.attackId}&tab=technique-map`}
                 className="text-xs text-[var(--accent-teal)] hover:underline"
               >
                 View technique map
@@ -902,7 +902,7 @@ export function TechniqueDetail() {
             )}
             <div className="pt-2">
               <Link
-                to={`/relationships?entity=${data.attackId}&tab=technique-map`}
+                href={`/relationships?entity=${data.attackId}&tab=technique-map`}
                 className="text-xs text-[var(--accent-teal)] hover:underline"
               >
                 View technique map
@@ -934,7 +934,7 @@ export function TechniqueDetail() {
             )}
             <div className="pt-2">
               <Link
-                to={`/relationships?entity=${data.attackId}&tab=technique-map`}
+                href={`/relationships?entity=${data.attackId}&tab=technique-map`}
                 className="text-xs text-[var(--accent-teal)] hover:underline"
               >
                 View technique map
@@ -959,7 +959,7 @@ export function TechniqueDetail() {
             )}
             <div className="pt-2">
               <Link
-                to={`/relationships?entity=${data.attackId}&tab=technique-map`}
+                href={`/relationships?entity=${data.attackId}&tab=technique-map`}
                 className="text-xs text-[var(--accent-teal)] hover:underline"
               >
                 View technique map

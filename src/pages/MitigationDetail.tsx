@@ -36,7 +36,7 @@ export function MitigationDetail() {
           { label: data.attackId },
         ]}
         titleAction={
-          <Link to={`/?entity=${data.attackId}&tab=mitigation-map`} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-medium text-[var(--text-secondary)] hover:text-[var(--accent-teal)] transition-colors" title="View in 360 Views">360 →</Link>
+          <Link href={`/?entity=${data.attackId}&tab=mitigation-map`} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-medium text-[var(--text-secondary)] hover:text-[var(--accent-teal)] transition-colors" title="View in 360 Views">360 →</Link>
         }
         actions={
           <div className="flex items-center gap-2">
@@ -75,7 +75,7 @@ export function MitigationDetail() {
             Mitigated Techniques
           </h3>
           <Link
-            to={`/?entity=${data.attackId}&tab=mitigation-map`}
+            href={`/?entity=${data.attackId}&tab=mitigation-map`}
             className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-medium text-[var(--text-secondary)] hover:text-[var(--accent-teal)] transition-colors"
           >
             view map →

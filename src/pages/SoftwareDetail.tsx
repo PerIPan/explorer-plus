@@ -38,7 +38,7 @@ export function SoftwareDetail() {
         ]}
         titleAction={
           <Link
-            to={`/?entity=${data.attackId}&tab=software-map`}
+            href={`/?entity=${data.attackId}&tab=software-map`}
             className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-medium text-[var(--text-secondary)] hover:text-[var(--accent-teal)] transition-colors"
             title="View in 360 Views"
           >
@@ -119,7 +119,7 @@ export function SoftwareDetail() {
             Relationships
           </h3>
           <Link
-            to={`/?entity=${data.attackId}&tab=software-map`}
+            href={`/?entity=${data.attackId}&tab=software-map`}
             className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-medium text-[var(--text-secondary)] hover:text-[var(--accent-teal)] transition-colors"
           >
             view map →
