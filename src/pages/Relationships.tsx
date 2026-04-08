@@ -6,7 +6,13 @@ import { useRelationships } from '../hooks/useApi';
 import { apiFetch } from '../lib/api';
 import { useDomain } from '../contexts/DomainContext';
 import { PageHeader } from '../components/layout/PageHeader';
-import { ForceGraph, type ForceGraphHandle } from '../components/graph/ForceGraph';
+import dynamic from 'next/dynamic';
+import type { ForceGraphHandle } from '../components/graph/ForceGraph';
+
+const ForceGraph = dynamic(
+  () => import('../components/graph/ForceGraph').then(m => ({ default: m.ForceGraph })),
+  { ssr: false }
+);
 import { Badge } from '../components/shared/Badge';
 import { ActorProfileView } from '../components/relationships/ActorProfileView';
 import { TechniqueMapView } from '../components/relationships/TechniqueMapView';
