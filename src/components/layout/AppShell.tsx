@@ -183,6 +183,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <p className="text-[var(--text-secondary)] text-xs pt-2 border-t border-[var(--border-color)]">
                 <span className="text-[var(--accent-teal)]">contact @ mitre-explorer.org</span>
                 {' — '}Not affiliated with or endorsed by MITRE Corporation.
+                {' | '}<a href="https://github.com/PerIPan/mitre-explorer-plus" target="_blank" rel="noopener noreferrer" className="text-[var(--accent-blue)] hover:underline">GitHub</a>
               </p>
             </div>
           </div>
