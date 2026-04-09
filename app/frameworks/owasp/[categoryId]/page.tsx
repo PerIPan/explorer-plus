@@ -8,9 +8,12 @@ export async function generateMetadata({ params }: { params: Promise<{ categoryI
   const { categoryId } = await params;
   const data = await fetchOwaspCategory(categoryId);
   if (!data) return { title: 'Not Found' };
+  const title = `${data.category_id} ${data.name}`;
+  const description = data.description?.slice(0, 160) ?? `Details for ${data.category_id} ${data.name}`;
   return {
-    title: `${data.category_id} ${data.name}`,
-    description: data.description?.slice(0, 160) ?? `Details for ${data.category_id} ${data.name}`,
+    title,
+    description,
+    openGraph: { title, description, url: `https://mitre-explorer.org/frameworks/owasp/${data.category_id}` },
   };
 }
 

@@ -15,10 +15,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ].map((path) => ({ url: `${BASE_URL}${path}`, changeFrequency: 'weekly' as const }));
 
   try {
-    const [techniques, groups, cves] = await Promise.all([
+    const [techniques, groups, cves, owasp] = await Promise.all([
       query<{ attack_id: string }>('SELECT attack_id FROM techniques WHERE attack_id IS NOT NULL'),
       query<{ attack_id: string }>('SELECT attack_id FROM threat_groups WHERE attack_id IS NOT NULL'),
       query<{ cve_id: string }>("SELECT cve_id FROM cves WHERE cve_id IS NOT NULL ORDER BY published_at DESC NULLS LAST LIMIT 5000"),
+      query<{ category_id: string }>('SELECT category_id FROM owasp_top10'),
     ]);
 
     const techniqueUrls = techniques.rows.map((t) => ({
@@ -36,7 +37,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'weekly' as const,
     }));
 
-    return [...staticPages, ...techniqueUrls, ...groupUrls, ...cveUrls];
+    const owaspUrls = owasp.rows.map((o) => ({
+      url: `${BASE_URL}/frameworks/owasp/${o.category_id}`,
+      changeFrequency: 'monthly' as const,
+    }));
+
+    return [...staticPages, ...techniqueUrls, ...groupUrls, ...cveUrls, ...owaspUrls];
   } catch {
     // If DB is not available (e.g., build time), return static pages only
     return staticPages;

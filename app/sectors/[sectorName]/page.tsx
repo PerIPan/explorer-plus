@@ -9,9 +9,11 @@ export async function generateMetadata({ params }: { params: Promise<{ sectorNam
   const slug = decodeURIComponent(sectorName);
   const data = await fetchSector(slug);
   if (!data) return { title: 'Not Found' };
+  const description = `Threat groups targeting the ${data.name} sector with ATT&CK techniques and campaigns`;
   return {
     title: data.name,
-    description: `Threat groups targeting the ${data.name} sector with ATT&CK techniques and campaigns`,
+    description,
+    openGraph: { title: data.name, description, url: `https://mitre-explorer.org/sectors/${slug}` },
   };
 }
 
