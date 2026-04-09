@@ -17,6 +17,7 @@ const DAILY_LIMIT = 50;
 const MODEL = 'gemini-3.1-flash-lite-preview';
 const MAX_INPUT_LENGTH = 2000;
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL
+  || (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : null)
   || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
 
 // -- Input validation --------------------------------------------------------

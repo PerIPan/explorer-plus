@@ -564,7 +564,7 @@ export function Relationships() {
                 ref={graphRef}
                 data={effectiveGraphData!}
                 onNodeClick={handleNodeClick}
-                height={typeof window !== 'undefined' ? Math.min(800, window.innerHeight - 200) : 600}
+                height={Math.min(800, window.innerHeight - 200)}
               />
 
               {/* Legend */}

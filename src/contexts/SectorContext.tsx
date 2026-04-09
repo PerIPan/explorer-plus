@@ -26,11 +26,13 @@ export function SectorProvider({ children }: { children: ReactNode }) {
 
   const urlSector = searchParams.get('sector') || null;
 
-  // Derive sector: URL takes priority, sessionStorage as fallback
-  // Use a useState initializer so sessionStorage is read only once on mount
-  const [storedSector, setStoredSector] = useState<string | null>(() =>
-    typeof window !== 'undefined' ? sessionStorage.getItem(STORAGE_KEY) : null
-  );
+  // Track stored sector — initialized as null to match server, synced from sessionStorage on mount
+  const [storedSector, setStoredSector] = useState<string | null>(null);
+
+  useEffect(() => {
+    const stored = sessionStorage.getItem(STORAGE_KEY);
+    if (stored) setStoredSector(stored);
+  }, []);
   const sector = urlSector ?? storedSector;
 
   // Persist to sessionStorage when URL sector changes

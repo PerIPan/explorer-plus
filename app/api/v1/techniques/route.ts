@@ -81,7 +81,7 @@ export async function GET(req: NextRequest) {
     conditions.push(`t.domain = $${params.length}`);
   }
 
-  const whereClause = `WHERE ${conditions.join(' AND ')}`;
+  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
   const countResult = await query<{ count: string }>(
     `SELECT count(*) FROM techniques t ${whereClause}`,

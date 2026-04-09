@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { errorResponse } from '../../../../lib/handler';
 import { withCors, corsOptions as OPTIONS } from '../../../../lib/cors';
 import { NextResponse } from 'next/server';
+import { verifyCronAuth } from '../../../../cron/lib/auth';
 
 export { OPTIONS };
 
@@ -13,15 +14,8 @@ export async function POST(
 ) {
   const { source: sourceKey } = await params;
 
-  // Auth via CRON_SECRET header — required in production
-  const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret) {
-    return withCors(errorResponse(500, 'Server misconfigured: CRON_SECRET not set', 'CONFIG_ERROR'));
-  }
-  const provided = req.headers.get('x-cron-secret') ?? req.headers.get('authorization');
-  if (provided !== cronSecret && provided !== `Bearer ${cronSecret}`) {
-    return withCors(errorResponse(401, 'Unauthorized', 'UNAUTHORIZED'));
-  }
+  const authError = verifyCronAuth(req);
+  if (authError) return authError;
 
   if (!VALID_SOURCES.includes(sourceKey)) {
     return withCors(errorResponse(404, 'Unknown source', 'NOT_FOUND'));

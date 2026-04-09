@@ -43,10 +43,13 @@ export function DomainProvider({ children }: { children: ReactNode }) {
 
   const urlDomain = searchParams.get('domain') ?? null;
 
-  // Track stored domain in state — updated when setDomain is called or URL changes
-  const [storedDomain, setStoredDomain] = useState<string | null>(() =>
-    typeof window !== 'undefined' ? sessionStorage.getItem(STORAGE_KEY) : null
-  );
+  // Track stored domain — initialized as null to match server, synced from sessionStorage on mount
+  const [storedDomain, setStoredDomain] = useState<string | null>(null);
+
+  useEffect(() => {
+    const stored = sessionStorage.getItem(STORAGE_KEY);
+    if (stored) setStoredDomain(stored);
+  }, []);
 
   const domain = urlDomain ?? storedDomain ?? DEFAULT_DOMAIN;
 

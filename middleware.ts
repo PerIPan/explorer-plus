@@ -11,6 +11,10 @@ export function middleware(request: NextRequest) {
     "img-src 'self' data: blob:",
     `connect-src 'self' https://*.vercel-insights.com https://va.vercel-scripts.com https://vitals.vercel-insights.com${isDev ? ' ws://localhost:* http://localhost:*' : ''}`,
     "font-src 'self'",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'none'",
   ].join('; ');
 
   const response = NextResponse.next();
