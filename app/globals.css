@@ -1,1 +1,5 @@
+@import "tailwindcss";
+@source "../src";
+
+/* Import project theme variables and custom styles */
 @import '../src/index.css';

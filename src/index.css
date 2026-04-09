@@ -1,4 +1,4 @@
-@import "tailwindcss";
+/* Tailwind import moved to app/globals.css (Next.js entry point) */
 
 /* ───────────────── Theme: Light (default) ───────────────── */
 :root {
