@@ -4,8 +4,8 @@
  * then links CVE IOCs to techniques based on their CWE weakness type.
  */
 
-import { query } from '../../v1/lib/db.js';
-import { getParentId } from '../../v1/lib/getParentId.js';
+import { query } from '../../v1/lib/db';
+import { getParentId } from '../../v1/lib/getParentId';
 
 const CAPEC_STIX_URL =
   'https://raw.githubusercontent.com/mitre/cti/master/capec/2.1/stix-capec.json';

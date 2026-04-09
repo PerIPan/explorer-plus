@@ -1,10 +1,10 @@
 import { NextRequest } from 'next/server';
-import { query } from '../../lib/db.js';
+import { query } from '../../lib/db';
 import { jsonResponse, errorResponse } from '../../../lib/handler';
 import { withCors, corsOptions as OPTIONS } from '../../../lib/cors';
-import { attackIdSchema } from '../../lib/validate.js';
+import { attackIdSchema } from '../../lib/validate';
 import { z } from 'zod';
-import type { GraphNode, GraphEdge } from '../../lib/types.js';
+import type { GraphNode, GraphEdge } from '../../lib/types';
 
 export { OPTIONS };
 

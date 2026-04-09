@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '../../v1/lib/db.js';
+import { query } from '../../v1/lib/db';
 import { verifyCronAuth } from '../lib/auth';
-import { linkCveTechniquesViaCwe } from '../lib/capec-bridge.js';
+import { linkCveTechniquesViaCwe } from '../lib/capec-bridge';
 
 export const maxDuration = 300;
 

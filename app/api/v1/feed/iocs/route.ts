@@ -1,9 +1,9 @@
 import { NextRequest } from 'next/server';
-import { query } from '../../lib/db.js';
+import { query } from '../../lib/db';
 import { jsonResponse, errorResponse } from '../../../lib/handler';
 import { withCors, corsOptions as OPTIONS } from '../../../lib/cors';
-import { paginationSchema } from '../../lib/validate.js';
-import { escapeLikePattern } from '../../lib/queries.js';
+import { paginationSchema } from '../../lib/validate';
+import { escapeLikePattern } from '../../lib/queries';
 import { z } from 'zod';
 
 export { OPTIONS };

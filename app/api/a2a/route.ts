@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
-import { query } from '../v1/lib/db.js';
+import { query } from '../v1/lib/db';
 import { withCors, corsOptions as OPTIONS } from '../lib/cors';
 
 export { OPTIONS };

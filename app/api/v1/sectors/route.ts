@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { query } from '../lib/db.js';
+import { query } from '../lib/db';
 import { jsonResponse } from '../../lib/handler';
 import { withCors, corsOptions as OPTIONS } from '../../lib/cors';
 

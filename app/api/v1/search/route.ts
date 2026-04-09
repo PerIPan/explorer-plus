@@ -1,8 +1,8 @@
 import { NextRequest } from 'next/server';
-import { query } from '../lib/db.js';
+import { query } from '../lib/db';
 import { jsonResponse, errorResponse } from '../../lib/handler';
 import { withCors, corsOptions as OPTIONS } from '../../lib/cors';
-import { searchSchema, domainSchema } from '../lib/validate.js';
+import { searchSchema, domainSchema } from '../lib/validate';
 import { z } from 'zod';
 
 export { OPTIONS };
