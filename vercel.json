@@ -1,4 +1,5 @@
 {
+  "framework": "nextjs",
   "crons": [
     { "path": "/api/cron/ingest-otx", "schedule": "0 */3 * * *" },
     { "path": "/api/cron/ingest-abuse-ch", "schedule": "0 2 * * *" },
