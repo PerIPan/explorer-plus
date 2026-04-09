@@ -1,5 +1,5 @@
 import { createContext, useContext, useCallback, useMemo, useEffect, useState, type ReactNode } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 
 export interface DomainOption {
   value: string;
@@ -37,7 +37,10 @@ const Ctx = createContext<DomainContextValue>({
 });
 
 export function DomainProvider({ children }: { children: ReactNode }) {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
   const urlDomain = searchParams.get('domain') ?? null;
 
   // Track stored domain in state — updated when setDomain is called or URL changes
@@ -55,33 +58,25 @@ export function DomainProvider({ children }: { children: ReactNode }) {
     }
   }, [urlDomain]);
 
-  // Re-inject domain into URL when navigating to a page that lost it
-  useEffect(() => {
-    if (domain !== DEFAULT_DOMAIN && !urlDomain) {
-      setSearchParams((prev) => {
-        const next = new URLSearchParams(prev);
-        next.set('domain', domain);
-        return next;
-      }, { replace: true });
-    }
-  }, [domain, urlDomain, setSearchParams]);
+  // NOTE: "re-inject domain into URL" effect removed — handled by UrlSyncEffect
+  // in providers.tsx to avoid race conditions with SectorContext
 
   const setDomain = useCallback(
     (slug: string) => {
       sessionStorage.setItem(STORAGE_KEY, slug);
       setStoredDomain(slug);
-      setSearchParams((prev) => {
-        const next = new URLSearchParams(prev);
-        if (slug === DEFAULT_DOMAIN) {
-          // Don't clutter the URL with the default value
-          next.delete('domain');
-        } else {
-          next.set('domain', slug);
-        }
-        return next;
-      });
+
+      const params = new URLSearchParams(searchParams.toString());
+      if (slug === DEFAULT_DOMAIN) {
+        // Don't clutter the URL with the default value
+        params.delete('domain');
+      } else {
+        params.set('domain', slug);
+      }
+      const qs = params.toString();
+      router.push(qs ? `${pathname}?${qs}` : pathname);
     },
-    [setSearchParams],
+    [searchParams, router, pathname],
   );
 
   const domainParam = useMemo<Record<string, string>>(

@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import type { ReactNode } from 'react';
 
 interface StatCardProps {
@@ -75,7 +75,7 @@ export function StatCard({
 
   if (href) {
     return (
-      <Link to={href} className={baseClass}>
+      <Link href={href} className={baseClass}>
         {inner}
       </Link>
     );

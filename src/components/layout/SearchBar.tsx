@@ -1,5 +1,7 @@
+'use client';
+
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import Fuse from 'fuse.js';
 import { apiFetch } from '../../lib/api';
@@ -37,7 +39,7 @@ export function SearchBar() {
   const [showDropdown, setShowDropdown] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const blurTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const navigate = useNavigate();
+  const router = useRouter();
   const { domain, setDomain } = useDomain();
 
   /** Load ALL entities cross-domain for Fuse.js */
@@ -93,16 +95,16 @@ export function SearchBar() {
       setValue('');
       // External actors navigate to list with search filter (no detail page)
       if (entity.type === 'external_actor') {
-        navigate(`/external-actors?search=${encodeURIComponent(entity.attackId)}`);
+        router.push(`/external-actors?search=${encodeURIComponent(entity.attackId)}`);
         return;
       }
       // Sectors and applications navigate to the 360 View
       if (entity.type === 'sector') {
-        navigate(`/?entity=${encodeURIComponent(entity.attackId)}&tab=sector-map`);
+        router.push(`/?entity=${encodeURIComponent(entity.attackId)}&tab=sector-map`);
         return;
       }
       if (entity.type === 'application') {
-        navigate(`/?entity=${encodeURIComponent(entity.attackId)}&tab=application-map`);
+        router.push(`/?entity=${encodeURIComponent(entity.attackId)}&tab=application-map`);
         return;
       }
       // Auto-switch domain when selecting an entity outside current domain
@@ -119,9 +121,9 @@ export function SearchBar() {
         data_source: 'data-sources',
       };
       const route = typeRoutes[entity.type] ?? 'techniques';
-      navigate(`/${route}/${entity.attackId}`);
+      router.push(`/${route}/${entity.attackId}`);
     },
-    [domain, setDomain, navigate],
+    [domain, setDomain, router],
   );
 
   const handleSubmit = useCallback(
@@ -131,12 +133,12 @@ export function SearchBar() {
       if (suggestions.length > 0) {
         navigateToEntity(suggestions[0]);
       } else if (trimmed.length >= 3) {
-        navigate(`/search?q=${encodeURIComponent(trimmed)}`);
+        router.push(`/search?q=${encodeURIComponent(trimmed)}`);
         setShowDropdown(false);
         setValue('');
       }
     },
-    [value, suggestions, navigate, navigateToEntity]
+    [value, suggestions, router, navigateToEntity]
   );
 
   return (

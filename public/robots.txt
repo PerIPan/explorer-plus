@@ -1,9 +1,0 @@
-User-agent: *
-Allow: /
-Disallow: /api/
-Disallow: /search
-Disallow: /relationships
-
-# A2A Agent-to-Agent Protocol
-# Agent card: https://mitre-explorer.org/.well-known/agent-card.json
-# Endpoint: POST https://mitre-explorer.org/api/a2a

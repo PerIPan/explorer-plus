@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { useThemeColors } from '../../hooks/useThemeColors';
 
 interface ModelNode {
@@ -140,7 +140,7 @@ interface Props {
 }
 
 export function RelationshipModel({ open, onClose }: Props) {
-  const navigate = useNavigate();
+  const router = useRouter();
   const c = useThemeColors();
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
   const [hoveredEdge, setHoveredEdge] = useState<number | null>(null);
@@ -269,7 +269,7 @@ export function RelationshipModel({ open, onClose }: Props) {
                   className="cursor-pointer"
                   onMouseEnter={() => setHoveredNode(node.id)}
                   onMouseLeave={() => setHoveredNode(null)}
-                  onClick={() => { navigate(node.path); onClose(); }}
+                  onClick={() => { router.push(node.path); onClose(); }}
                 >
                   {(() => {
                     const s = node.scale ?? 1;

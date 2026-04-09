@@ -1,0 +1,128 @@
+import { NextRequest } from 'next/server';
+import { query } from '../../lib/db';
+import { jsonResponse, errorResponse } from '../../../lib/handler';
+import { withCors, corsOptions as OPTIONS } from '../../../lib/cors';
+import { z } from 'zod';
+
+export { OPTIONS };
+
+const slugSchema = z.string().min(1).max(200).regex(/^[a-z0-9/]+$/);
+
+const querySchema = z.object({
+  page: z.coerce.number().int().positive().max(1000).default(1),
+  limit: z.coerce.number().int().positive().max(100).default(20),
+});
+
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ slug: string[] }> }
+) {
+  const { slug: slugParts } = await params;
+  const rawSlug = slugParts.join('/');
+
+  const slugParsed = slugSchema.safeParse(rawSlug);
+  if (!slugParsed.success) {
+    return withCors(errorResponse(400, 'Invalid slug', 'VALIDATION_ERROR'));
+  }
+  const slug = slugParsed.data;
+
+  const rawParams: Record<string, string> = {};
+  req.nextUrl.searchParams.forEach((v, k) => { rawParams[k] = v; });
+
+  const parsed = querySchema.safeParse(rawParams);
+  if (!parsed.success) {
+    return withCors(errorResponse(400, 'Invalid query params', 'VALIDATION_ERROR'));
+  }
+  const { page, limit } = parsed.data;
+  const offset = (page - 1) * limit;
+
+  // Find application
+  const appResult = await query<{
+    id: string; vendor: string; product: string; normalized: string;
+    cpePrefix: string | null; cveCount: number;
+  }>(
+    `SELECT id, vendor, product, normalized, cpe_prefix AS "cpePrefix", cve_count AS "cveCount"
+     FROM applications WHERE normalized = $1`,
+    [slug],
+  );
+
+  if (appResult.rows.length === 0) {
+    return withCors(errorResponse(404, 'Application not found', 'NOT_FOUND'));
+  }
+  const app = appResult.rows[0];
+
+  // Parallel queries for the 360 view
+  const [cvesResult, techniquesResult, groupsResult, weaknessesResult, cveCountResult] = await Promise.all([
+    query<{
+      cveId: string; description: string | null;
+      cvssScore: number | null; cvssSeverity: string | null;
+      publishedAt: string | null; isKev: boolean;
+    }>(
+      `SELECT cd.cve_id AS "cveId", cd.description,
+              cd.cvss_score AS "cvssScore", cd.cvss_severity AS "cvssSeverity",
+              cd.published_at AS "publishedAt", cd.is_kev AS "isKev"
+       FROM affected_products ap
+       JOIN cve_details cd ON cd.cve_id = ap.cve_id
+       WHERE ap.application_id = $1
+       ORDER BY cd.published_at DESC NULLS LAST, cd.cvss_score DESC NULLS LAST
+       LIMIT $2 OFFSET $3`,
+      [app.id, limit, offset],
+    ),
+
+    query<{ attackId: string; name: string; groupCount: string }>(
+      `SELECT attack_technique_id AS "attackId", technique_name AS "name",
+              COUNT(DISTINCT group_attack_id)::text AS "groupCount"
+       FROM app_technique_groups
+       WHERE application_id = $1
+       GROUP BY attack_technique_id, technique_name
+       ORDER BY COUNT(DISTINCT group_attack_id) DESC, technique_name ASC`,
+      [app.id],
+    ),
+
+    query<{ attackId: string; name: string; techniqueCount: string }>(
+      `SELECT group_attack_id AS "attackId", group_name AS "name",
+              COUNT(DISTINCT attack_technique_id)::text AS "techniqueCount"
+       FROM app_technique_groups
+       WHERE application_id = $1
+       GROUP BY group_attack_id, group_name
+       ORDER BY COUNT(DISTINCT attack_technique_id) DESC, group_name ASC`,
+      [app.id],
+    ),
+
+    query<{ cweId: string; count: string }>(
+      `SELECT cw.cwe_id AS "cweId", COUNT(DISTINCT cw.cve_id)::text AS "count"
+       FROM affected_products ap
+       JOIN cve_weaknesses cw ON cw.cve_id = ap.cve_id
+       WHERE ap.application_id = $1
+       GROUP BY cw.cwe_id
+       ORDER BY COUNT(DISTINCT cw.cve_id) DESC
+       LIMIT 20`,
+      [app.id],
+    ),
+
+    query<{ total: string }>(
+      `SELECT COUNT(DISTINCT ap.cve_id)::text AS total
+       FROM affected_products ap WHERE ap.application_id = $1`,
+      [app.id],
+    ),
+  ]);
+
+  return withCors(jsonResponse({
+    ...app,
+    cves: cvesResult.rows,
+    cvePagination: {
+      page, limit,
+      total: parseInt(cveCountResult.rows[0].total, 10),
+      totalPages: Math.ceil(parseInt(cveCountResult.rows[0].total, 10) / limit),
+    },
+    techniques: techniquesResult.rows.map((r) => ({
+      ...r, groupCount: parseInt(r.groupCount, 10),
+    })),
+    groups: groupsResult.rows.map((r) => ({
+      ...r, techniqueCount: parseInt(r.techniqueCount, 10),
+    })),
+    weaknesses: weaknessesResult.rows.map((r) => ({
+      ...r, count: parseInt(r.count, 10),
+    })),
+  }, 3600));
+}

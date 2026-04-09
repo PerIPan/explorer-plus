@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import type { MatrixData } from '../../lib/types';
 import { MatrixCell } from './MatrixCell';
 import type { CellOverlay } from './MatrixCell';
@@ -97,7 +97,8 @@ export function MatrixGrid({ data, filterText = '', actorOverlay, highlightIds }
               >
                 {/* Tactic header — sticky within scrollable container */}
                 <Link
-                  to={`/relationships?entity=${col.tactic.attackId}&tab=tactic-map`}
+                  href={`/relationships?entity=${col.tactic.attackId}&tab=tactic-map`}
+                  prefetch={false}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="

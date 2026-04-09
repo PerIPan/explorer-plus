@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import { apiFetch } from '../../lib/api';
 import { useTechnique, useFrameworks, useIntelligence } from '../../hooks/useApi';
 import { useSector } from '../../contexts/SectorContext';
@@ -843,7 +843,7 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
           )
         )}
         <MapRow prefix="RE&CT">
-          <Link to="/frameworks/react" className="text-xs text-[var(--accent-teal)] hover:underline">
+          <Link href="/frameworks/react" className="text-xs text-[var(--accent-teal)] hover:underline">
             Browse response actions
           </Link>
         </MapRow>
