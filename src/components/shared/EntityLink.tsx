@@ -88,6 +88,7 @@ export function EntityLink({ type, attackId, name, className = '', useMap, newTa
   return (
     <Link
       href={href}
+      prefetch={false}
       title={`${attackId} — ${name}`}
       {...(newTab ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
       className={`

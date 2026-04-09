@@ -98,6 +98,7 @@ export function MatrixGrid({ data, filterText = '', actorOverlay, highlightIds }
                 {/* Tactic header — sticky within scrollable container */}
                 <Link
                   href={`/relationships?entity=${col.tactic.attackId}&tab=tactic-map`}
+                  prefetch={false}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="
