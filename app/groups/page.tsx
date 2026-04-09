@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { DiamondLoader } from '../../src/components/shared/FoldingDiamond';
-import { GroupsList } from '../../src/pages/GroupsList';
+import { GroupsList } from '../../src/views/GroupsList';
 
 export const metadata: Metadata = {
   title: 'Threat Groups',

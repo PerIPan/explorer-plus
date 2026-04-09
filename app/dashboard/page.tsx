@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 };
 
 // Dynamic import to avoid issues — Dashboard is a client component
-import { Dashboard as DashboardClient } from '../../src/pages/Dashboard';
+import { Dashboard as DashboardClient } from '../../src/views/Dashboard';
 
 export default function Page() {
   return (

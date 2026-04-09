@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 import { fetchOwaspCategory } from '../../../lib/data';
 import { DiamondLoader } from '../../../../src/components/shared/FoldingDiamond';
-import { OwaspTop10 } from '../../../../src/pages/OwaspTop10';
+import { OwaspTop10 } from '../../../../src/views/OwaspTop10';
 
 export async function generateMetadata({ params }: { params: Promise<{ categoryId: string }> }) {
   const { categoryId } = await params;

@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 import { fetchMitigation } from '../../lib/data';
 import { DiamondLoader } from '../../../src/components/shared/FoldingDiamond';
-import { MitigationDetail } from '../../../src/pages/MitigationDetail';
+import { MitigationDetail } from '../../../src/views/MitigationDetail';
 
 export async function generateMetadata({ params }: { params: Promise<{ attackId: string }> }) {
   const { attackId } = await params;

@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 import { fetchCve } from '../../../lib/data';
 import { DiamondLoader } from '../../../../src/components/shared/FoldingDiamond';
-import { CveDetail } from '../../../../src/pages/CveDetail';
+import { CveDetail } from '../../../../src/views/CveDetail';
 
 export async function generateMetadata({ params }: { params: Promise<{ cveId: string }> }) {
   const { cveId } = await params;

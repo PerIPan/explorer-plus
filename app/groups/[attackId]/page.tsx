@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 import { fetchGroup } from '../../lib/data';
 import { DiamondLoader } from '../../../src/components/shared/FoldingDiamond';
-import { GroupDetail } from '../../../src/pages/GroupDetail';
+import { GroupDetail } from '../../../src/views/GroupDetail';
 
 export async function generateMetadata({ params }: { params: Promise<{ attackId: string }> }) {
   const { attackId } = await params;

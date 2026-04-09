@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 import { fetchSector } from '../../lib/data';
 import { DiamondLoader } from '../../../src/components/shared/FoldingDiamond';
-import { SectorDetail } from '../../../src/pages/SectorDetail';
+import { SectorDetail } from '../../../src/views/SectorDetail';
 
 export async function generateMetadata({ params }: { params: Promise<{ sectorName: string }> }) {
   const { sectorName } = await params;

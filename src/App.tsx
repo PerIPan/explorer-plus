@@ -1,5 +1,5 @@
 import { lazy, Suspense, useState, useEffect } from 'react';
-import { Routes, Route, Outlet } from 'react-router-dom';
+// react-router-dom removed — routing handled by Next.js app/ directory
 import { Sidebar } from './components/layout/Sidebar';
 import { SearchBar } from './components/layout/SearchBar';
 import { SectorProvider } from './contexts/SectorContext';
@@ -11,45 +11,45 @@ import { Analytics } from '@vercel/analytics/react';
 import { DiamondLoader } from './components/shared/FoldingDiamond';
 
 // Lazy-loaded pages
-const Dashboard       = lazy(() => import('./pages/Dashboard').then((m) => ({ default: m.Dashboard })));
-const Matrix          = lazy(() => import('./pages/Matrix').then((m) => ({ default: m.Matrix })));
-const TechniquesList  = lazy(() => import('./pages/TechniquesList').then((m) => ({ default: m.TechniquesList })));
-const TechniqueDetail = lazy(() => import('./pages/TechniqueDetail').then((m) => ({ default: m.TechniqueDetail })));
-const GroupsList      = lazy(() => import('./pages/GroupsList').then((m) => ({ default: m.GroupsList })));
-const GroupDetail     = lazy(() => import('./pages/GroupDetail').then((m) => ({ default: m.GroupDetail })));
-const CampaignsList   = lazy(() => import('./pages/CampaignsList').then((m) => ({ default: m.CampaignsList })));
-const CampaignDetail  = lazy(() => import('./pages/CampaignDetail').then((m) => ({ default: m.CampaignDetail })));
-const SoftwareList    = lazy(() => import('./pages/SoftwareList').then((m) => ({ default: m.SoftwareList })));
-const SoftwareDetail  = lazy(() => import('./pages/SoftwareDetail').then((m) => ({ default: m.SoftwareDetail })));
-const DataSourcesList = lazy(() => import('./pages/DataSourcesList').then((m) => ({ default: m.DataSourcesList })));
-const DataSourceDetail = lazy(() => import('./pages/DataSourceDetail').then((m) => ({ default: m.DataSourceDetail })));
-const MitigationsList = lazy(() => import('./pages/MitigationsList').then((m) => ({ default: m.MitigationsList })));
-const MitigationDetail = lazy(() => import('./pages/MitigationDetail').then((m) => ({ default: m.MitigationDetail })));
-const TacticsList     = lazy(() => import('./pages/TacticsList').then((m) => ({ default: m.TacticsList })));
-const TacticDetail    = lazy(() => import('./pages/TacticDetail').then((m) => ({ default: m.TacticDetail })));
-const SectorsList     = lazy(() => import('./pages/SectorsList').then((m) => ({ default: m.SectorsList })));
-const SectorDetail    = lazy(() => import('./pages/SectorDetail').then((m) => ({ default: m.SectorDetail })));
-const Relationships   = lazy(() => import('./pages/Relationships').then((m) => ({ default: m.Relationships })));
-const Search          = lazy(() => import('./pages/Search').then((m) => ({ default: m.Search })));
+const Dashboard       = lazy(() => import('./views/Dashboard').then((m) => ({ default: m.Dashboard })));
+const Matrix          = lazy(() => import('./views/Matrix').then((m) => ({ default: m.Matrix })));
+const TechniquesList  = lazy(() => import('./views/TechniquesList').then((m) => ({ default: m.TechniquesList })));
+const TechniqueDetail = lazy(() => import('./views/TechniqueDetail').then((m) => ({ default: m.TechniqueDetail })));
+const GroupsList      = lazy(() => import('./views/GroupsList').then((m) => ({ default: m.GroupsList })));
+const GroupDetail     = lazy(() => import('./views/GroupDetail').then((m) => ({ default: m.GroupDetail })));
+const CampaignsList   = lazy(() => import('./views/CampaignsList').then((m) => ({ default: m.CampaignsList })));
+const CampaignDetail  = lazy(() => import('./views/CampaignDetail').then((m) => ({ default: m.CampaignDetail })));
+const SoftwareList    = lazy(() => import('./views/SoftwareList').then((m) => ({ default: m.SoftwareList })));
+const SoftwareDetail  = lazy(() => import('./views/SoftwareDetail').then((m) => ({ default: m.SoftwareDetail })));
+const DataSourcesList = lazy(() => import('./views/DataSourcesList').then((m) => ({ default: m.DataSourcesList })));
+const DataSourceDetail = lazy(() => import('./views/DataSourceDetail').then((m) => ({ default: m.DataSourceDetail })));
+const MitigationsList = lazy(() => import('./views/MitigationsList').then((m) => ({ default: m.MitigationsList })));
+const MitigationDetail = lazy(() => import('./views/MitigationDetail').then((m) => ({ default: m.MitigationDetail })));
+const TacticsList     = lazy(() => import('./views/TacticsList').then((m) => ({ default: m.TacticsList })));
+const TacticDetail    = lazy(() => import('./views/TacticDetail').then((m) => ({ default: m.TacticDetail })));
+const SectorsList     = lazy(() => import('./views/SectorsList').then((m) => ({ default: m.SectorsList })));
+const SectorDetail    = lazy(() => import('./views/SectorDetail').then((m) => ({ default: m.SectorDetail })));
+const Relationships   = lazy(() => import('./views/Relationships').then((m) => ({ default: m.Relationships })));
+const Search          = lazy(() => import('./views/Search').then((m) => ({ default: m.Search })));
 // CTI pages
-const CvesList        = lazy(() => import('./pages/CvesList').then((m) => ({ default: m.CvesList })));
-const CveDetail       = lazy(() => import('./pages/CveDetail').then((m) => ({ default: m.CveDetail })));
-const ReportsList     = lazy(() => import('./pages/ReportsList').then((m) => ({ default: m.ReportsList })));
-const IocsList        = lazy(() => import('./pages/IocsList').then((m) => ({ default: m.IocsList })));
-const SigmaList       = lazy(() => import('./pages/SigmaList').then((m) => ({ default: m.SigmaList })));
-const FeedStatus      = lazy(() => import('./pages/FeedStatus').then((m) => ({ default: m.FeedStatus })));
+const CvesList        = lazy(() => import('./views/CvesList').then((m) => ({ default: m.CvesList })));
+const CveDetail       = lazy(() => import('./views/CveDetail').then((m) => ({ default: m.CveDetail })));
+const ReportsList     = lazy(() => import('./views/ReportsList').then((m) => ({ default: m.ReportsList })));
+const IocsList        = lazy(() => import('./views/IocsList').then((m) => ({ default: m.IocsList })));
+const SigmaList       = lazy(() => import('./views/SigmaList').then((m) => ({ default: m.SigmaList })));
+const FeedStatus      = lazy(() => import('./views/FeedStatus').then((m) => ({ default: m.FeedStatus })));
 // Framework pages
-const NistControls    = lazy(() => import('./pages/NistControls').then((m) => ({ default: m.NistControls })));
-const EngageActivities = lazy(() => import('./pages/EngageActivities').then((m) => ({ default: m.EngageActivities })));
-const ReactActions    = lazy(() => import('./pages/ReactActions').then((m) => ({ default: m.ReactActions })));
-const VerisCategories = lazy(() => import('./pages/VerisCategories').then((m) => ({ default: m.VerisCategories })));
-const OwaspTop10      = lazy(() => import('./pages/OwaspTop10').then((m) => ({ default: m.OwaspTop10 })));
-const CloudControls   = lazy(() => import('./pages/CloudControls').then((m) => ({ default: m.CloudControls })));
-const AtomicTests     = lazy(() => import('./pages/AtomicTests').then((m) => ({ default: m.AtomicTests })));
-const DetectionStrategies = lazy(() => import('./pages/DetectionStrategies').then((m) => ({ default: m.DetectionStrategies })));
-const ApplicationsList = lazy(() => import('./pages/ApplicationsList').then((m) => ({ default: m.ApplicationsList })));
+const NistControls    = lazy(() => import('./views/NistControls').then((m) => ({ default: m.NistControls })));
+const EngageActivities = lazy(() => import('./views/EngageActivities').then((m) => ({ default: m.EngageActivities })));
+const ReactActions    = lazy(() => import('./views/ReactActions').then((m) => ({ default: m.ReactActions })));
+const VerisCategories = lazy(() => import('./views/VerisCategories').then((m) => ({ default: m.VerisCategories })));
+const OwaspTop10      = lazy(() => import('./views/OwaspTop10').then((m) => ({ default: m.OwaspTop10 })));
+const CloudControls   = lazy(() => import('./views/CloudControls').then((m) => ({ default: m.CloudControls })));
+const AtomicTests     = lazy(() => import('./views/AtomicTests').then((m) => ({ default: m.AtomicTests })));
+const DetectionStrategies = lazy(() => import('./views/DetectionStrategies').then((m) => ({ default: m.DetectionStrategies })));
+const ApplicationsList = lazy(() => import('./views/ApplicationsList').then((m) => ({ default: m.ApplicationsList })));
 // Extended Intel pages
-const ExternalActors  = lazy(() => import('./pages/ExternalActors').then((m) => ({ default: m.ExternalActors })));
+const ExternalActors  = lazy(() => import('./views/ExternalActors').then((m) => ({ default: m.ExternalActors })));
 
 /** Simple spinner used as Suspense fallback */
 function LoadingSpinner() {

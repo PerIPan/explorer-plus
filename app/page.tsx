@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   description: 'Search any entity and explore its relationships — technique maps, actor profiles, application maps, and force-directed graphs',
 };
 
-import { Relationships } from '../src/pages/Relationships';
+import { Relationships } from '../src/views/Relationships';
 
 export default function Page() {
   return (

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { DiamondLoader } from '../../src/components/shared/FoldingDiamond';
-import { TechniquesList } from '../../src/pages/TechniquesList';
+import { TechniquesList } from '../../src/views/TechniquesList';
 
 export const metadata: Metadata = {
   title: 'ATT&CK Techniques',
