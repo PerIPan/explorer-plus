@@ -9,7 +9,8 @@
     { "path": "/api/cron/enrich-nvd", "schedule": "0 */4 * * *" },
     { "path": "/api/cron/enrich-vt", "schedule": "30 */8 * * *" },
     { "path": "/api/cron/ingest-cve-delta", "schedule": "0 4 * * *" },
-    { "path": "/api/cron/scan-site-health", "schedule": "0 12 * * 1" }
+    { "path": "/api/cron/scan-site-health", "schedule": "0 12 * * 1" },
+    { "path": "/api/cron/sync-csf", "schedule": "0 5 * * 1" }
   ],
   "headers": [
     {
