@@ -1,6 +1,11 @@
 import type { MetadataRoute } from 'next';
 import { query } from './api/v1/lib/db';
 
+// Force dynamic rendering so the sitemap hits the DB at request time,
+// not at build time (when POSTGRES_URL may be unavailable).
+export const dynamic = 'force-dynamic';
+export const revalidate = 3600;
+
 const BASE_URL = 'https://mitre-explorer.org';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -49,8 +54,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }));
 
     return [...staticPages, ...techniqueUrls, ...groupUrls, ...cveUrls, ...owaspUrls, ...csfUrls];
-  } catch {
+  } catch (err) {
     // If DB is not available (e.g., build time), return static pages only
+    console.error('[sitemap] DB query failed, returning static pages only:', err);
     return staticPages;
   }
 }
