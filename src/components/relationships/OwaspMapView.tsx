@@ -1,9 +1,9 @@
-import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '../../lib/api';
 import { EntityLink } from '../shared/EntityLink';
 import { Badge } from '../shared/Badge';
 import { DiamondLoader } from '../shared/FoldingDiamond';
+import { FrameworkMapCard } from './shared/FrameworkMapCard';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -66,46 +66,12 @@ function frameworkLabel(framework: string): string {
   }
 }
 
-// ── Collapsible card ───────────────────────────────────────────────────────────
+// ── Collapsible card — uses shared FrameworkMapCard with OWASP green ──────────
 
-function MapCard({
-  label,
-  count,
-  defaultOpen = true,
-  children,
-}: {
-  label: string;
-  count?: number;
-  defaultOpen?: boolean;
-  children: React.ReactNode;
-}) {
-  const [open, setOpen] = useState(defaultOpen);
-  return (
-    <div className="border border-[var(--border-color)] rounded-lg overflow-hidden">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center gap-3 px-4 py-3 bg-[var(--surface-card)] hover:bg-[var(--hover-subtle)] transition-colors text-left"
-      >
-        <span className="text-sm font-bold text-[#059669] uppercase tracking-wider">{label}</span>
-        {count !== undefined && (
-          <span className="text-xs text-[var(--text-secondary)]">({count})</span>
-        )}
-        <svg
-          className={`w-4 h-4 ml-auto text-[var(--text-secondary)] transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
-      {open && (
-        <div className="px-4 py-3 space-y-3 bg-[var(--surface-alt)]">{children}</div>
-      )}
-    </div>
-  );
+const OWASP_COLOR = '#059669';
+
+function MapCard(props: { label: string; count?: number; defaultOpen?: boolean; children: React.ReactNode }) {
+  return <FrameworkMapCard {...props} labelColor={OWASP_COLOR} />;
 }
 
 // ── Main component ─────────────────────────────────────────────────────────────
