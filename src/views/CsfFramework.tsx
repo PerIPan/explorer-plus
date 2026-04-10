@@ -2,39 +2,14 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { useParams } from 'next/navigation';
+import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '../lib/api';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Badge } from '../components/shared/Badge';
 import { EntityLink } from '../components/shared/EntityLink';
 import { DiamondLoader } from '../components/shared/FoldingDiamond';
-
-interface CsfSubcategoryListItem {
-  subcategoryId: string;
-  categoryId: string;
-  categoryName: string;
-  name: string;
-  description: string | null;
-  techniqueCount: number;
-}
-
-interface CsfFunctionGroup {
-  function: string;
-  functionName: string;
-  subcategories: CsfSubcategoryListItem[];
-}
-
-interface CsfDetail {
-  subcategoryId: string;
-  function: string;
-  functionName: string;
-  categoryId: string;
-  categoryName: string;
-  name: string;
-  description: string | null;
-  techniques: Array<{ attackId: string; name: string | null; tacticName: string | null }>;
-  relatedSubcategories: Array<{ subcategoryId: string; name: string; function: string; sharedCount: number }>;
-}
+import type { CsfFunctionGroup, CsfDetail } from '../lib/types';
 
 const FUNCTIONS = [
   { id: 'GV', name: 'Govern' },
@@ -47,20 +22,13 @@ const FUNCTIONS = [
 
 export function CsfFramework() {
   const { subcategoryId: urlSubId } = useParams<{ subcategoryId?: string }>();
-  const [expanded, setExpanded] = useState<string | null>(urlSubId?.toUpperCase() ?? null);
+  const [expanded, setExpanded] = useState<string | null>(() => urlSubId?.toUpperCase() ?? null);
   const [filter, setFilter] = useState<string>('');
   const [functionFilter, setFunctionFilter] = useState<string | null>(null);
 
+  // Sync expanded state from URL param
   useEffect(() => {
-    if (urlSubId) {
-      const id = urlSubId.toUpperCase();
-      setExpanded(id);
-      // Auto-scroll to the expanded item after a short delay to let the DOM render
-      setTimeout(() => {
-        const el = document.getElementById(`csf-sub-${id}`);
-        el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 200);
-    }
+    if (urlSubId) setExpanded(urlSubId.toUpperCase());
   }, [urlSubId]);
 
   const { data, isLoading } = useQuery({
@@ -68,6 +36,17 @@ export function CsfFramework() {
     queryFn: () => apiFetch<{ data: CsfFunctionGroup[]; total: number }>('/frameworks/csf'),
     staleTime: 10 * 60 * 1000,
   });
+
+  // Auto-scroll to expanded item ONCE after list loads. Runs after data is present,
+  // not on a fixed timeout, so it works even when the query is slow.
+  useEffect(() => {
+    if (!urlSubId || isLoading || !data) return;
+    const id = urlSubId.toUpperCase();
+    const t = setTimeout(() => {
+      document.getElementById(`csf-sub-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 50);
+    return () => clearTimeout(t);
+  }, [urlSubId, isLoading, data]);
 
   const { data: detail, isLoading: detailLoading } = useQuery({
     queryKey: ['csf-detail', expanded],
@@ -159,35 +138,50 @@ export function CsfFramework() {
                     id={`csf-sub-${sub.subcategoryId}`}
                     className="border border-[var(--border-color)] rounded-lg overflow-hidden"
                   >
-                    <button
-                      type="button"
-                      onClick={() => setExpanded(isOpen ? null : sub.subcategoryId)}
-                      className="w-full flex items-center gap-3 px-4 py-2 bg-[var(--surface-card)] hover:bg-[var(--hover-subtle)] transition-colors text-left"
-                    >
-                      <span className="font-mono text-xs font-bold text-[#6366f1] w-20 shrink-0">
-                        {sub.subcategoryId}
-                      </span>
-                      <span className="flex-1 text-sm text-[var(--text-primary)]">{sub.name}</span>
-                      <Badge label={`${sub.techniqueCount} tech`} variant="teal" />
-                      <a
+                    <div className="flex items-center gap-3 px-4 py-2 bg-[var(--surface-card)] hover:bg-[var(--hover-subtle)] transition-colors">
+                      <button
+                        type="button"
+                        onClick={() => setExpanded(isOpen ? null : sub.subcategoryId)}
+                        aria-expanded={isOpen}
+                        aria-controls={`csf-body-${sub.subcategoryId}`}
+                        className="flex-1 flex items-center gap-3 text-left min-w-0"
+                      >
+                        <span className="font-mono text-xs font-bold text-[#6366f1] w-20 shrink-0">
+                          {sub.subcategoryId}
+                        </span>
+                        <span className="flex-1 text-sm text-[var(--text-primary)] truncate">{sub.name}</span>
+                        <Badge label={`${sub.techniqueCount} tech`} variant="teal" />
+                      </button>
+                      <Link
                         href={`/?entity=${encodeURIComponent(sub.subcategoryId)}&tab=csf-map`}
-                        onClick={(e) => e.stopPropagation()}
+                        prefetch={false}
                         className="text-[10px] text-[#6366f1] hover:underline shrink-0"
                         title="Open 360 map view"
                       >
                         360 →
-                      </a>
-                      <svg
-                        className={`w-4 h-4 text-[var(--text-secondary)] shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => setExpanded(isOpen ? null : sub.subcategoryId)}
+                        aria-label={isOpen ? 'Collapse' : 'Expand'}
+                        className="shrink-0"
                       >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </button>
+                        <svg
+                          className={`w-4 h-4 text-[var(--text-secondary)] transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                    </div>
                     {isOpen && (
-                      <div className="px-4 py-4 bg-[var(--surface-alt)] space-y-3 border-t border-[var(--border-color)]">
+                      <div
+                        id={`csf-body-${sub.subcategoryId}`}
+                        role="region"
+                        className="px-4 py-4 bg-[var(--surface-alt)] space-y-3 border-t border-[var(--border-color)]"
+                      >
                         {detailLoading && expanded === sub.subcategoryId ? (
                           <DiamondLoader text="Loading..." />
                         ) : detail && detail.subcategoryId === sub.subcategoryId ? (
@@ -232,7 +226,13 @@ export function CsfFramework() {
                                     <button
                                       key={r.subcategoryId}
                                       type="button"
-                                      onClick={() => setExpanded(r.subcategoryId)}
+                                      onClick={() => {
+                                        setExpanded(r.subcategoryId);
+                                        setTimeout(() => {
+                                          document.getElementById(`csf-sub-${r.subcategoryId}`)
+                                            ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                        }, 50);
+                                      }}
                                       className="text-[10px] px-2 py-0.5 rounded bg-[var(--surface-card)] border border-[var(--border-color)] text-[#6366f1] hover:border-[#6366f1] transition-colors"
                                       title={`${r.subcategoryId} — ${r.name} (shares ${r.sharedCount} techniques)`}
                                     >

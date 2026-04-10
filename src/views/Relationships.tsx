@@ -193,9 +193,13 @@ export function Relationships() {
       .slice(0, 12);
   }, [fuse, searchInput, domain]);
 
-  // Infer entity type from graph center or suggestions; fall back to tab hint for non-graph entities
-  const entityType = inferEntityType(graphData?.center, suggestions, selectedId)
-    ?? TAB_TYPE_HINT[tabParam]
+  // Infer entity type from graph center or suggestions; fall back to tab hint for non-graph entities.
+  // When the user is on a framework/non-graph tab (owasp-map, csf-map, sector-map, application-map),
+  // the tab hint takes PRIORITY over suggestion matches — otherwise typing in the search box
+  // while viewing a CSF subcategory would flip entityType and unmount the view mid-session.
+  const tabHintType = TAB_TYPE_HINT[tabParam] ?? null;
+  const entityType = tabHintType
+    ?? inferEntityType(graphData?.center, suggestions, selectedId)
     ?? null;
 
   const isSector = entityType === 'sector';

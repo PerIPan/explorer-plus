@@ -1,25 +1,13 @@
 'use client';
 
+import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '../../lib/api';
 import { EntityLink } from '../shared/EntityLink';
 import { Badge } from '../shared/Badge';
 import { DiamondLoader } from '../shared/FoldingDiamond';
 import { FrameworkMapCard } from './shared/FrameworkMapCard';
-
-// ── Types ────────────────────────────────────────────────────────────────────
-
-interface CsfDetail {
-  subcategoryId: string;
-  function: string;
-  functionName: string;
-  categoryId: string;
-  categoryName: string;
-  name: string;
-  description: string | null;
-  techniques: Array<{ attackId: string; name: string | null; tacticName: string | null }>;
-  relatedSubcategories: Array<{ subcategoryId: string; name: string; function: string; sharedCount: number }>;
-}
+import type { CsfDetail } from '../../lib/types';
 
 const CSF_COLOR = '#6366f1';
 
@@ -97,27 +85,29 @@ export function CsfMapView({ subcategoryId }: { subcategoryId: string }) {
         <MapCard label="Related CSF Subcategories" count={data.relatedSubcategories.length} defaultOpen={false}>
           <div className="flex flex-wrap gap-1.5">
             {data.relatedSubcategories.map((r) => (
-              <a
+              <Link
                 key={r.subcategoryId}
                 href={`/?entity=${encodeURIComponent(r.subcategoryId)}&tab=csf-map`}
+                prefetch={false}
                 className="text-[10px] px-2 py-0.5 rounded bg-[var(--surface-card)] border border-[var(--border-color)] text-[#6366f1] hover:border-[#6366f1] transition-colors"
                 title={`${r.subcategoryId} — ${r.name} (shares ${r.sharedCount} techniques)`}
               >
                 <span className="font-mono">{r.subcategoryId}</span>
                 <span className="ml-1 text-[var(--text-secondary)]">({r.sharedCount})</span>
-              </a>
+              </Link>
             ))}
           </div>
         </MapCard>
       )}
 
       {/* ── Link to full page ── */}
-      <a
+      <Link
         href={`/frameworks/csf/${data.subcategoryId}`}
+        prefetch={false}
         className="inline-block text-xs text-[#6366f1] hover:underline"
       >
         View full CSF subcategory page →
-      </a>
+      </Link>
     </div>
   );
 }
