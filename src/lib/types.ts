@@ -295,7 +295,40 @@ export type EntityType =
   | 'mitigation'
   | 'data_source'
   | 'tactic'
-  | 'owasp';
+  | 'owasp'
+  | 'csf';
+
+export interface CsfSubcategory {
+  subcategoryId: string;
+  function: string;
+  functionName: string;
+  categoryId: string;
+  categoryName: string;
+  name: string;
+  description: string | null;
+}
+
+/** CSF subcategory list item — used by /frameworks/csf list endpoint */
+export interface CsfSubcategoryListItem {
+  subcategoryId: string;
+  categoryId: string;
+  categoryName: string;
+  name: string;
+  description: string | null;
+  techniqueCount: number;
+}
+
+export interface CsfFunctionGroup {
+  function: string;
+  functionName: string;
+  subcategories: CsfSubcategoryListItem[];
+}
+
+/** CSF subcategory detail — used by /frameworks/csf/[id] endpoint */
+export interface CsfDetail extends CsfSubcategory {
+  techniques: Array<{ attackId: string; name: string | null; tacticName: string | null }>;
+  relatedSubcategories: Array<{ subcategoryId: string; name: string; function: string; sharedCount: number }>;
+}
 
 export interface OwaspCategory {
   categoryId: string;
@@ -379,6 +412,14 @@ export interface FrameworkData {
   verisCategories?: VerisMapping[];
   cloudControls?: CloudControl[];
   owasp?: Array<{ categoryId: string; name: string; framework: string }>;
+  csf?: Array<{
+    subcategoryId: string;
+    name: string;
+    function: string;
+    functionName: string;
+    categoryId: string;
+    categoryName: string;
+  }>;
 }
 
 // ── CTI Feed Types ─────────────────────────────────────────────────────────────

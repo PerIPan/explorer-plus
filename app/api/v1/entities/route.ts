@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
   const domainWhere = domain ? ` AND domain = $1` : '';
   const domainParams = domain ? [domain] : [];
 
-  const [techniques, groups, software, campaigns, mitigations, tactics, externalActors, sectors, applications, owaspCategories] = await Promise.all([
+  const [techniques, groups, software, campaigns, mitigations, tactics, externalActors, sectors, applications, owaspCategories, csfSubcategories] = await Promise.all([
     query<{ attackId: string; name: string; domain: string | null }>(
       `SELECT attack_id AS "attackId", name, domain FROM techniques
        WHERE is_revoked = false AND is_deprecated = false AND is_subtechnique = false${domainWhere}
@@ -79,6 +79,11 @@ export async function GET(req: NextRequest) {
       SELECT category_id AS "attackId", category_id || ' ' || name AS name, NULL as domain
       FROM owasp_top10 ORDER BY framework, category_id
     `),
+    // CSF v2 subcategories
+    query<{ attackId: string; name: string; domain: string | null }>(`
+      SELECT subcategory_id AS "attackId", subcategory_id || ' ' || name AS name, NULL as domain
+      FROM csf_subcategories WHERE version = '2.0' ORDER BY function, subcategory_id
+    `),
   ]);
 
   const entities = [
@@ -92,6 +97,7 @@ export async function GET(req: NextRequest) {
     ...sectors.rows.map(r => ({ ...r, type: 'sector' })),
     ...applications.rows.map(r => ({ ...r, type: 'application' })),
     ...owaspCategories.rows.map(r => ({ ...r, type: 'owasp' })),
+    ...csfSubcategories.rows.map(r => ({ ...r, type: 'csf' })),
   ];
 
   return withCors(jsonResponse({ data: entities, total: entities.length }, 86400));

@@ -1,6 +1,7 @@
 .next
 venv/
 data/
+!seed/data/
 __pycache__/
 *.pyc
 .env

@@ -16,10 +16,10 @@ export async function GET(req: NextRequest) {
   const ids = raw.split(',').map((s) => s.trim()).filter((s) => /^T\d{4}(\.\d{3})?$/.test(s)).slice(0, 200);
 
   if (ids.length === 0) {
-    return withCors(jsonResponse({ veris: [], cloud: [] }));
+    return withCors(jsonResponse({ veris: [], cloud: [], owasp: [], csf: [] }));
   }
 
-  const [verisResult, cloudResult, owaspResult] = await Promise.all([
+  const [verisResult, cloudResult, owaspResult, csfResult] = await Promise.all([
     query<{ verisId: string; count: string }>(
       `SELECT veris_id AS "verisId", COUNT(*)::text AS count
        FROM veris_mappings
@@ -50,11 +50,27 @@ export async function GET(req: NextRequest) {
        ORDER BY o.framework, o.category_id`,
       [ids],
     ),
+    // CSF v2 subcategories linked to these techniques
+    query<{ subcategoryId: string; name: string; function: string; functionName: string; count: string }>(
+      `SELECT
+         m.subcategory_id AS "subcategoryId",
+         s.name,
+         s.function,
+         s.function_name  AS "functionName",
+         COUNT(DISTINCT m.attack_technique_id)::text AS count
+       FROM csf_technique_mappings m
+       JOIN csf_subcategories s ON s.subcategory_id = m.subcategory_id AND s.version = '2.0'
+       WHERE m.attack_technique_id = ANY($1::text[]) AND m.is_draft = FALSE
+       GROUP BY m.subcategory_id, s.name, s.function, s.function_name
+       ORDER BY COUNT(*) DESC, m.subcategory_id`,
+      [ids],
+    ),
   ]);
 
   return withCors(jsonResponse({
     veris: verisResult.rows.map((r) => ({ ...r, count: parseInt(r.count, 10) })),
     cloud: cloudResult.rows.map((r) => ({ ...r, count: parseInt(r.count, 10) })),
     owasp: owaspResult.rows,
+    csf: csfResult.rows.map((r) => ({ ...r, count: parseInt(r.count, 10) })),
   }, 3600));
 }

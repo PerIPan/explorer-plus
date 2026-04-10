@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
   const domainCond = domain ? ` AND domain = $2` : '';
   const domainParams = domain ? [q, domain] : [q];
 
-  const [techResult, groupResult, softResult, mitResult, campResult, dsResult, owaspResult] = await Promise.all([
+  const [techResult, groupResult, softResult, mitResult, campResult, dsResult, owaspResult, csfResult] = await Promise.all([
     query<{ attackId: string; name: string; description: string | null; platforms: string[] | null }>(
       `SELECT attack_id AS "attackId", name, description, platforms
        FROM techniques
@@ -81,6 +81,18 @@ export async function GET(req: NextRequest) {
        ORDER BY framework, category_id LIMIT 20`,
       [q],
     ),
+    // CSF v2 subcategories — not domain-filtered
+    query<{ subcategoryId: string; name: string; function: string; functionName: string }>(
+      `SELECT subcategory_id AS "subcategoryId", name, function, function_name AS "functionName"
+       FROM csf_subcategories
+       WHERE version = '2.0'
+         AND (
+           to_tsvector('english', name || ' ' || COALESCE(description, '')) @@ plainto_tsquery('english', $1)
+           OR UPPER(subcategory_id) = UPPER($1)
+         )
+       ORDER BY function, subcategory_id LIMIT 20`,
+      [q],
+    ),
   ]);
 
   return withCors(jsonResponse({
@@ -92,5 +104,6 @@ export async function GET(req: NextRequest) {
     campaigns: campResult.rows,
     data_sources: dsResult.rows,
     owasp: owaspResult.rows,
+    csf: csfResult.rows,
   }, 300));
 }

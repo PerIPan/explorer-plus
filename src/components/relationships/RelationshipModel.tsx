@@ -40,6 +40,7 @@ function makeNodes(c: ReturnType<typeof useThemeColors>): ModelNode[] {
     { id: 'sigma', label: 'Sigma Rules', x: 1040, y: 370, color: '#c084fc', bg: '#c084fc18', path: '/cti/sigma', description: 'Detection signatures from SigmaHQ mapped to techniques', category: 'defensive' },
     // Compliance & frameworks
     { id: 'owasp', label: 'OWASP Top 10', x: 700, y: 60, color: '#059669', bg: '#05966918', path: '/frameworks/owasp', description: 'Web, ML, and LLM security risks mapped to techniques via CWE + ATLAS', category: 'compliance' },
+    { id: 'csf', label: 'NIST CSF v2', x: 1060, y: 60, color: '#6366f1', bg: '#6366f118', path: '/frameworks/csf', description: 'NIST Cybersecurity Framework v2 subcategories (GV/ID/PR/DE/RS/RC) mapped to ATT&CK techniques', category: 'compliance' },
     { id: 'nist', label: 'NIST 800-53', x: 1240, y: 140, color: '#38bdf8', bg: '#38bdf818', path: '/frameworks/nist', description: 'Federal security controls mapped to ATT&CK techniques', category: 'compliance' },
     { id: 'engage', label: 'MITRE Engage', x: 1240, y: 310, color: '#fb923c', bg: '#fb923c18', path: '/frameworks/engage', description: 'Adversary deception & engagement activities per technique', category: 'compliance' },
     { id: 'react', label: 'RE&CT', x: 1240, y: 490, color: '#4ade80', bg: '#4ade8018', path: '/frameworks/react', description: 'Incident response playbooks and actions per technique', category: 'compliance' },
@@ -100,6 +101,8 @@ const EDGES: ModelEdge[] = [
   { from: 'owasp', to: 'technique', label: 'maps via CWE', style: 'dashed' },
   { from: 'owasp', to: 'atlas', label: 'AI risks', style: 'dashed' },
   { from: 'owasp', to: 'cve', label: 'categorizes', style: 'dashed' },
+  { from: 'csf', to: 'technique', label: 'outcomes', style: 'dashed' },
+  { from: 'csf', to: 'nist', label: 'implemented by', style: 'dashed' },
 ];
 
 function getEdgePath(from: ModelNode, to: ModelNode): { path: string; midX: number; midY: number; angle: number } {

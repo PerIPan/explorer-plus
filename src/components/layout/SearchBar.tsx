@@ -107,6 +107,15 @@ export function SearchBar() {
         router.push(`/?entity=${encodeURIComponent(entity.attackId)}&tab=application-map`);
         return;
       }
+      // OWASP + CSF navigate to the 360 framework map view
+      if (entity.type === 'owasp') {
+        router.push(`/?entity=${encodeURIComponent(entity.attackId)}&tab=owasp-map`);
+        return;
+      }
+      if (entity.type === 'csf') {
+        router.push(`/?entity=${encodeURIComponent(entity.attackId)}&tab=csf-map`);
+        return;
+      }
       // Auto-switch domain when selecting an entity outside current domain
       if (entity.domain && entity.domain !== domain && domain !== 'all') {
         setDomain('all');

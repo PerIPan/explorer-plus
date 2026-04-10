@@ -1,8 +1,8 @@
-import { Pool, QueryResult, QueryResultRow } from 'pg';
+import { Pool, PoolClient, QueryResult, QueryResultRow } from 'pg';
 
 let pool: Pool | null = null;
 
-function getPool(): Pool {
+export function getPool(): Pool {
   if (!pool) {
     const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
     if (!connectionString) {
@@ -41,5 +41,34 @@ export async function query<T extends QueryResultRow = QueryResultRow>(
       return client.query<T>(text, params);
     }
     throw err;
+  }
+}
+
+/**
+ * Run a callback inside a real Postgres transaction on a single dedicated client.
+ * Use this instead of calling `query('BEGIN')` / `query('COMMIT')` — those run on
+ * different pooled connections and provide ZERO atomicity.
+ *
+ * Automatically rolls back on error and releases the client in all paths.
+ */
+export async function withTransaction<T>(
+  cb: (client: PoolClient) => Promise<T>,
+): Promise<T> {
+  const pool = getPool();
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const result = await cb(client);
+    await client.query('COMMIT');
+    return result;
+  } catch (err) {
+    try {
+      await client.query('ROLLBACK');
+    } catch {
+      // ignore rollback errors — original error is more important
+    }
+    throw err;
+  } finally {
+    client.release();
   }
 }

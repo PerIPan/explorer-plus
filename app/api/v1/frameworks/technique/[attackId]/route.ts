@@ -17,7 +17,7 @@ export async function GET(
   }
   const attackId = parsed.data;
 
-  const [nistResult, engageResult, verisResult, cloudResult, owaspCweResult, owaspAtlasResult] = await Promise.all([
+  const [nistResult, engageResult, verisResult, cloudResult, owaspCweResult, owaspAtlasResult, csfResult] = await Promise.all([
     query<{
       controlId: string;
       controlName: string | null;
@@ -98,6 +98,21 @@ export async function GET(
        ORDER BY framework, category_id`,
       [attackId],
     ),
+    // NIST CSF v2 subcategories that cover this technique
+    query<{ subcategoryId: string; name: string; function: string; functionName: string; categoryId: string; categoryName: string }>(
+      `SELECT DISTINCT
+         m.subcategory_id  AS "subcategoryId",
+         s.name,
+         s.function,
+         s.function_name   AS "functionName",
+         s.category_id     AS "categoryId",
+         s.category_name   AS "categoryName"
+       FROM csf_technique_mappings m
+       JOIN csf_subcategories s ON s.subcategory_id = m.subcategory_id AND s.version = '2.0'
+       WHERE m.attack_technique_id = $1 AND m.is_draft = FALSE
+       ORDER BY m.subcategory_id`,
+      [attackId],
+    ),
   ]);
 
   const owaspRows = [...owaspCweResult.rows, ...owaspAtlasResult.rows];
@@ -111,5 +126,6 @@ export async function GET(
     verisCategories: verisResult.rows,
     cloudControls: cloudResult.rows,
     owasp,
+    csf: csfResult.rows,
   }, 3600));
 }

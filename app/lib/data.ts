@@ -91,3 +91,20 @@ export const fetchOwaspCategory = cache(async (categoryId: string) => {
   );
   return result.rows[0] ?? null;
 });
+
+export const fetchCsfSubcategory = cache(async (subcategoryId: string) => {
+  const result = await query<{
+    subcategory_id: string;
+    name: string;
+    description: string | null;
+    function: string;
+    function_name: string;
+    category_name: string;
+  }>(
+    `SELECT subcategory_id, name, description, function, function_name, category_name
+     FROM csf_subcategories
+     WHERE subcategory_id = $1 AND version = '2.0'`,
+    [subcategoryId.toUpperCase()],
+  );
+  return result.rows[0] ?? null;
+});

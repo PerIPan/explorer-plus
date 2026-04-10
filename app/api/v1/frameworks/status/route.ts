@@ -26,6 +26,8 @@ export async function GET(_req: NextRequest) {
     UNION ALL SELECT 'affected_products', COUNT(*)::text FROM affected_products
     UNION ALL SELECT 'ctid_mappings', COUNT(*)::text FROM capec_mappings WHERE capec_id = 'CTID-DIRECT'
     UNION ALL SELECT 'atlas_xrefs', COUNT(*)::text FROM atlas_xrefs
+    UNION ALL SELECT 'csf_subcategories', COUNT(*)::text FROM csf_subcategories
+    UNION ALL SELECT 'csf_technique_mappings', COUNT(*)::text FROM csf_technique_mappings
   `);
 
   const counts: Record<string, number> = {};
