@@ -23,7 +23,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const [techniques, groups, cves, owasp, csf] = await Promise.all([
       query<{ attack_id: string }>('SELECT attack_id FROM techniques WHERE attack_id IS NOT NULL'),
       query<{ attack_id: string }>('SELECT attack_id FROM threat_groups WHERE attack_id IS NOT NULL'),
-      query<{ cve_id: string }>("SELECT cve_id FROM cves WHERE cve_id IS NOT NULL ORDER BY published_at DESC NULLS LAST LIMIT 5000"),
+      query<{ cve_id: string }>("SELECT cve_id FROM cve_details WHERE cve_id IS NOT NULL ORDER BY published_at DESC NULLS LAST LIMIT 5000"),
       query<{ category_id: string }>('SELECT category_id FROM owasp_top10'),
       query<{ subcategory_id: string }>("SELECT subcategory_id FROM csf_subcategories WHERE version = '2.0'"),
     ]);
