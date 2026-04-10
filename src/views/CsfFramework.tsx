@@ -2,7 +2,6 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '../lib/api';
 import { PageHeader } from '../components/layout/PageHeader';
@@ -138,7 +137,7 @@ export function CsfFramework() {
                     id={`csf-sub-${sub.subcategoryId}`}
                     className="border border-[var(--border-color)] rounded-lg overflow-hidden"
                   >
-                    <div className="flex items-center gap-3 px-4 py-2 bg-[var(--surface-card)] hover:bg-[var(--hover-subtle)] transition-colors">
+                    <div className="flex items-center gap-3 px-4 py-2 bg-[var(--surface-card)] hover:bg-[var(--hover-subtle)] transition-colors min-w-0">
                       <button
                         type="button"
                         onClick={() => setExpanded(isOpen ? null : sub.subcategoryId)}
@@ -149,17 +148,9 @@ export function CsfFramework() {
                         <span className="font-mono text-xs font-bold text-[#6366f1] w-20 shrink-0">
                           {sub.subcategoryId}
                         </span>
-                        <span className="flex-1 text-sm text-[var(--text-primary)] truncate">{sub.name}</span>
+                        <span className="flex-1 min-w-0 text-sm text-[var(--text-primary)] truncate">{sub.name}</span>
                         <Badge label={`${sub.techniqueCount} tech`} variant="teal" />
                       </button>
-                      <Link
-                        href={`/?entity=${encodeURIComponent(sub.subcategoryId)}&tab=csf-map`}
-                        prefetch={false}
-                        className="text-[10px] text-[#6366f1] hover:underline shrink-0"
-                        title="Open 360 map view"
-                      >
-                        360 →
-                      </Link>
                       <button
                         type="button"
                         onClick={() => setExpanded(isOpen ? null : sub.subcategoryId)}

@@ -109,17 +109,28 @@ export function OwaspTop10() {
           return (
             <div key={cat.categoryId} className="border border-[var(--border-color)] rounded-lg overflow-hidden">
               {/* Category header */}
-              <button
-                type="button"
-                onClick={() => setExpanded(isOpen ? null : cat.categoryId)}
-                className="w-full flex items-center gap-3 px-4 py-3 bg-[var(--surface-card)] hover:bg-[var(--hover-subtle)] transition-colors text-left"
-              >
-                <span className="font-mono text-sm font-bold text-[var(--accent-teal)] w-10 shrink-0">
-                  {cat.categoryId}
-                </span>
-                <span className="flex-1 text-sm font-medium text-[var(--text-primary)]">
-                  {cat.name}
-                </span>
+              <div className="flex items-center gap-3 px-4 py-3 bg-[var(--surface-card)] hover:bg-[var(--hover-subtle)] transition-colors min-w-0">
+                <button
+                  type="button"
+                  onClick={() => setExpanded(isOpen ? null : cat.categoryId)}
+                  aria-expanded={isOpen}
+                  aria-controls={`owasp-body-${cat.categoryId}`}
+                  className="flex-1 flex items-center gap-3 text-left min-w-0"
+                >
+                  <span className="font-mono text-sm font-bold text-[var(--accent-teal)] w-10 shrink-0">
+                    {cat.categoryId}
+                  </span>
+                  <span className="flex-1 min-w-0 text-sm font-medium text-[var(--text-primary)] truncate">
+                    {cat.name}
+                  </span>
+                </button>
+                <a
+                  href={`/?entity=${encodeURIComponent(cat.categoryId)}&tab=owasp-map`}
+                  className="text-[10px] font-medium px-2 py-0.5 rounded border border-[#059669]/30 text-[#059669] bg-[#059669]/10 hover:bg-[#059669]/20 shrink-0"
+                  title="Open 360 map view"
+                >
+                  360 →
+                </a>
                 <div className="flex items-center gap-2 shrink-0">
                   <Badge label={`${cat.cweCount} CWEs`} variant="neutral" />
                   <Badge label={`${cat.techniqueCount} techniques`} variant="teal" />
@@ -128,26 +139,29 @@ export function OwaspTop10() {
                   </span>
                   {cat.isDraft && <Badge label="DRAFT" variant="neutral" />}
                   {cat.atlasCount > 0 && <Badge label={`${cat.atlasCount} ATLAS`} variant="purple" />}
-                  <a
-                    href={`/?entity=${encodeURIComponent(cat.categoryId)}&tab=owasp-map`}
-                    onClick={(e) => e.stopPropagation()}
-                    className="text-[10px] text-[#059669] hover:underline shrink-0"
-                    title="Open 360 map view"
-                  >
-                    360 →
-                  </a>
                 </div>
-                <svg
-                  className={`w-4 h-4 text-[var(--text-secondary)] shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
-                  fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                <button
+                  type="button"
+                  onClick={() => setExpanded(isOpen ? null : cat.categoryId)}
+                  aria-label={isOpen ? 'Collapse' : 'Expand'}
+                  className="shrink-0"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
+                  <svg
+                    className={`w-4 h-4 text-[var(--text-secondary)] transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+                    fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+              </div>
 
               {/* Expanded detail */}
               {isOpen && (
-                <div className="px-4 py-4 bg-[var(--surface-alt)] space-y-4 border-t border-[var(--border-color)]">
+                <div
+                  id={`owasp-body-${cat.categoryId}`}
+                  role="region"
+                  className="px-4 py-4 bg-[var(--surface-alt)] space-y-4 border-t border-[var(--border-color)]"
+                >
                   {detailLoading ? (
                     <DiamondLoader text="Loading..." />
                   ) : detail ? (

@@ -166,6 +166,8 @@ export function FeedStatus() {
 
 const FRAMEWORK_TABLES = [
   { key: 'owasp_top10', label: 'OWASP Top 10 (Web, ML, LLM)' },
+  { key: 'csf_subcategories', label: 'NIST CSF v2 (Subcategories)' },
+  { key: 'csf_technique_mappings', label: 'NIST CSF v2 (CRI Profile Mappings)' },
   { key: 'nist_controls', label: 'NIST 800-53' },
   { key: 'engage_mappings', label: 'MITRE Engage' },
   { key: 'defensive_mappings', label: 'D3FEND' },

@@ -25,7 +25,6 @@ import { TacticMapView } from '../components/relationships/TacticMapView';
 import { SectorMapView } from '../components/relationships/SectorMapView';
 import { ApplicationMapView } from '../components/relationships/ApplicationMapView';
 import { OwaspMapView } from '../components/relationships/OwaspMapView';
-import { CsfMapView } from '../components/relationships/CsfMapView';
 import type { GraphNode, GraphData } from '../lib/types';
 import { DiamondLoader } from '../components/shared/FoldingDiamond';
 
@@ -64,7 +63,7 @@ function typeLabel(type: string): string {
 
 // ── Tab definitions ────────────────────────────────────────────────────────────
 
-type TabId = 'graph' | 'actor' | 'technique-map' | 'software-map' | 'mitigation-map' | 'data-source-map' | 'tactic-map' | 'sector-map' | 'application-map' | 'owasp-map' | 'csf-map';
+type TabId = 'graph' | 'actor' | 'technique-map' | 'software-map' | 'mitigation-map' | 'data-source-map' | 'tactic-map' | 'sector-map' | 'application-map' | 'owasp-map';
 
 interface TabDef {
   id: TabId;
@@ -83,7 +82,6 @@ const TABS: TabDef[] = [
   { id: 'sector-map', label: 'Sector Map', forTypes: ['sector'] },
   { id: 'application-map', label: 'Application Map', forTypes: ['application'] },
   { id: 'owasp-map', label: 'OWASP Map', forTypes: ['owasp'] },
-  { id: 'csf-map', label: 'CSF Map', forTypes: ['csf'] },
   { id: 'graph', label: 'Graph' },
 ];
 
@@ -98,10 +96,9 @@ const TAB_FOR_TYPE: Record<string, TabId> = {
   sector: 'sector-map',
   application: 'application-map',
   owasp: 'owasp-map',
-  csf: 'csf-map',
 };
 
-const TAB_TYPE_HINT: Record<string, string> = { 'sector-map': 'sector', 'application-map': 'application', 'owasp-map': 'owasp', 'csf-map': 'csf' };
+const TAB_TYPE_HINT: Record<string, string> = { 'sector-map': 'sector', 'application-map': 'application', 'owasp-map': 'owasp' };
 
 /** Derive the entity type from the graph center node or from search suggestions */
 function inferEntityType(
@@ -160,7 +157,7 @@ export function Relationships() {
   }, []);
 
   const { data: graphData, isLoading, error } = useRelationships(
-    (tabParam === 'sector-map' || tabParam === 'application-map' || tabParam === 'owasp-map' || tabParam === 'csf-map' || !selectedId) ? '' : selectedId,
+    (tabParam === 'sector-map' || tabParam === 'application-map' || tabParam === 'owasp-map' || !selectedId) ? '' : selectedId,
   );
 
   /** Load ALL entity names cross-domain for Fuse.js — shared cache with SearchBar */
@@ -203,7 +200,7 @@ export function Relationships() {
     ?? null;
 
   const isSector = entityType === 'sector';
-  const isNonGraphEntity = isSector || entityType === 'application' || entityType === 'owasp' || entityType === 'csf';
+  const isNonGraphEntity = isSector || entityType === 'application' || entityType === 'owasp';
 
   /** Sector relationships — fetch only for sectors, build graph from it */
   const { data: sectorRel } = useQuery({
@@ -285,8 +282,7 @@ export function Relationships() {
 
   const effectiveGraphData = isSector ? sectorGraphData : isApp ? appGraphData : graphData;
   const isOwasp = entityType === 'owasp';
-  const isCsf = entityType === 'csf';
-  const graphReady = (isOwasp || isCsf) ? true : isNonGraphEntity ? Boolean(isSector ? sectorGraphData : appGraphData) : (!isLoading && !error && Boolean(graphData));
+  const graphReady = isOwasp ? true : isNonGraphEntity ? Boolean(isSector ? sectorGraphData : appGraphData) : (!isLoading && !error && Boolean(graphData));
 
   /** Determine which tabs are visible for the current entity */
   const visibleTabs = TABS.filter(
@@ -446,13 +442,23 @@ export function Relationships() {
       {/* Instructions when nothing selected */}
       {!selectedId && (
         <>
-        <div className="text-center mt-10 md:mt-[74px] mb-2 max-w-2xl px-4">
-          <div className="text-lg md:text-xl font-light text-[var(--text-secondary)] mb-1">
+        <div className="text-center mt-10 md:mt-[74px] mb-2 max-w-3xl px-4 mx-auto">
+          <div className="text-lg md:text-xl font-light text-[var(--text-secondary)] mb-2">
             Select an entity
           </div>
-          <p className="text-xs md:text-sm text-[var(--text-secondary)] opacity-70 mx-auto max-w-md">
-            Search for any Technique, Actor, Software, Campaign, Mitigation,
-            Data Source, Tactic, Sector, Application, or OWASP category to explore its relationships.
+          <p className="text-sm md:text-base text-[var(--text-secondary)] mx-auto max-w-2xl leading-relaxed">
+            Search for any{' '}
+            <span className="font-semibold text-[var(--text-primary)]">Technique</span>,{' '}
+            <span className="font-semibold text-[var(--text-primary)]">Actor</span>,{' '}
+            <span className="font-semibold text-[var(--text-primary)]">Software</span>,{' '}
+            <span className="font-semibold text-[var(--text-primary)]">Campaign</span>,{' '}
+            <span className="font-semibold text-[var(--text-primary)]">Mitigation</span>,{' '}
+            <span className="font-semibold text-[var(--text-primary)]">Data Source</span>,{' '}
+            <span className="font-semibold text-[var(--text-primary)]">Tactic</span>,{' '}
+            <span className="font-semibold text-[var(--text-primary)]">Sector</span>,{' '}
+            <span className="font-semibold text-[var(--text-primary)]">Application</span>, or{' '}
+            <span className="font-semibold text-[var(--text-primary)]">OWASP category</span>{' '}
+            to explore its relationships.
           </p>
         </div>
         {/* Small centered diamond on mobile */}
@@ -632,11 +638,6 @@ export function Relationships() {
           {/* OWASP Map tab */}
           {activeTab === 'owasp-map' && entityType === 'owasp' && (
             <OwaspMapView categoryId={selectedId} />
-          )}
-
-          {/* CSF Map tab */}
-          {activeTab === 'csf-map' && entityType === 'csf' && (
-            <CsfMapView subcategoryId={selectedId} />
           )}
         </div>
       )}

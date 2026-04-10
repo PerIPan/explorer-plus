@@ -396,6 +396,7 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
   );
 
   const nistControls = frameworks?.nist ?? [];
+  const csfSubcategories = frameworks?.csf ?? [];
   const engageActivities = frameworks?.engage ?? [];
   const d3fendMappings = intel?.defensiveMappings ?? [];
   const reports = intel?.reports ?? [];
@@ -715,7 +716,7 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
 
       {/* HOW TO PREVENT */}
       <MapCard label="How to Prevent" icon={IconShield}
-        count={mitigations.length + nistControls.length}
+        count={mitigations.length + nistControls.length + csfSubcategories.length}
       >
         {mitigations.length > 0 ? (
           <MapRow prefix="Mitigations">
@@ -756,6 +757,35 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
           ) : (
             <MapRow prefix="NIST Controls">
               <span className="text-xs text-[var(--text-secondary)]">No NIST controls mapped yet.</span>
+            </MapRow>
+          )
+        )}
+
+        {csfSubcategories.length > 0 ? (
+          <MapRow prefix="NIST CSF v2">
+            <div className="space-y-1 max-h-48 overflow-y-auto w-full">
+              {csfSubcategories.map((sub) => (
+                <Link
+                  key={sub.subcategoryId}
+                  href={`/frameworks/csf/${sub.subcategoryId}`}
+                  prefetch={false}
+                  className="flex items-center gap-2 py-1 px-2 rounded hover:bg-[var(--teal-ghost)] transition-colors group"
+                >
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-[#6366f1]/10 text-[#6366f1] border border-[#6366f1]/30 shrink-0 font-mono">{sub.subcategoryId}</span>
+                  <span className="text-xs text-[var(--text-primary)] group-hover:text-[var(--accent-teal)] truncate">{sub.name}</span>
+                  <span className="text-[9px] text-[var(--text-secondary)] shrink-0 ml-auto">{sub.function}</span>
+                </Link>
+              ))}
+            </div>
+          </MapRow>
+        ) : (
+          fwLoading ? (
+            <MapRow prefix="NIST CSF v2">
+              <span className="text-xs text-[var(--text-secondary)] italic">Loading...</span>
+            </MapRow>
+          ) : (
+            <MapRow prefix="NIST CSF v2">
+              <span className="text-xs text-[var(--text-secondary)]">No CSF subcategories mapped.</span>
             </MapRow>
           )
         )}

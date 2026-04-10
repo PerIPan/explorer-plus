@@ -72,7 +72,7 @@ const entityConfig: Record<
   },
 };
 
-const MAP_TABS: Record<EntityType, string> = {
+const MAP_TABS: Record<Exclude<EntityType, 'csf'>, string> = {
   technique: 'technique-map',
   group: 'actor',
   software: 'software-map',
@@ -81,7 +81,6 @@ const MAP_TABS: Record<EntityType, string> = {
   data_source: 'data-source-map',
   tactic: 'tactic-map',
   owasp: 'owasp-map',
-  csf: 'csf-map',
 };
 
 /**
@@ -89,7 +88,8 @@ const MAP_TABS: Record<EntityType, string> = {
  */
 export function EntityLink({ type, attackId, name, className = '', useMap, newTab }: EntityLinkProps) {
   const { color, bg, border, path } = entityConfig[type];
-  const href = useMap
+  // CSF has no 360 map view — always navigate to detail page even when useMap is set
+  const href = useMap && type !== 'csf'
     ? `/?entity=${encodeURIComponent(attackId)}&tab=${MAP_TABS[type]}`
     : `/${path}/${attackId}`;
   return (
