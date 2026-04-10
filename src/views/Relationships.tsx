@@ -49,7 +49,7 @@ const TYPE_VARIANT: Record<string, 'teal' | 'orange' | 'purple' | 'blue' | 'gree
   sector: 'neutral',
   application: 'blue',
   owasp: 'green',
-  cwe: 'yellow',
+  cwe: 'blue',
 };
 
 /** Human-readable label for entity types */

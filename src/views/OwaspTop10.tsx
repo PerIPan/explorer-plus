@@ -113,21 +113,8 @@ export function OwaspTop10() {
                 <button
                   type="button"
                   onClick={() => setExpanded(isOpen ? null : cat.categoryId)}
-                  aria-label={isOpen ? 'Collapse' : 'Expand'}
                   aria-expanded={isOpen}
                   aria-controls={`owasp-body-${cat.categoryId}`}
-                  className="shrink-0"
-                >
-                  <svg
-                    className={`w-4 h-4 text-[var(--text-secondary)] transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
-                    fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setExpanded(isOpen ? null : cat.categoryId)}
                   className="flex-1 flex items-center gap-3 text-left min-w-0"
                 >
                   <span className="font-mono text-sm font-bold text-[var(--accent-teal)] w-10 shrink-0">
@@ -154,6 +141,22 @@ export function OwaspTop10() {
                   {cat.isDraft && <Badge label="DRAFT" variant="neutral" />}
                   {cat.atlasCount > 0 && <Badge label={`${cat.atlasCount} ATLAS`} variant="purple" />}
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setExpanded(isOpen ? null : cat.categoryId)}
+                  aria-label={isOpen ? 'Collapse' : 'Expand'}
+                  aria-expanded={isOpen}
+                  aria-controls={`owasp-body-${cat.categoryId}`}
+                  className="shrink-0"
+                >
+                  <svg
+                    aria-hidden="true"
+                    className={`w-4 h-4 text-[var(--text-secondary)] transition-transform duration-200 ${isOpen ? 'rotate-90' : ''}`}
+                    fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
               </div>
 
               {/* Expanded detail */}

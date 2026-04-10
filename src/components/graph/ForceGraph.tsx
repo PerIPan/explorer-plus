@@ -47,7 +47,7 @@ export const ForceGraph = forwardRef<ForceGraphHandle, ForceGraphProps>(
     const [hiddenTypes, setHiddenTypes] = useState<Set<string>>(new Set(['software']));
     const colors = useThemeColors();
 
-    /** Entity type → accent color mapping */
+    /** Entity type → accent color mapping (see docs/feeds_setup.md color conventions) */
     const NODE_COLORS: Record<string, string> = {
       technique: colors.accentTeal,
       group: colors.accentOrange,
@@ -57,6 +57,10 @@ export const ForceGraph = forwardRef<ForceGraphHandle, ForceGraphProps>(
       data_source: colors.accentNeutral,
       tactic: colors.accentYellow,
       external_actor: colors.accentNeutral,
+      application: colors.accentBlue,
+      sector: colors.accentNeutral,
+      owasp: colors.accentGreen,
+      cwe: colors.accentBlue,
     };
 
     function nodeColor(type: string): string {
