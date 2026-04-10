@@ -42,46 +42,68 @@ Two new tables, added via idempotent migration.
 ### `csf_subcategories` (106 rows)
 
 ```sql
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 CREATE TABLE IF NOT EXISTS csf_subcategories (
   id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  subcategory_id  VARCHAR(10) UNIQUE NOT NULL,  -- 'PR.AA-01'
-  function        VARCHAR(4) NOT NULL,          -- 'PR'
-  function_name   VARCHAR(50) NOT NULL,         -- 'Protect'
-  category_id     VARCHAR(10) NOT NULL,         -- 'PR.AA'
-  category_name   VARCHAR(100) NOT NULL,        -- 'Identity Management and Access Control'
-  name            VARCHAR(255) NOT NULL,
+  subcategory_id  TEXT NOT NULL,              -- 'PR.AA-01' (or future 'PR.AA-01.01')
+  function        TEXT NOT NULL,              -- 'PR'
+  function_name   TEXT NOT NULL,              -- 'Protect'
+  category_id     TEXT NOT NULL,              -- 'PR.AA'
+  category_name   TEXT NOT NULL,              -- 'Identity Management and Access Control'
+  name            TEXT NOT NULL,
   description     TEXT,
-  version         VARCHAR(10) NOT NULL DEFAULT '2.0',
+  version         TEXT NOT NULL DEFAULT '2.0',
   created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (subcategory_id, version),
+  CONSTRAINT chk_csf_subcategory_id_format
+    CHECK (subcategory_id ~ '^(GV|ID|PR|DE|RS|RC)\.[A-Z]{2}-\d{2}(\.\d{2})?$'),
+  CONSTRAINT chk_csf_function
+    CHECK (function IN ('GV','ID','PR','DE','RS','RC'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_csf_sub_function ON csf_subcategories(function);
 CREATE INDEX IF NOT EXISTS idx_csf_sub_category ON csf_subcategories(category_id);
+CREATE INDEX IF NOT EXISTS idx_csf_sub_subcategory_id ON csf_subcategories(subcategory_id);
 ```
 
-Function/category names are denormalized to avoid 3-level JOIN chains. 106 static rows — normalization gain is negligible.
+Function/category names are denormalized to avoid 3-level JOIN chains. 106 static rows — normalization gain is negligible. `UNIQUE (subcategory_id, version)` allows future CSF versions (v2.1, v3) to coexist.
 
 ### `csf_technique_mappings`
 
 ```sql
 CREATE TABLE IF NOT EXISTS csf_technique_mappings (
-  id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  subcategory_id      VARCHAR(10) NOT NULL,
-  attack_technique_id VARCHAR(20) NOT NULL,
-  mapping_source      VARCHAR(50) NOT NULL DEFAULT 'ctid',
-  is_draft            BOOLEAN NOT NULL DEFAULT FALSE,
-  created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  id                   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  csf_subcategory_uuid UUID NOT NULL REFERENCES csf_subcategories(id) ON DELETE CASCADE,
+  subcategory_id       TEXT NOT NULL,              -- denormalized for fast lookups
+  technique_id         UUID REFERENCES techniques(id) ON DELETE CASCADE,
+  attack_technique_id  TEXT NOT NULL,              -- denormalized
+  mapping_source       TEXT NOT NULL DEFAULT 'ctid',
+  is_draft             BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at           TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at           TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE (subcategory_id, attack_technique_id),
-  FOREIGN KEY (subcategory_id) REFERENCES csf_subcategories(subcategory_id) ON DELETE CASCADE
+  CONSTRAINT chk_csf_mapping_source
+    CHECK (mapping_source IN ('ctid','manual','override')),
+  CONSTRAINT chk_csf_attack_technique_id_format
+    CHECK (attack_technique_id ~ '^T\d{4}(\.\d{3})?$')
 );
 
 CREATE INDEX IF NOT EXISTS idx_csf_tech_attackid ON csf_technique_mappings(attack_technique_id);
 CREATE INDEX IF NOT EXISTS idx_csf_tech_subcat   ON csf_technique_mappings(subcategory_id);
+CREATE INDEX IF NOT EXISTS idx_csf_tech_uuid     ON csf_technique_mappings(csf_subcategory_uuid);
+CREATE INDEX IF NOT EXISTS idx_csf_tech_techuuid ON csf_technique_mappings(technique_id);
 ```
 
-`is_draft` preserves CTID's draft flag where applicable. FK with cascade ensures a subcategory deletion cleans up its mappings.
+**Schema notes:**
+- Two FKs matching existing framework tables (`nist_controls`, `cis_controls`, `engage_mappings`):
+  - `csf_subcategory_uuid` → `csf_subcategories(id)` (hard FK)
+  - `technique_id` → `techniques(id)` nullable (graceful if ATT&CK ID not yet seeded)
+- `subcategory_id` and `attack_technique_id` are denormalized for fast string lookups in the API layer
+- `is_draft` preserves CTID's draft flag where applicable
+- CHECK constraints enforce ID format and mapping source at the DB layer (defense in depth — API also validates)
+- `TEXT` throughout (Postgres: zero storage difference vs `VARCHAR(n)`, no arbitrary length caps)
 
 ### Migration file
 
@@ -104,17 +126,37 @@ Schedule: "0 5 * * 1"  // Mondays at 05:00 UTC
 maxDuration: 300
 ```
 
-**Sync strategy — transaction-wrapped nuke-and-replace:**
+**Sync strategy — fetch outside, transaction-wrapped replace inside:**
 
 ```ts
+// 1. Fetch and validate OUTSIDE the transaction (network I/O)
+const mappings = await fetchFromCtidGitHub();
+validateSchema(mappings);  // fail early, don't touch DB
+
+// 2. Short in-memory transaction
 await client.query('BEGIN');
 await client.query("DELETE FROM csf_technique_mappings WHERE mapping_source = 'ctid'");
-// Fetch full mappings from CTID GitHub
-// Bulk INSERT
+
+// Chunked multi-row INSERT (500 rows per chunk, ~4 params each = 2000 params, safe under 65535 limit)
+for (const chunk of chunks(mappings, 500)) {
+  const values = chunk.map((_, i) => `($${i*4+1}, $${i*4+2}, $${i*4+3}, $${i*4+4})`).join(',');
+  const params = chunk.flatMap(m => [m.subcategory_id, m.attack_technique_id, 'ctid', m.is_draft]);
+  await client.query(
+    `INSERT INTO csf_technique_mappings
+       (subcategory_id, attack_technique_id, mapping_source, is_draft)
+     VALUES ${values}
+     ON CONFLICT (subcategory_id, attack_technique_id) DO NOTHING`,
+    params
+  );
+}
 await client.query('COMMIT');
 ```
 
-Why nuke-and-replace: CTID occasionally removes/refines mappings. Append-only upsert would accumulate stale rows. The `WHERE mapping_source = 'ctid'` scope prevents touching any future non-CTID data.
+**Critical:** fetch MUST happen before `BEGIN`. A 60-second network stall inside a transaction would hold the DELETE's `RowExclusiveLock`, accumulate dead tuples, and block autovacuum. Readers use MVCC snapshots and are unaffected by the DELETE+INSERT inside the transaction.
+
+Why nuke-and-replace: CTID occasionally removes/refines mappings. Append-only upsert would accumulate stale rows. The `WHERE mapping_source = 'ctid'` scope prevents touching any future `'manual'` or `'override'` data.
+
+**Why chunked INSERT, not COPY:** at ~500-1000 rows, multi-row INSERT is simpler and fast enough. `COPY FROM STDIN` pulls in an extra dependency (`pg-copy-streams`) without benefit at this scale. Temp-table swap adds failure surfaces with no upside.
 
 **Failure handling:**
 - Fetch 404 → fail loudly, log to `feed_sync_log`, do not touch DB
@@ -167,7 +209,7 @@ Detail for one subcategory. Cache 3600s. Validates `^(GV|ID|PR|DE|RS|RC)\.[A-Z]{
 }
 ```
 
-`relatedSubcategories` are other subcategories sharing ≥3 techniques (a lightweight "see also" graph).
+`relatedSubcategories` are other subcategories sharing ≥2 techniques with this one, ordered by shared count DESC, limited to 10 (lightweight "see also" graph). Lower threshold than initially considered because CSF subcategories average ~5 techniques each — a ≥3 threshold would leave most "see also" lists empty.
 
 ### `GET /api/v1/frameworks/csf/[subcategoryId]/techniques`
 
