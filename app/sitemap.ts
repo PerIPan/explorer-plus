@@ -8,18 +8,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     '', '/dashboard', '/matrix', '/techniques', '/groups', '/campaigns',
     '/software', '/mitigations', '/tactics', '/sectors', '/applications',
     '/search', '/cti/cves', '/cti/reports', '/cti/iocs', '/cti/sigma',
-    '/cti/feed-status', '/frameworks/owasp', '/frameworks/nist',
+    '/cti/feed-status', '/frameworks/owasp', '/frameworks/csf', '/frameworks/nist',
     '/frameworks/engage', '/frameworks/react', '/frameworks/veris',
     '/frameworks/cloud', '/frameworks/atomic', '/frameworks/detection',
     '/external-actors', '/data-sources',
   ].map((path) => ({ url: `${BASE_URL}${path}`, changeFrequency: 'weekly' as const }));
 
   try {
-    const [techniques, groups, cves, owasp] = await Promise.all([
+    const [techniques, groups, cves, owasp, csf] = await Promise.all([
       query<{ attack_id: string }>('SELECT attack_id FROM techniques WHERE attack_id IS NOT NULL'),
       query<{ attack_id: string }>('SELECT attack_id FROM threat_groups WHERE attack_id IS NOT NULL'),
       query<{ cve_id: string }>("SELECT cve_id FROM cves WHERE cve_id IS NOT NULL ORDER BY published_at DESC NULLS LAST LIMIT 5000"),
       query<{ category_id: string }>('SELECT category_id FROM owasp_top10'),
+      query<{ subcategory_id: string }>("SELECT subcategory_id FROM csf_subcategories WHERE version = '2.0'"),
     ]);
 
     const techniqueUrls = techniques.rows.map((t) => ({
@@ -42,7 +43,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'monthly' as const,
     }));
 
-    return [...staticPages, ...techniqueUrls, ...groupUrls, ...cveUrls, ...owaspUrls];
+    const csfUrls = csf.rows.map((c) => ({
+      url: `${BASE_URL}/frameworks/csf/${c.subcategory_id}`,
+      changeFrequency: 'monthly' as const,
+    }));
+
+    return [...staticPages, ...techniqueUrls, ...groupUrls, ...cveUrls, ...owaspUrls, ...csfUrls];
   } catch {
     // If DB is not available (e.g., build time), return static pages only
     return staticPages;
