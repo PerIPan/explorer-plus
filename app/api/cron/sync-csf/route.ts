@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '../../v1/lib/db';
+import { query, withTransaction } from '../../v1/lib/db';
 import { verifyCronAuth } from '../lib/auth';
 
 export const maxDuration = 300;
@@ -103,13 +103,15 @@ export async function GET(req: NextRequest) {
     );
     const techUuidMap = new Map(techResult.rows.map((r) => [r.attack_id, r.id]));
 
-    // ── 3. Transaction: DELETE + bulk INSERT ───────────────────────────────
-    await query('BEGIN');
-    try {
-      await query(`DELETE FROM csf_technique_mappings WHERE mapping_source = 'ctid'`);
+    // ── 3. Real transaction on a dedicated pool client ─────────────────────
+    // withTransaction guarantees BEGIN/COMMIT/ROLLBACK all run on the SAME
+    // connection. Previously these used pool.query() which checked out a new
+    // client per call — the "transaction" was non-atomic.
+    const { inserted, skippedUnknownSub } = await withTransaction(async (client) => {
+      await client.query(`DELETE FROM csf_technique_mappings WHERE mapping_source = 'ctid'`);
 
-      let inserted = 0;
-      let skippedUnknownSub = 0;
+      let insertedCount = 0;
+      let skipped = 0;
       const CHUNK_SIZE = 500;
 
       for (let i = 0; i < validMappings.length; i += CHUNK_SIZE) {
@@ -120,7 +122,7 @@ export async function GET(req: NextRequest) {
         for (const m of chunk) {
           const subUuid = subUuidMap.get(m.subcategory_id);
           if (!subUuid) {
-            skippedUnknownSub++;
+            skipped++;
             continue; // subcategory not in our seed (shouldn't happen after seed)
           }
           const techUuid = techUuidMap.get(m.attack_technique_id) ?? null;
@@ -134,48 +136,45 @@ export async function GET(req: NextRequest) {
 
         if (placeholders.length === 0) continue;
 
-        const res = await query(
+        const res = await client.query(
           `INSERT INTO csf_technique_mappings
              (csf_subcategory_uuid, subcategory_id, technique_id, attack_technique_id, mapping_source, is_draft)
            VALUES ${placeholders.join(',')}
            ON CONFLICT (subcategory_id, attack_technique_id) DO NOTHING`,
           rows,
         );
-        inserted += res.rowCount ?? 0;
+        insertedCount += res.rowCount ?? 0;
       }
 
-      await query('COMMIT');
+      return { inserted: insertedCount, skippedUnknownSub: skipped };
+    });
 
-      await query(
-        `UPDATE feed_sync_log
-         SET status = 'success', completed_at = NOW(),
-             records_inserted = $1, records_skipped = $2,
-             metadata = $3
-         WHERE id = $4`,
-        [
-          inserted,
-          skippedUnknownSub,
-          JSON.stringify({
-            totalRawMappings: mappings.length,
-            totalValidMappings: validMappings.length,
-            source: 'cri_profile-v2.1',
-          }),
-          logId,
-        ],
-      );
+    await query(
+      `UPDATE feed_sync_log
+       SET status = 'success', completed_at = NOW(),
+           records_inserted = $1, records_skipped = $2,
+           metadata = $3
+       WHERE id = $4`,
+      [
+        inserted,
+        skippedUnknownSub,
+        JSON.stringify({
+          totalRawMappings: mappings.length,
+          totalValidMappings: validMappings.length,
+          source: 'cri_profile-v2.1',
+        }),
+        logId,
+      ],
+    );
 
-      return NextResponse.json({
-        ok: true,
-        source: 'csf',
-        recordsInserted: inserted,
-        recordsSkipped: skippedUnknownSub,
-        totalValidated: validMappings.length,
-        totalRaw: mappings.length,
-      });
-    } catch (txErr) {
-      await query('ROLLBACK');
-      throw txErr;
-    }
+    return NextResponse.json({
+      ok: true,
+      source: 'csf',
+      recordsInserted: inserted,
+      recordsSkipped: skippedUnknownSub,
+      totalValidated: validMappings.length,
+      totalRaw: mappings.length,
+    });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error('CSF sync error:', err);
