@@ -64,6 +64,12 @@ const entityConfig: Record<
     border: 'border-[#059669]/30',
     path: 'frameworks/owasp',
   },
+  csf: {
+    color: 'text-[#6366f1]',
+    bg: 'bg-[#6366f1]/10',
+    border: 'border-[#6366f1]/30',
+    path: 'frameworks/csf',
+  },
 };
 
 const MAP_TABS: Record<EntityType, string> = {
@@ -75,6 +81,7 @@ const MAP_TABS: Record<EntityType, string> = {
   data_source: 'data-source-map',
   tactic: 'tactic-map',
   owasp: 'owasp-map',
+  csf: 'csf-map',
 };
 
 /**

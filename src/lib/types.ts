@@ -295,7 +295,18 @@ export type EntityType =
   | 'mitigation'
   | 'data_source'
   | 'tactic'
-  | 'owasp';
+  | 'owasp'
+  | 'csf';
+
+export interface CsfSubcategory {
+  subcategoryId: string;
+  function: string;
+  functionName: string;
+  categoryId: string;
+  categoryName: string;
+  name: string;
+  description: string | null;
+}
 
 export interface OwaspCategory {
   categoryId: string;

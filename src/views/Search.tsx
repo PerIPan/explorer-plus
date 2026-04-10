@@ -17,6 +17,7 @@ const ENTITY_PATH: Record<EntityType, string> = {
   data_source: 'data-sources',
   tactic: 'tactics',
   owasp: 'frameworks/owasp',
+  csf: 'frameworks/csf',
 };
 
 const ENTITY_COLOR: Record<EntityType, string> = {
@@ -28,6 +29,7 @@ const ENTITY_COLOR: Record<EntityType, string> = {
   data_source: 'text-[var(--accent-neutral)]',
   tactic: 'text-[var(--accent-yellow)]',
   owasp: 'text-[#059669]',
+  csf: 'text-[#6366f1]',
 };
 
 const EXAMPLE_CHIPS = ['APT29', 'T1059', 'Mimikatz', 'Phishing'];
