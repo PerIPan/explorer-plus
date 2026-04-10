@@ -304,6 +304,7 @@ export interface CsfSubcategory {
   functionName: string;
   categoryId: string;
   categoryName: string;
+  categoryDescription?: string | null;
   name: string;
   description: string | null;
 }
@@ -328,6 +329,8 @@ export interface CsfFunctionGroup {
 export interface CsfDetail extends CsfSubcategory {
   techniques: Array<{ attackId: string; name: string | null; tacticName: string | null }>;
   relatedSubcategories: Array<{ subcategoryId: string; name: string; function: string; sharedCount: number }>;
+  implementationExamples: Array<{ exampleId: string; ordinal: number; text: string }>;
+  informativeReferences: Array<{ framework: string; id: string; text: string | null; relationship: string | null }>;
 }
 
 export interface OwaspCategory {

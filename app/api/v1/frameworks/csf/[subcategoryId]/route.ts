@@ -25,15 +25,17 @@ export async function GET(
     functionName: string;
     categoryId: string;
     categoryName: string;
+    categoryDescription: string | null;
     name: string;
     description: string | null;
   }>(
     `SELECT
-       subcategory_id  AS "subcategoryId",
+       subcategory_id       AS "subcategoryId",
        function,
-       function_name   AS "functionName",
-       category_id     AS "categoryId",
-       category_name   AS "categoryName",
+       function_name        AS "functionName",
+       category_id          AS "categoryId",
+       category_name        AS "categoryName",
+       category_description AS "categoryDescription",
        name,
        description
      FROM csf_subcategories
@@ -48,6 +50,7 @@ export async function GET(
 
   const sub = subResult.rows[0];
 
+  // Core queries (must succeed)
   const [techniquesResult, relatedResult] = await Promise.all([
     query<{ attackId: string; name: string | null; tacticName: string | null }>(
       `SELECT
@@ -86,6 +89,28 @@ export async function GET(
     ),
   ]);
 
+  // Enrichment queries (Implementation Examples + Informative References).
+  // Tables may not exist yet on environments where migrate-csf-enrichment.sql
+  // hasn't been applied — degrade gracefully to empty arrays instead of 500.
+  const [examplesResult, refsResult] = await Promise.all([
+    query<{ exampleId: string; ordinal: number; text: string }>(
+      `SELECT example_id AS "exampleId", ordinal, text
+       FROM csf_implementation_examples
+       WHERE subcategory_id = $1
+       ORDER BY ordinal`,
+      [subcategoryId],
+    ).catch(() => ({ rows: [] as Array<{ exampleId: string; ordinal: number; text: string }> })),
+
+    query<{ framework: string; id: string; text: string | null; relationship: string | null }>(
+      `SELECT target_framework AS "framework", target_id AS "id",
+              target_text AS "text", relationship
+       FROM csf_informative_references
+       WHERE subcategory_id = $1
+       ORDER BY target_framework, target_id`,
+      [subcategoryId],
+    ).catch(() => ({ rows: [] as Array<{ framework: string; id: string; text: string | null; relationship: string | null }> })),
+  ]);
+
   return withCors(
     jsonResponse(
       {
@@ -95,6 +120,8 @@ export async function GET(
           ...r,
           sharedCount: parseInt(r.sharedCount, 10),
         })),
+        implementationExamples: examplesResult.rows,
+        informativeReferences: refsResult.rows,
       },
       CACHE_TTL,
     ),

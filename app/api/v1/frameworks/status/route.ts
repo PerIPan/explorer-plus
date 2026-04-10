@@ -6,6 +6,7 @@ import { withCors, corsOptions as OPTIONS } from '../../../lib/cors';
 export { OPTIONS };
 
 export async function GET(_req: NextRequest) {
+  // Core query over tables guaranteed to exist in all environments
   const result = await query<{ tbl: string; count: string }>(`
     SELECT 'owasp_top10' AS tbl, COUNT(*)::text AS count FROM owasp_top10
     UNION ALL SELECT 'nist_controls', COUNT(*)::text FROM nist_controls
@@ -33,6 +34,20 @@ export async function GET(_req: NextRequest) {
   const counts: Record<string, number> = {};
   for (const row of result.rows) {
     counts[row.tbl] = parseInt(row.count, 10);
+  }
+
+  // Enrichment tables — may not exist on unmigrated environments, degrade to 0
+  try {
+    const enrich = await query<{ tbl: string; count: string }>(`
+      SELECT 'csf_implementation_examples' AS tbl, COUNT(*)::text AS count FROM csf_implementation_examples
+      UNION ALL SELECT 'csf_informative_references', COUNT(*)::text FROM csf_informative_references
+    `);
+    for (const row of enrich.rows) {
+      counts[row.tbl] = parseInt(row.count, 10);
+    }
+  } catch {
+    counts.csf_implementation_examples = 0;
+    counts.csf_informative_references = 0;
   }
 
   return withCors(jsonResponse({ counts }, 300));

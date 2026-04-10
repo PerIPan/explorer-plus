@@ -11,12 +11,12 @@ import { DiamondLoader } from '../components/shared/FoldingDiamond';
 import type { CsfFunctionGroup, CsfDetail } from '../lib/types';
 
 const FUNCTIONS = [
-  { id: 'GV', name: 'Govern' },
-  { id: 'ID', name: 'Identify' },
-  { id: 'PR', name: 'Protect' },
-  { id: 'DE', name: 'Detect' },
-  { id: 'RS', name: 'Respond' },
-  { id: 'RC', name: 'Recover' },
+  { id: 'GV', name: 'Govern',   description: 'Establish and monitor the cybersecurity risk management strategy, expectations, and policy.' },
+  { id: 'ID', name: 'Identify', description: 'Help determine the current cybersecurity risk to the organization.' },
+  { id: 'PR', name: 'Protect',  description: 'Use safeguards to prevent or reduce cybersecurity risk.' },
+  { id: 'DE', name: 'Detect',   description: 'Find and analyze possible cybersecurity attacks and compromises.' },
+  { id: 'RS', name: 'Respond',  description: 'Take action regarding a detected cybersecurity incident.' },
+  { id: 'RC', name: 'Recover',  description: 'Restore assets and operations affected by a cybersecurity incident.' },
 ];
 
 export function CsfFramework() {
@@ -104,6 +104,7 @@ export function CsfFramework() {
             key={f.id}
             type="button"
             onClick={() => setFunctionFilter(f.id)}
+            title={f.description}
             className={`px-3 py-1.5 text-xs rounded-md border font-mono transition-colors ${
               functionFilter === f.id
                 ? 'border-[#6366f1] text-[#6366f1] bg-[#6366f1]/10'
@@ -141,6 +142,24 @@ export function CsfFramework() {
                       <button
                         type="button"
                         onClick={() => setExpanded(isOpen ? null : sub.subcategoryId)}
+                        aria-label={isOpen ? 'Collapse' : 'Expand'}
+                        aria-expanded={isOpen}
+                        aria-controls={`csf-body-${sub.subcategoryId}`}
+                        className="shrink-0"
+                      >
+                        <svg
+                          aria-hidden="true"
+                          className={`w-4 h-4 text-[var(--text-secondary)] transition-transform duration-200 ${isOpen ? 'rotate-90' : ''}`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setExpanded(isOpen ? null : sub.subcategoryId)}
                         aria-expanded={isOpen}
                         aria-controls={`csf-body-${sub.subcategoryId}`}
                         className="flex-1 flex items-center gap-3 text-left min-w-0"
@@ -151,26 +170,12 @@ export function CsfFramework() {
                         <span className="flex-1 min-w-0 text-sm text-[var(--text-primary)] truncate">{sub.name}</span>
                         <Badge label={`${sub.techniqueCount} tech`} variant="teal" />
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => setExpanded(isOpen ? null : sub.subcategoryId)}
-                        aria-label={isOpen ? 'Collapse' : 'Expand'}
-                        className="shrink-0"
-                      >
-                        <svg
-                          className={`w-4 h-4 text-[var(--text-secondary)] transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </button>
                     </div>
                     {isOpen && (
                       <div
                         id={`csf-body-${sub.subcategoryId}`}
                         role="region"
+                        aria-label={`${sub.subcategoryId} details`}
                         className="px-4 py-4 bg-[var(--surface-alt)] space-y-3 border-t border-[var(--border-color)]"
                       >
                         {detailLoading && expanded === sub.subcategoryId ? (
@@ -182,9 +187,12 @@ export function CsfFramework() {
                             )}
                             <div className="text-xs text-[var(--text-secondary)]">
                               <span className="font-semibold">Category:</span> {detail.categoryName}
+                              {detail.categoryDescription && (
+                                <span className="block mt-1 italic opacity-90">{detail.categoryDescription}</span>
+                              )}
                             </div>
 
-                            {detail.techniques.length > 0 ? (
+                            {(detail.techniques ?? []).length > 0 && (
                               <div>
                                 <h4 className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2">
                                   ATT&CK Techniques ({detail.techniques.length})
@@ -201,13 +209,24 @@ export function CsfFramework() {
                                   ))}
                                 </div>
                               </div>
-                            ) : (
+                            )}
+
+                            {(detail.implementationExamples ?? []).length > 0 && (
+                              <CsfExamplesSection
+                                key={sub.subcategoryId}
+                                examples={detail.implementationExamples}
+                                defaultOpen={(detail.techniques ?? []).length === 0}
+                                parentId={sub.subcategoryId}
+                              />
+                            )}
+
+                            {(detail.techniques ?? []).length === 0 && (detail.implementationExamples ?? []).length === 0 && (
                               <p className="text-xs text-[var(--text-secondary)] italic">
-                                No ATT&CK technique mappings yet. Mappings come from CTID's CRI Profile dataset, which covers a subset of CSF subcategories.
+                                No ATT&CK technique mappings yet. CTID's CRI Profile covers a subset of CSF subcategories focused on Protect and Detect.
                               </p>
                             )}
 
-                            {detail.relatedSubcategories.length > 0 && (
+                            {(detail.relatedSubcategories ?? []).length > 0 && (
                               <div>
                                 <h4 className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2">
                                   Related Subcategories
@@ -245,6 +264,52 @@ export function CsfFramework() {
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+/** Collapsible "Implementation Examples" block, shown per expanded CSF subcategory. */
+function CsfExamplesSection({
+  examples,
+  defaultOpen,
+  parentId,
+}: {
+  examples: Array<{ exampleId: string; ordinal: number; text: string }>;
+  defaultOpen: boolean;
+  parentId: string;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  const listId = `csf-examples-${parentId}`;
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        aria-controls={listId}
+        className="flex items-center gap-2 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2 hover:text-[var(--text-primary)]"
+      >
+        <svg
+          aria-hidden="true"
+          className={`w-3 h-3 transition-transform duration-200 ${open ? 'rotate-90' : ''}`}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+        </svg>
+        Implementation Examples ({examples.length})
+      </button>
+      {open && (
+        <ul id={listId} className="space-y-1.5 pl-4 list-disc marker:text-[#6366f1]">
+          {examples.map((ex) => (
+            <li key={ex.exampleId} className="text-xs text-[var(--text-secondary)] leading-relaxed">
+              {ex.text}
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

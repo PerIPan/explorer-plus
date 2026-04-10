@@ -77,6 +77,33 @@ DATABASE_URL="postgresql://..." node scripts/sync-atlas.mjs
 | `sync-sigma.mjs` | Same as GH Action but requires local `/tmp/sigma/rules/` clone |
 | `sync-atomic.mjs` | Same as GH Action but requires local clone |
 
+### NIST CSF v2 Enrichment
+
+Two-step process for loading Implementation Examples and category descriptions
+from the NIST OSCAL catalog. Informative References (800-53, CIS, ISO, 800-221A)
+are a follow-up — NIST publishes those as separate XLSX files.
+
+| Script | What it does | Tables affected | Records |
+|--------|-------------|-----------------|---------|
+| `migrate-csf-enrichment.sql` | Adds `csf_subcategories.category_description` column, creates `csf_implementation_examples` + `csf_informative_references` tables. Idempotent (`IF NOT EXISTS`). | `csf_subcategories` (ALTER), `csf_implementation_examples`, `csf_informative_references` | schema only |
+| `seed-csf-enrichment.mjs` | Reads local `seed/data/csf-v2-oscal-catalog.json` snapshot, parses ~22 category descriptions + 363 implementation examples, upserts. | `csf_subcategories.category_description`, `csf_implementation_examples` | ~22 descriptions, ~363 examples |
+
+**Run order** (required — app routes degrade gracefully if tables are missing, but populating requires migration first):
+
+```bash
+# 1. Apply schema (idempotent)
+DATABASE_URL="postgresql://..." psql "$DATABASE_URL" -f scripts/migrate-csf-enrichment.sql
+
+# 2. Populate examples + category descriptions
+DATABASE_URL="postgresql://..." node scripts/seed-csf-enrichment.mjs
+```
+
+**Data source:** the OSCAL catalog is mirrored into `seed/data/csf-v2-oscal-catalog.json`
+(committed to the repo for reproducibility — no runtime network fetch, no supply-chain
+dependency on a mutable `main` branch). To refresh, re-download from
+`https://raw.githubusercontent.com/usnistgov/oscal-content/main/nist.gov/CSF/v2.0/json/NIST_CSF_v2.0_catalog.json`
+and commit the new snapshot alongside a code change.
+
 ## Python Seed (manual)
 
 ```bash

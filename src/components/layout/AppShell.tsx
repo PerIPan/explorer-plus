@@ -75,7 +75,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       {/* Main area pushed right of the fixed sidebar on lg+ */}
-      <div className="flex-1 flex flex-col lg:ml-52 min-h-screen">
+      <div className="flex-1 flex flex-col lg:ml-52 min-h-screen min-w-0">
         {/* Top header bar */}
         <header className="sticky top-0 z-30 flex items-center gap-2 md:gap-4 px-3 md:px-6 py-2 md:py-3 bg-[var(--surface-card)] shadow-sm border-b border-[var(--border-color)]">
           {/* Hamburger — visible only below lg */}
