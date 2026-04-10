@@ -390,6 +390,14 @@ export interface FrameworkData {
   verisCategories?: VerisMapping[];
   cloudControls?: CloudControl[];
   owasp?: Array<{ categoryId: string; name: string; framework: string }>;
+  csf?: Array<{
+    subcategoryId: string;
+    name: string;
+    function: string;
+    functionName: string;
+    categoryId: string;
+    categoryName: string;
+  }>;
 }
 
 // ── CTI Feed Types ─────────────────────────────────────────────────────────────

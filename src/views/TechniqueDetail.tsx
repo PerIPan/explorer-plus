@@ -423,7 +423,8 @@ function FrameworksTab({ attackId }: { attackId: string }) {
     data.engage.length === 0 &&
     (data.verisCategories?.length ?? 0) === 0 &&
     (data.cloudControls?.length ?? 0) === 0 &&
-    (data.owasp?.length ?? 0) === 0;
+    (data.owasp?.length ?? 0) === 0 &&
+    (data.csf?.length ?? 0) === 0;
 
   if (isEmpty) {
     return (
@@ -598,6 +599,30 @@ function FrameworksTab({ attackId }: { attackId: string }) {
           <div className="pt-2">
             <Link href="/frameworks/owasp" className="text-xs text-[var(--accent-teal)] hover:underline">
               Browse all OWASP categories
+            </Link>
+          </div>
+        </section>
+      )}
+
+      {/* NIST CSF v2 Subcategories */}
+      {data.csf && data.csf.length > 0 && (
+        <section>
+          <h3 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-3">
+            NIST CSF v2 Subcategories ({data.csf.length})
+          </h3>
+          <div className="flex flex-wrap gap-1.5">
+            {data.csf.map((sub) => (
+              <EntityLink
+                key={sub.subcategoryId}
+                type="csf"
+                attackId={sub.subcategoryId}
+                name={`${sub.name} (${sub.functionName})`}
+              />
+            ))}
+          </div>
+          <div className="pt-2">
+            <Link href="/frameworks/csf" className="text-xs text-[var(--accent-teal)] hover:underline">
+              Browse all CSF subcategories
             </Link>
           </div>
         </section>
