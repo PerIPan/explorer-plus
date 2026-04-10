@@ -113,37 +113,9 @@ export function OwaspTop10() {
                 <button
                   type="button"
                   onClick={() => setExpanded(isOpen ? null : cat.categoryId)}
+                  aria-label={isOpen ? 'Collapse' : 'Expand'}
                   aria-expanded={isOpen}
                   aria-controls={`owasp-body-${cat.categoryId}`}
-                  className="flex-1 flex items-center gap-3 text-left min-w-0"
-                >
-                  <span className="font-mono text-sm font-bold text-[var(--accent-teal)] w-10 shrink-0">
-                    {cat.categoryId}
-                  </span>
-                  <span className="flex-1 min-w-0 text-sm font-medium text-[var(--text-primary)] truncate">
-                    {cat.name}
-                  </span>
-                </button>
-                <a
-                  href={`/?entity=${encodeURIComponent(cat.categoryId)}&tab=owasp-map`}
-                  className="text-[10px] font-medium px-2 py-0.5 rounded border border-[#059669]/30 text-[#059669] bg-[#059669]/10 hover:bg-[#059669]/20 shrink-0"
-                  title="Open 360 map view"
-                >
-                  360 →
-                </a>
-                <div className="flex items-center gap-2 shrink-0">
-                  <Badge label={`${cat.cweCount} CWEs`} variant="neutral" />
-                  <Badge label={`${cat.techniqueCount} techniques`} variant="teal" />
-                  <span className="hidden sm:inline">
-                    <Badge label={`${cat.cveCount.toLocaleString()} CVEs`} variant="pink" />
-                  </span>
-                  {cat.isDraft && <Badge label="DRAFT" variant="neutral" />}
-                  {cat.atlasCount > 0 && <Badge label={`${cat.atlasCount} ATLAS`} variant="purple" />}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setExpanded(isOpen ? null : cat.categoryId)}
-                  aria-label={isOpen ? 'Collapse' : 'Expand'}
                   className="shrink-0"
                 >
                   <svg
@@ -153,6 +125,35 @@ export function OwaspTop10() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setExpanded(isOpen ? null : cat.categoryId)}
+                  className="flex-1 flex items-center gap-3 text-left min-w-0"
+                >
+                  <span className="font-mono text-sm font-bold text-[var(--accent-teal)] w-10 shrink-0">
+                    {cat.categoryId}
+                  </span>
+                  <span className="min-w-0 text-sm font-medium text-[var(--text-primary)] truncate">
+                    {cat.name}
+                  </span>
+                </button>
+                <a
+                  href={`/?entity=${encodeURIComponent(cat.categoryId)}&tab=owasp-map`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-[10px] font-medium text-[#059669] hover:underline shrink-0"
+                  title="Open 360 map view"
+                >
+                  360 →
+                </a>
+                <div className="flex items-center gap-2 shrink-0 ml-auto">
+                  <Badge label={`${cat.cweCount} CWEs`} variant="neutral" />
+                  <Badge label={`${cat.techniqueCount} techniques`} variant="teal" />
+                  <span className="hidden sm:inline">
+                    <Badge label={`${cat.cveCount.toLocaleString()} CVEs`} variant="pink" />
+                  </span>
+                  {cat.isDraft && <Badge label="DRAFT" variant="neutral" />}
+                  {cat.atlasCount > 0 && <Badge label={`${cat.atlasCount} ATLAS`} variant="purple" />}
+                </div>
               </div>
 
               {/* Expanded detail */}

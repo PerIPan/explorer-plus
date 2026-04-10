@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '../../lib/api';
 import { EntityLink } from '../shared/EntityLink';
@@ -82,6 +83,7 @@ function MapCard(props: { label: string; count?: number; defaultOpen?: boolean; 
  * CWE mappings, and cross-framework related categories.
  */
 export function OwaspMapView({ categoryId }: { categoryId: string }) {
+  const [showAllCves, setShowAllCves] = useState(false);
   const { data, isLoading, error } = useQuery<OwaspDetail>({
     queryKey: ['owasp-detail', categoryId],
     queryFn: () => apiFetch<OwaspDetail>(`/frameworks/owasp/${categoryId}`),
@@ -219,7 +221,7 @@ export function OwaspMapView({ categoryId }: { categoryId: string }) {
       <MapCard label="Top CVEs" count={data.cves.length} defaultOpen={data.cves.length > 0}>
         {data.cves.length > 0 ? (
           <div className="space-y-2">
-            {data.cves.map((cve) => (
+            {(showAllCves ? data.cves : data.cves.slice(0, 10)).map((cve) => (
               <div
                 key={cve.cveId}
                 className="flex flex-wrap items-start gap-2 py-1 border-b border-[var(--border-color)] last:border-0"
@@ -248,6 +250,15 @@ export function OwaspMapView({ categoryId }: { categoryId: string }) {
                 )}
               </div>
             ))}
+            {data.cves.length > 10 && (
+              <button
+                type="button"
+                onClick={() => setShowAllCves((v) => !v)}
+                className="mt-2 text-xs text-[#059669] hover:underline"
+              >
+                {showAllCves ? 'Show less' : `View all (${data.cves.length}) →`}
+              </button>
+            )}
           </div>
         ) : (
           <p className="text-xs text-[var(--text-secondary)]">No CVEs linked to this category.</p>

@@ -48,6 +48,8 @@ const TYPE_VARIANT: Record<string, 'teal' | 'orange' | 'purple' | 'blue' | 'gree
   external_actor: 'neutral',
   sector: 'neutral',
   application: 'blue',
+  owasp: 'green',
+  cwe: 'yellow',
 };
 
 /** Human-readable label for entity types */
@@ -100,6 +102,12 @@ const TAB_FOR_TYPE: Record<string, TabId> = {
 
 const TAB_TYPE_HINT: Record<string, string> = { 'sector-map': 'sector', 'application-map': 'application', 'owasp-map': 'owasp' };
 
+/** OWASP category ID pattern — A01, ML01, LLM01, etc. */
+const OWASP_ID_RE = /^(A|ML|LLM)\d{2}$/i;
+function isOwaspId(id: string): boolean {
+  return OWASP_ID_RE.test(id);
+}
+
 /** Derive the entity type from the graph center node or from search suggestions */
 function inferEntityType(
   graphCenter: GraphNode | undefined,
@@ -107,6 +115,7 @@ function inferEntityType(
   selectedId: string,
 ): string | null {
   if (graphCenter?.type) return graphCenter.type;
+  if (isOwaspId(selectedId)) return 'owasp';
   const match = suggestions.find((s) => s.attackId === selectedId);
   return match?.type ?? null;
 }
@@ -157,7 +166,7 @@ export function Relationships() {
   }, []);
 
   const { data: graphData, isLoading, error } = useRelationships(
-    (tabParam === 'sector-map' || tabParam === 'application-map' || tabParam === 'owasp-map' || !selectedId) ? '' : selectedId,
+    (tabParam === 'sector-map' || tabParam === 'application-map' || tabParam === 'owasp-map' || isOwaspId(selectedId) || !selectedId) ? '' : selectedId,
   );
 
   /** Load ALL entity names cross-domain for Fuse.js — shared cache with SearchBar */
@@ -191,9 +200,8 @@ export function Relationships() {
   }, [fuse, searchInput, domain]);
 
   // Infer entity type from graph center or suggestions; fall back to tab hint for non-graph entities.
-  // When the user is on a framework/non-graph tab (owasp-map, csf-map, sector-map, application-map),
-  // the tab hint takes PRIORITY over suggestion matches — otherwise typing in the search box
-  // while viewing a CSF subcategory would flip entityType and unmount the view mid-session.
+  // Tab hint takes PRIORITY over suggestion matches — otherwise typing in the search box
+  // while viewing a framework entity would flip entityType and unmount the view mid-session.
   const tabHintType = TAB_TYPE_HINT[tabParam] ?? null;
   const entityType = tabHintType
     ?? inferEntityType(graphData?.center, suggestions, selectedId)
@@ -280,9 +288,98 @@ export function Relationships() {
     return { center, nodes, edges, truncated: appDetail.techniques.length > 30 || appDetail.groups.length > 30 };
   }, [isApp, appDetail, selectedId]);
 
-  const effectiveGraphData = isSector ? sectorGraphData : isApp ? appGraphData : graphData;
+  /** OWASP graph — build from OWASP category detail API */
   const isOwasp = entityType === 'owasp';
-  const graphReady = isOwasp ? true : isNonGraphEntity ? Boolean(isSector ? sectorGraphData : appGraphData) : (!isLoading && !error && Boolean(graphData));
+  const { data: owaspDetail } = useQuery({
+    queryKey: ['owasp-detail', selectedId],
+    queryFn: () => apiFetch<{
+      categoryId: string;
+      name: string;
+      framework: string;
+      cwes: string[];
+      techniques: Array<{ attackId: string; name: string; cweId: string }>;
+      atlasTechniques: Array<{ attackId: string; name: string }>;
+      relatedCategories: Array<{ categoryId: string; name: string; framework: string }>;
+      applications: Array<{ normalized: string; vendor: string; product: string; cveCount: number }>;
+    }>(`/frameworks/owasp/${selectedId}`),
+    enabled: isOwasp && Boolean(selectedId),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Resolve display name for OWASP entities when detail arrives
+  useEffect(() => {
+    if (isOwasp && owaspDetail) {
+      setSelectedName(owaspDetail.name);
+      setSearchInput(owaspDetail.name);
+    }
+  }, [isOwasp, owaspDetail]);
+
+  const owaspGraphData = useMemo<GraphData | null>(() => {
+    if (!isOwasp || !owaspDetail) return null;
+    const center: GraphNode = {
+      id: selectedId,
+      label: `${owaspDetail.categoryId}: ${owaspDetail.name}`,
+      type: 'owasp',
+      attackId: selectedId,
+    };
+    const nodes: GraphNode[] = [];
+    const edges: GraphData['edges'] = [];
+
+    // Dedup technique attackIds across ATT&CK + ATLAS
+    const seen = new Set<string>();
+    for (const t of owaspDetail.techniques) {
+      if (seen.has(t.attackId)) continue;
+      seen.add(t.attackId);
+      nodes.push({ id: t.attackId, label: t.name, type: 'technique', attackId: t.attackId });
+      edges.push({ source: selectedId, target: t.attackId, relationship: 'maps_to' });
+    }
+    for (const t of owaspDetail.atlasTechniques) {
+      if (seen.has(t.attackId)) continue;
+      seen.add(t.attackId);
+      nodes.push({ id: t.attackId, label: t.name, type: 'technique', attackId: t.attackId });
+      edges.push({ source: selectedId, target: t.attackId, relationship: 'maps_to' });
+    }
+    // Affected applications (cap 20 — CVEs/CWEs omitted to keep graph readable)
+    for (const a of owaspDetail.applications.slice(0, 20)) {
+      const appId = a.normalized;
+      if (seen.has(appId)) continue;
+      seen.add(appId);
+      nodes.push({
+        id: appId,
+        label: `${a.vendor} / ${a.product}`,
+        type: 'application',
+        attackId: appId,
+      });
+      edges.push({ source: selectedId, target: appId, relationship: 'affects' });
+    }
+    // Related OWASP categories across frameworks
+    for (const rc of owaspDetail.relatedCategories) {
+      if (seen.has(rc.categoryId)) continue;
+      seen.add(rc.categoryId);
+      nodes.push({ id: rc.categoryId, label: rc.name, type: 'owasp', attackId: rc.categoryId });
+      edges.push({ source: selectedId, target: rc.categoryId, relationship: 'related' });
+    }
+
+    return {
+      center,
+      nodes,
+      edges,
+      truncated: owaspDetail.applications.length > 20,
+    };
+  }, [isOwasp, owaspDetail, selectedId]);
+
+  const effectiveGraphData = isSector
+    ? sectorGraphData
+    : isApp
+      ? appGraphData
+      : isOwasp
+        ? owaspGraphData
+        : graphData;
+  const graphReady = isOwasp
+    ? Boolean(owaspGraphData)
+    : isNonGraphEntity
+      ? Boolean(isSector ? sectorGraphData : appGraphData)
+      : (!isLoading && !error && Boolean(graphData));
 
   /** Determine which tabs are visible for the current entity */
   const visibleTabs = TABS.filter(
@@ -443,21 +540,18 @@ export function Relationships() {
       {!selectedId && (
         <>
         <div className="text-center mt-10 md:mt-[74px] mb-2 max-w-3xl px-4 mx-auto">
-          <div className="text-lg md:text-xl font-light text-[var(--text-secondary)] mb-2">
-            Select an entity
-          </div>
           <p className="text-sm md:text-base text-[var(--text-secondary)] mx-auto max-w-2xl leading-relaxed">
             Search for any{' '}
-            <span className="font-semibold text-[var(--text-primary)]">Technique</span>,{' '}
-            <span className="font-semibold text-[var(--text-primary)]">Actor</span>,{' '}
-            <span className="font-semibold text-[var(--text-primary)]">Software</span>,{' '}
-            <span className="font-semibold text-[var(--text-primary)]">Campaign</span>,{' '}
-            <span className="font-semibold text-[var(--text-primary)]">Mitigation</span>,{' '}
-            <span className="font-semibold text-[var(--text-primary)]">Data Source</span>,{' '}
-            <span className="font-semibold text-[var(--text-primary)]">Tactic</span>,{' '}
-            <span className="font-semibold text-[var(--text-primary)]">Sector</span>,{' '}
-            <span className="font-semibold text-[var(--text-primary)]">Application</span>, or{' '}
-            <span className="font-semibold text-[var(--text-primary)]">OWASP category</span>{' '}
+            <span className="font-medium text-[var(--text-primary)]">Technique</span>,{' '}
+            <span className="font-medium text-[var(--text-primary)]">Actor</span>,{' '}
+            <span className="font-medium text-[var(--text-primary)]">Software</span>,{' '}
+            <span className="font-medium text-[var(--text-primary)]">Campaign</span>,{' '}
+            <span className="font-medium text-[var(--text-primary)]">Mitigation</span>,{' '}
+            <span className="font-medium text-[var(--text-primary)]">Data Source</span>,{' '}
+            <span className="font-medium text-[var(--text-primary)]">Tactic</span>,{' '}
+            <span className="font-medium text-[var(--text-primary)]">Sector</span>,{' '}
+            <span className="font-medium text-[var(--text-primary)]">Application</span>, or{' '}
+            <span className="font-medium text-[var(--text-primary)]">OWASP category</span>{' '}
             to explore its relationships.
           </p>
         </div>
