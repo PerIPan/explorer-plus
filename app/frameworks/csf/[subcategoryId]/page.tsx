@@ -20,10 +20,10 @@ export async function generateMetadata({
     `NIST CSF v2 subcategory ${data.subcategory_id}`;
 
   return {
-    title: `${title} — MITRE Explorer`,
+    title,
     description,
     openGraph: {
-      title,
+      title: `${title} — MITRE Explorer`,
       description,
       url: `https://mitre-explorer.org/frameworks/csf/${data.subcategory_id}`,
     },

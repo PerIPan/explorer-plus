@@ -52,7 +52,15 @@ export function CsfFramework() {
   const [functionFilter, setFunctionFilter] = useState<string | null>(null);
 
   useEffect(() => {
-    if (urlSubId) setExpanded(urlSubId.toUpperCase());
+    if (urlSubId) {
+      const id = urlSubId.toUpperCase();
+      setExpanded(id);
+      // Auto-scroll to the expanded item after a short delay to let the DOM render
+      setTimeout(() => {
+        const el = document.getElementById(`csf-sub-${id}`);
+        el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 200);
+    }
   }, [urlSubId]);
 
   const { data, isLoading } = useQuery({
@@ -148,6 +156,7 @@ export function CsfFramework() {
                 return (
                   <div
                     key={sub.subcategoryId}
+                    id={`csf-sub-${sub.subcategoryId}`}
                     className="border border-[var(--border-color)] rounded-lg overflow-hidden"
                   >
                     <button

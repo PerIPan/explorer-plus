@@ -50,15 +50,16 @@ export async function GET(
 
   const [techniquesResult, relatedResult] = await Promise.all([
     query<{ attackId: string; name: string | null; tacticName: string | null }>(
-      `SELECT DISTINCT
+      `SELECT
          m.attack_technique_id AS "attackId",
-         t.name,
-         tac.name              AS "tacticName"
+         MAX(t.name)           AS "name",
+         MIN(tac.name)         AS "tacticName"
        FROM csf_technique_mappings m
        LEFT JOIN techniques t ON t.id = m.technique_id
        LEFT JOIN technique_tactics tt ON tt.technique_id = t.id
        LEFT JOIN tactics tac ON tac.id = tt.tactic_id
        WHERE m.subcategory_id = $1 AND m.is_draft = FALSE
+       GROUP BY m.attack_technique_id
        ORDER BY m.attack_technique_id`,
       [subcategoryId],
     ),
