@@ -1,4 +1,5 @@
 'use client';
+import { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useDashboard, useReports } from '../hooks/useApi';
@@ -137,11 +138,19 @@ export function Dashboard() {
   const { domain, domainParam } = useDomain();
   const isAllDomains = domain === 'all';
   const isAtlas = domain === 'atlas-attack';
-  const { data, isLoading, error } = useDashboard({ ...sectorParam, ...domainParam });
-  const { data: reportsData, isLoading: reportsLoading } = useReports({
+  const dashParams = useMemo(
+    () => ({ ...sectorParam, ...domainParam }),
+    [sectorParam, domainParam],
+  );
+  const { data, isLoading, error } = useDashboard(dashParams);
+
+  // Compute "7 days ago" once per component mount — new Date() on every render
+  // would change the cache key across midnight or render cycles.
+  const reportsParams = useMemo(() => ({
     limit: '5',
     since: new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0],
-  });
+  }), []);
+  const { data: reportsData, isLoading: reportsLoading } = useReports(reportsParams);
 
   // ── Skeleton ────────────────────────────────────────────────────────────────
 

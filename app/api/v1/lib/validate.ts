@@ -7,8 +7,14 @@ export const attackIdSchema = z.string().regex(/^(AML\.)?(TA|T|G|S|M|C|DS)\d{4}(
 export const slugSchema = z.string().regex(/^[a-z0-9-]+$/);
 export const searchSchema = z.string().min(3).max(200);
 
+// Public list endpoints. `limit` stays at 5000 because existing views
+// (GroupsList, TechniquesList, CampaignsList, etc.) depend on loading the
+// full collection for client-side Fuse.js filtering. `page` is tightened to
+// 100 (was 1000) — there's no legitimate reason to ask for the 1000th page
+// of anything in our datasets, and the combination `limit=5000&page=1000`
+// was the real exfiltration vector the audit flagged.
 export const paginationSchema = z.object({
-  page: z.coerce.number().int().positive().max(1000).default(1),
+  page: z.coerce.number().int().positive().max(100).default(1),
   limit: z.coerce.number().int().positive().max(5000).default(50),
   sort: z.string().optional(),
   order: z.enum(['asc', 'desc']).default('asc'),

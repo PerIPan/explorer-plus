@@ -50,35 +50,35 @@ export function useDashboard(params: Record<string, string> = EMPTY_PARAMS) {
   });
 }
 
-export function useTechniques(params: Record<string, string> = {}) {
+export function useTechniques(params: Record<string, string> = EMPTY_PARAMS) {
   return useQuery({
     queryKey: ['techniques', params],
     queryFn: () => apiFetch<PaginatedResponse<Technique>>('/techniques', params),
   });
 }
 
-export function useGroups(params: Record<string, string> = {}) {
+export function useGroups(params: Record<string, string> = EMPTY_PARAMS) {
   return useQuery({
     queryKey: ['groups', params],
     queryFn: () => apiFetch<PaginatedResponse<Group>>('/groups', params),
   });
 }
 
-export function useSoftware(params: Record<string, string> = {}) {
+export function useSoftware(params: Record<string, string> = EMPTY_PARAMS) {
   return useQuery({
     queryKey: ['software', params],
     queryFn: () => apiFetch<PaginatedResponse<Software>>('/software', params),
   });
 }
 
-export function useCampaigns(params: Record<string, string> = {}) {
+export function useCampaigns(params: Record<string, string> = EMPTY_PARAMS) {
   return useQuery({
     queryKey: ['campaigns', params],
     queryFn: () => apiFetch<PaginatedResponse<Campaign>>('/campaigns', params),
   });
 }
 
-export function useDataSources(params: Record<string, string> = {}) {
+export function useDataSources(params: Record<string, string> = EMPTY_PARAMS) {
   return useQuery({
     queryKey: ['data-sources', params],
     queryFn: () =>
@@ -86,7 +86,7 @@ export function useDataSources(params: Record<string, string> = {}) {
   });
 }
 
-export function useMitigations(params: Record<string, string> = {}) {
+export function useMitigations(params: Record<string, string> = EMPTY_PARAMS) {
   return useQuery({
     queryKey: ['mitigations', params],
     queryFn: () =>
@@ -94,14 +94,14 @@ export function useMitigations(params: Record<string, string> = {}) {
   });
 }
 
-export function useTactics(params: Record<string, string> = {}) {
+export function useTactics(params: Record<string, string> = EMPTY_PARAMS) {
   return useQuery({
     queryKey: ['tactics', params],
     queryFn: () => apiFetch<PaginatedResponse<Tactic>>('/tactics', params),
   });
 }
 
-export function useSectors(params: Record<string, string> = {}) {
+export function useSectors(params: Record<string, string> = EMPTY_PARAMS) {
   return useQuery({
     queryKey: ['sectors', params],
     queryFn: () => apiFetch<{ data: Sector[] }>('/sectors', params),
@@ -110,7 +110,7 @@ export function useSectors(params: Record<string, string> = {}) {
 
 // ── Detail hooks ──────────────────────────────────────────────────────────────
 
-export function useTechnique(attackId: string, params: Record<string, string> = {}) {
+export function useTechnique(attackId: string, params: Record<string, string> = EMPTY_PARAMS) {
   return useQuery({
     queryKey: ['technique', attackId, params],
     queryFn: () => apiFetch<Technique>(`/techniques/${attackId}`, params),
@@ -119,7 +119,7 @@ export function useTechnique(attackId: string, params: Record<string, string> = 
   });
 }
 
-export function useGroup(attackId: string, params: Record<string, string> = {}) {
+export function useGroup(attackId: string, params: Record<string, string> = EMPTY_PARAMS) {
   return useQuery({
     queryKey: ['group', attackId, params],
     queryFn: () => apiFetch<Group>(`/groups/${attackId}`, params),
@@ -169,7 +169,7 @@ export function useTactic(attackId: string) {
 
 // ── Special hooks ─────────────────────────────────────────────────────────────
 
-export function useSearch(q: string, params?: Record<string, string>) {
+export function useSearch(q: string, params: Record<string, string> = EMPTY_PARAMS) {
   return useQuery({
     queryKey: ['search', q, params],
     queryFn: () => apiFetch<SearchResponse>('/search', { q, ...params }),
@@ -177,7 +177,7 @@ export function useSearch(q: string, params?: Record<string, string>) {
   });
 }
 
-export function useMatrix(params?: Record<string, string>) {
+export function useMatrix(params: Record<string, string> = EMPTY_PARAMS) {
   return useQuery({
     queryKey: ['matrix', params],
     queryFn: async () => {
@@ -197,28 +197,28 @@ export function useRelationships(attackId: string) {
 
 // ── CTI Feed hooks ─────────────────────────────────────────────────────────────
 
-export function useReports(params: Record<string, string> = {}) {
+export function useReports(params: Record<string, string> = EMPTY_PARAMS) {
   return useQuery({
     queryKey: ['feed-reports', params],
     queryFn: () => apiFetch<PaginatedResponse<ThreatReport>>('/feed/reports', params),
   });
 }
 
-export function useIocs(params: Record<string, string> = {}) {
+export function useIocs(params: Record<string, string> = EMPTY_PARAMS) {
   return useQuery({
     queryKey: ['feed-iocs', params],
     queryFn: () => apiFetch<PaginatedResponse<IocEntry>>('/feed/iocs', params),
   });
 }
 
-export function useSigmaRules(params: Record<string, string> = {}) {
+export function useSigmaRules(params: Record<string, string> = EMPTY_PARAMS) {
   return useQuery({
     queryKey: ['feed-sigma', params],
     queryFn: () => apiFetch<PaginatedResponse<SigmaRule>>('/feed/sigma', params),
   });
 }
 
-export function useAtomicTests(params: Record<string, string> = {}) {
+export function useAtomicTests(params: Record<string, string> = EMPTY_PARAMS) {
   return useQuery({
     queryKey: ['feed-atomic', params],
     queryFn: () => apiFetch<PaginatedResponse<AtomicTest>>('/feed/atomic', params),
@@ -253,21 +253,21 @@ export function useFrameworks(attackId: string) {
   });
 }
 
-export function useNistControls(params: Record<string, string> = {}) {
+export function useNistControls(params: Record<string, string> = EMPTY_PARAMS) {
   return useQuery({
     queryKey: ['nist-controls', params],
     queryFn: () => apiFetch<PaginatedResponse<NistControlSummary>>('/frameworks/nist', params),
   });
 }
 
-export function useEngageActivities(params: Record<string, string> = {}) {
+export function useEngageActivities(params: Record<string, string> = EMPTY_PARAMS) {
   return useQuery({
     queryKey: ['engage-activities', params],
     queryFn: () => apiFetch<PaginatedResponse<EngageSummary>>('/frameworks/engage', params),
   });
 }
 
-export function useReactActions(params: Record<string, string> = {}) {
+export function useReactActions(params: Record<string, string> = EMPTY_PARAMS) {
   return useQuery({
     queryKey: ['react-actions', params],
     queryFn: () => apiFetch<PaginatedResponse<ReactAction>>('/frameworks/react', params),
@@ -276,7 +276,7 @@ export function useReactActions(params: Record<string, string> = {}) {
 
 // ── CVE hooks ────────────────────────────────────────────────────────────────
 
-export function useCves(params: Record<string, string> = {}) {
+export function useCves(params: Record<string, string> = EMPTY_PARAMS) {
   return useQuery({
     queryKey: ['cves', params],
     queryFn: () => apiFetch<PaginatedResponse<CveEntry>>('/cves', params),
@@ -304,7 +304,7 @@ export function useCvePackages(cveId: string) {
 
 // ── GHSA hooks ─────────────────────────────────────────────────────────────────
 
-export function useGhsa(params: Record<string, string> = {}) {
+export function useGhsa(params: Record<string, string> = EMPTY_PARAMS) {
   return useQuery({
     queryKey: ['ghsa', params],
     queryFn: () => apiFetch<PaginatedResponse<GhsaEntry>>('/ghsa', params),
@@ -323,7 +323,7 @@ export function useGhsaDetail(ghsaId: string, enabled = true) {
 
 // ── Package hooks ─────────────────────────────────────────────────────────────
 
-export function usePackages(params: Record<string, string> = {}) {
+export function usePackages(params: Record<string, string> = EMPTY_PARAMS) {
   return useQuery({
     queryKey: ['packages', params],
     queryFn: () => apiFetch<PaginatedResponse<PackageListEntry>>('/packages', params),
@@ -342,7 +342,7 @@ export function usePackageDetail(ecosystem: string, nameEncoded: string) {
 
 // ── Extended Intel hooks ───────────────────────────────────────────────────────
 
-export function useExternalActors(params: Record<string, string> = {}) {
+export function useExternalActors(params: Record<string, string> = EMPTY_PARAMS) {
   return useQuery({
     queryKey: ['external-actors', params],
     queryFn: () => apiFetch<PaginatedResponse<ExternalActor>>('/external-actors', params),

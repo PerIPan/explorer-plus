@@ -2,6 +2,7 @@ import {
   useEffect,
   useRef,
   useCallback,
+  useMemo,
   useState,
   forwardRef,
   useImperativeHandle,
@@ -48,24 +49,28 @@ export const ForceGraph = forwardRef<ForceGraphHandle, ForceGraphProps>(
     const colors = useThemeColors();
 
     /** Entity type → accent color mapping (see docs/feeds_setup.md color conventions) */
-    const NODE_COLORS: Record<string, string> = {
-      technique: colors.accentTeal,
-      group: colors.accentOrange,
-      software: colors.accentPurple,
-      campaign: colors.accentBlue,
-      mitigation: colors.accentGreen,
-      data_source: colors.accentNeutral,
-      tactic: colors.accentYellow,
-      external_actor: colors.accentNeutral,
-      application: colors.accentBlue,
-      sector: colors.accentNeutral,
-      owasp: colors.accentGreen,
-      cwe: colors.accentBlue,
-    };
+    const NODE_COLORS = useMemo<Record<string, string>>(
+      () => ({
+        technique: colors.accentTeal,
+        group: colors.accentOrange,
+        software: colors.accentPurple,
+        campaign: colors.accentBlue,
+        mitigation: colors.accentGreen,
+        data_source: colors.accentNeutral,
+        tactic: colors.accentYellow,
+        external_actor: colors.accentNeutral,
+        application: colors.accentBlue,
+        sector: colors.accentNeutral,
+        owasp: colors.accentGreen,
+        cwe: colors.accentBlue,
+      }),
+      [colors],
+    );
 
-    function nodeColor(type: string): string {
-      return NODE_COLORS[type] ?? colors.textSecondary;
-    }
+    const nodeColor = useCallback(
+      (type: string) => NODE_COLORS[type] ?? colors.textSecondary,
+      [NODE_COLORS, colors.textSecondary],
+    );
 
     useImperativeHandle(ref, () => ({
       reset() {

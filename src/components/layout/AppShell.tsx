@@ -1,20 +1,31 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useTheme } from '../../contexts/ThemeContext';
 import { Sidebar } from './Sidebar';
 import { SearchBar } from './SearchBar';
 import { RelationshipModel } from '../relationships/RelationshipModel';
 
+interface SiteHealth {
+  available: boolean;
+  malicious?: number;
+  total?: number;
+  reportUrl?: string;
+}
+
 /** VirusTotal trust badge */
 function VtBadge() {
-  const [data, setData] = useState<{ malicious: number; total: number; reportUrl: string } | null>(null);
-  useEffect(() => {
-    fetch('/api/v1/site-health').then(r => r.json()).then(d => {
-      if (d.available) setData({ malicious: d.malicious, total: d.total, reportUrl: d.reportUrl });
-    }).catch(() => {});
-  }, []);
-  if (!data) return null;
+  const { data } = useQuery({
+    queryKey: ['site-health'],
+    queryFn: async (): Promise<SiteHealth> => {
+      const r = await fetch('/api/v1/site-health');
+      return r.ok ? r.json() : { available: false };
+    },
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
+  });
+  if (!data?.available || data.malicious == null || data.total == null || !data.reportUrl) return null;
   return (
     <a
       href={data.reportUrl}

@@ -1,5 +1,5 @@
 'use client';
-import { useState, useCallback } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useGroups } from '../hooks/useApi';
 import { useSector } from '../contexts/SectorContext';
@@ -34,9 +34,12 @@ export function GroupsList() {
 
   const [search, setSearch] = useState('');
 
-  const params: Record<string, string> = { limit: '5000', ...sectorParam, ...domainParam };
-  if (sortBy) params.sort = sortBy;
-  if (sortDir) params.order = sortDir;
+  const params = useMemo(() => {
+    const p: Record<string, string> = { limit: '5000', ...sectorParam, ...domainParam };
+    if (sortBy) p.sort = sortBy;
+    if (sortDir) p.order = sortDir;
+    return p;
+  }, [sectorParam, domainParam, sortBy, sortDir]);
 
   const { data, isLoading } = useGroups(params);
 

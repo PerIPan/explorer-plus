@@ -62,7 +62,7 @@ export async function GET(req: NextRequest) {
   }
 
   if (malware) {
-    params.push(`%${malware}%`);
+    params.push(`%${escapeLikePattern(malware)}%`);
     conditions.push(`i.malware_family ILIKE $${params.length}`);
   }
 

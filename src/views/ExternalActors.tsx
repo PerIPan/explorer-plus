@@ -360,7 +360,7 @@ export function ExternalActors() {
             <tbody>
               {isLoading &&
                 Array.from({ length: 8 }).map((_, i) => (
-                  <tr key={i} className={`border-b border-[var(--border-color)] ${i % 2 === 0 ? 'bg-[var(--surface-card)]' : 'bg-[var(--surface-base)]'}`}>
+                  <tr key={`skeleton-${i}`} className={`border-b border-[var(--border-color)] ${i % 2 === 0 ? 'bg-[var(--surface-card)]' : 'bg-[var(--surface-base)]'}`}>
                     {columns.map((col) => (
                       <td key={col.key} className="px-4 py-3">
                         <div className="h-4 rounded bg-[var(--border-color)] animate-pulse w-3/4" />

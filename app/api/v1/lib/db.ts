@@ -8,9 +8,23 @@ export function getPool(): Pool {
     if (!connectionString) {
       throw new Error('DATABASE_URL or POSTGRES_URL environment variable must be set');
     }
-    const isProduction = connectionString.includes('neon') || connectionString.includes('vercel');
-    // Strip sslmode from connection string — we set ssl via config object to avoid pg deprecation warning
-    const connStr = connectionString.replace(/[?&]sslmode=[^&]*/g, (m) => m.startsWith('?') ? '?' : '');
+    // Prefer NODE_ENV for production detection; fall back to host heuristic so
+    // tests / local prod-like setups still get strict SSL when they explicitly
+    // point at a managed Postgres.
+    const isProduction =
+      process.env.NODE_ENV === 'production' ||
+      connectionString.includes('neon') ||
+      connectionString.includes('vercel');
+    // Strip sslmode from connection string — we set ssl via config object to avoid pg deprecation warning.
+    // Use URL parser to avoid edge-case orphan `?` when sslmode is the sole query param.
+    let connStr = connectionString;
+    try {
+      const u = new URL(connectionString);
+      u.searchParams.delete('sslmode');
+      connStr = u.toString();
+    } catch {
+      // Non-URL form (unlikely) — leave as-is, pg will complain cleanly
+    }
     pool = new Pool({
       connectionString: connStr,
       statement_timeout: 5000,

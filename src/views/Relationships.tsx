@@ -141,6 +141,16 @@ export function Relationships() {
   const containerRef = useRef<HTMLDivElement>(null);
   const blurTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // SSR-safe viewport height sampler. Direct `window.innerHeight` during render
+  // would throw ReferenceError on the server.
+  const [viewportHeight, setViewportHeight] = useState(900);
+  useEffect(() => {
+    const update = () => setViewportHeight(window.innerHeight);
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
+
   /** Keep selectedId in sync with URL param */
   useEffect(() => {
     if (entityParam && entityParam !== selectedId) {
@@ -148,16 +158,14 @@ export function Relationships() {
       setSelectedName(entityParam);
       setSearchInput(entityParam);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entityParam]);
+  }, [entityParam, selectedId]);
 
   /** Keep tab in sync with URL param */
   useEffect(() => {
     if (tabParam && tabParam !== activeTab) {
       setActiveTab(tabParam);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tabParam]);
+  }, [tabParam, activeTab]);
 
   /** Clear blur timer on unmount */
   useEffect(() => {
@@ -383,8 +391,12 @@ export function Relationships() {
       : (!isLoading && !error && Boolean(graphData));
 
   /** Determine which tabs are visible for the current entity */
-  const visibleTabs = TABS.filter(
-    (tab) => !tab.forTypes || (entityType && tab.forTypes.includes(entityType))
+  const visibleTabs = useMemo(
+    () =>
+      TABS.filter(
+        (tab) => !tab.forTypes || (entityType && tab.forTypes.includes(entityType)),
+      ),
+    [entityType],
   );
 
   /** When entity type changes, auto-select the best tab (unless URL explicitly set one) */
@@ -397,8 +409,7 @@ export function Relationships() {
       setActiveTab(bestTab);
       updateParams({ tab: bestTab });
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entityType, activeTab]);
+  }, [entityType, activeTab, tabParam, visibleTabs, updateParams]);
 
   const selectEntity = useCallback(
     (attackId: string, knownType?: string, name?: string) => {
@@ -604,24 +615,32 @@ export function Relationships() {
       {/* Tab bar — shown once entity is selected and data is ready */}
       {selectedId && graphReady && (
         <div className="border-b border-[var(--border-color)] overflow-x-auto">
-          <div className="flex gap-1 min-w-max">
-            {visibleTabs.map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => selectTab(tab.id)}
-                className={`
-                  px-3 md:px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors duration-150
-                  border-b-2 -mb-px
-                  ${activeTab === tab.id
-                    ? 'text-[var(--accent-teal)] border-[var(--accent-teal)]'
-                    : 'text-[var(--text-secondary)] border-transparent hover:text-[var(--text-primary)]'
-                  }
-                `}
-              >
-                {tab.label}
-              </button>
-            ))}
+          <div role="tablist" aria-label="Entity views" className="flex gap-1 min-w-max">
+            {visibleTabs.map((tab) => {
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  id={`rel-tab-${tab.id}`}
+                  type="button"
+                  role="tab"
+                  aria-selected={isActive}
+                  aria-controls={`rel-tabpanel-${tab.id}`}
+                  tabIndex={isActive ? 0 : -1}
+                  onClick={() => selectTab(tab.id)}
+                  className={`
+                    px-3 md:px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors duration-150
+                    border-b-2 -mb-px
+                    ${isActive
+                      ? 'text-[var(--accent-teal)] border-[var(--accent-teal)]'
+                      : 'text-[var(--text-secondary)] border-transparent hover:text-[var(--text-primary)]'
+                    }
+                  `}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
             {entityType && entityType !== 'technique' && (
               <button
                 type="button"
@@ -671,7 +690,7 @@ export function Relationships() {
                 ref={graphRef}
                 data={effectiveGraphData!}
                 onNodeClick={handleNodeClick}
-                height={Math.min(800, window.innerHeight - 200)}
+                height={Math.min(800, viewportHeight - 200)}
               />
 
               {/* Legend */}

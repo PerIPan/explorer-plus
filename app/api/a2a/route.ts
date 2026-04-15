@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
 import { query } from '../v1/lib/db';
-import { withCors, corsOptions as OPTIONS } from '../lib/cors';
+import { withCorsRestricted, corsOptionsRestricted } from '../lib/cors';
 
-export { OPTIONS };
+// A2A uses restricted CORS (origin allowlist) to prevent cross-origin browser
+// pages from silently consuming a victim user's 50-req/day quota.
+export async function OPTIONS(req: NextRequest) { return corsOptionsRestricted(req); }
 
 /**
  * A2A (Agent-to-Agent) endpoint -- JSON-RPC 2.0 over HTTPS.
@@ -749,10 +751,24 @@ async function executeTool(name: string, args: Record<string, unknown>): Promise
 // -- Rate limiting ------------------------------------------------------------
 
 function getClientIp(req: NextRequest): string {
+  // Trust Vercel's infrastructure-set headers first. These are written by the
+  // Vercel edge and cannot be spoofed by the user agent:
+  //   - `x-vercel-forwarded-for` (preferred): real client IP
+  //   - `x-real-ip` (legacy): also set by Vercel
+  // DO NOT trust the user-supplied `x-forwarded-for`: an attacker can send
+  // `X-Forwarded-For: <anything>` and rotate through "fresh" IPs to bypass
+  // our 50-req/day quota.
+  const vercelIp = req.headers.get('x-vercel-forwarded-for');
+  if (vercelIp) return vercelIp.split(',')[0].trim();
   const realIp = req.headers.get('x-real-ip');
   if (realIp) return realIp.trim();
+  // Fallback to last hop of x-forwarded-for — Vercel appends the real IP at
+  // the end if they forward the header at all.
   const forwarded = req.headers.get('x-forwarded-for');
-  if (forwarded) return forwarded.split(',')[0].trim();
+  if (forwarded) {
+    const hops = forwarded.split(',').map((s) => s.trim()).filter(Boolean);
+    return hops[hops.length - 1] ?? 'unknown';
+  }
   return 'unknown';
 }
 
@@ -802,6 +818,9 @@ function jsonRpcError(id: string | number | null, code: number, message: string)
 }
 
 export async function POST(req: NextRequest) {
+  // Origin-restricted CORS closure — stays in scope for all response returns below.
+  const withCors = (resp: NextResponse) => withCorsRestricted(resp, req);
+
   const body = (await req.json()) as JsonRpcRequest;
   if (!body?.jsonrpc || body.jsonrpc !== '2.0' || !body.method) {
     return withCors(NextResponse.json(

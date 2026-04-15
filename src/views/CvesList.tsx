@@ -1,5 +1,5 @@
 'use client';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useSearchParams } from 'next/navigation';
 import { useUpdateParams } from '../hooks/useUpdateParams';
@@ -71,8 +71,10 @@ function CopyButton({ value }: { value: string }) {
 /** Clickable technique count with popover */
 function TechniquePopover({ cveId, count }: { cveId: string; count: number }) {
   const [open, setOpen] = useState(false);
+  // Distinct key from `useCveDetail` — partial popover response must not
+  // contaminate the full-detail cache, and vice versa.
   const { data, isLoading } = useQuery({
-    queryKey: ['cve-detail', cveId],
+    queryKey: ['cve-techniques-popover', cveId],
     queryFn: () => apiFetch<{ techniques: Array<{ attackId: string; name: string }> }>(`/cves/${cveId}`),
     enabled: open,
     staleTime: 5 * 60 * 1000,
@@ -268,7 +270,12 @@ export function CvesList() {
   const q = searchParams.get('q') ?? '';
   const technique = searchParams.get('technique') ?? '';
   const app = searchParams.get('app') ?? '';
-  const defaultSince = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
+  // Cache the 30-day-ago default at mount so the value doesn't change mid-session
+  // (would otherwise thrash the TanStack Query key after midnight).
+  const defaultSince = useMemo(
+    () => new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0],
+    [],
+  );
   const since = searchParams.has('since') ? (searchParams.get('since') ?? '') : defaultSince;
 
   const setParam = useCallback(
@@ -313,13 +320,16 @@ export function CvesList() {
   }, [setParam]);
   useEffect(() => () => { clearTimeout(debounceRef.current); clearTimeout(techDebounceRef.current); clearTimeout(appDebounceRef.current); }, []);
 
-  const params: Record<string, string> = { page: String(page), limit: '100', ...sectorParam };
-  if (severity) params.severity = severity;
-  if (source) params.source = source;
-  if (q) params.q = q;
-  if (technique) params.technique = technique;
-  if (app) params.app = app;
-  if (since) params.since = since;
+  const params = useMemo(() => {
+    const p: Record<string, string> = { page: String(page), limit: '100', ...sectorParam };
+    if (severity) p.severity = severity;
+    if (source) p.source = source;
+    if (q) p.q = q;
+    if (technique) p.technique = technique;
+    if (app) p.app = app;
+    if (since) p.since = since;
+    return p;
+  }, [page, sectorParam, severity, source, q, technique, app, since]);
 
   const { data, isLoading } = useCves(params);
 

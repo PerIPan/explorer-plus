@@ -200,6 +200,12 @@ export interface SearchResponse {
   campaigns: Campaign[];
   data_sources: DataSource[];
   owasp: OwaspSearchResult[];
+  csf: Array<{
+    subcategoryId: string;
+    name: string;
+    function: string;
+    functionName: string;
+  }>;
 }
 
 export interface GraphNode {

@@ -41,7 +41,10 @@ function UrlSyncEffect() {
     if (changed) {
       router.replace(`${pathname}?${params.toString()}`);
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    // Re-run on path changes so client-side nav (App Router soft-nav) still
+    // re-injects sessionStorage overrides. The `changed` guard above makes
+    // this cheap when no params are missing.
+  }, [pathname, searchParams, router]);
 
   return null;
 }
