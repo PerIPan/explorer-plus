@@ -1,10 +1,10 @@
 name: Sync GitHub Security Advisories
 on:
   schedule:
-    - cron: '0 6 * * 1'  # Mondays 06:00 UTC
+    - cron: '0 6 * * *'  # Daily at 06:00 UTC
   workflow_dispatch: {}
 
-# Prevent overlapping runs from double-inserting via the diff-upsert windows
+# Prevent overlapping runs
 concurrency:
   group: sync-ghsa
   cancel-in-progress: false
@@ -12,16 +12,23 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Clone github/advisory-database (curated only, shallow + sparse)
+        run: |
+          git clone --depth 1 --filter=blob:none --sparse \
+            https://github.com/github/advisory-database.git /tmp/advdb
+          cd /tmp/advdb
+          git sparse-checkout set advisories/github-reviewed
+          echo "Cloned. File count:"
+          find advisories/github-reviewed -name '*.json' | wc -l
       - name: Install pg
         run: npm install pg
-      - name: Sync GHSA
+      - name: Bulk sync
         env:
-          TOKEN_GHSA: ${{ secrets.TOKEN_GHSA }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: node scripts/sync-ghsa.mjs
+        run: node scripts/sync-ghsa-bulk.mjs /tmp/advdb/advisories/github-reviewed
