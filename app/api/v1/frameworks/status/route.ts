@@ -36,7 +36,7 @@ export async function GET(_req: NextRequest) {
     counts[row.tbl] = parseInt(row.count, 10);
   }
 
-  // Enrichment tables — may not exist on unmigrated environments, degrade to 0
+  // CSF enrichment tables — may not exist on unmigrated environments, degrade to 0
   try {
     const enrich = await query<{ tbl: string; count: string }>(`
       SELECT 'csf_implementation_examples' AS tbl, COUNT(*)::text AS count FROM csf_implementation_examples
@@ -48,6 +48,24 @@ export async function GET(_req: NextRequest) {
   } catch {
     counts.csf_implementation_examples = 0;
     counts.csf_informative_references = 0;
+  }
+
+  // GHSA + Packages tables — separate try/catch so one missing table doesn't fallback-zero unrelated counts
+  try {
+    const ghsa = await query<{ tbl: string; count: string }>(`
+      SELECT 'ghsa_advisories' AS tbl, COUNT(*)::text AS count FROM ghsa_advisories
+      UNION ALL SELECT 'ghsa_weaknesses', COUNT(*)::text FROM ghsa_weaknesses
+      UNION ALL SELECT 'ghsa_packages', COUNT(*)::text FROM ghsa_packages
+      UNION ALL SELECT 'packages', COUNT(*)::text FROM packages
+    `);
+    for (const row of ghsa.rows) {
+      counts[row.tbl] = parseInt(row.count, 10);
+    }
+  } catch {
+    counts.ghsa_advisories = 0;
+    counts.ghsa_weaknesses = 0;
+    counts.ghsa_packages = 0;
+    counts.packages = 0;
   }
 
   return withCors(jsonResponse({ counts }, 300));
