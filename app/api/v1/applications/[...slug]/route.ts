@@ -70,22 +70,27 @@ export async function GET(
     ),
 
     query<{ attackId: string; name: string; groupCount: string }>(
-      `SELECT attack_technique_id AS "attackId", technique_name AS "name",
-              COUNT(DISTINCT group_attack_id)::text AS "groupCount"
-       FROM app_technique_groups
-       WHERE application_id = $1
-       GROUP BY attack_technique_id, technique_name
-       ORDER BY COUNT(DISTINCT group_attack_id) DESC, technique_name ASC`,
+      // Names are JOINed live from techniques rather than denormalised into the
+      // matview — keeps app_technique_groups narrow and lets ATT&CK renames
+      // flow through without a refresh.
+      `SELECT atg.attack_technique_id AS "attackId", t.name AS "name",
+              COUNT(DISTINCT atg.group_attack_id)::text AS "groupCount"
+       FROM app_technique_groups atg
+       JOIN techniques t ON t.attack_id = atg.attack_technique_id
+       WHERE atg.application_id = $1
+       GROUP BY atg.attack_technique_id, t.name
+       ORDER BY COUNT(DISTINCT atg.group_attack_id) DESC, t.name ASC`,
       [app.id],
     ),
 
     query<{ attackId: string; name: string; techniqueCount: string }>(
-      `SELECT group_attack_id AS "attackId", group_name AS "name",
-              COUNT(DISTINCT attack_technique_id)::text AS "techniqueCount"
-       FROM app_technique_groups
-       WHERE application_id = $1
-       GROUP BY group_attack_id, group_name
-       ORDER BY COUNT(DISTINCT attack_technique_id) DESC, group_name ASC`,
+      `SELECT atg.group_attack_id AS "attackId", tg.name AS "name",
+              COUNT(DISTINCT atg.attack_technique_id)::text AS "techniqueCount"
+       FROM app_technique_groups atg
+       JOIN threat_groups tg ON tg.attack_id = atg.group_attack_id
+       WHERE atg.application_id = $1
+       GROUP BY atg.group_attack_id, tg.name
+       ORDER BY COUNT(DISTINCT atg.attack_technique_id) DESC, tg.name ASC`,
       [app.id],
     ),
 

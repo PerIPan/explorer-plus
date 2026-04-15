@@ -308,15 +308,15 @@ async function main() {
   if (mvExists.rows.length > 0) {
     await pool.query('REFRESH MATERIALIZED VIEW CONCURRENTLY app_technique_groups');
   } else {
+    // Slim matview: only the 3 ID columns needed for joins. technique_name /
+    // group_name / technique_id(uuid) were previously denormalised here but
+    // are resolved via JOIN at query time now — saves ~185 MB on the matview.
     await pool.query(`
       CREATE MATERIALIZED VIEW app_technique_groups AS
       SELECT DISTINCT
         ap.application_id,
         cm.attack_technique_id,
-        t.id            AS technique_id,
-        t.name          AS technique_name,
-        tg.attack_id    AS group_attack_id,
-        tg.name         AS group_name
+        tg.attack_id    AS group_attack_id
       FROM affected_products ap
       JOIN cve_weaknesses cw     ON cw.cve_id = ap.cve_id
       JOIN capec_mappings cm     ON cm.cwe_id = cw.cwe_id AND cm.technique_id IS NOT NULL
@@ -324,9 +324,14 @@ async function main() {
       JOIN group_techniques gt   ON gt.technique_id = t.id
       JOIN threat_groups tg      ON tg.id = gt.group_id
     `);
-    await pool.query('CREATE INDEX ON app_technique_groups(application_id)');
-    await pool.query('CREATE INDEX ON app_technique_groups(technique_id)');
-    await pool.query('CREATE INDEX ON app_technique_groups(group_attack_id)');
+    // Unique index is required for REFRESH CONCURRENTLY. Covering all
+    // surviving columns also lets Postgres use it for the IN-subquery paths.
+    await pool.query(
+      'CREATE UNIQUE INDEX idx_atg_unique ON app_technique_groups(application_id, attack_technique_id, group_attack_id)',
+    );
+    await pool.query('CREATE INDEX idx_atg_app ON app_technique_groups(application_id)');
+    await pool.query('CREATE INDEX idx_atg_tech ON app_technique_groups(attack_technique_id)');
+    await pool.query('CREATE INDEX idx_atg_group ON app_technique_groups(group_attack_id)');
   }
 
   // Final stats
@@ -337,7 +342,7 @@ async function main() {
       (SELECT COUNT(*) FROM affected_products) AS affected,
       (SELECT COUNT(*) FROM cve_weaknesses) AS weaknesses,
       (SELECT COUNT(*) FROM app_technique_groups) AS mv_rows,
-      (SELECT COUNT(DISTINCT technique_id) FROM app_technique_groups) AS mv_techniques,
+      (SELECT COUNT(DISTINCT attack_technique_id) FROM app_technique_groups) AS mv_techniques,
       (SELECT COUNT(DISTINCT group_attack_id) FROM app_technique_groups) AS mv_groups
   `);
   const s = stats.rows[0];

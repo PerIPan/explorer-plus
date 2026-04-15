@@ -181,16 +181,18 @@ export async function GET(
         [techId],
       ),
 
-      // Affected applications via CAPEC bridge (materialized view)
+      // Affected applications via CAPEC bridge (materialized view).
+      // app_technique_groups stores the public attack_id string (e.g. T1027),
+      // not the techniques.id uuid, so we filter on that directly.
       query<{ normalized: string; vendor: string; product: string; cveCount: string }>(
         `SELECT a.normalized, a.vendor, a.product, a.cve_count::text AS "cveCount"
          FROM app_technique_groups atg
          JOIN applications a ON a.id = atg.application_id
-         WHERE atg.technique_id = $1
+         WHERE atg.attack_technique_id = $1
          GROUP BY a.normalized, a.vendor, a.product, a.cve_count
          ORDER BY a.cve_count DESC
          LIMIT 100`,
-        [techId],
+        [id],
       ),
     ]);
 
