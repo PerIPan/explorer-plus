@@ -25,6 +25,7 @@ import { TacticMapView } from '../components/relationships/TacticMapView';
 import { SectorMapView } from '../components/relationships/SectorMapView';
 import { ApplicationMapView } from '../components/relationships/ApplicationMapView';
 import { OwaspMapView } from '../components/relationships/OwaspMapView';
+import { RecentCvesCard } from '../components/home/RecentCvesCard';
 import type { GraphNode, GraphData } from '../lib/types';
 import { DiamondLoader } from '../components/shared/FoldingDiamond';
 
@@ -538,56 +539,58 @@ export function Relationships() {
 
       {/* Instructions when nothing selected */}
       {!selectedId && (
-        <>
-        <div className="text-center mt-10 md:mt-[74px] mb-2 max-w-3xl px-4 mx-auto">
-          <p className="text-sm md:text-base text-[var(--text-secondary)] mx-auto max-w-2xl leading-relaxed">
-            Search for any{' '}
-            <span className="font-medium text-[var(--text-primary)]">Technique</span>,{' '}
-            <span className="font-medium text-[var(--text-primary)]">Actor</span>,{' '}
-            <span className="font-medium text-[var(--text-primary)]">Software</span>,{' '}
-            <span className="font-medium text-[var(--text-primary)]">Campaign</span>,{' '}
-            <span className="font-medium text-[var(--text-primary)]">Mitigation</span>,{' '}
-            <span className="font-medium text-[var(--text-primary)]">Data Source</span>,{' '}
-            <span className="font-medium text-[var(--text-primary)]">Tactic</span>,{' '}
-            <span className="font-medium text-[var(--text-primary)]">Sector</span>,{' '}
-            <span className="font-medium text-[var(--text-primary)]">Application</span>, or{' '}
-            <span className="font-medium text-[var(--text-primary)]">OWASP category</span>{' '}
-            to explore its relationships.
-          </p>
-        </div>
-        {/* Small centered diamond on mobile */}
-        {/* Mobile diamond — centered below text, no labels */}
-        <div className="flex md:hidden justify-center mt-12 opacity-40 pointer-events-none">
-          <img src="/diamond-favicon.svg" alt="" width={140} height={140} />
-        </div>
+        <div className="mt-8 md:mt-12 md:grid md:grid-cols-[minmax(0,1fr)_320px] md:gap-10 md:items-start">
+          {/* LEFT column — blurb + CVE card */}
+          <div className="min-w-0">
+            <p className="text-sm md:text-base text-[var(--text-secondary)] leading-relaxed mb-6">
+              Search for any{' '}
+              <span className="font-medium text-[var(--text-primary)]">Technique</span>,{' '}
+              <span className="font-medium text-[var(--text-primary)]">Actor</span>,{' '}
+              <span className="font-medium text-[var(--text-primary)]">Software</span>,{' '}
+              <span className="font-medium text-[var(--text-primary)]">Campaign</span>,{' '}
+              <span className="font-medium text-[var(--text-primary)]">Mitigation</span>,{' '}
+              <span className="font-medium text-[var(--text-primary)]">Data Source</span>,{' '}
+              <span className="font-medium text-[var(--text-primary)]">Tactic</span>,{' '}
+              <span className="font-medium text-[var(--text-primary)]">Sector</span>,{' '}
+              <span className="font-medium text-[var(--text-primary)]">Application</span>, or{' '}
+              <span className="font-medium text-[var(--text-primary)]">OWASP category</span>{' '}
+              to explore its relationships.
+            </p>
 
-        <div className="relative h-[calc(100vh-420px)] overflow-hidden rounded-lg hidden md:block">
+            {/* Recent CVEs teaser — last 3 days */}
+            <RecentCvesCard />
+          </div>
 
-          {/* Diamond + corner labels — desktop only */}
-          <div className="absolute bottom-[calc(10%+80px)] right-[22%] pointer-events-none select-none"
-               style={{ width: 210, height: 210 }}>
-            <img src="/diamond-favicon.svg" alt="" width={210} height={210} className="opacity-[0.55]" />
+          {/* RIGHT column — diamond with labels (desktop only) */}
+          <div className="hidden md:flex justify-center pt-16 pointer-events-none select-none">
+            <div className="relative" style={{ width: 210, height: 210 }}>
+              <img src="/diamond-favicon.svg" alt="" width={210} height={210} className="opacity-[0.55]" />
 
-            {/* Labels at diamond corners */}
-            <div className="absolute -top-10 left-1/2 -translate-x-1/2 text-center">
-              <div className="text-xs font-medium text-[var(--accent-orange)] opacity-50">actor</div>
-              <div className="text-xs font-medium text-[var(--accent-orange)] opacity-50">adversary</div>
-            </div>
-            <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 text-center">
-              <div className="text-xs font-medium text-[var(--text-secondary)] opacity-50">sector</div>
-              <div className="text-xs font-medium text-[var(--text-secondary)] opacity-50">victim</div>
-            </div>
-            <div className="absolute top-1/2 -left-20 -translate-y-1/2 text-right">
-              <div className="text-xs font-medium text-[var(--accent-teal)] opacity-50">technique</div>
-              <div className="text-xs font-medium text-[var(--accent-teal)] opacity-50">capability</div>
-            </div>
-            <div className="absolute top-1/2 -right-24 -translate-y-1/2 text-center">
-              <div className="text-xs font-medium text-[var(--accent-blue)] opacity-50">application</div>
-              <div className="text-xs font-medium text-[var(--accent-blue)] opacity-50">infrastructure</div>
+              {/* Labels at diamond corners */}
+              <div className="absolute -top-10 left-1/2 -translate-x-1/2 text-center">
+                <div className="text-xs font-medium text-[var(--accent-orange)] opacity-50">actor</div>
+                <div className="text-xs font-medium text-[var(--accent-orange)] opacity-50">adversary</div>
+              </div>
+              <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 text-center">
+                <div className="text-xs font-medium text-[var(--text-secondary)] opacity-50">sector</div>
+                <div className="text-xs font-medium text-[var(--text-secondary)] opacity-50">victim</div>
+              </div>
+              <div className="absolute top-1/2 -left-20 -translate-y-1/2 text-right">
+                <div className="text-xs font-medium text-[var(--accent-teal)] opacity-50">technique</div>
+                <div className="text-xs font-medium text-[var(--accent-teal)] opacity-50">capability</div>
+              </div>
+              <div className="absolute top-1/2 -right-24 -translate-y-1/2 text-center">
+                <div className="text-xs font-medium text-[var(--accent-blue)] opacity-50">application</div>
+                <div className="text-xs font-medium text-[var(--accent-blue)] opacity-50">infrastructure</div>
+              </div>
             </div>
           </div>
+
+          {/* Mobile diamond — below content, small, no labels */}
+          <div className="flex md:hidden justify-center mt-10 opacity-40 pointer-events-none">
+            <img src="/diamond-favicon.svg" alt="" width={140} height={140} />
+          </div>
         </div>
-        </>
       )}
 
       {/* Loading */}
