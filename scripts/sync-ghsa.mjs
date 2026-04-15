@@ -40,10 +40,7 @@ const QUERY = /* GraphQL */ `
         summary
         description
         severity
-        cvssSeverities {
-          cvssV3 { score vectorString }
-          cvssV4 { score vectorString }
-        }
+        cvss { score vectorString }
         cwes(first: 25) { nodes { cweId } }
         publishedAt
         updatedAt
@@ -66,7 +63,8 @@ const SEVERITY_ALLOWLIST = new Set(['CRITICAL', 'HIGH', 'MEDIUM', 'LOW']);
 
 function normalizeSeverity(upstream) {
   if (!upstream) return null;
-  const s = upstream === 'MODERATE' ? 'MEDIUM' : upstream;
+  const up = String(upstream).toUpperCase();
+  const s = up === 'MODERATE' ? 'MEDIUM' : up;
   return SEVERITY_ALLOWLIST.has(s) ? s : null;
 }
 
@@ -381,17 +379,18 @@ try {
         const severity = normalizeSeverity(rawSeverity);
         if (rawSeverity && !severity) stats.unknown_severities++;
 
-        const sev = node.cvssSeverities ?? {};
         const adv = {
           ghsaId,
           cveId,
           summary: node.summary ?? null,
           description: node.description ?? null,
           severity,
-          cvssScore: sev.cvssV3?.score ?? null,
-          cvssVector: sev.cvssV3?.vectorString ?? null,
-          cvssV4Score: sev.cvssV4?.score ?? null,
-          cvssV4Vector: sev.cvssV4?.vectorString ?? null,
+          cvssScore: node.cvss?.score ?? null,
+          cvssVector: node.cvss?.vectorString ?? null,
+          // CVSS v4 currently not exposed on the SecurityAdvisory GraphQL type
+          // in a stable form; leave columns null until GitHub documents it GA.
+          cvssV4Score: null,
+          cvssV4Vector: null,
           publishedAt: node.publishedAt,
           upstreamUpdatedAt: node.updatedAt ?? null,
           withdrawnAt: node.withdrawnAt ?? null,

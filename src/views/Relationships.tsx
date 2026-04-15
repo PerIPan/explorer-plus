@@ -540,7 +540,7 @@ export function Relationships() {
       {/* Instructions when nothing selected */}
       {!selectedId && (
         <div className="mt-8 md:mt-12">
-          <p className="text-sm md:text-base text-[var(--text-secondary)] leading-relaxed mb-6">
+          <p className="text-sm md:text-base text-[var(--text-secondary)] leading-relaxed mb-12 md:mb-16">
             Search for any{' '}
             <span className="font-medium text-[var(--text-primary)]">Technique</span>,{' '}
             <span className="font-medium text-[var(--text-primary)]">Actor</span>,{' '}
