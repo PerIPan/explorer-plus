@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, withTransaction } from '../../v1/lib/db';
 import { verifyCronAuth } from '../lib/auth';
+import { withSoftTimeout, DEFAULT_SOFT_TIMEOUT_MS } from '../lib/softTimeout';
 
 export const maxDuration = 300;
 
@@ -48,6 +49,7 @@ export async function GET(req: NextRequest) {
   const logId = logResult.rows[0].id;
 
   try {
+    return await withSoftTimeout(async () => {
     // ── 1. Fetch OUTSIDE transaction ───────────────────────────────────────
     const resp = await fetch(CTID_URL, {
       headers: { Accept: 'application/json' },
@@ -154,7 +156,7 @@ export async function GET(req: NextRequest) {
        SET status = 'success', completed_at = NOW(),
            records_inserted = $1, records_skipped = $2,
            metadata = $3
-       WHERE id = $4`,
+       WHERE id = $4 AND status = 'running'`,
       [
         inserted,
         skippedUnknownSub,
@@ -175,6 +177,7 @@ export async function GET(req: NextRequest) {
       totalValidated: validMappings.length,
       totalRaw: mappings.length,
     });
+    }, DEFAULT_SOFT_TIMEOUT_MS);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error('CSF sync error:', err);
@@ -182,8 +185,8 @@ export async function GET(req: NextRequest) {
     await query(
       `UPDATE feed_sync_log
        SET status = 'error', completed_at = NOW(), error_message = $1
-       WHERE id = $2`,
-      [msg, logId],
+       WHERE id = $2 AND status = 'running'`,
+      [msg.slice(0, 500), logId],
     );
 
     return NextResponse.json({ ok: false, error: 'Feed sync failed' }, { status: 500 });

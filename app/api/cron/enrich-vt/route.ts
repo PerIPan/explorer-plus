@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '../../v1/lib/db';
 import { verifyCronAuth } from '../lib/auth';
+import { withSoftTimeout, DEFAULT_SOFT_TIMEOUT_MS } from '../lib/softTimeout';
 
 export const maxDuration = 300;
 
@@ -42,6 +43,7 @@ export async function GET(req: NextRequest) {
   let techniquesLinked = 0;
 
   try {
+    return await withSoftTimeout(async () => {
     // Find hashes not yet enriched by VT
     const pending = await query<{ id: string; value: string }>(
       `SELECT id, value FROM ioc_entries
@@ -154,7 +156,7 @@ export async function GET(req: NextRequest) {
        SET status = 'success', completed_at = NOW(),
            records_inserted = $1, records_skipped = $2,
            metadata = $3
-       WHERE id = $4`,
+       WHERE id = $4 AND status = 'running'`,
       [recordsInserted, recordsSkipped, JSON.stringify({ techniquesLinked }), logId],
     );
 
@@ -166,6 +168,7 @@ export async function GET(req: NextRequest) {
       techniquesLinked,
       pending: pending.rows.length,
     });
+    }, DEFAULT_SOFT_TIMEOUT_MS);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error('VT enrich error:', err);
@@ -173,8 +176,8 @@ export async function GET(req: NextRequest) {
     await query(
       `UPDATE feed_sync_log
        SET status = 'error', completed_at = NOW(), error_message = $1
-       WHERE id = $2`,
-      [msg, logId],
+       WHERE id = $2 AND status = 'running'`,
+      [msg.slice(0, 500), logId],
     );
 
     return NextResponse.json({ ok: false, error: 'VT enrichment failed' }, { status: 500 });

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '../../v1/lib/db';
 import { verifyCronAuth } from '../lib/auth';
+import { withSoftTimeout, DEFAULT_SOFT_TIMEOUT_MS } from '../lib/softTimeout';
 
 export const maxDuration = 300;
 
@@ -70,7 +71,7 @@ export async function GET(req: NextRequest) {
   let recordsInserted = 0;
   let recordsSkipped = 0;
 
-  try {
+  const doWork = async (): Promise<NextResponse> => {
     // -- ThreatFox ---------------------------------------------------------------
     let threatfoxOk = false;
     try {
@@ -171,10 +172,14 @@ export async function GET(req: NextRequest) {
     // -- MalwareBazaar -----------------------------------------------------------
     let mbOk = false;
     try {
+      // MalwareBazaar switched their endpoint to require form-encoded bodies
+      // (ThreatFox still accepts JSON). JSON now returns query_status:
+      // "missing_query" and the run silently produces zero MB IOCs. Keep the
+      // auth key in the header — it's valid for both.
       const mbResp = await fetch(MALWAREBAZAAR_API, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Auth-Key': authKey },
-        body: JSON.stringify({ query: 'get_recent', selector: '100' }),
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Auth-Key': authKey },
+        body: new URLSearchParams({ query: 'get_recent', selector: '100' }).toString(),
       });
 
       if (mbResp.ok) {
@@ -219,23 +224,27 @@ export async function GET(req: NextRequest) {
       `UPDATE feed_sync_log
        SET status = 'success', completed_at = NOW(),
            records_inserted = $1, records_skipped = $2
-       WHERE id = $3`,
+       WHERE id = $3 AND status = 'running'`,
       [recordsInserted, recordsSkipped, logId],
     );
 
     return NextResponse.json({ ok: true, source: 'abuse_ch', recordsInserted, recordsSkipped });
+  };
+
+  try {
+    return await withSoftTimeout(doWork, DEFAULT_SOFT_TIMEOUT_MS);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error('abuse.ch ingest error:', err);
 
     await query(
       `UPDATE feed_sync_log
-       SET status = 'error', completed_at = NOW(), error_message = $1
-       WHERE id = $2`,
-      [msg, logId],
+       SET status = 'error', completed_at = NOW(), error_message = $1,
+           records_inserted = $2, records_skipped = $3
+       WHERE id = $4 AND status = 'running'`,
+      [msg.slice(0, 500), recordsInserted, recordsSkipped, logId],
     );
 
-    console.error('[cron] error:', msg);
     return NextResponse.json({ ok: false, error: 'Feed sync failed' }, { status: 500 });
   }
 }

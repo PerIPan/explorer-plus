@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '../../v1/lib/db';
 import { verifyCronAuth } from '../lib/auth';
+import { withSoftTimeout, DEFAULT_SOFT_TIMEOUT_MS } from '../lib/softTimeout';
 
 export const maxDuration = 300;
 
@@ -78,6 +79,7 @@ export async function GET(req: NextRequest) {
   let errorMessage: string | null = null;
 
   try {
+    return await withSoftTimeout(async () => {
     // Get cursor from last successful sync's completed_at as modified_since proxy
     const cursorResult = await query<{ completed_at: string | null }>(
       `SELECT completed_at FROM feed_sync_log
@@ -220,11 +222,12 @@ export async function GET(req: NextRequest) {
            completed_at = NOW(),
            records_inserted = $1,
            records_skipped = $2
-       WHERE id = $3`,
+       WHERE id = $3 AND status = 'running'`,
       [recordsInserted, recordsSkipped, logId],
     );
 
     return NextResponse.json({ ok: true, source: 'otx', recordsInserted, recordsSkipped, pagesFetched: pages });
+    }, DEFAULT_SOFT_TIMEOUT_MS);
   } catch (err) {
     errorMessage = err instanceof Error ? err.message : String(err);
     console.error('OTX ingest error:', err);
@@ -232,8 +235,8 @@ export async function GET(req: NextRequest) {
     await query(
       `UPDATE feed_sync_log
        SET status = 'error', completed_at = NOW(), error_message = $1
-       WHERE id = $2`,
-      [errorMessage, logId],
+       WHERE id = $2 AND status = 'running'`,
+      [errorMessage.slice(0, 500), logId],
     );
 
     return NextResponse.json({ ok: false, error: 'Feed sync failed' }, { status: 500 });

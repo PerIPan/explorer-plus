@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '../../v1/lib/db';
 import { verifyCronAuth } from '../lib/auth';
+import { withSoftTimeout, DEFAULT_SOFT_TIMEOUT_MS } from '../lib/softTimeout';
 
 export const maxDuration = 300;
 
@@ -59,6 +60,7 @@ export async function GET(req: NextRequest) {
   let techniquesProcessed = 0;
 
   try {
+    return await withSoftTimeout(async () => {
     // Resume from last processed attack_id stored in metadata
     const lastLogResult = await query<{ metadata: Record<string, unknown> | null }>(
       `SELECT metadata FROM feed_sync_log
@@ -160,7 +162,7 @@ export async function GET(req: NextRequest) {
        SET status = 'success', completed_at = NOW(),
            records_inserted = $1, records_skipped = $2,
            metadata = $3
-       WHERE id = $4`,
+       WHERE id = $4 AND status = 'running'`,
       [
         recordsInserted,
         recordsSkipped,
@@ -178,6 +180,7 @@ export async function GET(req: NextRequest) {
       resumedFrom: lastAttackId,
       lastProcessed: finalAttackId,
     });
+    }, DEFAULT_SOFT_TIMEOUT_MS);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error('D3FEND sync error:', err);
@@ -185,8 +188,8 @@ export async function GET(req: NextRequest) {
     await query(
       `UPDATE feed_sync_log
        SET status = 'error', completed_at = NOW(), error_message = $1
-       WHERE id = $2`,
-      [msg, logId],
+       WHERE id = $2 AND status = 'running'`,
+      [msg.slice(0, 500), logId],
     );
 
     console.error('[cron] error:', msg);
