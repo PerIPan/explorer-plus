@@ -593,9 +593,28 @@ export function Relationships() {
             </div>
           </div>
 
-          {/* Mobile diamond — small, no labels */}
-          <div className="flex md:hidden justify-center mt-10 opacity-40 pointer-events-none">
-            <img src="/diamond-favicon.svg" alt="" width={140} height={140} />
+          {/* Mobile diamond — with labels */}
+          <div className="flex md:hidden justify-center mt-10 pb-10 pointer-events-none select-none">
+            <div className="relative" style={{ width: 140, height: 140 }}>
+              <img src="/diamond-favicon.svg" alt="" width={140} height={140} className="opacity-[0.55]" />
+
+              <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-center">
+                <div className="text-[10px] font-medium text-[var(--accent-orange)] opacity-60 leading-tight">actor</div>
+                <div className="text-[10px] font-medium text-[var(--accent-orange)] opacity-60 leading-tight">adversary</div>
+              </div>
+              <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-center">
+                <div className="text-[10px] font-medium text-[var(--text-secondary)] opacity-60 leading-tight">sector</div>
+                <div className="text-[10px] font-medium text-[var(--text-secondary)] opacity-60 leading-tight">victim</div>
+              </div>
+              <div className="absolute top-1/2 -left-16 -translate-y-1/2 text-right">
+                <div className="text-[10px] font-medium text-[var(--accent-teal)] opacity-60 leading-tight">technique</div>
+                <div className="text-[10px] font-medium text-[var(--accent-teal)] opacity-60 leading-tight">capability</div>
+              </div>
+              <div className="absolute top-1/2 -right-[72px] -translate-y-1/2 text-left">
+                <div className="text-[10px] font-medium text-[var(--accent-blue)] opacity-60 leading-tight">application</div>
+                <div className="text-[10px] font-medium text-[var(--accent-blue)] opacity-60 leading-tight">infra</div>
+              </div>
+            </div>
           </div>
         </div>
       )}
