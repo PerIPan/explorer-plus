@@ -3,19 +3,20 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { isSafeUrl } from '../lib/urlSafety';
-import { useCveDetail } from '../hooks/useApi';
+import { useCveDetail, useCvePackages, useGhsaDetail } from '../hooks/useApi';
 import { formatDate } from '../lib/formatDate';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Badge } from '../components/shared/Badge';
 import { EntityLink } from '../components/shared/EntityLink';
 import { DiamondLoader } from '../components/shared/FoldingDiamond';
 
-type TabId = 'overview' | 'techniques' | 'applications' | 'reports';
+type TabId = 'overview' | 'techniques' | 'applications' | 'packages' | 'reports';
 
 const TABS: { id: TabId; label: string }[] = [
   { id: 'overview', label: 'Overview' },
   { id: 'techniques', label: 'Techniques' },
   { id: 'applications', label: 'Applications' },
+  { id: 'packages', label: 'Packages' },
   { id: 'reports', label: 'Related Reports' },
 ];
 
@@ -144,6 +145,7 @@ export function CveDetail() {
         {TABS.map((tab) => {
           const count = tab.id === 'techniques' ? data.techniques.length
             : tab.id === 'applications' ? (data.affectedApps ?? []).length
+            : tab.id === 'packages' ? undefined // lazy — count shown inside tab
             : tab.id === 'reports' ? data.reports.length
             : undefined;
           return (
@@ -238,6 +240,9 @@ export function CveDetail() {
                 </div>
               </div>
             )}
+
+            {/* GitHub Advisory enrichment (lazy-loaded) */}
+            {data.ghsa && <GhsaEnrichmentCard ghsaId={data.ghsa.ghsaId} summaryStub={data.ghsa.summary} />}
 
             {/* Sources */}
             <section>
@@ -365,6 +370,8 @@ export function CveDetail() {
           </div>
         )}
 
+        {activeTab === 'packages' && <CvePackagesTab cveId={data.cveId} />}
+
         {activeTab === 'reports' && (
           <div className="space-y-2">
             {data.reports.length === 0 ? (
@@ -403,5 +410,137 @@ export function CveDetail() {
         )}
       </div>
     </div>
+  );
+}
+
+/** Packages affected by this CVE via its GHSA alias (if any) */
+function CvePackagesTab({ cveId }: { cveId: string }) {
+  const { data, isLoading } = useCvePackages(cveId);
+  if (isLoading) return <DiamondLoader text="Loading packages..." />;
+  if (!data || !data.ghsaId) {
+    return (
+      <p className="text-[var(--text-secondary)] text-sm py-6">
+        No GitHub Security Advisory linked to this CVE.
+        <span className="block text-xs mt-1 opacity-70">
+          Packages are sourced from GitHub Security Advisories. CVEs without a GHSA alias won't have package data.
+        </span>
+      </p>
+    );
+  }
+  if (data.packages.length === 0) {
+    return (
+      <p className="text-[var(--text-secondary)] text-sm py-6">
+        GHSA <Link href={`/cti/ghsa/${data.ghsaId}`} className="text-[var(--accent-teal)] hover:underline font-mono">{data.ghsaId}</Link> is linked, but no affected packages are recorded.
+      </p>
+    );
+  }
+  return (
+    <div className="space-y-3">
+      <p className="text-[var(--text-secondary)] text-xs">
+        Affected packages from GHSA <Link href={`/cti/ghsa/${data.ghsaId}`} className="text-[var(--accent-teal)] hover:underline font-mono">{data.ghsaId}</Link>
+      </p>
+      <div className="overflow-x-auto">
+        <table className="w-full text-xs">
+          <thead className="bg-[var(--surface-deep)] text-[var(--text-secondary)]">
+            <tr>
+              <th className="text-left px-3 py-2 w-28">Ecosystem</th>
+              <th className="text-left px-3 py-2">Package</th>
+              <th className="text-left px-3 py-2">Vulnerable Range</th>
+              <th className="text-left px-3 py-2">Fixed Version</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.packages.map((p, i) => (
+              <tr key={`${p.ecosystem}/${p.packageName}/${i}`} className="border-t border-[var(--border-color)]">
+                <td className="px-3 py-2"><Badge label={p.ecosystem} variant="blue" /></td>
+                <td className="px-3 py-2">
+                  <Link href={`/packages/${p.ecosystem}/${encodeURIComponent(p.packageName)}`} className="font-mono text-[var(--text-primary)] hover:text-[var(--accent-teal)] hover:underline">
+                    {p.packageName}
+                  </Link>
+                </td>
+                <td className="px-3 py-2 font-mono text-[var(--text-secondary)]">{p.vulnerableRange ?? '—'}</td>
+                <td className="px-3 py-2 font-mono text-[var(--accent-green)]">{p.fixedVersion ?? '—'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+/** Collapsible GHSA enrichment card on the Overview tab */
+function GhsaEnrichmentCard({ ghsaId, summaryStub }: { ghsaId: string; summaryStub: string | null }) {
+  const [open, setOpen] = useState(false);
+  const { data, isLoading, error } = useGhsaDetail(open ? ghsaId : '');
+  return (
+    <section className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg p-4">
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h3 className="text-sm font-semibold text-[var(--text-primary)]">GitHub Advisory</h3>
+            <Link href={`/cti/ghsa/${ghsaId}`} className="font-mono text-xs text-[var(--accent-teal)] hover:underline">
+              {ghsaId}
+            </Link>
+            <a
+              href={`https://github.com/advisories/${ghsaId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[10px] text-[var(--text-secondary)] hover:underline"
+            >
+              ↗ on GitHub
+            </a>
+          </div>
+          {summaryStub && <p className="text-xs text-[var(--text-secondary)] mt-1">{summaryStub}</p>}
+        </div>
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          className="text-xs px-3 py-1 rounded-md border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--accent-teal)] hover:border-[var(--teal-dim)] transition-colors"
+        >
+          {open ? 'Collapse' : 'Expand full advisory'}
+        </button>
+      </div>
+
+      {open && (
+        <div className="mt-4 border-t border-[var(--border-color)] pt-4">
+          {isLoading && <DiamondLoader text="Loading advisory..." />}
+          {error && (
+            <p className="text-[var(--accent-orange)] text-xs">Failed to load GHSA details.</p>
+          )}
+          {data && (
+            <div className="space-y-3 text-sm">
+              {data.description && (
+                <p className="text-[var(--text-secondary)] whitespace-pre-wrap leading-relaxed">
+                  {data.description}
+                </p>
+              )}
+              {data.packages.length > 0 && (
+                <div>
+                  <h4 className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2">
+                    Affected Packages ({data.packages.length})
+                  </h4>
+                  <div className="flex flex-wrap gap-1.5">
+                    {data.packages.map((p, i) => (
+                      <Link
+                        key={`${p.ecosystem}/${p.packageName}/${i}`}
+                        href={`/packages/${p.ecosystem}/${encodeURIComponent(p.packageName)}`}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium border text-[var(--accent-blue)] bg-[var(--blue-faint)] border-[var(--blue-dim)] hover:brightness-125"
+                      >
+                        <span className="opacity-70">{p.ecosystem}/</span>
+                        <span className="font-mono">{p.packageName}</span>
+                        {p.fixedVersion && (
+                          <span className="opacity-70 text-[10px]">→ {p.fixedVersion}</span>
+                        )}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </section>
   );
 }

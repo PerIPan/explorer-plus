@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '../../lib/api';
+import { useAffectedPackages, PackageChipList } from '../shared/AffectedPackagesCard';
 import { EntityLink } from '../shared/EntityLink';
 import { Badge } from '../shared/Badge';
 import { DiamondLoader } from '../shared/FoldingDiamond';
@@ -285,6 +286,9 @@ export function OwaspMapView({ categoryId }: { categoryId: string }) {
         )}
       </MapCard>
 
+      {/* ── Affected Packages (GHSA via CWE bridge) ── */}
+      <OwaspAffectedPackages categoryId={data.categoryId} />
+
       {/* ── Related Categories ── */}
       {data.relatedCategories.length > 0 && (
         <MapCard label="Related Categories" count={data.relatedCategories.length} defaultOpen={false}>
@@ -304,5 +308,16 @@ export function OwaspMapView({ categoryId }: { categoryId: string }) {
         </MapCard>
       )}
     </div>
+  );
+}
+
+function OwaspAffectedPackages({ categoryId }: { categoryId: string }) {
+  const { data } = useAffectedPackages(`/frameworks/owasp/${categoryId}/packages`, [categoryId]);
+  const pkgs = data?.packages ?? [];
+  if (pkgs.length === 0) return null;
+  return (
+    <MapCard label="Affected Packages" count={pkgs.length} defaultOpen={false}>
+      <PackageChipList packages={pkgs} />
+    </MapCard>
   );
 }

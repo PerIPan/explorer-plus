@@ -14,6 +14,7 @@ import { ctidCloudUrl, ctidVerisUrl } from '../../lib/urlSafety';
 import { ExternalLinksButton } from '../shared/ExternalLinksButton';
 import { formatDate } from '../../lib/formatDate';
 import { DiamondLoader } from '../shared/FoldingDiamond';
+import { useAffectedPackages, PackageChipList } from '../shared/AffectedPackagesCard';
 import type { CloudControl } from '../../lib/types';
 
 // ── Level badge ──────────────────────────────────────────────────────────────
@@ -973,6 +974,9 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
         </MapCard>
       )}
 
+      {/* AFFECTED PACKAGES (GHSA via CWE→CAPEC bridge) */}
+      <AffectedPackagesMapCard attackId={attackId} />
+
       {/* VIRUSTOTAL INTELLIGENCE */}
       <VtSection iocs={intel?.iocs ?? []} loading={intelLoading} />
 
@@ -1081,5 +1085,17 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
       })()}
 
     </div>
+  );
+}
+
+/** Affected Packages MapCard scoped to a technique (uses local MapCard for consistency) */
+function AffectedPackagesMapCard({ attackId }: { attackId: string }) {
+  const { data } = useAffectedPackages(`/techniques/${attackId}/packages`, [attackId]);
+  const pkgs = data?.packages ?? [];
+  if (pkgs.length === 0) return null;
+  return (
+    <MapCard label="Affected Packages" icon={IconDatabase} count={pkgs.length} defaultOpen={false}>
+      <PackageChipList packages={pkgs} />
+    </MapCard>
   );
 }
