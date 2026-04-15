@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createHash } from 'node:crypto';
 import { GoogleGenAI } from '@google/genai';
 import { query } from '../v1/lib/db';
 import { withCorsRestricted, corsOptionsRestricted } from '../lib/cors';
@@ -751,7 +752,21 @@ async function executeTool(name: string, args: Record<string, unknown>): Promise
 
 // -- Rate limiting ------------------------------------------------------------
 
-function getClientIp(req: NextRequest): string {
+/**
+ * Static salt used to hash client IPs before they touch the database. The raw
+ * IP is never persisted — only the salted SHA-256, which is sufficient for
+ * rate-limit bucketing but pseudonymous under GDPR (Art. 4(5)).
+ *
+ * Set A2A_IP_SALT in the Vercel environment. In local dev, a fallback is used
+ * with a loud warning; this is NOT GDPR-compliant for production, but lets
+ * tests and local development work without extra setup.
+ */
+const IP_SALT = process.env.A2A_IP_SALT || (() => {
+  console.warn('[a2a] A2A_IP_SALT is not set — using insecure fallback. Set the env var in production.');
+  return 'dev-only-insecure-salt';
+})();
+
+function getRawClientIp(req: NextRequest): string {
   // Trust Vercel's infrastructure-set headers first. These are written by the
   // Vercel edge and cannot be spoofed by the user agent:
   //   - `x-vercel-forwarded-for` (preferred): real client IP
@@ -773,17 +788,28 @@ function getClientIp(req: NextRequest): string {
   return 'unknown';
 }
 
-async function checkRateLimit(ip: string): Promise<{ allowed: boolean; remaining: number }> {
+/**
+ * Returns a salted SHA-256 hex digest of the client IP. Stable across
+ * requests (so rate-limit counts aggregate correctly) but irreversible
+ * without the salt. The raw IP is never stored or logged by this module.
+ */
+function getClientIpHash(req: NextRequest): string {
+  const raw = getRawClientIp(req);
+  return createHash('sha256').update(IP_SALT).update(':').update(raw).digest('hex');
+}
+
+async function checkRateLimit(ipHash: string): Promise<{ allowed: boolean; remaining: number }> {
   const result = await query<{ count: string }>(
     `SELECT COUNT(*) FROM a2a_requests WHERE ip = $1 AND requested_at > NOW() - INTERVAL '24 hours'`,
-    [ip],
+    [ipHash],
   );
   const used = parseInt(result.rows[0].count, 10);
   return { allowed: used < DAILY_LIMIT, remaining: Math.max(0, DAILY_LIMIT - used) };
 }
 
 interface A2aLog {
-  ip: string;
+  /** Salted SHA-256 hash of the client IP — never the raw address. */
+  ipHash: string;
   userQuery: string | null;
   skillId: string | null;
   toolsCalled: string[];
@@ -798,7 +824,7 @@ async function recordRequest(log: A2aLog): Promise<void> {
     await query(
       `INSERT INTO a2a_requests (ip, user_query, skill_id, tools_called, response_text, tokens_used, latency_ms, error)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-      [log.ip, log.userQuery, log.skillId, log.toolsCalled, log.responseText, log.tokensUsed, log.latencyMs, log.error],
+      [log.ipHash, log.userQuery, log.skillId, log.toolsCalled, log.responseText, log.tokensUsed, log.latencyMs, log.error],
     );
   } catch (e) {
     console.error('A2A log write failed:', e instanceof Error ? e.message : e);
@@ -839,12 +865,12 @@ export async function POST(req: NextRequest) {
     ));
   }
 
-  const ip = getClientIp(req);
+  const ipHash = getClientIpHash(req);
 
   // Rate limit -- fail-closed on DB errors
   let remaining = DAILY_LIMIT;
   try {
-    const rl = await checkRateLimit(ip);
+    const rl = await checkRateLimit(ipHash);
     remaining = rl.remaining;
     if (!rl.allowed) {
       const resp = NextResponse.json(
@@ -1024,7 +1050,7 @@ export async function POST(req: NextRequest) {
       }
 
       await recordRequest({
-        ip, userQuery: userText, skillId: skillsUsed[0] ?? null,
+        ipHash, userQuery: userText, skillId: skillsUsed[0] ?? null,
         toolsCalled: skillsUsed, responseText: finalText.slice(0, 4000),
         tokensUsed: totalTokens, latencyMs: Date.now() - startMs, error: null,
       });
@@ -1078,7 +1104,7 @@ export async function POST(req: NextRequest) {
       const errMsg = err instanceof Error ? err.message : String(err);
       console.error('A2A error:', errMsg);
       await recordRequest({
-        ip, userQuery: userText, skillId: null, toolsCalled: [],
+        ipHash, userQuery: userText, skillId: null, toolsCalled: [],
         responseText: null, tokensUsed: 0, latencyMs: Date.now() - startMs, error: errMsg.slice(0, 1000),
       });
       return withCors(NextResponse.json(
