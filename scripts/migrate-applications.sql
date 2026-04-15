@@ -42,9 +42,15 @@ CREATE TABLE IF NOT EXISTS applications (
   updated_at    TIMESTAMPTZ   NOT NULL DEFAULT now(),
   UNIQUE (normalized)
 );
+-- latest_cve_at is added via ALTER so older installs pick it up. New installs
+-- get it here too via IF NOT EXISTS. Maintained by ingest-cve-delta after
+-- every successful CVE upsert; NOT kept fresh by a trigger (MAX() per-row
+-- would be too expensive).
+ALTER TABLE applications ADD COLUMN IF NOT EXISTS latest_cve_at TIMESTAMPTZ;
 CREATE INDEX IF NOT EXISTS idx_applications_vendor_trgm ON applications USING GIN (vendor gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_applications_product_trgm ON applications USING GIN (product gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_applications_cve_count ON applications(cve_count DESC);
+CREATE INDEX IF NOT EXISTS idx_applications_latest_cve ON applications(latest_cve_at DESC NULLS LAST);
 CREATE INDEX IF NOT EXISTS idx_applications_cpe ON applications(cpe_prefix) WHERE cpe_prefix IS NOT NULL;
 
 -- ── affected_products (CVE ↔ application with version ranges) ────────────────

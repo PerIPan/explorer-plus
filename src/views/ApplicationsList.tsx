@@ -7,6 +7,7 @@ import { apiFetch } from '../lib/api';
 import { PageHeader } from '../components/layout/PageHeader';
 import { DataTable, type ColumnDef } from '../components/shared/DataTable';
 import { Badge } from '../components/shared/Badge';
+import { formatDate } from '../lib/formatDate';
 
 interface Application {
   id: string;
@@ -18,6 +19,7 @@ interface Application {
   topSeverity: string | null;
   techniqueCount: number;
   groupCount: number;
+  latestCveAt: string | null;
 }
 
 interface PaginatedResponse {
@@ -64,6 +66,17 @@ const columns: ColumnDef<Application>[] = [
       ) : (
         <span className="text-[var(--text-secondary)] text-xs">—</span>
       ),
+  },
+  {
+    key: 'latestCveAt',
+    header: 'Latest',
+    tooltip: 'Most recent published_at across this app\'s linked CVEs',
+    width: '100px',
+    render: (row) => (
+      <span className="text-[10px] text-[var(--text-secondary)]">
+        {row.latestCveAt ? formatDate(row.latestCveAt) : '—'}
+      </span>
+    ),
   },
   {
     key: 'techniqueCount',

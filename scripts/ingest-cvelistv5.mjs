@@ -292,11 +292,15 @@ async function main() {
     enableClient.release();
   }
 
-  // Update counts
-  console.log('Updating cve_count...');
+  // Update counts + latest_cve_at (denormalised for fast list-page queries)
+  console.log('Updating cve_count + latest_cve_at...');
   await pool.query(`
     UPDATE applications a SET
       cve_count = (SELECT COUNT(DISTINCT cve_id) FROM affected_products WHERE application_id = a.id),
+      latest_cve_at = (
+        SELECT MAX(cd.published_at) FROM cve_details cd
+        JOIN affected_products ap ON ap.cve_id = cd.cve_id AND ap.application_id = a.id
+      ),
       updated_at = now()
   `);
 

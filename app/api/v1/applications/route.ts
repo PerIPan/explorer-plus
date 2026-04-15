@@ -11,7 +11,9 @@ const querySchema = z.object({
   vendor: z.string().max(200).optional(),
   page: z.coerce.number().int().positive().max(1000).default(1),
   limit: z.coerce.number().int().positive().max(200).default(50),
-  sort: z.enum(['cve_count', 'vendor', 'product']).default('cve_count'),
+  // Default to latest_cve DESC so users scanning /applications see the
+  // freshest advisories first — matches the /packages list behaviour.
+  sort: z.enum(['cve_count', 'vendor', 'product', 'latest_cve']).default('latest_cve'),
   order: z.enum(['asc', 'desc']).default('desc'),
 });
 
@@ -44,9 +46,11 @@ export async function GET(req: NextRequest) {
     cve_count: 'a.cve_count',
     vendor: 'a.vendor',
     product: 'a.product',
+    latest_cve: 'a.latest_cve_at',
   };
   const sortCol = sortMap[sort] ?? 'a.cve_count';
-  const sortDir = order === 'asc' ? 'ASC' : 'DESC';
+  // NULLS LAST so apps without CVE dates sink to the bottom on DESC order.
+  const sortDir = order === 'asc' ? 'ASC NULLS LAST' : 'DESC NULLS LAST';
 
   const countResult = await query<{ total: string }>(
     `SELECT COUNT(*) AS total FROM applications a ${where}`,
@@ -65,10 +69,12 @@ export async function GET(req: NextRequest) {
     topSeverity: string | null;
     techniqueCount: string;
     groupCount: string;
+    latestCveAt: string | null;
   }>(
     `SELECT
        a.id, a.vendor, a.product, a.normalized, a.cpe_prefix AS "cpePrefix",
        a.cve_count::text AS "cveCount",
+       a.latest_cve_at AS "latestCveAt",
        (SELECT cd.cvss_severity FROM cve_details cd
         JOIN affected_products ap ON ap.cve_id = cd.cve_id AND ap.application_id = a.id
         WHERE cd.cvss_severity IS NOT NULL
