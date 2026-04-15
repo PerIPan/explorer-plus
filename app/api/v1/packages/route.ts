@@ -71,7 +71,7 @@ export async function GET(req: NextRequest) {
          technique_count  AS "techniqueCount"
        FROM package_summary
        ${whereClause}
-       ORDER BY advisory_count DESC, latest_published DESC NULLS LAST, package_name ASC
+       ORDER BY latest_published DESC NULLS LAST, advisory_count DESC, package_name ASC
        LIMIT $${params.length - 1} OFFSET $${params.length}`,
       params,
     );
