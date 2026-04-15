@@ -210,6 +210,51 @@
         "Compare Web and LLM OWASP supply chain risks"
       ],
       "tags": ["owasp", "top10", "web-security", "appsec", "compliance", "ml-security", "llm-security", "ai-risks"]
+    },
+    {
+      "id": "ghsa-lookup",
+      "name": "GitHub Security Advisory Detail",
+      "description": "Get full details for a GitHub Security Advisory: summary, description, CVSS v3/v4, CWEs, affected open-source packages with vulnerable/fixed version ranges, linked ATT&CK techniques.",
+      "examples": [
+        "Show me GHSA-jfh8-c2jp-5v3q",
+        "What does GHSA-m3wx-6f6g-9mvv affect?",
+        "Get the GitHub advisory for the log4shell vulnerability"
+      ],
+      "tags": ["ghsa", "github", "advisory", "appsec", "vulnerabilities", "supply-chain"]
+    },
+    {
+      "id": "package-vulnerabilities",
+      "name": "Package Vulnerabilities",
+      "description": "List vulnerabilities affecting a specific open-source package in an ecosystem (npm, pypi, go, maven, rubygems, nuget, composer, rust). Returns all GHSAs with vulnerable/fixed version ranges and linked ATT&CK techniques.",
+      "examples": [
+        "Which vulnerabilities affect npm/log4js-node?",
+        "Show me GHSAs for pypi/django",
+        "Is maven/org.apache.logging.log4j:log4j-core vulnerable?",
+        "What CVEs affect the go package github.com/containerd/containerd?"
+      ],
+      "tags": ["packages", "npm", "pypi", "go", "maven", "supply-chain", "appsec", "vulnerabilities"]
+    },
+    {
+      "id": "ghsa-search",
+      "name": "Search GitHub Security Advisories",
+      "description": "Search GHSA advisories by keyword, severity, ecosystem, or publication date. Returns summary, severity, affected ecosystems, linked CVEs.",
+      "examples": [
+        "Show me recent CRITICAL GHSAs for npm",
+        "Search GHSA advisories about prototype pollution",
+        "List GHSA-only vulnerabilities (no CVE assigned) from the last 30 days",
+        "Show me HIGH-severity Python package vulnerabilities"
+      ],
+      "tags": ["ghsa", "github", "advisory", "search", "vulnerabilities"]
+    },
+    {
+      "id": "cve-to-packages",
+      "name": "CVE to Affected Packages",
+      "description": "Given a CVE ID, return the open-source packages affected via its GitHub Security Advisory alias. Returns ecosystem, package name, vulnerable range, fixed version.",
+      "examples": [
+        "Which packages are affected by CVE-2021-44228?",
+        "Show me the package versions vulnerable to CVE-2022-22965"
+      ],
+      "tags": ["cve", "packages", "ghsa", "supply-chain", "remediation"]
     }
   ],
   "extensions": {
@@ -246,6 +291,10 @@
         "campaign_detail": "/campaigns/{attackId}",
         "cve_detail": "/cti/cves/{cveId}",
         "cve_list": "/cti/cves?q={query}&since={isoDate}",
+        "ghsa_detail": "/cti/ghsa/{ghsaId}",
+        "ghsa_list": "/cti/ghsa?q={query}&since={isoDate}",
+        "package_detail": "/packages/{ecosystem}/{encodedName}",
+        "package_list": "/packages",
         "application_360": "/?entity={vendor}%2F{product}&tab=application-map",
         "application_list": "/applications",
         "sector_360": "/?entity={sectorSlug}&tab=sector-map",

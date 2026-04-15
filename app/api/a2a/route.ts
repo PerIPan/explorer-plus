@@ -379,6 +379,55 @@ const TOOL_DECLARATIONS = [
       required: ['category_id'],
     },
   },
+  {
+    name: 'get_ghsa_detail',
+    description: 'Get full details for a GitHub Security Advisory: summary, description, CVSS v3/v4, CWEs, affected open-source packages with vulnerable/fixed version ranges, linked ATT&CK techniques.',
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        ghsa_id: { type: "STRING", description: 'GHSA identifier, e.g. GHSA-jfh8-c2jp-5v3q' },
+      },
+      required: ['ghsa_id'],
+    },
+  },
+  {
+    name: 'get_package_vulnerabilities',
+    description: 'List vulnerabilities affecting a specific open-source package in an ecosystem (npm, pypi, go, maven, rubygems, nuget, composer, rust). Returns all GHSAs with vulnerable/fixed version ranges and linked ATT&CK techniques.',
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        ecosystem: { type: "STRING", description: 'Package ecosystem: npm, pypi, go, maven, rubygems, nuget, composer, rust, erlang, pub, swift, actions' },
+        package_name: { type: "STRING", description: 'Package name, e.g. log4js-node, django, @angular/core' },
+      },
+      required: ['ecosystem', 'package_name'],
+    },
+  },
+  {
+    name: 'search_ghsa',
+    description: 'Search GitHub Security Advisories by keyword, severity, ecosystem, or publication date. Returns GHSA ID, CVE alias (if any), severity, summary, affected ecosystems, published date.',
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        q: { type: "STRING", description: 'Search query (GHSA ID, CVE, summary, or description)' },
+        severity: { type: "STRING", description: 'Filter by severity: CRITICAL, HIGH, MEDIUM, LOW' },
+        ecosystem: { type: "STRING", description: 'Filter by ecosystem: npm, pypi, go, maven, rubygems, nuget, composer, rust' },
+        since: { type: "STRING", description: 'ISO date string — only advisories published after this date' },
+        has_cve: { type: "STRING", description: 'Filter by CVE alias presence: "true" (CVE-linked) or "false" (GHSA-only)' },
+        limit: { type: "NUMBER", description: 'Max results (default 10, max 50)' },
+      },
+    },
+  },
+  {
+    name: 'cve_to_packages',
+    description: 'Given a CVE ID, return the open-source packages affected via its GitHub Security Advisory alias. Returns empty list if no GHSA is linked to the CVE.',
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        cve_id: { type: "STRING", description: 'CVE identifier, e.g. CVE-2021-44228' },
+      },
+      required: ['cve_id'],
+    },
+  },
 ];
 
 // Dynamic system instruction -- injects current date so Gemini calculates relative dates correctly
@@ -653,6 +702,44 @@ async function executeTool(name: string, args: Record<string, unknown>): Promise
       const cat = String(args.category_id ?? '').toUpperCase();
       if (!/^(A|ML|LLM)\d{2}$/.test(cat)) return { error: 'Invalid category ID (A01-A10, ML01-ML10, LLM01-LLM10)' };
       return callInternalApi(`/frameworks/owasp/${cat}`);
+    }
+    case 'get_ghsa_detail': {
+      const id = String(args.ghsa_id ?? '').toUpperCase();
+      if (!/^GHSA(-[0-9A-Z]{4}){3}$/.test(id)) return { error: 'Invalid GHSA ID format' };
+      return callInternalApi(`/ghsa/${id}`);
+    }
+    case 'get_package_vulnerabilities': {
+      const eco = String(args.ecosystem ?? '').toLowerCase();
+      const name = String(args.package_name ?? '');
+      if (!/^[a-z][a-z0-9-]{1,49}$/.test(eco)) return { error: 'Invalid ecosystem' };
+      if (!name || name.length > 500) return { error: 'Invalid package name' };
+      return callInternalApi(`/packages/${eco}/${encodeURIComponent(name)}`);
+    }
+    case 'search_ghsa': {
+      const params = new URLSearchParams();
+      if (args.q) params.set('q', sanitizeSearch(args.q));
+      if (args.severity) {
+        const sev = String(args.severity).toUpperCase();
+        if (SEVERITY_VALUES.has(sev)) params.set('severity', sev);
+      }
+      if (args.ecosystem) {
+        const eco = String(args.ecosystem).toLowerCase();
+        if (/^[a-z][a-z0-9-]{1,49}$/.test(eco)) params.set('ecosystem', eco);
+      }
+      if (args.since) {
+        const d = new Date(String(args.since));
+        if (!isNaN(d.getTime())) params.set('since', d.toISOString());
+      }
+      if (args.has_cve === 'true' || args.has_cve === 'false') {
+        params.set('has_cve', String(args.has_cve));
+      }
+      params.set('limit', clampLimit(args.limit, 10, 50));
+      return callInternalApi(`/ghsa?${params}`);
+    }
+    case 'cve_to_packages': {
+      const id = validateCveId(args.cve_id);
+      if (!id) return { error: 'Invalid CVE ID format' };
+      return callInternalApi(`/cves/${id}/packages`);
     }
     default:
       return { error: `Unknown tool: ${name}` };
