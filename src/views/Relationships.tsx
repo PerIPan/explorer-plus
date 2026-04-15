@@ -109,6 +109,14 @@ function isOwaspId(id: string): boolean {
   return OWASP_ID_RE.test(id);
 }
 
+/** Application slug pattern — `<vendor>/<product>`. Matches the URL shape used
+ *  by /applications/[...slug] routes. Applications are the only entity type
+ *  whose selectedId contains a '/', so this is a safe discriminator. */
+const APP_SLUG_RE = /^[a-z0-9][a-z0-9._-]*\/[a-z0-9][a-z0-9._-]*$/i;
+function isApplicationSlug(id: string): boolean {
+  return APP_SLUG_RE.test(id);
+}
+
 /** Derive the entity type from the graph center node or from search suggestions */
 function inferEntityType(
   graphCenter: GraphNode | undefined,
@@ -117,6 +125,9 @@ function inferEntityType(
 ): string | null {
   if (graphCenter?.type) return graphCenter.type;
   if (isOwaspId(selectedId)) return 'owasp';
+  // Application slugs may not appear in /entities (capped at ~500 for Fuse),
+  // so we need a direct pattern check for direct-URL loads to work.
+  if (isApplicationSlug(selectedId)) return 'application';
   const match = suggestions.find((s) => s.attackId === selectedId);
   return match?.type ?? null;
 }
@@ -185,7 +196,7 @@ export function Relationships() {
   }, []);
 
   const { data: graphData, isLoading, error } = useRelationships(
-    (tabParam === 'sector-map' || tabParam === 'application-map' || tabParam === 'owasp-map' || isOwaspId(selectedId) || !selectedId) ? '' : selectedId,
+    (tabParam === 'sector-map' || tabParam === 'application-map' || tabParam === 'owasp-map' || isOwaspId(selectedId) || isApplicationSlug(selectedId) || !selectedId) ? '' : selectedId,
   );
 
   /** Load ALL entity names cross-domain for Fuse.js — shared cache with SearchBar */
