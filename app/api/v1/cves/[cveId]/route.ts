@@ -16,7 +16,7 @@ export async function GET(
     return withCors(errorResponse(400, 'Invalid CVE ID', 'VALIDATION_ERROR'));
   }
 
-  const [detailResult, sourcesResult, cwesResult, appsResult, techIocResult, techCapecResult, reportsResult, owaspResult] =
+  const [detailResult, sourcesResult, cwesResult, appsResult, techIocResult, techCapecResult, reportsResult, owaspResult, ghsaResult] =
     await Promise.all([
       query<{
         cve_id: string;
@@ -127,6 +127,14 @@ export async function GET(
          ORDER BY o.framework, o.category_id`,
         [id],
       ),
+
+      // Minimal GHSA stub — full details via /api/v1/ghsa/:ghsaId
+      // Wrapped in .catch for pre-migration envs where ghsa_advisories may not exist
+      query<{ ghsaId: string; summary: string | null }>(
+        `SELECT ghsa_id AS "ghsaId", summary
+         FROM ghsa_advisories WHERE cve_id = $1 LIMIT 1`,
+        [id],
+      ).catch(() => ({ rows: [] as Array<{ ghsaId: string; summary: string | null }> })),
     ]);
 
   if (!detailResult.rows[0] && !sourcesResult.rows.length) {
@@ -182,5 +190,6 @@ export async function GET(
       publishedAt: r.published_at,
     })),
     owaspCategories: owaspResult.rows,
+    ghsa: ghsaResult.rows[0] ?? null,
   }, 300));
 }
