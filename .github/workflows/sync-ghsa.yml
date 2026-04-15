@@ -1,10 +1,10 @@
-name: Sync GitHub Security Advisories
+name: Sync GitHub Security Advisories (full rebase)
 on:
   schedule:
-    - cron: '0 6 * * *'  # Daily at 06:00 UTC
+    - cron: '0 4 * * 0'  # Weekly Sundays 04:00 UTC — sweeps the full advisory-database tree
   workflow_dispatch: {}
 
-# Prevent overlapping runs
+# Prevent overlapping runs with the delta workflow
 concurrency:
   group: sync-ghsa
   cancel-in-progress: false

@@ -272,8 +272,16 @@ async function* walkJson(dir) {
 
 // ── DB batch writers ────────────────────────────────────────────────────
 
-async function processBatch(client, batch, stats) {
-  if (batch.length === 0) return;
+async function processBatch(client, rawBatch, stats) {
+  if (rawBatch.length === 0) return;
+
+  // DEDUPE: Postgres ON CONFLICT DO UPDATE fails if a single INSERT statement
+  // targets the same unique-index row twice. Keep the last occurrence of each
+  // ghsa_id — later entries likely reflect an updated copy if any duplicates
+  // slip through the advisory-database tree.
+  const deduped = new Map();
+  for (const adv of rawBatch) deduped.set(adv.ghsaId, adv);
+  const batch = Array.from(deduped.values());
 
   // 1. Check which CVE IDs exist in cve_details; set non-existent to NULL on GHSA FK
   const cveIds = Array.from(
@@ -404,10 +412,15 @@ async function processBatch(client, batch, stats) {
   );
 
   // 5. Bulk insert weaknesses (ON CONFLICT DO NOTHING — orphans cleaned nightly if needed)
+  // Dedupe by (ghsa_id, cwe_id) — same reason as top-level batch dedupe.
+  const weaknessSeen = new Set();
   const wGhsas = [];
   const wCwes = [];
   for (const adv of batch) {
     for (const cwe of adv.cwes) {
+      const key = `${adv.ghsaId}|${cwe}`;
+      if (weaknessSeen.has(key)) continue;
+      weaknessSeen.add(key);
       wGhsas.push(adv.ghsaId);
       wCwes.push(cwe);
     }
@@ -423,6 +436,8 @@ async function processBatch(client, batch, stats) {
   }
 
   // 6. Bulk insert ghsa_packages
+  // Dedupe by (ghsa_id, package_id, vulnerable_range_key) — same reason.
+  const ghsaPackageSeen = new Set();
   const pkGhsas = [];
   const pkPkgIds = [];
   const pkRanges = [];
@@ -431,6 +446,10 @@ async function processBatch(client, batch, stats) {
     for (const p of adv.packages) {
       const pkgId = pkgIdMap.get(`${p.ecosystem}|${p.packageName}`);
       if (!pkgId) continue;
+      const rangeKey = p.vulnerableRange ?? '';
+      const key = `${adv.ghsaId}|${pkgId}|${rangeKey}`;
+      if (ghsaPackageSeen.has(key)) continue;
+      ghsaPackageSeen.add(key);
       pkGhsas.push(adv.ghsaId);
       pkPkgIds.push(pkgId);
       pkRanges.push(p.vulnerableRange);

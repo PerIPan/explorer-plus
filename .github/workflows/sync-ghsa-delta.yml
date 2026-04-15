@@ -1,0 +1,43 @@
+name: Sync GHSA delta (daily)
+on:
+  schedule:
+    - cron: '0 6 * * *'  # Daily 06:00 UTC — catches advisories updated in the last 48h
+  workflow_dispatch:
+    inputs:
+      since_days:
+        description: 'Look back N days (default 2)'
+        required: false
+        default: '2'
+
+# Share the same group as the full rebase workflow so they queue rather than race.
+concurrency:
+  group: sync-ghsa
+  cancel-in-progress: false
+
+jobs:
+  delta:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install pg
+        run: npm install pg
+      - name: Compute since date
+        id: since
+        run: |
+          DAYS="${{ github.event.inputs.since_days || '2' }}"
+          SINCE=$(date -u -d "$DAYS days ago" +%Y-%m-%d)
+          echo "since=$SINCE" >> "$GITHUB_OUTPUT"
+          echo "Looking up GHSAs updated since $SINCE"
+      - name: Fetch delta via gh and upsert
+        env:
+          GH_TOKEN: ${{ secrets.TOKEN_GHSA }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          set -euo pipefail
+          gh api "/advisories?per_page=100&type=reviewed&sort=updated&direction=desc&updated=>=${{ steps.since.outputs.since }}" \
+            --paginate --jq '.[]' \
+            | node scripts/sync-ghsa-delta.mjs
