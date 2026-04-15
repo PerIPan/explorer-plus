@@ -81,11 +81,19 @@ DATABASE_URL="postgresql://..." node scripts/sync-atlas.mjs
 
 Library-level vulnerabilities for npm, PyPI, Go, Maven, RubyGems, NuGet, Composer, Rust, and more. Includes ~2K GHSA-only advisories with no CVE assigned — a strict addition to NVD-sourced coverage. CWE→CAPEC bridge extends ATT&CK technique linkage to every advisory.
 
-| Component | Purpose | Records |
+**Two workflows in tandem:**
+
+| Component | Cadence | Purpose |
 |---|---|---|
-| `scripts/migrate-ghsa.sql` | Schema: `ecosystems`, `packages`, `ghsa_advisories`, `ghsa_weaknesses`, `ghsa_packages` tables + `unified_weaknesses` VIEW + `package_summary` materialized view | schema only |
-| `scripts/sync-ghsa.mjs` | Paginated GitHub GraphQL ingest, `publishedSince: 2017-01-01`, upserts advisories + CWEs + packages, refreshes `package_summary` | ~13K advisories, ~15K weaknesses, ~50K package-advisory rows, ~25K unique packages |
-| `.github/workflows/sync-ghsa.yml` | Weekly cron (Mondays 06:00 UTC) + `workflow_dispatch`, `concurrency: sync-ghsa` | |
+| `sync-ghsa.yml` + `scripts/sync-ghsa-bulk.mjs` | Weekly (Sun 04:00 UTC) | Full rebase. Clones `github/advisory-database` (sparse `github-reviewed/` tree) and batch-upserts all ~17K advisories. Catches withdrawn entries, description/CWE edits, and anything the delta missed. |
+| `sync-ghsa-delta.yml` + `scripts/sync-ghsa-delta.mjs` | Daily (06:00 UTC) | Incremental. Uses `gh api /advisories?updated=>=...&type=reviewed` to fetch only advisories changed in the last 2 days (~30-100 records), upserts per-advisory. Runs in seconds. |
+
+Both share `concurrency: sync-ghsa` so they queue rather than race.
+
+| DB artifact | Details |
+|---|---|
+| `scripts/migrate-ghsa.sql` | Schema: `ecosystems`, `packages`, `ghsa_advisories`, `ghsa_weaknesses`, `ghsa_packages` tables + `unified_weaknesses` VIEW + `package_summary` materialized view |
+| Expected steady-state volumes | ~15K advisories, ~15K weaknesses, ~50K package-advisory rows, ~25K unique packages |
 
 **Prerequisite:** `TOKEN_GHSA` secret in GitHub repo settings → Secrets → Actions. Fine-grained PAT, public-read only, 5,000 req/h rate limit unlocks paginated backfill in ~2-3 minutes.
 
