@@ -349,7 +349,7 @@ function CsfInformativeReferencesSection({
   references: Array<{ framework: string; id: string; text: string | null; relationship: string | null }>;
   parentId: string;
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   const listId = `csf-refs-${parentId}`;
 
   const grouped = new Map<string, Array<{ id: string }>>();
