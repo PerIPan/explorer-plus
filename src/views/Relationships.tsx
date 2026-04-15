@@ -539,34 +539,30 @@ export function Relationships() {
 
       {/* Instructions when nothing selected */}
       {!selectedId && (
-        <div className="mt-8 md:mt-12 md:grid md:grid-cols-[minmax(0,1fr)_320px] md:gap-10 md:items-start">
-          {/* LEFT column — blurb + CVE card */}
-          <div className="min-w-0">
-            <p className="text-sm md:text-base text-[var(--text-secondary)] leading-relaxed mb-6">
-              Search for any{' '}
-              <span className="font-medium text-[var(--text-primary)]">Technique</span>,{' '}
-              <span className="font-medium text-[var(--text-primary)]">Actor</span>,{' '}
-              <span className="font-medium text-[var(--text-primary)]">Software</span>,{' '}
-              <span className="font-medium text-[var(--text-primary)]">Campaign</span>,{' '}
-              <span className="font-medium text-[var(--text-primary)]">Mitigation</span>,{' '}
-              <span className="font-medium text-[var(--text-primary)]">Data Source</span>,{' '}
-              <span className="font-medium text-[var(--text-primary)]">Tactic</span>,{' '}
-              <span className="font-medium text-[var(--text-primary)]">Sector</span>,{' '}
-              <span className="font-medium text-[var(--text-primary)]">Application</span>, or{' '}
-              <span className="font-medium text-[var(--text-primary)]">OWASP category</span>{' '}
-              to explore its relationships.
-            </p>
+        <div className="mt-8 md:mt-12">
+          <p className="text-sm md:text-base text-[var(--text-secondary)] leading-relaxed mb-6">
+            Search for any{' '}
+            <span className="font-medium text-[var(--text-primary)]">Technique</span>,{' '}
+            <span className="font-medium text-[var(--text-primary)]">Actor</span>,{' '}
+            <span className="font-medium text-[var(--text-primary)]">Software</span>,{' '}
+            <span className="font-medium text-[var(--text-primary)]">Campaign</span>,{' '}
+            <span className="font-medium text-[var(--text-primary)]">Mitigation</span>,{' '}
+            <span className="font-medium text-[var(--text-primary)]">Data Source</span>,{' '}
+            <span className="font-medium text-[var(--text-primary)]">Tactic</span>,{' '}
+            <span className="font-medium text-[var(--text-primary)]">Sector</span>,{' '}
+            <span className="font-medium text-[var(--text-primary)]">Application</span>, or{' '}
+            <span className="font-medium text-[var(--text-primary)]">OWASP category</span>{' '}
+            to explore its relationships.
+          </p>
 
-            {/* Recent CVEs teaser — last 3 days */}
-            <RecentCvesCard />
-          </div>
+          {/* Recent CVEs teaser — last 3 days */}
+          <RecentCvesCard />
 
-          {/* RIGHT column — diamond with labels (desktop only) */}
-          <div className="hidden md:flex justify-center pt-16 pointer-events-none select-none">
+          {/* Diamond — desktop with labels */}
+          <div className="hidden md:flex justify-center pt-24 pb-16 pointer-events-none select-none">
             <div className="relative" style={{ width: 210, height: 210 }}>
               <img src="/diamond-favicon.svg" alt="" width={210} height={210} className="opacity-[0.55]" />
 
-              {/* Labels at diamond corners */}
               <div className="absolute -top-10 left-1/2 -translate-x-1/2 text-center">
                 <div className="text-xs font-medium text-[var(--accent-orange)] opacity-50">actor</div>
                 <div className="text-xs font-medium text-[var(--accent-orange)] opacity-50">adversary</div>
@@ -586,7 +582,7 @@ export function Relationships() {
             </div>
           </div>
 
-          {/* Mobile diamond — below content, small, no labels */}
+          {/* Mobile diamond — small, no labels */}
           <div className="flex md:hidden justify-center mt-10 opacity-40 pointer-events-none">
             <img src="/diamond-favicon.svg" alt="" width={140} height={140} />
           </div>
