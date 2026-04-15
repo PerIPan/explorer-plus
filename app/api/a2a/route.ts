@@ -706,8 +706,9 @@ async function executeTool(name: string, args: Record<string, unknown>): Promise
       return callInternalApi(`/frameworks/owasp/${cat}`);
     }
     case 'get_ghsa_detail': {
-      const id = String(args.ghsa_id ?? '').toUpperCase();
-      if (!/^GHSA(-[0-9A-Z]{4}){3}$/.test(id)) return { error: 'Invalid GHSA ID format' };
+      // Preserve case of the random segments — GHSA stores them lowercase.
+      const id = String(args.ghsa_id ?? '').replace(/^ghsa-/i, 'GHSA-');
+      if (!/^GHSA(-[0-9a-z]{4}){3}$/.test(id)) return { error: 'Invalid GHSA ID format' };
       return callInternalApi(`/ghsa/${id}`);
     }
     case 'get_package_vulnerabilities': {
