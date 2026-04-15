@@ -139,7 +139,17 @@ export function Relationships() {
   const [activeTab, setActiveTab] = useState<TabId>(tabParam);
   const graphRef = useRef<ForceGraphHandle>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const blurTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  /** Autofocus the search input on landing (nothing selected yet). Skip on
+   *  touch devices so we don't pop the keyboard. */
+  useEffect(() => {
+    if (entityParam) return;
+    const isTouch = typeof window !== 'undefined' && window.matchMedia?.('(hover: none)').matches;
+    if (isTouch) return;
+    inputRef.current?.focus({ preventScroll: true });
+  }, [entityParam]);
 
   // SSR-safe viewport height sampler. Direct `window.innerHeight` during render
   // would throw ReferenceError on the server.
@@ -474,6 +484,7 @@ export function Relationships() {
             />
           )}
           <input
+            ref={inputRef}
             type="text"
             value={searchInput}
             onChange={(e) => {
