@@ -518,7 +518,7 @@ export function Relationships() {
               aria-hidden="true"
               className="hidden md:inline-flex items-center gap-1 flex-shrink-0 text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--accent-teal)] pointer-events-none"
             >
-              <span>←</span>
+              <span className="inline-block animate-start-here-wiggle">←</span>
               <span>Start here</span>
             </span>
           )}

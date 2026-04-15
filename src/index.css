@@ -187,3 +187,22 @@ body {
     display: flex !important;
   }
 }
+
+/* Subtle periodic wiggle for the landing search "Start here" hint.
+   The arrow animates independently so the label sits still. */
+@keyframes start-here-wiggle {
+  0%, 70%, 100% { transform: translateX(0); }
+  77%           { transform: translateX(-4px); }
+  84%           { transform: translateX(2px); }
+  91%           { transform: translateX(-2px); }
+}
+
+.animate-start-here-wiggle {
+  animation: start-here-wiggle 3.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-start-here-wiggle {
+    animation: none;
+  }
+}
