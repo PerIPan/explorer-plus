@@ -14,6 +14,7 @@ const SOURCE_LABELS: Record<string, string> = {
   d3fend: 'D3FEND Defensive Mappings',
   nvd: 'NVD CVE Enrichment',
   virustotal: 'VirusTotal Hash Enrichment',
+  matview_refresh: 'Matview refresh (app_technique_groups + package_summary)',
 };
 
 function formatTimeAgo(iso: string): string {
