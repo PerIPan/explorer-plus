@@ -27,7 +27,9 @@ function SeverityBadge({ severity }: { severity: string | null }) {
 
 export function GhsaDetail() {
   const { ghsaId: rawId } = useParams<{ ghsaId: string }>();
-  const ghsaId = (rawId ?? '').toUpperCase();
+  // Only normalize the GHSA- prefix — the 12-char random segment is stored
+  // lowercase in GitHub's canonical form (e.g. GHSA-g4vj-cjjj-v7hg).
+  const ghsaId = (rawId ?? '').replace(/^ghsa-/i, 'GHSA-');
   const { data, isLoading, error } = useGhsaDetail(ghsaId);
 
   if (isLoading) return <DiamondLoader text="Loading GHSA advisory..." />;

@@ -6,6 +6,7 @@ import { formatDate } from '../lib/formatDate';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Badge } from '../components/shared/Badge';
 import { EntityLink } from '../components/shared/EntityLink';
+import { FrameworkMapCard } from '../components/relationships/shared/FrameworkMapCard';
 import { DiamondLoader } from '../components/shared/FoldingDiamond';
 
 const SEVERITY_COLORS: Record<string, string> = {
@@ -14,6 +15,8 @@ const SEVERITY_COLORS: Record<string, string> = {
   MEDIUM: 'bg-[var(--yellow-faint)] text-[var(--accent-yellow)] border-[var(--yellow-dim)]',
   LOW: 'bg-[var(--blue-faint)] text-[var(--accent-blue)] border-[var(--blue-dim)]',
 };
+
+const SEVERITY_ORDER = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'];
 
 function SeverityBadge({ severity }: { severity: string | null }) {
   if (!severity) return <span className="text-[var(--text-secondary)] text-xs">—</span>;
@@ -40,16 +43,18 @@ export function PackageDetail() {
     );
   }
 
-  const severityOrder = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'];
+  const topSeverity = SEVERITY_ORDER.find((s) => data.severityCounts[s]) ?? null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <PageHeader
         title={data.packageName}
-        subtitle={`${data.ecosystem} — ${data.advisoryCount} advisories`}
+        subtitle={`${data.ecosystem} — ${data.advisoryCount} advisories · 360 view`}
         actions={
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            <Badge label="package" variant="blue" />
             <Badge label={data.ecosystem} variant="blue" />
+            {topSeverity && <SeverityBadge severity={topSeverity} />}
             {data.purl && (
               <span className="font-mono text-xs text-[var(--text-secondary)] truncate max-w-md" title={data.purl}>
                 {data.purl}
@@ -61,26 +66,24 @@ export function PackageDetail() {
 
       {/* Severity breakdown */}
       {Object.keys(data.severityCounts).length > 0 && (
-        <div className="flex flex-wrap gap-2 items-center">
-          <span className="text-xs text-[var(--text-secondary)]">Severities:</span>
-          {severityOrder
-            .filter((s) => data.severityCounts[s])
-            .map((s) => (
-              <span
-                key={s}
-                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border ${SEVERITY_COLORS[s]}`}
-              >
-                {s} <span className="font-mono">×{data.severityCounts[s]}</span>
-              </span>
-            ))}
-        </div>
+        <FrameworkMapCard label="Severity Breakdown" labelColor="#f472b6" count={Object.keys(data.severityCounts).length}>
+          <div className="flex flex-wrap gap-2">
+            {SEVERITY_ORDER
+              .filter((s) => data.severityCounts[s])
+              .map((s) => (
+                <span
+                  key={s}
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border ${SEVERITY_COLORS[s]}`}
+                >
+                  {s} <span className="font-mono">×{data.severityCounts[s]}</span>
+                </span>
+              ))}
+          </div>
+        </FrameworkMapCard>
       )}
 
-      {/* Advisories table */}
-      <section>
-        <h2 className="text-sm font-semibold text-[var(--text-primary)] uppercase tracking-wider mb-2">
-          Advisories ({data.advisories.length})
-        </h2>
+      {/* Advisories */}
+      <FrameworkMapCard label="GHSA Advisories" labelColor="#f472b6" count={data.advisories.length}>
         {data.advisories.length === 0 ? (
           <p className="text-xs text-[var(--text-secondary)]">No advisories.</p>
         ) : (
@@ -138,21 +141,25 @@ export function PackageDetail() {
             </table>
           </div>
         )}
-      </section>
+      </FrameworkMapCard>
 
       {/* Linked techniques */}
-      {data.linkedTechniques.length > 0 && (
-        <section>
-          <h2 className="text-sm font-semibold text-[var(--text-primary)] uppercase tracking-wider mb-2">
-            Linked ATT&CK Techniques ({data.linkedTechniques.length})
-          </h2>
+      <FrameworkMapCard
+        label="Linked ATT&CK Techniques"
+        labelColor="#14b8a6"
+        count={data.linkedTechniques.length}
+        defaultOpen={data.linkedTechniques.length > 0}
+      >
+        {data.linkedTechniques.length === 0 ? (
+          <p className="text-xs text-[var(--text-secondary)]">No techniques reachable via CWE→CAPEC bridge.</p>
+        ) : (
           <div className="flex flex-wrap gap-1.5">
             {data.linkedTechniques.map((t) => (
               <EntityLink key={t.attackId} type="technique" attackId={t.attackId} name={t.name} useMap />
             ))}
           </div>
-        </section>
-      )}
+        )}
+      </FrameworkMapCard>
     </div>
   );
 }

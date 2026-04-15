@@ -35,7 +35,7 @@ function makeNodes(c: ReturnType<typeof useThemeColors>): ModelNode[] {
     { id: 'campaign', label: 'Campaign', x: 400, y: 100, color: c.accentBlue, bg: alpha(c.accentBlue, '18'), path: '/campaigns', description: 'Named intrusion operations with timelines', category: 'core' },
     { id: 'sector', label: 'Sector', x: 70, y: 80, color: c.accentPink, bg: alpha(c.accentPink, '18'), path: '/sectors', description: 'Industries targeted by threat groups', category: 'core' },
     { id: 'application', label: 'Application', x: 180, y: 560, color: '#3b82f6', bg: '#3b82f618', path: '/applications', description: 'Defender view — vendor products with CVEs (Windows, PAN-OS, etc.)', category: 'core' },
-    { id: 'package', label: 'Package', x: 780, y: 680, color: '#60a5fa', bg: '#60a5fa18', path: '/packages', description: 'Library packages (npm, PyPI, Go, Maven, RubyGems, NuGet, Composer, Rust) with GHSA advisories — parallel to Applications but library-centric', category: 'core' },
+    { id: 'package', label: 'Package', x: 420, y: 700, color: '#60a5fa', bg: '#60a5fa33', path: '/packages', description: 'Library packages (npm, PyPI, Go, Maven, RubyGems, NuGet, Composer, Rust) with GHSA advisories — parallel to Applications but library-centric', category: 'core' },
     // Defensive
     { id: 'mitigation', label: 'Mitigation', x: 1000, y: 140, color: c.accentGreen, bg: alpha(c.accentGreen, '18'), path: '/mitigations', description: 'Countermeasures to prevent techniques', category: 'defensive' },
     { id: 'sigma', label: 'Sigma Rules', x: 1040, y: 370, color: '#c084fc', bg: '#c084fc18', path: '/cti/sigma', description: 'Detection signatures from SigmaHQ mapped to techniques', category: 'defensive' },
@@ -51,7 +51,7 @@ function makeNodes(c: ReturnType<typeof useThemeColors>): ModelNode[] {
     // Intelligence
     { id: 'report', label: 'Threat Reports', x: 240, y: 460, color: c.accentOrange, bg: alpha(c.accentOrange, '18'), path: '/cti/reports', description: 'Live threat intelligence from OTX, RSS feeds', category: 'intelligence' },
     { id: 'cve', label: 'CVEs', x: 440, y: 500, color: c.accentPink, bg: alpha(c.accentPink, '18'), path: '/cti/cves', description: 'Known vulnerabilities enriched with NVD metadata', category: 'intelligence' },
-    { id: 'ghsa', label: 'GHSA', x: 600, y: 680, color: '#f472b6', bg: '#f472b618', path: '/cti/ghsa', description: 'GitHub Security Advisories — library-level vulnerabilities for open-source packages. Includes ~2K GHSA-only advisories not tracked in NVD.', category: 'intelligence' },
+    { id: 'ghsa', label: 'GHSA', x: 560, y: 700, color: '#f472b6', bg: '#f472b633', path: '/cti/ghsa', description: 'GitHub Security Advisories — library-level vulnerabilities for open-source packages. Includes ~2K GHSA-only advisories not tracked in NVD.', category: 'intelligence' },
     { id: 'nvd', label: 'NVD', x: 320, y: 560, color: '#38bdf8', bg: '#38bdf818', path: '/cti/cves', description: 'National Vulnerability Database — CVSS scores, CWE, descriptions', category: 'intelligence' },
     { id: 'capec', label: 'CAPEC', x: 380, y: 600, color: '#fbbf24', bg: '#fbbf2418', path: '/cti/cves', description: 'CWE→CAPEC→ATT&CK automated bridge linking CVEs to techniques', category: 'intelligence', scale: 0.85 },
     { id: 'ctid', label: 'CTID', x: 520, y: 600, color: '#f472b6', bg: '#f472b618', path: '/cti/cves', description: 'Hand-curated CVE→ATT&CK mappings from MITRE Center for Threat-Informed Defense', category: 'intelligence', scale: 0.85 },
@@ -212,7 +212,7 @@ export function RelationshipModel({ open, onClose }: Props) {
 
         {/* Diagram */}
         <div className="flex-1 overflow-auto p-4">
-          <svg viewBox="0 0 1520 660" className="w-full h-auto min-h-[550px]">
+          <svg viewBox="0 0 1520 760" className="w-full h-auto min-h-[640px]">
             <defs>
               <marker id="arrow" viewBox="0 0 10 7" refX="10" refY="3.5" markerWidth="8" markerHeight="6" orient="auto-start-reverse">
                 <polygon points="0 0, 10 3.5, 0 7" fill={c.borderColor} />
