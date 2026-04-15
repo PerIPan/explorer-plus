@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
+import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '../lib/api';
@@ -220,6 +221,14 @@ export function CsfFramework() {
                               />
                             )}
 
+                            {(detail.informativeReferences ?? []).length > 0 && (
+                              <CsfInformativeReferencesSection
+                                key={`${sub.subcategoryId}-refs`}
+                                references={detail.informativeReferences}
+                                parentId={sub.subcategoryId}
+                              />
+                            )}
+
                             {(detail.techniques ?? []).length === 0 && (detail.implementationExamples ?? []).length === 0 && (
                               <p className="text-xs text-[var(--text-secondary)] italic">
                                 No ATT&CK technique mappings yet. CTID's CRI Profile covers a subset of CSF subcategories focused on Protect and Detect.
@@ -309,6 +318,97 @@ function CsfExamplesSection({
             </li>
           ))}
         </ul>
+      )}
+    </div>
+  );
+}
+
+const REF_FRAMEWORK_META: Record<string, { label: string; colorClass: string; detailHref?: (id: string) => string }> = {
+  '800-53r5': {
+    label: 'NIST 800-53 r5',
+    colorClass: 'text-[var(--accent-teal)] border-[var(--teal-dim)] bg-[var(--teal-faint)]',
+    detailHref: (id) => {
+      // Deep-link into the NIST Controls list pre-filtered to this control.
+      // Only the bare `FAMILY-NN` form matches cleanly; enhancements like
+      // `(01)` are rendered as plain text.
+      const m = id.match(/^[A-Z]{2}-\d{2}$/);
+      return m ? `/frameworks/nist?search=${id}` : '';
+    },
+  },
+  'iso-27001-2022': {
+    label: 'ISO 27001:2022',
+    colorClass: 'text-[var(--accent-blue)] border-[var(--blue-dim)] bg-[var(--blue-faint)]',
+  },
+};
+
+/** Collapsible block that groups Informative References by target framework. */
+function CsfInformativeReferencesSection({
+  references,
+  parentId,
+}: {
+  references: Array<{ framework: string; id: string; text: string | null; relationship: string | null }>;
+  parentId: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const listId = `csf-refs-${parentId}`;
+
+  const grouped = new Map<string, Array<{ id: string }>>();
+  for (const r of references) {
+    const arr = grouped.get(r.framework) ?? [];
+    arr.push({ id: r.id });
+    grouped.set(r.framework, arr);
+  }
+
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        aria-controls={listId}
+        className="flex items-center gap-2 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2 hover:text-[var(--text-primary)]"
+      >
+        <svg
+          aria-hidden="true"
+          className={`w-3 h-3 transition-transform duration-200 ${open ? 'rotate-90' : ''}`}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+        </svg>
+        Informative References ({references.length})
+      </button>
+      {open && (
+        <div id={listId} className="space-y-2 pl-4">
+          {Array.from(grouped.entries()).map(([framework, items]) => {
+            const meta = REF_FRAMEWORK_META[framework] ?? {
+              label: framework,
+              colorClass: 'text-[var(--text-secondary)] border-[var(--border-color)] bg-[var(--surface-card)]',
+            };
+            return (
+              <div key={framework}>
+                <div className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1">
+                  {meta.label} ({items.length})
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {items.map((ref) => {
+                    const href = meta.detailHref?.(ref.id);
+                    const className = `inline-block text-[10px] font-mono px-2 py-0.5 rounded border ${meta.colorClass}`;
+                    return href ? (
+                      <Link key={ref.id} href={href} className={`${className} hover:underline`}>
+                        {ref.id}
+                      </Link>
+                    ) : (
+                      <span key={ref.id} className={className}>{ref.id}</span>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       )}
     </div>
   );

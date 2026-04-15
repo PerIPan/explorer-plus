@@ -327,25 +327,44 @@ export function RelationshipModel({ open, onClose }: Props) {
             {hoveredNode && (() => {
               const node = nodeMap[hoveredNode];
               if (!node) return null;
-              const tooltipY = node.y < 100 ? node.y + 40 : node.y - 45;
-              const tooltipW = Math.max(280, Math.min(420, node.description.length * 4.5 + 20));
+              // Word-wrap the description so the rect always fully contains the text.
+              const MAX_CHARS = 55;
+              const lines: string[] = [];
+              let current = '';
+              for (const w of node.description.split(/\s+/)) {
+                if (current.length + w.length + 1 > MAX_CHARS && current) {
+                  lines.push(current);
+                  current = w;
+                } else {
+                  current = current ? `${current} ${w}` : w;
+                }
+              }
+              if (current) lines.push(current);
+              const longest = Math.max(...lines.map((l) => l.length));
+              const tooltipW = Math.max(200, longest * 5 + 20);
+              const lineHeight = 12;
+              const padY = 6;
+              const tooltipH = lines.length * lineHeight + padY * 2;
+              const tooltipY = node.y < 100 ? node.y + 40 : node.y - (tooltipH + 14);
               return (
                 <g className="pointer-events-none">
                   <rect
-                    x={node.x - tooltipW / 2} y={tooltipY - 12}
-                    width={tooltipW} height={24}
+                    x={node.x - tooltipW / 2} y={tooltipY}
+                    width={tooltipW} height={tooltipH}
                     rx={4}
                     fill={c.surfaceCard}
                     stroke={c.borderColor}
                   />
                   <text
-                    x={node.x} y={tooltipY + 2}
+                    x={node.x} y={tooltipY + padY + 9}
                     textAnchor="middle"
                     fontSize={9}
                     fill={c.textSecondary}
                     className="select-none"
                   >
-                    {node.description}
+                    {lines.map((line, i) => (
+                      <tspan key={i} x={node.x} dy={i === 0 ? 0 : lineHeight}>{line}</tspan>
+                    ))}
                   </text>
                 </g>
               );

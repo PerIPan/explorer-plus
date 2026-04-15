@@ -176,7 +176,7 @@ const FRAMEWORK_TABLES: FrameworkTable[] = [
   { key: 'csf_subcategories', label: 'NIST CSF v2 (Subcategories)' },
   { key: 'csf_technique_mappings', label: 'NIST CSF v2 (CRI Profile Mappings)' },
   { key: 'csf_implementation_examples', label: 'NIST CSF v2 (Implementation Examples)' },
-  { key: 'csf_informative_references', label: 'NIST CSF v2 (Informative References)', expectedEmpty: true },
+  { key: 'csf_informative_references', label: 'NIST CSF v2 (Informative References — 800-53 + ISO 27001)' },
   { key: 'ghsa_advisories', label: 'GitHub Security Advisories' },
   { key: 'ghsa_weaknesses', label: 'GHSA CWE Mappings' },
   { key: 'ghsa_packages', label: 'GHSA Affected Packages' },
