@@ -502,7 +502,7 @@ export function Relationships() {
               }
             }}
             placeholder={selectedId ? 'Search for another entity...' : 'Phishing, APT29, PowerShell, T1059, Linux 7...'}
-            className={`flex-1 bg-transparent text-[16px] ${!selectedId ? 'md:text-base' : 'md:text-sm'} text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none`}
+            className={`flex-1 bg-transparent text-[16px] ${!selectedId ? 'md:text-base' : 'md:text-sm'} text-[var(--text-primary)] placeholder-[var(--text-secondary)] ${!selectedId ? 'placeholder:opacity-50' : ''} focus:outline-none`}
           />
           {searchInput && (
             <button
@@ -516,7 +516,7 @@ export function Relationships() {
           {!selectedId && !searchInput && (
             <span
               aria-hidden="true"
-              className="hidden md:inline-flex items-center gap-1 flex-shrink-0 text-[9px] font-normal uppercase tracking-[0.2em] text-[var(--text-secondary)] opacity-30 pointer-events-none"
+              className="hidden md:inline-flex items-center gap-1 flex-shrink-0 text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--accent-teal)] pointer-events-none"
             >
               <span>←</span>
               <span>Start here</span>
