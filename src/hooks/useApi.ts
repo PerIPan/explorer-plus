@@ -29,6 +29,11 @@ import type {
   CveDetail,
   VerisMapping,
   CloudControl,
+  GhsaEntry,
+  GhsaDetail,
+  PackageListEntry,
+  PackageDetail,
+  CvePackagesResponse,
 } from '../lib/types';
 
 // Re-export for consumers that import from useApi
@@ -283,6 +288,48 @@ export function useCveDetail(cveId: string) {
     queryKey: ['cve-detail', cveId],
     queryFn: () => apiFetch<CveDetail>(`/cves/${cveId}`),
     enabled: Boolean(cveId),
+  });
+}
+
+export function useCvePackages(cveId: string) {
+  return useQuery({
+    queryKey: ['cve-packages', cveId],
+    queryFn: () => apiFetch<CvePackagesResponse>(`/cves/${cveId}/packages`),
+    enabled: Boolean(cveId),
+  });
+}
+
+// ── GHSA hooks ─────────────────────────────────────────────────────────────────
+
+export function useGhsa(params: Record<string, string> = {}) {
+  return useQuery({
+    queryKey: ['ghsa', params],
+    queryFn: () => apiFetch<PaginatedResponse<GhsaEntry>>('/ghsa', params),
+  });
+}
+
+export function useGhsaDetail(ghsaId: string) {
+  return useQuery({
+    queryKey: ['ghsa-detail', ghsaId],
+    queryFn: () => apiFetch<GhsaDetail>(`/ghsa/${ghsaId}`),
+    enabled: Boolean(ghsaId),
+  });
+}
+
+// ── Package hooks ─────────────────────────────────────────────────────────────
+
+export function usePackages(params: Record<string, string> = {}) {
+  return useQuery({
+    queryKey: ['packages', params],
+    queryFn: () => apiFetch<PaginatedResponse<PackageListEntry>>('/packages', params),
+  });
+}
+
+export function usePackageDetail(ecosystem: string, nameEncoded: string) {
+  return useQuery({
+    queryKey: ['package-detail', ecosystem, nameEncoded],
+    queryFn: () => apiFetch<PackageDetail>(`/packages/${ecosystem}/${nameEncoded}`),
+    enabled: Boolean(ecosystem && nameEncoded),
   });
 }
 

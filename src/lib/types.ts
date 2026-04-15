@@ -602,4 +602,69 @@ export interface CveDetail extends Omit<CveEntry, 'sources' | 'techniqueCount' |
   affectedApps: Array<{ normalized: string; vendor: string; product: string; versionStart: string | null; versionEnd: string | null; cveCount: number }>;
   reports: Array<{ id: string; title: string; url: string | null; source: string | null; publishedAt: string | null }>;
   owaspCategories?: Array<{ categoryId: string; name: string; framework: string }>;
+  /** Minimal GHSA stub; full details fetched via /api/v1/ghsa/:ghsaId on demand. */
+  ghsa?: { ghsaId: string; summary: string | null } | null;
+}
+
+// ── GHSA Types ────────────────────────────────────────────────────────────────
+
+export interface GhsaEntry {
+  ghsaId: string;
+  cveId: string | null;
+  summary: string | null;
+  severity: string | null;
+  cvssScore: number | null;
+  publishedAt: string;
+  withdrawnAt: string | null;
+  packageCount: number;
+  ecosystems: string[];
+  techniqueCount: number;
+}
+
+export interface GhsaPackageRef {
+  ecosystem: string;
+  packageName: string;
+  purl: string | null;
+  vulnerableRange: string | null;
+  fixedVersion: string | null;
+}
+
+export interface GhsaDetail extends GhsaEntry {
+  description: string | null;
+  cvssVector: string | null;
+  cvssV4Score: number | null;
+  cvssV4Vector: string | null;
+  cwes: string[];
+  packages: GhsaPackageRef[];
+  techniques: Array<{ attackId: string; name: string }>;
+}
+
+// ── Package Types ─────────────────────────────────────────────────────────────
+
+export interface PackageListEntry {
+  packageId: string;
+  ecosystem: string;
+  packageName: string;
+  purl: string | null;
+  advisoryCount: number;
+  latestPublished: string | null;
+  severities: string[];
+  techniqueCount: number;
+}
+
+export interface PackageDetail {
+  packageId: string;
+  ecosystem: string;
+  packageName: string;
+  purl: string | null;
+  advisoryCount: number;
+  severityCounts: Record<string, number>;
+  advisories: Array<GhsaEntry & { vulnerableRange: string | null; fixedVersion: string | null }>;
+  linkedTechniques: Array<{ attackId: string; name: string }>;
+}
+
+export interface CvePackagesResponse {
+  cveId: string;
+  ghsaId: string | null;
+  packages: GhsaPackageRef[];
 }
