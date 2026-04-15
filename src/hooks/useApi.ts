@@ -291,11 +291,14 @@ export function useCveDetail(cveId: string) {
   });
 }
 
+const FIVE_MIN = 5 * 60 * 1000;
+
 export function useCvePackages(cveId: string) {
   return useQuery({
     queryKey: ['cve-packages', cveId],
     queryFn: () => apiFetch<CvePackagesResponse>(`/cves/${cveId}/packages`),
     enabled: Boolean(cveId),
+    staleTime: FIVE_MIN,
   });
 }
 
@@ -305,14 +308,16 @@ export function useGhsa(params: Record<string, string> = {}) {
   return useQuery({
     queryKey: ['ghsa', params],
     queryFn: () => apiFetch<PaginatedResponse<GhsaEntry>>('/ghsa', params),
+    staleTime: FIVE_MIN,
   });
 }
 
-export function useGhsaDetail(ghsaId: string) {
+export function useGhsaDetail(ghsaId: string, enabled = true) {
   return useQuery({
     queryKey: ['ghsa-detail', ghsaId],
     queryFn: () => apiFetch<GhsaDetail>(`/ghsa/${ghsaId}`),
-    enabled: Boolean(ghsaId),
+    enabled: enabled && Boolean(ghsaId),
+    staleTime: FIVE_MIN,
   });
 }
 
@@ -322,6 +327,7 @@ export function usePackages(params: Record<string, string> = {}) {
   return useQuery({
     queryKey: ['packages', params],
     queryFn: () => apiFetch<PaginatedResponse<PackageListEntry>>('/packages', params),
+    staleTime: FIVE_MIN,
   });
 }
 
@@ -330,6 +336,7 @@ export function usePackageDetail(ecosystem: string, nameEncoded: string) {
     queryKey: ['package-detail', ecosystem, nameEncoded],
     queryFn: () => apiFetch<PackageDetail>(`/packages/${ecosystem}/${nameEncoded}`),
     enabled: Boolean(ecosystem && nameEncoded),
+    staleTime: FIVE_MIN,
   });
 }
 

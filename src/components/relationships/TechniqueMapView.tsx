@@ -1090,7 +1090,11 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
 
 /** Affected Packages MapCard scoped to a technique (uses local MapCard for consistency) */
 function AffectedPackagesMapCard({ attackId }: { attackId: string }) {
-  const { data } = useAffectedPackages(`/techniques/${attackId}/packages`, [attackId]);
+  const { data } = useAffectedPackages(
+    `/techniques/${attackId}/packages`,
+    [attackId],
+    Boolean(attackId),
+  );
   const pkgs = data?.packages ?? [];
   if (pkgs.length === 0) return null;
   return (

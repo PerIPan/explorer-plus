@@ -12,7 +12,8 @@ export async function GET(
   { params }: { params: Promise<{ ghsaId: string }> },
 ) {
   const { ghsaId: raw } = await params;
-  const ghsaId = raw.toUpperCase().replace(/^GHSA-/i, 'GHSA-');
+  // Normalize to canonical uppercase form; regex below still accepts lowercase input.
+  const ghsaId = raw.toUpperCase();
 
   if (!GHSA_ID_RE.test(ghsaId)) {
     return withCors(errorResponse(400, 'Invalid GHSA ID', 'VALIDATION_ERROR'));

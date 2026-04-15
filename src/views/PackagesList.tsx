@@ -1,5 +1,5 @@
 'use client';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useUpdateParams } from '../hooks/useUpdateParams';
 import { usePackages } from '../hooks/useApi';
@@ -99,9 +99,12 @@ export function PackagesList() {
   useEffect(() => { setQInput(q); }, [q]);
   useEffect(() => () => clearTimeout(debounceRef.current), []);
 
-  const params: Record<string, string> = { page: String(page), limit: '50' };
-  if (ecosystem) params.ecosystem = ecosystem;
-  if (q) params.q = q;
+  const params = useMemo(() => {
+    const p: Record<string, string> = { page: String(page), limit: '50' };
+    if (ecosystem) p.ecosystem = ecosystem;
+    if (q) p.q = q;
+    return p;
+  }, [page, ecosystem, q]);
 
   const { data, isLoading } = usePackages(params);
 
@@ -132,8 +135,8 @@ export function PackagesList() {
           className="px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)]"
         >
           <option value="">All ecosystems</option>
-          {ECOSYSTEMS.map((e) => (
-            <option key={e} value={e}>{e}</option>
+          {ECOSYSTEMS.map((eco) => (
+            <option key={eco} value={eco}>{eco}</option>
           ))}
         </select>
       </div>

@@ -1,5 +1,5 @@
 'use client';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useUpdateParams } from '../hooks/useUpdateParams';
@@ -163,12 +163,15 @@ export function GhsaList() {
   useEffect(() => { setQInput(q); }, [q]);
   useEffect(() => () => clearTimeout(debounceRef.current), []);
 
-  const params: Record<string, string> = { page: String(page), limit: '50' };
-  if (severity) params.severity = severity;
-  if (ecosystem) params.ecosystem = ecosystem;
-  if (q) params.q = q;
-  if (hasCve) params.has_cve = hasCve;
-  if (since) params.since = since;
+  const params = useMemo(() => {
+    const p: Record<string, string> = { page: String(page), limit: '50' };
+    if (severity) p.severity = severity;
+    if (ecosystem) p.ecosystem = ecosystem;
+    if (q) p.q = q;
+    if (hasCve) p.has_cve = hasCve;
+    if (since) p.since = since;
+    return p;
+  }, [page, severity, ecosystem, q, hasCve, since]);
 
   const { data, isLoading } = useGhsa(params);
 
@@ -210,8 +213,8 @@ export function GhsaList() {
           className="px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)]"
         >
           <option value="">All ecosystems</option>
-          {ECOSYSTEMS.map((e) => (
-            <option key={e} value={e}>{e}</option>
+          {ECOSYSTEMS.map((eco) => (
+            <option key={eco} value={eco}>{eco}</option>
           ))}
         </select>
 

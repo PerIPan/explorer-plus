@@ -8,13 +8,15 @@ import { z } from 'zod';
 
 export { OPTIONS };
 
+const ECOSYSTEM_RE = /^[a-z][a-z0-9-]{1,49}$/;
+
 const querySchema = paginationSchema.extend({
-  severity: z.string().optional(),
-  ecosystem: z.string().max(50).optional(),
+  severity: z.enum(['CRITICAL', 'HIGH', 'MEDIUM', 'LOW']).optional(),
+  ecosystem: z.string().regex(ECOSYSTEM_RE).optional(),
   since: z.string().optional(),
-  q: z.string().min(1).max(200).optional(),
+  q: z.string().min(3).max(200).optional(),       // min 3 to avoid short-query seq-scan DoS on description
   has_cve: z.enum(['true', 'false']).optional(),
-  package: z.string().min(1).max(200).optional(),
+  package: z.string().min(3).max(200).optional(), // min 3 for same reason
   include_withdrawn: z.enum(['true', 'false', '0', '1']).optional(),
 });
 

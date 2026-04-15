@@ -312,7 +312,11 @@ export function OwaspMapView({ categoryId }: { categoryId: string }) {
 }
 
 function OwaspAffectedPackages({ categoryId }: { categoryId: string }) {
-  const { data } = useAffectedPackages(`/frameworks/owasp/${categoryId}/packages`, [categoryId]);
+  const { data } = useAffectedPackages(
+    `/frameworks/owasp/${categoryId}/packages`,
+    [categoryId],
+    Boolean(categoryId),
+  );
   const pkgs = data?.packages ?? [];
   if (pkgs.length === 0) return null;
   return (

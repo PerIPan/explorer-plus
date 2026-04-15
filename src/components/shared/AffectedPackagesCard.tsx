@@ -22,10 +22,16 @@ const SEVERITY_VARIANTS: Record<string, 'pink' | 'orange' | 'yellow' | 'blue' | 
   LOW: 'blue',
 };
 
-export function useAffectedPackages(fetchPath: string, queryKey: (string | number)[]) {
+export function useAffectedPackages(
+  fetchPath: string,
+  queryKey: (string | number)[],
+  enabled = true,
+) {
   return useQuery({
     queryKey: ['affected-packages', ...queryKey],
     queryFn: () => apiFetch<Response>(fetchPath),
+    enabled,
+    staleTime: 5 * 60 * 1000,
   });
 }
 
@@ -41,27 +47,32 @@ export function PackageChipList({
   const shown = packages.slice(0, limit);
   const more = packages.length - shown.length;
   return (
-    <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto" tabIndex={0} aria-label="Affected packages">
+    <ul
+      role="list"
+      aria-label="Affected packages"
+      className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto list-none m-0 p-0"
+    >
       {shown.map((p) => (
-        <Link
-          key={p.packageId}
-          href={`/packages/${p.ecosystem}/${encodeURIComponent(p.packageName)}`}
-          className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-medium border text-[var(--accent-blue)] bg-[var(--blue-faint)] border-[var(--blue-dim)] hover:brightness-125 transition-all duration-150"
-          title={`${p.advisoryCount} advisor${p.advisoryCount === 1 ? 'y' : 'ies'}`}
-        >
-          <span className="opacity-70">{p.ecosystem}/</span>
-          <span className="font-mono">{p.packageName}</span>
-          <span className="opacity-60">({p.advisoryCount})</span>
-          {p.severityTop && (
-            <Badge label={p.severityTop} variant={SEVERITY_VARIANTS[p.severityTop] ?? 'neutral'} />
-          )}
-        </Link>
+        <li key={p.packageId} role="listitem">
+          <Link
+            href={`/packages/${p.ecosystem}/${encodeURIComponent(p.packageName)}`}
+            className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-medium border text-[var(--accent-blue)] bg-[var(--blue-faint)] border-[var(--blue-dim)] hover:brightness-125 transition-all duration-150"
+            title={`${p.advisoryCount} advisor${p.advisoryCount === 1 ? 'y' : 'ies'}`}
+          >
+            <span className="opacity-70">{p.ecosystem}/</span>
+            <span className="font-mono">{p.packageName}</span>
+            <span className="opacity-60">({p.advisoryCount})</span>
+            {p.severityTop && (
+              <Badge label={p.severityTop} variant={SEVERITY_VARIANTS[p.severityTop] ?? 'neutral'} />
+            )}
+          </Link>
+        </li>
       ))}
       {more > 0 && (
-        <span className="text-xs text-[var(--text-secondary)] self-center ml-1">
+        <li role="listitem" className="text-xs text-[var(--text-secondary)] self-center ml-1">
           +{more} more
-        </span>
+        </li>
       )}
-    </div>
+    </ul>
   );
 }

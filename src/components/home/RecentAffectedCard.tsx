@@ -33,7 +33,14 @@ export function RecentAffectedCard() {
     queryFn: () => apiFetch<RecentAffected>('/home/recent-affected', { days: '10' }),
   });
 
-  if (isLoading || error) return null;
+  if (isLoading) return null;
+  if (error) {
+    return (
+      <p className="text-xs text-[var(--text-secondary)] italic">
+        Couldn&apos;t load recent vulnerability activity. Try refreshing.
+      </p>
+    );
+  }
   const apps = data?.applications ?? [];
   const pkgs = data?.packages ?? [];
   if (apps.length === 0 && pkgs.length === 0) return null;

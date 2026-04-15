@@ -35,7 +35,8 @@ if (!rootArg) {
 const ROOT = resolve(rootArg);
 
 const YEAR_CUTOFF_ISO = '2017-01-01T00:00:00Z';
-const BATCH_SIZE = 500;
+// Smaller batches limit the damage if a single constraint violation rolls back the batch.
+const BATCH_SIZE = 200;
 
 // ── Ecosystem + severity normalization ──────────────────────────────────
 
@@ -485,7 +486,15 @@ try {
       );
     } catch (err) {
       await client.query('ROLLBACK');
-      throw err;
+      stats.batchesFailed = (stats.batchesFailed ?? 0) + 1;
+      stats.advisoriesDroppedOnBatchFailure =
+        (stats.advisoriesDroppedOnBatchFailure ?? 0) + batch.length;
+      // Log and continue — we'd rather land ~99% of advisories than abort the whole sync
+      // on one bad page. Weekly re-runs are idempotent and will retry the dropped batch.
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(
+        `  batch ${stats.batches + (stats.batchesFailed ?? 0)} FAILED (${batch.length} advisories dropped): ${msg.slice(0, 300)}`,
+      );
     }
     batch = [];
   };

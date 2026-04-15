@@ -141,19 +141,25 @@ export function CveDetail() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-0 border-b border-[var(--border-color)]">
+      <div role="tablist" aria-label="CVE detail tabs" className="flex gap-0 border-b border-[var(--border-color)]">
         {TABS.map((tab) => {
           const count = tab.id === 'techniques' ? data.techniques.length
             : tab.id === 'applications' ? (data.affectedApps ?? []).length
             : tab.id === 'packages' ? undefined // lazy — count shown inside tab
             : tab.id === 'reports' ? data.reports.length
             : undefined;
+          const isActive = activeTab === tab.id;
           return (
             <button
               key={tab.id}
+              id={`cve-tab-${tab.id}`}
+              role="tab"
+              aria-selected={isActive}
+              aria-controls={`cve-tabpanel-${tab.id}`}
+              tabIndex={isActive ? 0 : -1}
               onClick={() => setActiveTab(tab.id)}
               className={`px-4 py-2.5 text-sm font-medium transition-colors
-                ${activeTab === tab.id
+                ${isActive
                   ? 'text-[var(--accent-teal)] border-b-2 border-[var(--accent-teal)]'
                   : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                 }`}
@@ -167,7 +173,7 @@ export function CveDetail() {
       {/* Tab Content */}
       <div className="pt-2">
         {activeTab === 'overview' && (
-          <div className="space-y-6">
+          <div role="tabpanel" id="cve-tabpanel-overview" aria-labelledby="cve-tab-overview" className="space-y-6">
             {/* Description */}
             {data.description && (
               <section>
@@ -304,7 +310,7 @@ export function CveDetail() {
         )}
 
         {activeTab === 'techniques' && (
-          <div className="space-y-2">
+          <div role="tabpanel" id="cve-tabpanel-techniques" aria-labelledby="cve-tab-techniques" className="space-y-2">
             {data.techniques.length === 0 ? (
               <p className="text-[var(--text-secondary)] text-sm py-6">No linked techniques found.</p>
             ) : (
@@ -329,7 +335,7 @@ export function CveDetail() {
         )}
 
         {activeTab === 'applications' && (
-          <div className="space-y-2">
+          <div role="tabpanel" id="cve-tabpanel-applications" aria-labelledby="cve-tab-applications" className="space-y-2">
             {(data.affectedApps ?? []).length === 0 ? (
               <p className="text-[var(--text-secondary)] text-sm py-6">
                 No affected applications found.
@@ -370,10 +376,14 @@ export function CveDetail() {
           </div>
         )}
 
-        {activeTab === 'packages' && <CvePackagesTab cveId={data.cveId} />}
+        {activeTab === 'packages' && (
+          <div role="tabpanel" id="cve-tabpanel-packages" aria-labelledby="cve-tab-packages">
+            <CvePackagesTab cveId={data.cveId} />
+          </div>
+        )}
 
         {activeTab === 'reports' && (
-          <div className="space-y-2">
+          <div role="tabpanel" id="cve-tabpanel-reports" aria-labelledby="cve-tab-reports" className="space-y-2">
             {data.reports.length === 0 ? (
               <p className="text-[var(--text-secondary)] text-sm py-6">No related reports found.</p>
             ) : (
@@ -472,7 +482,8 @@ function CvePackagesTab({ cveId }: { cveId: string }) {
 /** Collapsible GHSA enrichment card on the Overview tab */
 function GhsaEnrichmentCard({ ghsaId, summaryStub }: { ghsaId: string; summaryStub: string | null }) {
   const [open, setOpen] = useState(false);
-  const { data, isLoading, error } = useGhsaDetail(open ? ghsaId : '');
+  const { data, isLoading, error } = useGhsaDetail(ghsaId, open);
+  const panelId = `ghsa-enrichment-${ghsaId}`;
   return (
     <section className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg p-4">
       <div className="flex items-start justify-between gap-3 flex-wrap">
@@ -496,6 +507,8 @@ function GhsaEnrichmentCard({ ghsaId, summaryStub }: { ghsaId: string; summarySt
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          aria-controls={panelId}
           className="text-xs px-3 py-1 rounded-md border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--accent-teal)] hover:border-[var(--teal-dim)] transition-colors"
         >
           {open ? 'Collapse' : 'Expand full advisory'}
@@ -503,7 +516,7 @@ function GhsaEnrichmentCard({ ghsaId, summaryStub }: { ghsaId: string; summarySt
       </div>
 
       {open && (
-        <div className="mt-4 border-t border-[var(--border-color)] pt-4">
+        <div id={panelId} className="mt-4 border-t border-[var(--border-color)] pt-4">
           {isLoading && <DiamondLoader text="Loading advisory..." />}
           {error && (
             <p className="text-[var(--accent-orange)] text-xs">Failed to load GHSA details.</p>

@@ -8,9 +8,11 @@ import { z } from 'zod';
 
 export { OPTIONS };
 
+const ECOSYSTEM_RE = /^[a-z][a-z0-9-]{1,49}$/;
+
 const querySchema = paginationSchema.extend({
-  ecosystem: z.string().max(50).optional(),
-  q: z.string().min(1).max(200).optional(),
+  ecosystem: z.string().regex(ECOSYSTEM_RE).optional(),
+  q: z.string().min(3).max(200).optional(),  // min 3 so trigram ILIKE is plannable
 });
 
 export async function GET(req: NextRequest) {

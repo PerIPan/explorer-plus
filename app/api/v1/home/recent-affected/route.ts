@@ -1,16 +1,20 @@
 import { NextRequest } from 'next/server';
 import { query } from '../../lib/db';
-import { jsonResponse, errorResponse } from '../../../lib/handler';
+import { jsonResponse } from '../../../lib/handler';
 import { withCors, corsOptions as OPTIONS } from '../../../lib/cors';
 
 export { OPTIONS };
 
 export async function GET(req: NextRequest) {
   const daysRaw = parseInt(req.nextUrl.searchParams.get('days') ?? '10', 10);
-  const days = Number.isFinite(daysRaw) && daysRaw > 0 && daysRaw <= 365 ? daysRaw : 10;
+  // Cap at 30 days — this endpoint aggregates uncached across 3-way joins on every request.
+  const days = Number.isFinite(daysRaw) && daysRaw > 0 && daysRaw <= 30 ? daysRaw : 10;
   const limit = 7;
 
-  const sinceIso = new Date(Date.now() - days * 86400000).toISOString();
+  // DST-safe: step back N calendar days rather than N × 86400000 ms.
+  const sinceDate = new Date();
+  sinceDate.setDate(sinceDate.getDate() - days);
+  const sinceIso = sinceDate.toISOString();
 
   const appsPromise = query<{
     normalized: string;

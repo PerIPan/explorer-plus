@@ -99,7 +99,10 @@ export function PackageDetail() {
               </thead>
               <tbody>
                 {data.advisories.map((a) => (
-                  <tr key={a.ghsaId} className="border-t border-[var(--border-color)] align-top">
+                  <tr
+                    key={`${a.ghsaId}|${a.vulnerableRange ?? ''}`}
+                    className="border-t border-[var(--border-color)] align-top"
+                  >
                     <td className="px-3 py-2">
                       <SeverityBadge severity={a.severity} />
                     </td>

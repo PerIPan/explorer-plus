@@ -49,7 +49,10 @@ export async function GET(
   }
 
   const pkg = pkgResult.rows[0];
-  const withdrawnFilter = includeWithdrawn ? '' : ' AND g.withdrawn_at IS NULL';
+
+  // Parameterized withdrawn filter: $2 = null when includeWithdrawn, otherwise 'excluded'.
+  // The SQL below short-circuits to no-op when $2 is null.
+  const excludeWithdrawn = includeWithdrawn ? null : 'excluded';
 
   const [advResult, techResult] = await Promise.all([
     query<{
@@ -75,20 +78,22 @@ export async function GET(
          gp.fixed_version          AS "fixedVersion"
        FROM ghsa_packages gp
        JOIN ghsa_advisories g ON g.ghsa_id = gp.ghsa_id
-       WHERE gp.package_id = $1 ${withdrawnFilter}
+       WHERE gp.package_id = $1
+         AND ($2::text IS NULL OR g.withdrawn_at IS NULL)
        ORDER BY g.published_at DESC NULLS LAST, g.ghsa_id DESC`,
-      [pkg.id],
+      [pkg.id, excludeWithdrawn],
     ),
     query<{ attackId: string; name: string }>(
       `SELECT DISTINCT t.attack_id AS "attackId", t.name
        FROM ghsa_packages gp
-       JOIN ghsa_advisories g ON g.ghsa_id = gp.ghsa_id ${withdrawnFilter}
+       JOIN ghsa_advisories g ON g.ghsa_id = gp.ghsa_id
+         AND ($2::text IS NULL OR g.withdrawn_at IS NULL)
        JOIN ghsa_weaknesses w ON w.ghsa_id = g.ghsa_id
        JOIN capec_mappings cm ON cm.cwe_id = w.cwe_id AND cm.technique_id IS NOT NULL
        JOIN techniques t ON t.id = cm.technique_id
        WHERE gp.package_id = $1
        ORDER BY t.attack_id`,
-      [pkg.id],
+      [pkg.id, excludeWithdrawn],
     ),
   ]);
 
