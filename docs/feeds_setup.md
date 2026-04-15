@@ -77,6 +77,46 @@ DATABASE_URL="postgresql://..." node scripts/sync-atlas.mjs
 | `sync-sigma.mjs` | Same as GH Action but requires local `/tmp/sigma/rules/` clone |
 | `sync-atomic.mjs` | Same as GH Action but requires local clone |
 
+### GitHub Security Advisories (GHSA)
+
+Library-level vulnerabilities for npm, PyPI, Go, Maven, RubyGems, NuGet, Composer, Rust, and more. Includes ~2K GHSA-only advisories with no CVE assigned — a strict addition to NVD-sourced coverage. CWE→CAPEC bridge extends ATT&CK technique linkage to every advisory.
+
+| Component | Purpose | Records |
+|---|---|---|
+| `scripts/migrate-ghsa.sql` | Schema: `ecosystems`, `packages`, `ghsa_advisories`, `ghsa_weaknesses`, `ghsa_packages` tables + `unified_weaknesses` VIEW + `package_summary` materialized view | schema only |
+| `scripts/sync-ghsa.mjs` | Paginated GitHub GraphQL ingest, `publishedSince: 2017-01-01`, upserts advisories + CWEs + packages, refreshes `package_summary` | ~13K advisories, ~15K weaknesses, ~50K package-advisory rows, ~25K unique packages |
+| `.github/workflows/sync-ghsa.yml` | Weekly cron (Mondays 06:00 UTC) + `workflow_dispatch`, `concurrency: sync-ghsa` | |
+
+**Prerequisite:** `TOKEN_GHSA` secret in GitHub repo settings → Secrets → Actions. Fine-grained PAT, public-read only, 5,000 req/h rate limit unlocks paginated backfill in ~2-3 minutes.
+
+**Run order (first deploy):**
+
+```bash
+# 1. Apply schema
+DATABASE_URL="postgresql://..." psql "$DATABASE_URL" -f scripts/migrate-ghsa.sql
+
+# 2. First sync — via GitHub Actions (recommended, uses workflow's TOKEN_GHSA secret)
+#    Navigate to Actions tab → Sync GitHub Security Advisories → Run workflow
+#    OR manually if running locally:
+TOKEN_GHSA="github_pat_..." DATABASE_URL="postgresql://..." node scripts/sync-ghsa.mjs
+```
+
+**First-sync edge case:** the migration creates `package_summary` as empty (non-concurrent bootstrap refresh produces 0 rows since no underlying data exists). `/packages` returns an empty list until the first successful sync populates the tables and refreshes the matview at its end. If the first backfill sync fails midway, `/packages` stays empty (not stale) until a manual re-run completes. Operators must verify a successful first-sync post-deployment.
+
+**Mid-sync failure policy:** subsequent syncs that fail partway leave `package_summary` at the last successful refresh state (up to 7 days stale). No refresh-at-start. Operators re-run manually via `workflow_dispatch`.
+
+**Post-sync verification:**
+```bash
+curl -sS https://mitre-explorer.org/api/v1/frameworks/status | jq '.counts.ghsa_advisories, .counts.packages, .counts.ghsa_packages'
+curl -sS "https://mitre-explorer.org/api/v1/packages?ecosystem=npm&limit=3" | jq '.pagination.total'
+curl -sS https://mitre-explorer.org/api/v1/ghsa/GHSA-jfh8-c2jp-5v3q | jq '.packages | length'
+```
+
+**Schema boundaries:**
+- Packages = library identifiers `(ecosystem, package_name)` — **parallel to Applications** (which are vendor/product CPE entities)
+- Applications ↔ Packages are **not directly linked** by design. CVE acts as the natural pivot when one exists.
+- `purl` column on `packages` stores industry-standard Package URL for future SBOM interop
+
 ### NIST CSF v2 Enrichment
 
 Two-step process for loading Implementation Examples and category descriptions
