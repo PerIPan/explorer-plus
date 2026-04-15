@@ -25,7 +25,7 @@ import { TacticMapView } from '../components/relationships/TacticMapView';
 import { SectorMapView } from '../components/relationships/SectorMapView';
 import { ApplicationMapView } from '../components/relationships/ApplicationMapView';
 import { OwaspMapView } from '../components/relationships/OwaspMapView';
-import { RecentCvesCard } from '../components/home/RecentCvesCard';
+import { RecentAffectedCard } from '../components/home/RecentAffectedCard';
 import type { GraphNode, GraphData } from '../lib/types';
 import { DiamondLoader } from '../components/shared/FoldingDiamond';
 
@@ -555,8 +555,8 @@ export function Relationships() {
             to explore its relationships.
           </p>
 
-          {/* Recent CVEs teaser — last 3 days */}
-          <RecentCvesCard />
+          {/* Recently affected Applications + Packages — last 10 days */}
+          <RecentAffectedCard />
 
           {/* Diamond — desktop with labels */}
           <div className="hidden md:flex justify-center pt-24 pb-16 pointer-events-none select-none">
