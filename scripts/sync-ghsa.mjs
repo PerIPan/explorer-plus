@@ -40,8 +40,10 @@ const QUERY = /* GraphQL */ `
         summary
         description
         severity
-        cvss { score vectorString }
-        cvssV4 { score vectorString }
+        cvssSeverities {
+          cvssV3 { score vectorString }
+          cvssV4 { score vectorString }
+        }
         cwes(first: 25) { nodes { cweId } }
         publishedAt
         updatedAt
@@ -379,16 +381,17 @@ try {
         const severity = normalizeSeverity(rawSeverity);
         if (rawSeverity && !severity) stats.unknown_severities++;
 
+        const sev = node.cvssSeverities ?? {};
         const adv = {
           ghsaId,
           cveId,
           summary: node.summary ?? null,
           description: node.description ?? null,
           severity,
-          cvssScore: node.cvss?.score ?? null,
-          cvssVector: node.cvss?.vectorString ?? null,
-          cvssV4Score: node.cvssV4?.score ?? null,
-          cvssV4Vector: node.cvssV4?.vectorString ?? null,
+          cvssScore: sev.cvssV3?.score ?? null,
+          cvssVector: sev.cvssV3?.vectorString ?? null,
+          cvssV4Score: sev.cvssV4?.score ?? null,
+          cvssV4Vector: sev.cvssV4?.vectorString ?? null,
           publishedAt: node.publishedAt,
           upstreamUpdatedAt: node.updatedAt ?? null,
           withdrawnAt: node.withdrawnAt ?? null,
