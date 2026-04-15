@@ -61,11 +61,13 @@ const mainSections: NavSection[] = [
 
 const assetsNav: NavItem[] = [
   { path: '/applications', label: 'Applications', tooltip: 'defender view — vendor products that get exploited (vs Software which is attacker tools)' },
+  { path: '/packages', label: 'Packages', tooltip: 'library/dependency packages with GHSA advisories (npm, PyPI, Go, Maven, RubyGems, NuGet, Composer, Rust)' },
 ];
 
 const ctiNav: NavItem[] = [
   { path: '/cti/reports', label: 'Reports', tooltip: 'threat intelligence reports from OTX, RSS feeds' },
   { path: '/cti/cves', label: 'CVEs', tooltip: 'known vulnerabilities from OTX, CISA KEV, enriched via NVD' },
+  { path: '/cti/ghsa', label: 'GHSA', tooltip: 'GitHub Security Advisories — library-level vulnerabilities for npm, PyPI, Go, Maven, and more' },
   { path: '/cti/iocs', label: 'IOCs', tooltip: 'hashes, domains, IPs, URLs from AlienVault OTX, CISA KEV' },
 ];
 
