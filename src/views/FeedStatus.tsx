@@ -15,6 +15,7 @@ const SOURCE_LABELS: Record<string, string> = {
   nvd: 'NVD CVE Enrichment',
   virustotal: 'VirusTotal Hash Enrichment',
   matview_refresh: 'Matview refresh (app_technique_groups + package_summary)',
+  cve_products: 'CVE → Application enrichment (re-fetches NVD CPE data for CVEs missing products)',
 };
 
 function formatTimeAgo(iso: string): string {
