@@ -357,7 +357,8 @@ export function useCapecPattern(capecId: string) {
     queryKey: ['capec-pattern', capecId],
     queryFn: () => apiFetch<CapecDetail>(`/capec/${capecId}`),
     enabled: Boolean(capecId),
-    staleTime: FIVE_MIN,
+    // Align with backend s-maxage=3600 — CAPEC taxonomy changes annually
+    staleTime: 60 * 60 * 1000,
   });
 }
 

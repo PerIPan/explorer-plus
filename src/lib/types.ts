@@ -1,3 +1,35 @@
+// ── CAPEC shared reference types (hoisted — used by Technique, CveDetail,
+//    GhsaDetail interfaces below) ──────────────────────────────────────────
+
+/** Minimal CAPEC reference surfaced in CVE/GHSA/Technique detail responses */
+export interface CapecRef {
+  capecId: string;
+  name: string;
+  severity: string | null;
+  likelihood: string | null;
+  abstraction: string | null;
+}
+
+export interface CapecListEntry extends CapecRef {
+  cweIds: string[] | null;
+  techniqueCount: number;
+  mitigationCount: number;
+}
+
+export interface CapecDetail extends CapecRef {
+  description: string | null;
+  status: string | null;
+  prerequisites: string[] | null;
+  resourcesRequired: string[] | null;
+  skillsRequired: Record<string, string>;
+  consequences: Record<string, string[]>;
+  exampleInstances: string[] | null;
+  cweIds: string[] | null;
+  mitigations: Array<{ name: string | null; description: string | null }>;
+  related: Array<{ relatedCapecId: string; nature: string; name: string | null }>;
+  techniques: Array<{ attackId: string; name: string }>;
+}
+
 /** Base fields shared by every MITRE ATT&CK entity. */
 export interface BaseEntity {
   id: string;
@@ -58,6 +90,7 @@ export interface Technique extends BaseEntity {
   detection: string | null;
   maturity: string | null;
   atlasXrefs?: Array<{ attackId: string; name: string; domain: string | null }>;
+  /** Only populated by /api/v1/techniques/[attackId] detail endpoint; undefined in list contexts. */
   capecPatterns?: CapecRef[];
   sub_techniques: SubTechnique[];
   /** Relationship data returned by the detail endpoint */
@@ -618,38 +651,7 @@ export interface CveDetail extends Omit<CveEntry, 'sources' | 'techniqueCount' |
   /** Minimal GHSA stub; full details fetched via /api/v1/ghsa/:ghsaId on demand. */
   ghsa?: { ghsaId: string; summary: string | null } | null;
   /** Attack patterns whose referenced CWEs overlap this CVE's CWEs */
-  capecPatterns?: CapecRef[];
-}
-
-// ── CAPEC Types ────────────────────────────────────────────────────────────────
-
-/** Minimal CAPEC reference surfaced in CVE/GHSA/Technique detail responses */
-export interface CapecRef {
-  capecId: string;
-  name: string;
-  severity: string | null;
-  likelihood: string | null;
-  abstraction: string | null;
-}
-
-export interface CapecListEntry extends CapecRef {
-  cweIds: string[] | null;
-  techniqueCount: number;
-  mitigationCount: number;
-}
-
-export interface CapecDetail extends CapecRef {
-  description: string | null;
-  status: string | null;
-  prerequisites: string[] | null;
-  resourcesRequired: string[] | null;
-  skillsRequired: Record<string, string>;
-  consequences: Record<string, string[]>;
-  exampleInstances: string[] | null;
-  cweIds: string[] | null;
-  mitigations: Array<{ name: string | null; description: string | null }>;
-  related: Array<{ relatedCapecId: string; nature: string; name: string | null }>;
-  techniques: Array<{ attackId: string; name: string }>;
+  capecPatterns: CapecRef[];
 }
 
 // ── GHSA Types ────────────────────────────────────────────────────────────────
@@ -683,7 +685,7 @@ export interface GhsaDetail extends GhsaEntry {
   cwes: string[];
   packages: GhsaPackageRef[];
   techniques: Array<{ attackId: string; name: string }>;
-  capecPatterns?: CapecRef[];
+  capecPatterns: CapecRef[];
 }
 
 // ── Package Types ─────────────────────────────────────────────────────────────

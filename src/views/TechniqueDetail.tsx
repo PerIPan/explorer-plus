@@ -741,7 +741,7 @@ export function TechniqueDetail() {
             <span className="text-[var(--text-secondary)] shrink-0">Attack Patterns (CAPEC):</span>
             <div className="flex flex-wrap gap-1.5">
               {data.capecPatterns.map((p) => (
-                <a
+                <Link
                   key={p.capecId}
                   href={`/cti/capec/${p.capecId}`}
                   title={p.severity ? `${p.name} · Severity: ${p.severity}` : p.name}
@@ -749,7 +749,7 @@ export function TechniqueDetail() {
                 >
                   <span className="font-mono">{p.capecId}</span>
                   <span>{p.name}</span>
-                </a>
+                </Link>
               ))}
             </div>
           </div>

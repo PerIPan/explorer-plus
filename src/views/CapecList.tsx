@@ -6,21 +6,8 @@ import { useCapecPatterns } from '../hooks/useApi';
 import { PageHeader } from '../components/layout/PageHeader';
 import { DataTable, type ColumnDef } from '../components/shared/DataTable';
 import { Badge } from '../components/shared/Badge';
+import { CAPEC_SEVERITY_VARIANTS, CAPEC_LIKELIHOOD_VARIANTS } from '../lib/capecVariants';
 import type { CapecListEntry } from '../lib/types';
-
-const SEVERITY_VARIANTS: Record<string, 'pink' | 'orange' | 'yellow' | 'blue' | 'neutral'> = {
-  'Very High': 'pink',
-  'High': 'orange',
-  'Medium': 'yellow',
-  'Low': 'blue',
-  'Very Low': 'neutral',
-};
-
-const LIKELIHOOD_VARIANTS: Record<string, 'orange' | 'yellow' | 'blue' | 'neutral'> = {
-  High: 'orange',
-  Medium: 'yellow',
-  Low: 'blue',
-};
 
 const ABSTRACTIONS = ['Meta', 'Standard', 'Detailed'] as const;
 const SEVERITIES = ['Very High', 'High', 'Medium', 'Low', 'Very Low'] as const;
@@ -57,7 +44,7 @@ const columns: ColumnDef<CapecListEntry>[] = [
     width: '100px',
     render: (row) =>
       row.severity ? (
-        <Badge label={row.severity} variant={SEVERITY_VARIANTS[row.severity] ?? 'neutral'} />
+        <Badge label={row.severity} variant={CAPEC_SEVERITY_VARIANTS[row.severity] ?? 'neutral'} />
       ) : (
         <span className="text-xs text-[var(--text-secondary)]">—</span>
       ),
@@ -68,7 +55,7 @@ const columns: ColumnDef<CapecListEntry>[] = [
     width: '100px',
     render: (row) =>
       row.likelihood ? (
-        <Badge label={row.likelihood} variant={LIKELIHOOD_VARIANTS[row.likelihood] ?? 'neutral'} />
+        <Badge label={row.likelihood} variant={CAPEC_LIKELIHOOD_VARIANTS[row.likelihood] ?? 'neutral'} />
       ) : (
         <span className="text-xs text-[var(--text-secondary)]">—</span>
       ),

@@ -7,20 +7,7 @@ import { Badge } from '../components/shared/Badge';
 import { EntityLink } from '../components/shared/EntityLink';
 import { FrameworkMapCard } from '../components/relationships/shared/FrameworkMapCard';
 import { DiamondLoader } from '../components/shared/FoldingDiamond';
-
-const SEVERITY_VARIANTS: Record<string, 'pink' | 'orange' | 'yellow' | 'blue' | 'neutral'> = {
-  'Very High': 'pink',
-  'High': 'orange',
-  'Medium': 'yellow',
-  'Low': 'blue',
-  'Very Low': 'neutral',
-};
-
-const LIKELIHOOD_VARIANTS: Record<string, 'orange' | 'yellow' | 'blue' | 'neutral'> = {
-  High: 'orange',
-  Medium: 'yellow',
-  Low: 'blue',
-};
+import { CAPEC_SEVERITY_VARIANTS, CAPEC_LIKELIHOOD_VARIANTS } from '../lib/capecVariants';
 
 const NATURE_LABELS: Record<string, string> = {
   ChildOf: 'Parent pattern',
@@ -59,10 +46,10 @@ export function CapecDetail() {
           <div className="flex items-center gap-2 flex-wrap">
             {data.abstraction && <Badge label={data.abstraction} variant="neutral" />}
             {data.severity && (
-              <Badge label={`Severity: ${data.severity}`} variant={SEVERITY_VARIANTS[data.severity] ?? 'neutral'} />
+              <Badge label={`Severity: ${data.severity}`} variant={CAPEC_SEVERITY_VARIANTS[data.severity] ?? 'neutral'} />
             )}
             {data.likelihood && (
-              <Badge label={`Likelihood: ${data.likelihood}`} variant={LIKELIHOOD_VARIANTS[data.likelihood] ?? 'neutral'} />
+              <Badge label={`Likelihood: ${data.likelihood}`} variant={CAPEC_LIKELIHOOD_VARIANTS[data.likelihood] ?? 'neutral'} />
             )}
             {data.status && <Badge label={data.status} variant="neutral" />}
             <a
@@ -136,7 +123,7 @@ export function CapecDetail() {
             {Object.entries(data.skillsRequired).map(([level, desc]) => (
               <div key={level} className="text-xs">
                 <div className="mb-1">
-                  <Badge label={level} variant={LIKELIHOOD_VARIANTS[level] ?? 'neutral'} />
+                  <Badge label={level} variant={CAPEC_LIKELIHOOD_VARIANTS[level] ?? 'neutral'} />
                 </div>
                 <p className="text-[var(--text-secondary)] leading-relaxed whitespace-pre-wrap pl-2">{desc}</p>
               </div>

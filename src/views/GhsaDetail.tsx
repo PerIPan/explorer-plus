@@ -206,7 +206,7 @@ export function GhsaDetail() {
       )}
 
       {/* Attack patterns (CAPEC) linked via CWE overlap */}
-      {data.capecPatterns && data.capecPatterns.length > 0 && (
+      {data.capecPatterns.length > 0 && (
         <section>
           <h2 className="text-sm font-semibold text-[var(--text-primary)] uppercase tracking-wider mb-2">
             Attack Patterns (CAPEC) — {data.capecPatterns.length}
