@@ -23,40 +23,27 @@ interface NavSection {
   items: NavItem[];
 }
 
-const mainSections: NavSection[] = [
-  {
-    items: [
-      { path: '/', label: '360 Views', tooltip: 'explore entity connections — graph and dedicated map views for every entity type' },
-      { path: '/matrix', label: 'Matrix', tooltip: 'att&ck technique matrix heatmap — tactics vs techniques' },
-      { path: '/dashboard', label: 'Overview', tooltip: 'summary stats, charts, and top threat groups' },
-      { path: '/cti/feed-status', label: 'Feed Status', tooltip: 'CTI feed ingestion health and manual sync controls' },
-    ],
-  },
-  {
-    label: 'Threat Actors',
-    items: [
-      { path: '/groups', label: 'Groups', tooltip: 'tracked threat actor groups (APT29, Lazarus, etc.)' },
-      { path: '/campaigns', label: 'Campaigns', tooltip: 'named intrusion campaigns with timelines' },
-      { path: '/sectors', label: 'Sectors', tooltip: 'industry sectors targeted by threat groups' },
-    ],
-  },
-  {
-    label: 'Offensive',
-    items: [
-      { path: '/tactics', label: 'Tactics', tooltip: 'kill chain phases: recon → impact' },
-      { path: '/techniques', label: 'Techniques', tooltip: 'attack techniques and sub-techniques used by adversaries' },
-      { path: '/software', label: 'Software', tooltip: 'attacker view — malware and tools used by threat actors (vs Applications which are victim products)' },
-    ],
-  },
-  {
-    label: 'Defensive',
-    items: [
-      { path: '/mitigations', label: 'Mitigations', tooltip: 'countermeasures to prevent or limit techniques' },
-      { path: '/data-sources', label: 'Data Sources', tooltip: 'telemetry sources for detecting techniques' },
-      { path: '/frameworks/detection', label: 'Detection', tooltip: 'ATT&CK v18 detection strategies and analytics' },
-      { path: '/frameworks/engage', label: 'Engage', tooltip: 'adversary deception and engagement activities' },
-    ],
-  },
+const topNav: NavItem[] = [
+  { path: '/', label: '360 Views', tooltip: 'explore entity connections — graph and dedicated map views for every entity type' },
+  { path: '/matrix', label: 'Matrix', tooltip: 'att&ck technique matrix heatmap — tactics vs techniques' },
+  { path: '/dashboard', label: 'Overview', tooltip: 'summary stats, charts, and top threat groups' },
+  { path: '/cti/feed-status', label: 'Feed Status', tooltip: 'CTI feed ingestion health and manual sync controls' },
+];
+
+const threatActorsNav: NavItem[] = [
+  { path: '/groups', label: 'Groups', tooltip: 'tracked threat actor groups (APT29, Lazarus, etc.)' },
+  { path: '/campaigns', label: 'Campaigns', tooltip: 'named intrusion campaigns with timelines' },
+  { path: '/sectors', label: 'Sectors', tooltip: 'industry sectors targeted by threat groups' },
+];
+
+const attackNav: NavItem[] = [
+  { path: '/tactics', label: 'Tactics', tooltip: 'kill chain phases: recon → impact' },
+  { path: '/techniques', label: 'Techniques', tooltip: 'attack techniques and sub-techniques used by adversaries' },
+  { path: '/software', label: 'Software', tooltip: 'attacker view — malware and tools used by threat actors (vs Applications which are victim products)' },
+  { path: '/mitigations', label: 'Mitigations', tooltip: 'countermeasures to prevent or limit techniques' },
+  { path: '/data-sources', label: 'Data Sources', tooltip: 'telemetry sources for detecting techniques' },
+  { path: '/frameworks/detection', label: 'Detection', tooltip: 'ATT&CK v18 detection strategies and analytics' },
+  { path: '/frameworks/engage', label: 'Engage', tooltip: 'adversary deception and engagement activities' },
 ];
 
 const assetsNav: NavItem[] = [
@@ -81,6 +68,7 @@ const frameworksNav: NavItem[] = [
   { path: '/cti/sigma', label: 'Sigma Rules', tooltip: 'detection signatures mapped to techniques (SigmaHQ)' },
   { path: '/frameworks/atomic', label: 'Atomic Tests', tooltip: 'red team validation tests from Atomic Red Team' },
   { path: '/cti/capec', label: 'CAPEC', tooltip: 'MITRE Common Attack Pattern Enumeration — 615 attack patterns with severity, likelihood, prerequisites, mitigations' },
+  { path: '/frameworks/cra', label: 'CRA – wip', tooltip: 'EU Cyber Resilience Act (Regulation 2024/2847) — reference page covering key dates, Annex I essential requirements, Article 14 reporting cadence. Mappings to ATT&CK/CWE pending harmonised standards.' },
 ];
 
 const extendedIntelNav: NavItem[] = [
@@ -206,23 +194,15 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         <SectorDropdown />
       </div>
 
-      {/* Main Nav */}
+      {/* Main Nav — unlabeled top entries */}
       <nav
         className="flex-1 px-2 py-4 space-y-0.5 overflow-y-auto
           [scrollbar-width:thin] [scrollbar-color:var(--border-color)_transparent]
           [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent
           [&::-webkit-scrollbar-thumb]:bg-[var(--border-color)] [&::-webkit-scrollbar-thumb]:rounded-full"
       >
-        {mainSections.map((section, si) => (
-          <div key={si} className={si > 0 ? 'mt-3 pt-3 border-t border-[var(--border-faint)]' : ''}>
-            {section.label ? (
-              <CollapsibleNavSection label={section.label} items={section.items} />
-            ) : (
-              section.items.map((item) => (
-                <NavItemLink key={item.path} path={item.path} label={item.label} tooltip={item.tooltip} end={item.path === '/'} />
-              ))
-            )}
-          </div>
+        {topNav.map((item) => (
+          <NavItemLink key={item.path} path={item.path} label={item.label} tooltip={item.tooltip} end={item.path === '/'} />
         ))}
       </nav>
 
@@ -248,6 +228,22 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       {/* Frameworks Section */}
       <div className="px-2 py-3">
         <CollapsibleNavSection label="Frameworks" items={frameworksNav} defaultOpen={false} title="Not filtered by sector" />
+      </div>
+
+      {/* Separator */}
+      <div className="mx-4 border-t border-[var(--border-color)]" />
+
+      {/* Threat Actors Section */}
+      <div className="px-2 py-3">
+        <CollapsibleNavSection label="Threat Actors" items={threatActorsNav} />
+      </div>
+
+      {/* Separator */}
+      <div className="mx-4 border-t border-[var(--border-color)]" />
+
+      {/* ATT&CK Section — merged offensive + defensive ATT&CK taxonomy */}
+      <div className="px-2 py-3">
+        <CollapsibleNavSection label="ATT&CK" items={attackNav} />
       </div>
 
       {/* Separator */}

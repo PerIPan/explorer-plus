@@ -591,7 +591,6 @@ export function Relationships() {
             <span className="font-medium text-[var(--text-primary)]">Software</span>,{' '}
             <span className="font-medium text-[var(--text-primary)]">Campaign</span>,{' '}
             <span className="font-medium text-[var(--text-primary)]">Mitigation</span>,{' '}
-            <span className="font-medium text-[var(--text-primary)]">Data Source</span>,{' '}
             <span className="font-medium text-[var(--text-primary)]">Tactic</span>,{' '}
             <span className="font-medium text-[var(--text-primary)]">Sector</span>,{' '}
             <span className="font-medium text-[var(--text-primary)]">Application</span>, or{' '}
@@ -745,16 +744,18 @@ export function Relationships() {
                 height={Math.min(800, viewportHeight - 200)}
               />
 
-              {/* Legend */}
+              {/* Legend — data_source intentionally omitted from the landing surface */}
               <div className="flex flex-wrap items-center gap-2 pt-2">
                 <span className="text-xs text-[var(--text-secondary)] font-semibold mr-1">Node types:</span>
-                {Object.entries(TYPE_VARIANT).map(([type, variant]) => (
-                  <Badge
-                    key={type}
-                    label={typeLabel(type)}
-                    variant={variant}
-                  />
-                ))}
+                {Object.entries(TYPE_VARIANT)
+                  .filter(([type]) => type !== 'data_source')
+                  .map(([type, variant]) => (
+                    <Badge
+                      key={type}
+                      label={typeLabel(type)}
+                      variant={variant}
+                    />
+                  ))}
               </div>
             </div>
           )}
