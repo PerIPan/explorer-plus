@@ -407,6 +407,7 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
   const campaigns = technique.campaigns ?? [];
   const mitigations = technique.mitigations ?? [];
   const dataComponents = technique.dataComponents ?? [];
+  const capecPatterns = technique.capecPatterns ?? [];
 
 
 
@@ -717,7 +718,7 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
 
       {/* HOW TO PREVENT */}
       <MapCard label="How to Prevent" icon={IconShield}
-        count={mitigations.length + nistControls.length + csfSubcategories.length}
+        count={mitigations.length + nistControls.length + csfSubcategories.length + capecPatterns.length}
       >
         {mitigations.length > 0 ? (
           <MapRow prefix="Mitigations">
@@ -728,6 +729,23 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
         ) : (
           <MapRow prefix="Mitigations">
             <span className="text-xs text-[var(--text-secondary)]">No mitigations linked.</span>
+          </MapRow>
+        )}
+
+        {capecPatterns.length > 0 && (
+          <MapRow prefix="CAPEC">
+            {capecPatterns.map((p) => (
+              <Link
+                key={p.capecId}
+                href={`/cti/capec/${p.capecId}`}
+                prefetch={false}
+                title={p.severity ? `${p.name} · Severity: ${p.severity}` : p.name}
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium border bg-[var(--yellow-faint)] text-[var(--accent-yellow)] border-[var(--yellow-dim)] hover:underline"
+              >
+                <span className="font-mono opacity-80">{p.capecId}</span>
+                <span>{p.name}</span>
+              </Link>
+            ))}
           </MapRow>
         )}
 
