@@ -69,7 +69,6 @@ const ctiNav: NavItem[] = [
   { path: '/cti/cves', label: 'CVEs', tooltip: 'known vulnerabilities from OTX, CISA KEV, enriched via NVD' },
   { path: '/cti/ghsa', label: 'GHSA', tooltip: 'GitHub Security Advisories — library-level vulnerabilities for npm, PyPI, Go, Maven, and more' },
   { path: '/cti/iocs', label: 'IOCs', tooltip: 'hashes, domains, IPs, URLs from AlienVault OTX, CISA KEV' },
-  { path: '/cti/capec', label: 'CAPEC', tooltip: 'MITRE Common Attack Pattern Enumeration and Classification — 615 patterns with severity, likelihood, prerequisites, mitigations' },
 ];
 
 const frameworksNav: NavItem[] = [
@@ -81,6 +80,7 @@ const frameworksNav: NavItem[] = [
   { path: '/frameworks/cloud', label: 'Cloud Controls', tooltip: 'Azure and GCP security controls mapped to techniques' },
   { path: '/cti/sigma', label: 'Sigma Rules', tooltip: 'detection signatures mapped to techniques (SigmaHQ)' },
   { path: '/frameworks/atomic', label: 'Atomic Tests', tooltip: 'red team validation tests from Atomic Red Team' },
+  { path: '/cti/capec', label: 'CAPEC', tooltip: 'MITRE Common Attack Pattern Enumeration — 615 attack patterns with severity, likelihood, prerequisites, mitigations' },
 ];
 
 const extendedIntelNav: NavItem[] = [
