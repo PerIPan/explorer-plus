@@ -132,14 +132,20 @@ export async function GET(
       // capec_mappings bridge. Filter to rows where the CAPEC has full-taxonomy
       // data in capec_patterns (skip bridge-only rows without names).
       query<{ capecId: string; name: string; severity: string | null; likelihood: string | null; abstraction: string | null }>(
-        `SELECT DISTINCT p.id AS "capecId", p.name, p.severity, p.likelihood, p.abstraction
-         FROM capec_mappings cm
-         JOIN capec_patterns p ON p.id = cm.capec_id
-         WHERE cm.attack_technique_id = $1
+        // Wrapped in a subquery because SELECT DISTINCT + CASE-in-ORDER-BY
+        // fails with "ORDER BY expressions must appear in select list".
+        `SELECT "capecId", name, severity, likelihood, abstraction
+         FROM (
+           SELECT DISTINCT
+             p.id AS "capecId", p.name, p.severity, p.likelihood, p.abstraction
+           FROM capec_mappings cm
+           JOIN capec_patterns p ON p.id = cm.capec_id
+           WHERE cm.attack_technique_id = $1
+         ) t
          ORDER BY
-           CASE p.severity WHEN 'Very High' THEN 5 WHEN 'High' THEN 4 WHEN 'Medium' THEN 3
+           CASE severity WHEN 'Very High' THEN 5 WHEN 'High' THEN 4 WHEN 'Medium' THEN 3
                 WHEN 'Low' THEN 2 WHEN 'Very Low' THEN 1 ELSE 0 END DESC,
-           p.id`,
+           "capecId"`,
         [attackId],
       ).catch(() => ({ rows: [] as Array<{ capecId: string; name: string; severity: string | null; likelihood: string | null; abstraction: string | null }> })),
     ]);

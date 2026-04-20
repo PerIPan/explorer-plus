@@ -149,7 +149,7 @@ export async function GET(
     `SELECT p.id AS "capecId", p.name, p.severity, p.likelihood, p.abstraction
      FROM capec_patterns p
      WHERE p.cwe_ids && (
-       SELECT COALESCE(ARRAY_AGG(DISTINCT cwe_id), ARRAY[]::text[])
+       SELECT COALESCE(ARRAY_AGG(DISTINCT cwe_id::text), ARRAY[]::text[])
        FROM cve_weaknesses WHERE cve_id = $1 AND cwe_id LIKE 'CWE-%'
      )
      ORDER BY
