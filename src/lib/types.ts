@@ -591,8 +591,13 @@ export interface CveEntry {
   description: string | null;
   cvssScore: number | null;
   cvssSeverity: string | null;
+  cvssVector: string | null;
   cweId: string | null;
   publishedAt: string | null;
+  /** EPSS: probability of exploitation in next 30 days [0, 0.99999] */
+  epssScore: number | null;
+  /** EPSS: percentile rank across all CVEs */
+  epssPercentile: number | null;
   sources: string[];
   techniqueCount: number;
   techniques: string[];
@@ -603,6 +608,7 @@ export interface CveDetail extends Omit<CveEntry, 'sources' | 'techniqueCount' |
   cvssVector: string | null;
   cwes: string[];
   isKev: boolean;
+  epssUpdatedAt: string | null;
   sources: Array<{ source: string; sourceRef: string | null }>;
   techniques: Array<{ attackId: string; name: string; tactics: string[]; sources: string[] }>;
   affectedApps: Array<{ normalized: string; vendor: string; product: string; versionStart: string | null; versionEnd: string | null; cveCount: number }>;

@@ -13,6 +13,7 @@ import { PageHeader } from '../components/layout/PageHeader';
 import { DataTable, type ColumnDef } from '../components/shared/DataTable';
 import { EntityLink } from '../components/shared/EntityLink';
 import { Badge } from '../components/shared/Badge';
+import { CvssBadge } from '../components/shared/CvssBadge';
 import type { CveEntry } from '../lib/types';
 
 const SEVERITIES = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'];
@@ -189,13 +190,36 @@ const columns: ColumnDef<CveEntry>[] = [
   {
     key: 'cvssScore',
     header: 'CVSS',
-    tooltip: 'Common Vulnerability Scoring System v3.1 base score (0–10)',
-    width: '70px',
-    render: (row) => (
-      <span className="text-xs text-[var(--text-primary)] font-mono">
-        {row.cvssScore != null ? row.cvssScore.toFixed(1) : '—'}
-      </span>
-    ),
+    tooltip: 'CVSS v3 base score — click for per-metric breakdown',
+    width: '140px',
+    render: (row) =>
+      row.cvssScore != null ? (
+        <CvssBadge score={row.cvssScore} vector={row.cvssVector ?? null} />
+      ) : (
+        <span className="text-xs text-[var(--text-secondary)]">—</span>
+      ),
+  },
+  {
+    key: 'epssScore',
+    header: 'EPSS',
+    tooltip: 'Exploit Prediction Scoring System — probability of exploitation in next 30 days',
+    width: '90px',
+    align: 'right',
+    render: (row) =>
+      row.epssScore != null ? (
+        <span
+          className="text-xs font-mono text-[var(--text-primary)]"
+          title={
+            row.epssPercentile != null
+              ? `${(row.epssPercentile * 100).toFixed(1)}th percentile`
+              : undefined
+          }
+        >
+          {(row.epssScore * 100).toFixed(2)}%
+        </span>
+      ) : (
+        <span className="text-xs text-[var(--text-secondary)]">—</span>
+      ),
   },
   {
     key: 'cweId',

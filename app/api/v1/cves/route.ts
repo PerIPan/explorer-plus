@@ -111,15 +111,19 @@ export async function GET(req: NextRequest) {
     description: string | null;
     cvss_score: string | null;
     cvss_severity: string | null;
+    cvss_vector: string | null;
     cwe_id: string | null;
     published_at: string | null;
+    epss_score: string | null;
+    epss_percentile: string | null;
     sources: string | null;
     technique_count: string;
     technique_ids: string | null;
     app_names: string | null;
   }>(
     `WITH page AS (
-       SELECT cd.cve_id, cd.description, cd.cvss_score, cd.cvss_severity, cd.cwe_id, cd.published_at
+       SELECT cd.cve_id, cd.description, cd.cvss_score, cd.cvss_severity, cd.cvss_vector,
+              cd.cwe_id, cd.published_at, cd.epss_score, cd.epss_percentile
        FROM cve_details cd
        ${whereClause}
        ORDER BY cd.published_at ${sortDir} NULLS LAST, cd.cve_id DESC
@@ -169,8 +173,11 @@ export async function GET(req: NextRequest) {
     description: r.description,
     cvssScore: r.cvss_score ? parseFloat(r.cvss_score) : null,
     cvssSeverity: r.cvss_severity,
+    cvssVector: r.cvss_vector,
     cweId: r.cwe_id,
     publishedAt: r.published_at,
+    epssScore: r.epss_score ? parseFloat(r.epss_score) : null,
+    epssPercentile: r.epss_percentile ? parseFloat(r.epss_percentile) : null,
     sources: r.sources ? r.sources.split(',') : [],
     techniqueCount: parseInt(r.technique_count, 10),
     techniques: r.technique_ids ? r.technique_ids.split(',') : [],

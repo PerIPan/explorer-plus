@@ -27,9 +27,13 @@ export async function GET(
         cwe_id: string | null;
         published_at: string | null;
         is_kev: boolean;
+        epss_score: string | null;
+        epss_percentile: string | null;
+        epss_updated_at: string | null;
       }>(
         `SELECT cve_id, description, cvss_score, cvss_severity, cvss_vector, cwe_id, published_at,
-                COALESCE(is_kev, false) AS is_kev
+                COALESCE(is_kev, false) AS is_kev,
+                epss_score, epss_percentile, epss_updated_at
          FROM cve_details WHERE cve_id = $1`,
         [id],
       ),
@@ -165,6 +169,9 @@ export async function GET(
     cvssScore: detail?.cvss_score ? parseFloat(detail.cvss_score) : null,
     cvssSeverity: detail?.cvss_severity ?? null,
     cvssVector: detail?.cvss_vector ?? null,
+    epssScore: detail?.epss_score ? parseFloat(detail.epss_score) : null,
+    epssPercentile: detail?.epss_percentile ? parseFloat(detail.epss_percentile) : null,
+    epssUpdatedAt: detail?.epss_updated_at ?? null,
     cweId: detail?.cwe_id ?? null,
     cwes: cwesResult.rows.map((r) => r.cwe_id),
     isKev: detail?.is_kev ?? false,

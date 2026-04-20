@@ -16,6 +16,7 @@ const SOURCE_LABELS: Record<string, string> = {
   virustotal: 'VirusTotal Hash Enrichment',
   matview_refresh: 'Matview refresh (app_technique_groups + package_summary)',
   cve_products: 'CVE → Application enrichment (re-fetches NVD CPE data for CVEs missing products)',
+  epss: 'EPSS (First.org exploit-probability scores)',
 };
 
 function formatTimeAgo(iso: string): string {

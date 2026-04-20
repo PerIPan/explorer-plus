@@ -7,6 +7,7 @@ import { useCveDetail, useCvePackages, useGhsaDetail } from '../hooks/useApi';
 import { formatDate } from '../lib/formatDate';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Badge } from '../components/shared/Badge';
+import { CvssBadge } from '../components/shared/CvssBadge';
 import { EntityLink } from '../components/shared/EntityLink';
 import { DiamondLoader } from '../components/shared/FoldingDiamond';
 
@@ -118,9 +119,22 @@ export function CveDetail() {
       <div>
         <div className="flex items-center gap-2 mb-2 flex-wrap">
           <SeverityBadge severity={data.cvssSeverity} />
-          {data.cvssScore != null && (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border bg-[var(--blue-faint)] text-[var(--accent-blue)] border-[var(--blue-dim)]">
-              CVSS {data.cvssScore.toFixed(1)}
+          <CvssBadge
+            score={data.cvssScore}
+            vector={data.cvssVector}
+            label={data.cvssVector?.startsWith('CVSS:3') ? `CVSS v${data.cvssVector.slice(5, 8)}` : 'CVSS'}
+          />
+          {data.epssScore != null && (
+            <span
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border bg-[var(--surface-card)] text-[var(--text-primary)] border-[var(--border-color)]"
+              title={
+                data.epssPercentile != null
+                  ? `EPSS: ${(data.epssScore * 100).toFixed(2)}% chance of exploitation in next 30 days · ${(data.epssPercentile * 100).toFixed(1)}th percentile`
+                  : `EPSS: ${(data.epssScore * 100).toFixed(2)}% chance of exploitation in next 30 days`
+              }
+            >
+              <span className="text-[var(--text-secondary)]">EPSS</span>
+              <span className="font-mono">{(data.epssScore * 100).toFixed(2)}%</span>
             </span>
           )}
           {data.cweId && (
