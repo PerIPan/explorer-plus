@@ -241,18 +241,69 @@ const REFERENCE_TABLES: FrameworkTable[] = [
   { key: 'ctid_mappings', label: 'CTID CVE → Technique', description: 'Hand-curated CVE to ATT&CK technique mappings from MITRE CTID' },
 ];
 
+interface FrameworkStatusResponse {
+  counts: Record<string, number>;
+  ecosystemDrift?: { registered: number; inDb: number; unknown: string[] };
+}
+
 function FrameworkStatus() {
   const { data } = useQuery({
     queryKey: ['framework-counts'],
-    queryFn: () => apiFetch<{ counts: Record<string, number> }>('/frameworks/status'),
+    queryFn: () => apiFetch<FrameworkStatusResponse>('/frameworks/status'),
     refetchInterval: 60_000,
   });
 
   const counts = data?.counts ?? {};
+  const drift = data?.ecosystemDrift;
   return (
     <div className="space-y-6 mt-8">
+      {drift && <EcosystemDriftRow drift={drift} />}
       <TableRowsSection title="Automated Data Tables" tables={AUTOMATED_TABLES} counts={counts} />
       <TableRowsSection title="Reference Data (Manual)" tables={REFERENCE_TABLES} counts={counts} />
+    </div>
+  );
+}
+
+function EcosystemDriftRow({
+  drift,
+}: {
+  drift: { registered: number; inDb: number; unknown: string[] };
+}) {
+  const clean = drift.unknown.length === 0;
+  const dotClass = clean ? 'bg-[var(--accent-green)]' : 'bg-[var(--accent-yellow)]';
+  const badge = clean ? (
+    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border bg-[var(--green-faint)] text-[var(--accent-green)] border-[var(--green-dim)]">
+      in sync
+    </span>
+  ) : (
+    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border bg-[var(--yellow-faint)] text-[var(--accent-yellow)] border-[var(--yellow-dim)]">
+      drift
+    </span>
+  );
+  return (
+    <div>
+      <h2 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-3">
+        Ecosystem Registry Coverage
+      </h2>
+      <div className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-md px-4 py-2.5">
+        <div className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-3">
+          <span className={`inline-block w-2.5 h-2.5 rounded-full ${dotClass}`} />
+          <div className="min-w-0">
+            <div className="text-[var(--text-primary)] font-medium text-sm truncate">
+              src/lib/ecosystems.ts coverage
+            </div>
+            <div className="text-[11px] text-[var(--text-secondary)] truncate opacity-70">
+              {clean
+                ? `Every DB ecosystem has a registry entry — ${drift.registered} registered, ${drift.inDb} in DB`
+                : `${drift.unknown.length} DB ecosystem${drift.unknown.length === 1 ? '' : 's'} missing from registry: ${drift.unknown.join(', ')}`}
+            </div>
+          </div>
+          <span className="text-xs text-[var(--text-secondary)] whitespace-nowrap">
+            {drift.registered}/{drift.inDb}
+          </span>
+          {badge}
+        </div>
+      </div>
     </div>
   );
 }

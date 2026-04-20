@@ -38,6 +38,8 @@ import type {
   CapecDetail,
   OsvAdvisory,
   AdvisoryListEntry,
+  EcosystemListRow,
+  EcosystemDetail,
 } from '../lib/types';
 
 // Re-export for consumers that import from useApi
@@ -342,6 +344,25 @@ export function useOsvDetail(osvId: string, enabled = true) {
     queryKey: ['osv-detail', osvId],
     queryFn: () => apiFetch<OsvAdvisory>(`/osv/${encodeURIComponent(osvId)}`),
     enabled: enabled && Boolean(osvId),
+    staleTime: FIVE_MIN,
+  });
+}
+
+// ── Ecosystem hooks ───────────────────────────────────────────────────────────
+
+export function useEcosystems() {
+  return useQuery({
+    queryKey: ['ecosystems'],
+    queryFn: () => apiFetch<{ data: EcosystemListRow[] }>('/ecosystems'),
+    staleTime: FIVE_MIN,
+  });
+}
+
+export function useEcosystemDetail(slug: string, enabled = true) {
+  return useQuery({
+    queryKey: ['ecosystem-detail', slug],
+    queryFn: () => apiFetch<EcosystemDetail>(`/ecosystems/${slug}`),
+    enabled: enabled && Boolean(slug),
     staleTime: FIVE_MIN,
   });
 }

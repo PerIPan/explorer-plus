@@ -728,6 +728,53 @@ export interface CvePackagesResponse {
   packages: GhsaPackageRef[];
 }
 
+// ── Ecosystem Types (list + detail endpoints) ───────────────────────────────
+
+export interface EcosystemListRow {
+  slug: string;
+  displayName: string;
+  canonical: string;
+  category: 'package-manager' | 'os-distro' | 'container-distro' | 'kernel-misc';
+  totalAdvisories: number;
+  last14dCount: number;
+  severityBreakdown: {
+    CRITICAL: number;
+    HIGH: number;
+    MEDIUM: number;
+    LOW: number;
+    UNRATED: number;
+  };
+  topPackages: Array<{ name: string; advisoryCount: number }>;
+}
+
+export interface EcosystemDetail {
+  slug: string;
+  meta: {
+    displayName: string;
+    canonical: string;
+    category: EcosystemListRow['category'];
+    homepage?: string;
+    description: string;
+  };
+  stats: {
+    total: number;
+    last14d: number;
+    last30d: number;
+    criticalLast30d: number;
+  };
+  severityBreakdown: EcosystemListRow['severityBreakdown'];
+  topPackages: Array<{ packageName: string; advisoryCount: number }>;
+  recentAdvisories: Array<{
+    advisoryId: string;
+    source: 'GHSA' | 'OSV';
+    cveId: string | null;
+    summary: string | null;
+    severity: string | null;
+    cvssScore: number | null;
+    publishedAt: string | null;
+  }>;
+}
+
 // ── Unified Advisory Types (GHSA + OSV) ──────────────────────────────────────
 //
 // Shape returned by `/api/v1/advisories`. Mirrors GhsaEntry closely but adds

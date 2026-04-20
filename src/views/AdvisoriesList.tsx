@@ -14,6 +14,7 @@ import {
   ADVISORY_ECOSYSTEM_CATEGORIES,
   type AdvisoryEcosystemCategory,
 } from '../lib/advisoryEcosystems';
+import { ECOSYSTEM_BY_CANONICAL } from '../lib/ecosystems';
 
 const SEVERITIES = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'];
 
@@ -270,6 +271,26 @@ export function AdvisoriesList() {
         title="Advisories"
         subtitle="GitHub Security Advisories (OSS packages) + OSV (Linux kernel, Debian, Ubuntu, Alpine, Android, OSS-Fuzz, …) — one unified list with source badges"
       />
+
+      {/* Ecosystem overview cross-link when filtered to a known ecosystem */}
+      {ecosystem && (() => {
+        const meta = ECOSYSTEM_BY_CANONICAL.get(ecosystem);
+        if (!meta) return null;
+        return (
+          <div className="rounded-md border border-[var(--teal-dim)] bg-[var(--teal-faint)] px-4 py-2 text-xs flex items-center justify-between gap-3">
+            <span className="text-[var(--text-primary)]">
+              Viewing <span className="font-semibold">{meta.displayName}</span> advisories.
+              See the ecosystem overview for top packages + severity trends.
+            </span>
+            <Link
+              href={`/ecosystems/${meta.slug}`}
+              className="text-[var(--accent-teal)] hover:underline whitespace-nowrap font-medium"
+            >
+              Ecosystem overview →
+            </Link>
+          </div>
+        );
+      })()}
 
       <div className="flex flex-wrap gap-3 items-center">
         <input

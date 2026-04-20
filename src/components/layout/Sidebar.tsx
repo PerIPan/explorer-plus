@@ -27,9 +27,7 @@ const topNav: NavItem[] = [
   { path: '/', label: '360 Views', tooltip: 'explore entity connections — graph and dedicated map views for every entity type' },
   { path: '/matrix', label: 'Matrix', tooltip: 'att&ck technique matrix heatmap — tactics vs techniques' },
   { path: '/dashboard', label: 'Overview', tooltip: 'summary stats, charts, and top threat groups' },
-  // Feed Status is hidden from the sidebar for now — re-enable by uncommenting.
-  // The /cti/feed-status route itself still works for direct access.
-  // { path: '/cti/feed-status', label: 'Feed Status', tooltip: 'CTI feed ingestion health and manual sync controls' },
+  { path: '/cti/feed-status', label: 'Feed Status', tooltip: 'CTI feed ingestion health and manual sync controls' },
 ];
 
 const threatActorsNav: NavItem[] = [
@@ -50,6 +48,7 @@ const attackNav: NavItem[] = [
 
 const assetsNav: NavItem[] = [
   { path: '/applications', label: 'Applications', tooltip: 'defender view — vendor products that get exploited (vs Software which is attacker tools)' },
+  { path: '/ecosystems', label: 'Ecosystems', tooltip: 'per-ecosystem advisory dashboards — npm, PyPI, Debian, Ubuntu, Alpine, Android, Linux kernel, Chainguard, OSS-Fuzz, and more. Severity breakdowns + top affected packages' },
   { path: '/packages', label: 'Packages', tooltip: 'library/dependency packages with GHSA advisories (npm, PyPI, Go, Maven, RubyGems, NuGet, Composer, Rust)' },
 ];
 

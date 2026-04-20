@@ -8,6 +8,7 @@ import { Badge } from '../components/shared/Badge';
 import { EntityLink } from '../components/shared/EntityLink';
 import { FrameworkMapCard } from '../components/relationships/shared/FrameworkMapCard';
 import { DiamondLoader } from '../components/shared/FoldingDiamond';
+import { ECOSYSTEM_BY_CANONICAL } from '../lib/ecosystems';
 
 const SEVERITY_COLORS: Record<string, string> = {
   CRITICAL: 'bg-[var(--pink-faint)] text-[var(--accent-pink)] border-[var(--pink-dim)]',
@@ -60,6 +61,19 @@ export function PackageDetail() {
                 {data.purl}
               </span>
             )}
+            {(() => {
+              // Packages store ecosystem lowercased; lookup by canonical works
+              // for the GHSA side (npm, pypi, …). No match → render nothing.
+              const meta = ECOSYSTEM_BY_CANONICAL.get(data.ecosystem);
+              return meta ? (
+                <Link
+                  href={`/ecosystems/${meta.slug}`}
+                  className="text-xs text-[var(--accent-teal)] hover:underline"
+                >
+                  Explore all {meta.displayName} →
+                </Link>
+              ) : null;
+            })()}
           </div>
         }
       />

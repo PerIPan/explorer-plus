@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { query } from '../../lib/db';
 import { jsonResponse } from '../../../lib/handler';
 import { withCors, corsOptions as OPTIONS } from '../../../lib/cors';
+import { ECOSYSTEM_BY_CANONICAL } from '../../../../../src/lib/ecosystems';
 
 export { OPTIONS };
 
@@ -96,5 +97,30 @@ export async function GET(_req: NextRequest) {
     counts.osv_affected = 0;
   }
 
-  return withCors(jsonResponse({ counts }, 300));
+  // Ecosystem registry drift check — compare distinct DB ecosystems to the
+  // registry at src/lib/ecosystems.ts. Unknown DB ecosystems indicate OSV
+  // added a new bucket we haven't curated yet.
+  let ecosystemDrift: { registered: number; inDb: number; unknown: string[] } = {
+    registered: ECOSYSTEM_BY_CANONICAL.size,
+    inDb: 0,
+    unknown: [],
+  };
+  try {
+    const ecoRes = await query<{ ecosystem: string }>(
+      `SELECT DISTINCT ecosystem FROM osv_advisories
+       UNION
+       SELECT DISTINCT LOWER(ecosystem) FROM packages`,
+    );
+    const dbEcos = ecoRes.rows.map((r) => r.ecosystem).filter(Boolean);
+    const unknown = dbEcos.filter((e) => !ECOSYSTEM_BY_CANONICAL.has(e));
+    ecosystemDrift = {
+      registered: ECOSYSTEM_BY_CANONICAL.size,
+      inDb: dbEcos.length,
+      unknown,
+    };
+  } catch {
+    // pre-migration env; leave defaults
+  }
+
+  return withCors(jsonResponse({ counts, ecosystemDrift }, 300));
 }
