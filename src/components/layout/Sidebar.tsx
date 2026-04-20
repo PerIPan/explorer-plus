@@ -27,7 +27,9 @@ const topNav: NavItem[] = [
   { path: '/', label: '360 Views', tooltip: 'explore entity connections — graph and dedicated map views for every entity type' },
   { path: '/matrix', label: 'Matrix', tooltip: 'att&ck technique matrix heatmap — tactics vs techniques' },
   { path: '/dashboard', label: 'Overview', tooltip: 'summary stats, charts, and top threat groups' },
-  { path: '/cti/feed-status', label: 'Feed Status', tooltip: 'CTI feed ingestion health and manual sync controls' },
+  // Feed Status is hidden from the sidebar for now — re-enable by uncommenting.
+  // The /cti/feed-status route itself still works for direct access.
+  // { path: '/cti/feed-status', label: 'Feed Status', tooltip: 'CTI feed ingestion health and manual sync controls' },
 ];
 
 const threatActorsNav: NavItem[] = [
