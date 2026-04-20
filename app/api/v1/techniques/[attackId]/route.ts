@@ -52,7 +52,7 @@ export async function GET(
   const techId = tech.id;
 
   // Run all relationship queries in parallel
-  const [groupsResult, softwareResult, mitigationsResult, dataComponentsResult, subTechResult, campaignsResult, tacticsResult, xrefsResult] =
+  const [groupsResult, softwareResult, mitigationsResult, dataComponentsResult, subTechResult, campaignsResult, tacticsResult, xrefsResult, capecResult] =
     await Promise.all([
       query<{ attackId: string; name: string; procedure: string | null }>(
         `SELECT DISTINCT ON (tg.name) tg.attack_id AS "attackId", tg.name, gt.description AS procedure
@@ -128,6 +128,20 @@ export async function GET(
          WHERE ax.attack_technique_id = $1`,
         [techId],
       ),
+      // Attack patterns (CAPEC) that map to this technique via the
+      // capec_mappings bridge. Filter to rows where the CAPEC has full-taxonomy
+      // data in capec_patterns (skip bridge-only rows without names).
+      query<{ capecId: string; name: string; severity: string | null; likelihood: string | null; abstraction: string | null }>(
+        `SELECT DISTINCT p.id AS "capecId", p.name, p.severity, p.likelihood, p.abstraction
+         FROM capec_mappings cm
+         JOIN capec_patterns p ON p.id = cm.capec_id
+         WHERE cm.attack_technique_id = $1
+         ORDER BY
+           CASE p.severity WHEN 'Very High' THEN 5 WHEN 'High' THEN 4 WHEN 'Medium' THEN 3
+                WHEN 'Low' THEN 2 WHEN 'Very Low' THEN 1 ELSE 0 END DESC,
+           p.id`,
+        [attackId],
+      ).catch(() => ({ rows: [] as Array<{ capecId: string; name: string; severity: string | null; likelihood: string | null; abstraction: string | null }> })),
     ]);
 
   return withCors(jsonResponse({
@@ -140,5 +154,6 @@ export async function GET(
     sub_techniques: subTechResult.rows,
     campaigns: campaignsResult.rows,
     atlasXrefs: xrefsResult.rows,
+    capecPatterns: capecResult.rows,
   }, 3600));
 }

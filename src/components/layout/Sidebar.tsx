@@ -69,6 +69,7 @@ const ctiNav: NavItem[] = [
   { path: '/cti/cves', label: 'CVEs', tooltip: 'known vulnerabilities from OTX, CISA KEV, enriched via NVD' },
   { path: '/cti/ghsa', label: 'GHSA', tooltip: 'GitHub Security Advisories — library-level vulnerabilities for npm, PyPI, Go, Maven, and more' },
   { path: '/cti/iocs', label: 'IOCs', tooltip: 'hashes, domains, IPs, URLs from AlienVault OTX, CISA KEV' },
+  { path: '/cti/capec', label: 'CAPEC', tooltip: 'MITRE Common Attack Pattern Enumeration and Classification — 615 patterns with severity, likelihood, prerequisites, mitigations' },
 ];
 
 const frameworksNav: NavItem[] = [

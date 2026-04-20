@@ -34,6 +34,8 @@ import type {
   PackageListEntry,
   PackageDetail,
   CvePackagesResponse,
+  CapecListEntry,
+  CapecDetail,
 } from '../lib/types';
 
 // Re-export for consumers that import from useApi
@@ -336,6 +338,25 @@ export function usePackageDetail(ecosystem: string, nameEncoded: string) {
     queryKey: ['package-detail', ecosystem, nameEncoded],
     queryFn: () => apiFetch<PackageDetail>(`/packages/${ecosystem}/${nameEncoded}`),
     enabled: Boolean(ecosystem && nameEncoded),
+    staleTime: FIVE_MIN,
+  });
+}
+
+// ── CAPEC hooks ───────────────────────────────────────────────────────────────
+
+export function useCapecPatterns(params: Record<string, string> = EMPTY_PARAMS) {
+  return useQuery({
+    queryKey: ['capec-patterns', params],
+    queryFn: () => apiFetch<PaginatedResponse<CapecListEntry>>('/capec', params),
+    staleTime: FIVE_MIN,
+  });
+}
+
+export function useCapecPattern(capecId: string) {
+  return useQuery({
+    queryKey: ['capec-pattern', capecId],
+    queryFn: () => apiFetch<CapecDetail>(`/capec/${capecId}`),
+    enabled: Boolean(capecId),
     staleTime: FIVE_MIN,
   });
 }

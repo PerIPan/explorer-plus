@@ -736,6 +736,24 @@ export function TechniqueDetail() {
             ))}
           </div>
         )}
+        {data.capecPatterns && data.capecPatterns.length > 0 && (
+          <div className="flex items-start gap-2 flex-wrap">
+            <span className="text-[var(--text-secondary)] shrink-0">Attack Patterns (CAPEC):</span>
+            <div className="flex flex-wrap gap-1.5">
+              {data.capecPatterns.map((p) => (
+                <a
+                  key={p.capecId}
+                  href={`/cti/capec/${p.capecId}`}
+                  title={p.severity ? `${p.name} · Severity: ${p.severity}` : p.name}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] border bg-[var(--yellow-faint)] text-[var(--accent-yellow)] border-[var(--yellow-dim)] hover:underline"
+                >
+                  <span className="font-mono">{p.capecId}</span>
+                  <span>{p.name}</span>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
         {data.url && isSafeUrl(data.url) && (
           <a
             href={data.url}

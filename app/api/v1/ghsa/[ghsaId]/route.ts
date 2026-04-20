@@ -58,7 +58,7 @@ export async function GET(
 
   const adv = advResult.rows[0];
 
-  const [cweResult, pkgResult, techResult] = await Promise.all([
+  const [cweResult, pkgResult, techResult, capecResult] = await Promise.all([
     query<{ cweId: string }>(
       `SELECT cwe_id AS "cweId" FROM ghsa_weaknesses WHERE ghsa_id = $1 ORDER BY cwe_id`,
       [ghsaId],
@@ -91,6 +91,20 @@ export async function GET(
        ORDER BY t.attack_id`,
       [ghsaId],
     ),
+    // Attack patterns whose referenced CWEs overlap this GHSA's CWEs
+    query<{ capecId: string; name: string; severity: string | null; likelihood: string | null; abstraction: string | null }>(
+      `SELECT p.id AS "capecId", p.name, p.severity, p.likelihood, p.abstraction
+       FROM capec_patterns p
+       WHERE p.cwe_ids && (
+         SELECT COALESCE(ARRAY_AGG(DISTINCT cwe_id), ARRAY[]::text[])
+         FROM ghsa_weaknesses WHERE ghsa_id = $1
+       )
+       ORDER BY
+         CASE p.severity WHEN 'Very High' THEN 5 WHEN 'High' THEN 4 WHEN 'Medium' THEN 3
+              WHEN 'Low' THEN 2 WHEN 'Very Low' THEN 1 ELSE 0 END DESC,
+         p.id`,
+      [ghsaId],
+    ).catch(() => ({ rows: [] as Array<{ capecId: string; name: string; severity: string | null; likelihood: string | null; abstraction: string | null }> })),
   ]);
 
   const packageCount = pkgResult.rows.length;
@@ -116,6 +130,7 @@ export async function GET(
         cwes: cweResult.rows.map((r) => r.cweId),
         packages: pkgResult.rows,
         techniques: techResult.rows,
+        capecPatterns: capecResult.rows,
       },
       3600,
     ),

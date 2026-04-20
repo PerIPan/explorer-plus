@@ -58,6 +58,7 @@ export interface Technique extends BaseEntity {
   detection: string | null;
   maturity: string | null;
   atlasXrefs?: Array<{ attackId: string; name: string; domain: string | null }>;
+  capecPatterns?: CapecRef[];
   sub_techniques: SubTechnique[];
   /** Relationship data returned by the detail endpoint */
   groups?: TechniqueRelatedGroup[];
@@ -616,6 +617,40 @@ export interface CveDetail extends Omit<CveEntry, 'sources' | 'techniqueCount' |
   owaspCategories?: Array<{ categoryId: string; name: string; framework: string }>;
   /** Minimal GHSA stub; full details fetched via /api/v1/ghsa/:ghsaId on demand. */
   ghsa?: { ghsaId: string; summary: string | null } | null;
+  /** Attack patterns whose referenced CWEs overlap this CVE's CWEs */
+  capecPatterns?: CapecRef[];
+}
+
+// ── CAPEC Types ────────────────────────────────────────────────────────────────
+
+/** Minimal CAPEC reference surfaced in CVE/GHSA/Technique detail responses */
+export interface CapecRef {
+  capecId: string;
+  name: string;
+  severity: string | null;
+  likelihood: string | null;
+  abstraction: string | null;
+}
+
+export interface CapecListEntry extends CapecRef {
+  cweIds: string[] | null;
+  techniqueCount: number;
+  mitigationCount: number;
+}
+
+export interface CapecDetail extends CapecRef {
+  id: string;
+  description: string | null;
+  status: string | null;
+  prerequisites: string[] | null;
+  resourcesRequired: string[] | null;
+  skillsRequired: Record<string, string>;
+  consequences: Record<string, string[]>;
+  exampleInstances: string[] | null;
+  cweIds: string[] | null;
+  mitigations: Array<{ name: string | null; description: string | null }>;
+  related: Array<{ relatedCapecId: string; nature: string; name: string | null }>;
+  techniques: Array<{ attackId: string; name: string }>;
 }
 
 // ── GHSA Types ────────────────────────────────────────────────────────────────
@@ -649,6 +684,7 @@ export interface GhsaDetail extends GhsaEntry {
   cwes: string[];
   packages: GhsaPackageRef[];
   techniques: Array<{ attackId: string; name: string }>;
+  capecPatterns?: CapecRef[];
 }
 
 // ── Package Types ─────────────────────────────────────────────────────────────

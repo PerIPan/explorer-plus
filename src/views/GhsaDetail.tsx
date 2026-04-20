@@ -204,6 +204,28 @@ export function GhsaDetail() {
           </div>
         </section>
       )}
+
+      {/* Attack patterns (CAPEC) linked via CWE overlap */}
+      {data.capecPatterns && data.capecPatterns.length > 0 && (
+        <section>
+          <h2 className="text-sm font-semibold text-[var(--text-primary)] uppercase tracking-wider mb-2">
+            Attack Patterns (CAPEC) — {data.capecPatterns.length}
+          </h2>
+          <div className="flex flex-wrap gap-1.5">
+            {data.capecPatterns.map((p) => (
+              <Link
+                key={p.capecId}
+                href={`/cti/capec/${p.capecId}`}
+                title={p.severity ? `${p.name} · Severity: ${p.severity}` : p.name}
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] border bg-[var(--yellow-faint)] text-[var(--accent-yellow)] border-[var(--yellow-dim)] hover:underline"
+              >
+                <span className="font-mono">{p.capecId}</span>
+                <span>{p.name}</span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

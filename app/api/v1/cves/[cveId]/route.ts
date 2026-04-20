@@ -141,6 +141,24 @@ export async function GET(
       ).catch(() => ({ rows: [] as Array<{ ghsaId: string; summary: string | null }> })),
     ]);
 
+  // Resolve CAPEC attack patterns via CWE overlap. Safe on pre-migration envs
+  // where capec_patterns may not exist — fall back to empty.
+  const capecResult = await query<{
+    capecId: string; name: string; severity: string | null; likelihood: string | null; abstraction: string | null;
+  }>(
+    `SELECT p.id AS "capecId", p.name, p.severity, p.likelihood, p.abstraction
+     FROM capec_patterns p
+     WHERE p.cwe_ids && (
+       SELECT COALESCE(ARRAY_AGG(DISTINCT cwe_id), ARRAY[]::text[])
+       FROM cve_weaknesses WHERE cve_id = $1 AND cwe_id LIKE 'CWE-%'
+     )
+     ORDER BY
+       CASE p.severity WHEN 'Very High' THEN 5 WHEN 'High' THEN 4 WHEN 'Medium' THEN 3
+            WHEN 'Low' THEN 2 WHEN 'Very Low' THEN 1 ELSE 0 END DESC,
+       p.id`,
+    [id],
+  ).catch(() => ({ rows: [] as Array<{ capecId: string; name: string; severity: string | null; likelihood: string | null; abstraction: string | null }> }));
+
   if (!detailResult.rows[0] && !sourcesResult.rows.length) {
     return withCors(errorResponse(404, 'CVE not found', 'NOT_FOUND'));
   }
@@ -198,5 +216,6 @@ export async function GET(
     })),
     owaspCategories: owaspResult.rows,
     ghsa: ghsaResult.rows[0] ?? null,
+    capecPatterns: capecResult.rows,
   }, 300));
 }

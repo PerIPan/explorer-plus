@@ -24,6 +24,9 @@ CREATE TABLE IF NOT EXISTS capec_patterns (
   updated_at          timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS idx_capec_patterns_abstraction ON capec_patterns(abstraction);
+-- GIN index on cwe_ids array for fast "patterns for this CVE's CWEs" lookup
+-- (used by CVE + GHSA detail endpoints to surface attack patterns).
+CREATE INDEX IF NOT EXISTS idx_capec_patterns_cwe_ids_gin ON capec_patterns USING GIN (cwe_ids);
 
 CREATE TABLE IF NOT EXISTS capec_mitigations (
   id          text PRIMARY KEY,                 -- STIX UUID for the course-of-action object
