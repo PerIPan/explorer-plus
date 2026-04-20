@@ -27,9 +27,13 @@ const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL
 
 const CVE_RE = /^CVE-\d{4}-\d{4,}$/;
 const ATTACK_ID_RE = /^(AML\.)?(TA|T|G|S|M|C|CS|DS)\d{4}(\.\d{3})?$/;
+const CAPEC_ID_RE = /^CAPEC-\d+$/;
 const SECTOR_RE = /^[a-z][a-z0-9-]{1,28}[a-z0-9]$/;
 const DOMAIN_RE = /^(enterprise|ics|mobile|atlas)-attack$/;
 const SEVERITY_VALUES = new Set(['CRITICAL', 'HIGH', 'MEDIUM', 'LOW']);
+const CAPEC_SEVERITY_VALUES = new Set(['Very Low', 'Low', 'Medium', 'High', 'Very High']);
+const CAPEC_LIKELIHOOD_VALUES = new Set(['Low', 'Medium', 'High']);
+const CAPEC_ABSTRACTION_VALUES = new Set(['Meta', 'Standard', 'Detailed']);
 
 function validateCveId(id: unknown): string | null {
   const s = String(id ?? '').trim();
@@ -39,6 +43,11 @@ function validateCveId(id: unknown): string | null {
 function validateAttackId(id: unknown): string | null {
   const s = String(id ?? '').trim();
   return ATTACK_ID_RE.test(s) ? s : null;
+}
+
+function validateCapecId(id: unknown): string | null {
+  const s = String(id ?? '').trim().toUpperCase();
+  return CAPEC_ID_RE.test(s) ? s : null;
 }
 
 function validateSector(slug: unknown): string | null {
@@ -60,7 +69,7 @@ function sanitizeSearch(q: unknown): string {
 const TOOL_DECLARATIONS = [
   {
     name: 'search_cves',
-    description: 'Search CVE vulnerabilities by keyword, severity, or date range. Returns CVE ID, CVSS score, severity, description, linked ATT&CK technique IDs, and affected applications.',
+    description: 'Search CVE vulnerabilities by keyword, severity, or date range. Returns CVE ID, CVSS score, severity, description, linked ATT&CK technique IDs, and affected applications. Use get_cve_detail for EPSS exploit-probability score and CAPEC attack patterns.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -73,7 +82,7 @@ const TOOL_DECLARATIONS = [
   },
   {
     name: 'get_cve_detail',
-    description: 'Get full details for a specific CVE including all CWEs, CVSS breakdown, affected applications, linked techniques (via CAPEC + CTID), and CISA KEV status.',
+    description: 'Get full details for a specific CVE including all CWEs, CVSS breakdown, EPSS score + percentile (First.org exploit-probability, 0..1), CAPEC attack patterns (via CWE overlap), affected applications, linked ATT&CK techniques (via CAPEC + CTID), OWASP Top 10 categories, GHSA alias, threat reports, and CISA KEV status. The `epssScore` field is the probability a CVE will be exploited in the next 30 days; `epssPercentile` is its rank vs all scored CVEs. The `capecPatterns` array contains mapped attack patterns with severity/likelihood/abstraction.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -95,7 +104,7 @@ const TOOL_DECLARATIONS = [
   },
   {
     name: 'get_technique_detail',
-    description: 'Get detailed technique information: description, tactics, platforms, sub-techniques, procedures, mitigations, data sources, ATLAS cross-references.',
+    description: 'Get detailed technique information: description, tactics, platforms, sub-techniques, procedures, mitigations, data sources, ATLAS cross-references, and CAPEC attack patterns mapped to this technique (via capec_mappings). The `capecPatterns` array contains CAPEC ID, name, severity, likelihood, and abstraction.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -384,7 +393,7 @@ const TOOL_DECLARATIONS = [
   },
   {
     name: 'get_ghsa_detail',
-    description: 'Get full details for a GitHub Security Advisory: summary, description, CVSS v3/v4, CWEs, affected open-source packages with vulnerable/fixed version ranges, linked ATT&CK techniques.',
+    description: 'Get full details for a GitHub Security Advisory: summary, description, CVSS v3/v4, CWEs, CAPEC attack patterns (via CWE overlap — `capecPatterns` array with ID/name/severity/likelihood/abstraction), affected open-source packages with vulnerable/fixed version ranges, linked ATT&CK techniques.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -431,6 +440,31 @@ const TOOL_DECLARATIONS = [
       required: ['cve_id'],
     },
   },
+  {
+    name: 'get_capec_detail',
+    description: 'Get full detail for a MITRE CAPEC attack pattern: description, abstraction (Meta/Standard/Detailed), severity (Very Low..Very High), likelihood (Low/Medium/High), prerequisites, skills required, resources required, consequences, example instances, linked CWEs, mapped ATT&CK techniques, mitigations, and related patterns (ChildOf/ParentOf/CanPrecede/CanFollow).',
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        capec_id: { type: "STRING", description: 'CAPEC identifier, e.g. CAPEC-66 for SQL Injection' },
+      },
+      required: ['capec_id'],
+    },
+  },
+  {
+    name: 'search_capec',
+    description: 'Search/filter 615 CAPEC attack patterns by keyword, abstraction, severity, or likelihood. Returns CAPEC ID, name, abstraction, severity, likelihood, CWE refs, and counts of mapped ATT&CK techniques and mitigations.',
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        q: { type: "STRING", description: 'Search keyword against CAPEC name/ID (minimum 2 characters)' },
+        abstraction: { type: "STRING", description: 'Abstraction level: Meta, Standard, Detailed' },
+        severity: { type: "STRING", description: 'Severity: Very Low, Low, Medium, High, Very High' },
+        likelihood: { type: "STRING", description: 'Likelihood of attack: Low, Medium, High' },
+        limit: { type: "NUMBER", description: 'Max results (default 20, max 50)' },
+      },
+    },
+  },
 ];
 
 // Dynamic system instruction -- injects current date so Gemini calculates relative dates correctly
@@ -446,6 +480,7 @@ Tool selection rules:
 - When asked about a SPECIFIC group (e.g. "Lazarus Group", "APT29"): use search_groups to find the ID, then get_group_profile for the full profile
 - When asked about a SPECIFIC technique: use get_technique_detail for description + get_technique_intelligence for feeds
 - When asked about a SPECIFIC software/malware: use search_software to find the ID, then get_software_detail
+- When asked about a SPECIFIC CAPEC attack pattern (e.g. "CAPEC-66", "SQL Injection attack pattern"): use get_capec_detail; to list/filter patterns use search_capec
 - "search_" tools return summaries/lists; "get_" tools return full profiles -- always prefer the full profile for specific entities
 - For OWASP categories: use get_owasp_top10 (optionally filtered by framework: web-2021, ml-2023, llm-2025), then get_owasp_category for details
 - OWASP links: [A01 Broken Access Control](https://mitre-explorer.org/frameworks/owasp/A01)
@@ -454,11 +489,14 @@ Tool selection rules:
 When responding:
 - Be concise and factual
 - For EVERY CVE mentioned, always include: CVE ID, CVSS score, severity (CRITICAL/HIGH/MEDIUM/LOW), published date, and linked ATT&CK techniques if available
+- If the CVE detail response includes epssScore and epssPercentile, surface them: "EPSS: 0.94 (97th percentile)" means 94% predicted exploitation in 30 days and ranked in top 3% of all scored CVEs. Omit cleanly when null.
+- If the CVE / GHSA / technique detail response includes capecPatterns, list them by CAPEC ID with severity (e.g. "CAPEC-66 SQL Injection — High severity") and link to [CAPEC-66](https://mitre-explorer.org/cti/capec/CAPEC-66)
 - Include clickable markdown links to MITRE Explorer for every entity mentioned:
   - CVEs: [CVE-2024-3400](https://mitre-explorer.org/cti/cves/CVE-2024-3400)
   - Techniques: [T1059](https://mitre-explorer.org/techniques/T1059)
   - Groups: [APT29](https://mitre-explorer.org/?entity=G0016&tab=actor)
   - Applications: [LiteLLM](https://mitre-explorer.org/?entity=litellm%2Flitellm&tab=application-map)
+  - CAPEC patterns: [CAPEC-66 SQL Injection](https://mitre-explorer.org/cti/capec/CAPEC-66)
 - Use tables for structured data when listing multiple items
 - Always mention total result count (e.g. "Showing 10 of 47 results")
 - Keep a consistent schema per entity type -- do not change column layout between responses
@@ -744,6 +782,31 @@ async function executeTool(name: string, args: Record<string, unknown>): Promise
       const id = validateCveId(args.cve_id);
       if (!id) return { error: 'Invalid CVE ID format' };
       return callInternalApi(`/cves/${id}/packages`);
+    }
+    case 'get_capec_detail': {
+      const id = validateCapecId(args.capec_id);
+      if (!id) return { error: 'Invalid CAPEC ID format (expected CAPEC-N)' };
+      return callInternalApi(`/capec/${id}`);
+    }
+    case 'search_capec': {
+      const params = new URLSearchParams();
+      const q = sanitizeSearch(args.q);
+      if (q.length > 0 && q.length < 2) return { error: 'Search query must be at least 2 characters' };
+      if (q.length >= 2) params.set('q', q);
+      if (args.abstraction) {
+        const a = String(args.abstraction);
+        if (CAPEC_ABSTRACTION_VALUES.has(a)) params.set('abstraction', a);
+      }
+      if (args.severity) {
+        const s = String(args.severity);
+        if (CAPEC_SEVERITY_VALUES.has(s)) params.set('severity', s);
+      }
+      if (args.likelihood) {
+        const l = String(args.likelihood);
+        if (CAPEC_LIKELIHOOD_VALUES.has(l)) params.set('likelihood', l);
+      }
+      params.set('limit', clampLimit(args.limit, 20, 50));
+      return callInternalApi(`/capec?${params}`);
     }
     default:
       return { error: `Unknown tool: ${name}` };

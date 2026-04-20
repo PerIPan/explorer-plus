@@ -1,7 +1,7 @@
 {
   "id": "mitre-explorer",
   "name": "MITRE Explorer",
-  "description": "Threat intelligence agent for MITRE ATT&CK, ATLAS, CVE vulnerabilities, and application security. Query techniques, threat groups, campaigns, software, CVEs, detection strategies, and compliance mappings across Enterprise, ICS, Mobile, and ATLAS domains.",
+  "description": "Threat intelligence agent for MITRE ATT&CK, ATLAS, CVE vulnerabilities, and application security. Query techniques, threat groups, campaigns, software, CVEs (with EPSS exploit-probability scoring), CAPEC attack patterns, detection strategies, and compliance mappings across Enterprise, ICS, Mobile, and ATLAS domains.",
   "url": "https://mitre-explorer.org/api/a2a",
   "version": "1.0.0",
   "protocolVersion": "1.0.0",
@@ -29,26 +29,29 @@
     {
       "id": "cve-lookup",
       "name": "CVE Vulnerability Lookup",
-      "description": "Search and retrieve CVE vulnerability details including CVSS scores, severity, CWEs, affected applications, linked ATT&CK techniques, and CISA KEV status. Covers 21,000+ CVEs from 2017-2026.",
+      "description": "Search and retrieve CVE vulnerability details including CVSS scores, severity, CWEs, EPSS exploit-probability scores (First.org, daily refreshed), CAPEC attack patterns, affected applications, linked ATT&CK techniques, and CISA KEV status. Covers 21,000+ CVEs from 2017-2026.",
       "examples": [
         "What is CVE-2024-3400?",
         "Show me critical CVEs affecting Apache HTTP Server",
         "What new CVEs were published in the last 7 days?",
-        "Which CVEs are linked to technique T1190?"
+        "Which CVEs are linked to technique T1190?",
+        "What is the EPSS score for CVE-2021-44228?",
+        "Which CAPEC attack patterns apply to CVE-2024-3400?"
       ],
-      "tags": ["cve", "vulnerability", "security", "cvss", "cisa-kev"]
+      "tags": ["cve", "vulnerability", "security", "cvss", "epss", "capec", "cisa-kev"]
     },
     {
       "id": "technique-intelligence",
       "name": "ATT&CK Technique Intelligence",
-      "description": "Get detailed intelligence on ATT&CK and ATLAS techniques: threat groups using them, Sigma detection rules, Atomic Red Team tests, D3FEND countermeasures, affected applications, and NIST 800-53 control mappings.",
+      "description": "Get detailed intelligence on ATT&CK and ATLAS techniques: threat groups using them, Sigma detection rules, Atomic Red Team tests, D3FEND countermeasures, affected applications, NIST 800-53 control mappings, and CAPEC attack patterns mapped to the technique.",
       "examples": [
         "What groups use T1059 Command and Scripting Interpreter?",
         "Give me Sigma rules for T1566 Phishing",
         "What are the D3FEND countermeasures for T1190?",
-        "Show me ATLAS technique AML.T0051"
+        "Show me ATLAS technique AML.T0051",
+        "Which CAPEC attack patterns map to T1190?"
       ],
-      "tags": ["technique", "attack", "atlas", "detection", "sigma", "d3fend"]
+      "tags": ["technique", "attack", "atlas", "detection", "sigma", "d3fend", "capec"]
     },
     {
       "id": "threat-group-profile",
@@ -214,13 +217,14 @@
     {
       "id": "ghsa-lookup",
       "name": "GitHub Security Advisory Detail",
-      "description": "Get full details for a GitHub Security Advisory: summary, description, CVSS v3/v4, CWEs, affected open-source packages with vulnerable/fixed version ranges, linked ATT&CK techniques.",
+      "description": "Get full details for a GitHub Security Advisory: summary, description, CVSS v3/v4, CWEs, CAPEC attack patterns, affected open-source packages with vulnerable/fixed version ranges, linked ATT&CK techniques.",
       "examples": [
         "Show me GHSA-jfh8-c2jp-5v3q",
         "What does GHSA-m3wx-6f6g-9mvv affect?",
-        "Get the GitHub advisory for the log4shell vulnerability"
+        "Get the GitHub advisory for the log4shell vulnerability",
+        "Which CAPEC attack patterns apply to GHSA-jfh8-c2jp-5v3q?"
       ],
-      "tags": ["ghsa", "github", "advisory", "appsec", "vulnerabilities", "supply-chain"]
+      "tags": ["ghsa", "github", "advisory", "appsec", "vulnerabilities", "supply-chain", "capec"]
     },
     {
       "id": "package-vulnerabilities",
@@ -255,6 +259,30 @@
         "Show me the package versions vulnerable to CVE-2022-22965"
       ],
       "tags": ["cve", "packages", "ghsa", "supply-chain", "remediation"]
+    },
+    {
+      "id": "capec-lookup",
+      "name": "CAPEC Attack Pattern Detail",
+      "description": "Get a specific MITRE CAPEC attack pattern (CAPEC-N) with full taxonomy: description, abstraction (Meta/Standard/Detailed), severity, likelihood, prerequisites, skills required, resources required, consequences, example instances, linked CWEs, mapped ATT&CK techniques, mitigations, and related patterns (ChildOf/ParentOf/CanPrecede/CanFollow). 615 patterns from the CAPEC STIX 2.1 corpus.",
+      "examples": [
+        "Show me CAPEC-66 SQL Injection",
+        "What are the prerequisites for CAPEC-112 Brute Force?",
+        "Which ATT&CK techniques map to CAPEC-206?",
+        "What mitigations exist for CAPEC-63 Cross-Site Scripting?"
+      ],
+      "tags": ["capec", "attack-pattern", "cwe", "adversary-modelling", "threat-modelling"]
+    },
+    {
+      "id": "capec-search",
+      "name": "Search CAPEC Attack Patterns",
+      "description": "Search/filter CAPEC attack patterns by keyword, abstraction level (Meta, Standard, Detailed), severity (Very Low..Very High), or likelihood (Low, Medium, High). Returns CAPEC ID, name, taxonomy fields, CWE references, and technique/mitigation counts.",
+      "examples": [
+        "List all Very High severity CAPEC patterns",
+        "Show me CAPEC patterns about injection",
+        "Which Standard-abstraction patterns have High likelihood?",
+        "Find CAPEC patterns related to authentication bypass"
+      ],
+      "tags": ["capec", "attack-pattern", "search", "threat-modelling"]
     }
   ],
   "extensions": {
@@ -269,7 +297,8 @@
       "CVElistV5 (21,000+ CVEs, 2017-2026)",
       "CISA KEV (Known Exploited Vulnerabilities)",
       "NVD (CVSS enrichment)",
-      "CAPEC STIX (CWE→CAPEC→ATT&CK bridge)",
+      "EPSS (First.org exploit-probability scoring, daily refreshed, 26,000+ scored CVEs)",
+      "CAPEC STIX 2.1 (615 attack patterns with full taxonomy: prerequisites, skills, consequences, mitigations, related patterns; also used as CWE→CAPEC→ATT&CK bridge)",
       "CTID (hand-curated CVE→technique mappings)",
       "SigmaHQ (3,100+ detection rules)",
       "Atomic Red Team (1,770+ tests)",
@@ -298,6 +327,8 @@
         "application_360": "/?entity={vendor}%2F{product}&tab=application-map",
         "application_list": "/applications",
         "sector_360": "/?entity={sectorSlug}&tab=sector-map",
+        "capec_detail": "/cti/capec/{capecId}",
+        "capec_list": "/cti/capec?q={query}",
         "matrix": "/matrix?domain={domain}",
         "matrix_filtered": "/matrix?entity={attackId}&type={entityType}&label={name}",
         "dashboard": "/dashboard?domain={domain}"
@@ -316,9 +347,10 @@
         "mitigation": "#34d399",
         "application": "#3b82f6",
         "cve": "#f472b6",
+        "capec": "#eab308",
         "data_source": "#94a3b8"
       },
-      "example": "When listing CVEs, render each as a clickable link: [CVE-2024-3400](https://mitre-explorer.org/cti/cves/CVE-2024-3400). For techniques: [T1059](https://mitre-explorer.org/techniques/T1059). For groups: [APT29 (G0016)](https://mitre-explorer.org/?entity=G0016&tab=actor). For applications: [LiteLLM](https://mitre-explorer.org/?entity=litellm%2Flitellm&tab=application-map)."
+      "example": "When listing CVEs, render each as a clickable link: [CVE-2024-3400](https://mitre-explorer.org/cti/cves/CVE-2024-3400). For techniques: [T1059](https://mitre-explorer.org/techniques/T1059). For groups: [APT29 (G0016)](https://mitre-explorer.org/?entity=G0016&tab=actor). For applications: [LiteLLM](https://mitre-explorer.org/?entity=litellm%2Flitellm&tab=application-map). For CAPEC patterns: [CAPEC-66 SQL Injection](https://mitre-explorer.org/cti/capec/CAPEC-66)."
     }
   }
 }
