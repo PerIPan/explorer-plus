@@ -197,6 +197,8 @@ const FRAMEWORK_TABLES: FrameworkTable[] = [
   { key: 'external_actors', label: 'ETDA Actors' },
   { key: 'applications', label: 'Applications (CVElistV5)' },
   { key: 'capec_mappings', label: 'CAPEC Bridge' },
+  { key: 'capec_patterns', label: 'CAPEC Patterns (full taxonomy)' },
+  { key: 'capec_mitigations', label: 'CAPEC Mitigations' },
   { key: 'ctid_mappings', label: 'CTID CVE→Technique' },
   { key: 'atlas_xrefs', label: 'ATLAS Cross-References' },
   { key: 'cve_details', label: 'CVE Details' },

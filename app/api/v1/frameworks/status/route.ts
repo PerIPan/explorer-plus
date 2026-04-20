@@ -50,6 +50,20 @@ export async function GET(_req: NextRequest) {
     counts.csf_informative_references = 0;
   }
 
+  // CAPEC full-taxonomy tables — may not exist on unmigrated environments
+  try {
+    const capec = await query<{ tbl: string; count: string }>(`
+      SELECT 'capec_patterns' AS tbl, COUNT(*)::text AS count FROM capec_patterns
+      UNION ALL SELECT 'capec_mitigations', COUNT(*)::text FROM capec_mitigations
+    `);
+    for (const row of capec.rows) {
+      counts[row.tbl] = parseInt(row.count, 10);
+    }
+  } catch {
+    counts.capec_patterns = 0;
+    counts.capec_mitigations = 0;
+  }
+
   // GHSA + Packages tables — separate try/catch so one missing table doesn't fallback-zero unrelated counts
   try {
     const ghsa = await query<{ tbl: string; count: string }>(`
