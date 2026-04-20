@@ -78,6 +78,14 @@ export function OsvDetail() {
                 CVSS {data.cvssScore.toFixed(1)}
               </span>
             )}
+            {data.severityInherited && (
+              <span
+                className="text-[10px] uppercase tracking-wider text-[var(--text-secondary)]"
+                title="The distro didn't publish a CVSS score — severity shown is inherited from the linked CVE's NVD score."
+              >
+                (via CVE)
+              </span>
+            )}
           </div>
         }
       />

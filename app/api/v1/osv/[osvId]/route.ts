@@ -25,6 +25,11 @@ export async function GET(
   // non-GHSA slice, but possible for OSS-Fuzz ↔ distro cross-references).
   // The detail endpoint aggregates: returns the primary row (any one) plus
   // the full set of affected packages across all rows with this osv_id.
+  // LATERAL-join cve_details via the first CVE alias to backfill severity
+  // for OSV rows where the distro didn't publish CVSS data (very common
+  // for Chainguard/Wolfi/Linux/SUSE rebuild advisories). The stored
+  // cvss_severity stays NULL if OSV didn't give us one — we expose the
+  // resolved value at read time via COALESCE.
   const advisoryRes = await query<{
     osvId: string;
     ecosystem: string;
@@ -35,24 +40,32 @@ export async function GET(
     cvssVector: string | null;
     cvssScore: string | null;
     cvssSeverity: string | null;
+    severityInherited: boolean;
     published: string | null;
     modified: string | null;
   }>(
     `SELECT
-       osv_id          AS "osvId",
-       ecosystem,
-       aliases,
-       summary,
-       details,
-       severity_raw    AS "severityRaw",
-       cvss_vector     AS "cvssVector",
-       cvss_score      AS "cvssScore",
-       cvss_severity   AS "cvssSeverity",
-       published,
-       modified
-     FROM osv_advisories
-     WHERE osv_id = $1
-     ORDER BY ecosystem
+       o.osv_id          AS "osvId",
+       o.ecosystem,
+       o.aliases,
+       o.summary,
+       o.details,
+       o.severity_raw    AS "severityRaw",
+       o.cvss_vector     AS "cvssVector",
+       COALESCE(o.cvss_score, cve.cvss_score)       AS "cvssScore",
+       COALESCE(o.cvss_severity, cve.cvss_severity) AS "cvssSeverity",
+       (o.cvss_severity IS NULL AND cve.cvss_severity IS NOT NULL) AS "severityInherited",
+       o.published,
+       o.modified
+     FROM osv_advisories o
+     LEFT JOIN LATERAL (
+       SELECT cd.cvss_severity, cd.cvss_score
+       FROM cve_details cd
+       WHERE cd.cve_id = ANY(o.aliases)
+       LIMIT 1
+     ) cve ON true
+     WHERE o.osv_id = $1
+     ORDER BY o.ecosystem
      LIMIT 1`,
     [osvId],
   );
@@ -96,6 +109,10 @@ export async function GET(
         cvssVector: adv.cvssVector,
         cvssScore: adv.cvssScore ? parseFloat(adv.cvssScore) : null,
         cvssSeverity: adv.cvssSeverity,
+        /** True when the severity was inherited from a CVE alias rather
+         *  than published by the distro itself — UI can render a subtle
+         *  "via CVE" hint to be transparent about the source. */
+        severityInherited: adv.severityInherited ?? false,
         published: adv.published,
         modified: adv.modified,
         packageCount: affectedRes.rows.length,

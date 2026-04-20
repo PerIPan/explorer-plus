@@ -50,6 +50,11 @@ const GHSA_COVERED = new Set([
   'GitHub Actions',
 ]);
 
+// OSV publishes a `[EMPTY]` bucket for NVD CVE stubs with no package data —
+// 95%+ of rows are CVE IDs we already have in cve_details from CVElistV5.
+// Skip to prevent duplicate/useless data.
+const SKIP_ECOSYSTEMS = new Set(['[EMPTY]']);
+
 interface SeverityEntry {
   type?: string;
   score?: string;
@@ -356,7 +361,7 @@ export async function GET(req: NextRequest) {
     const ghsaSet = await loadGhsaSet();
 
     const allEcos = await fetchEcosystems();
-    const targets = allEcos.filter((e) => !GHSA_COVERED.has(e));
+    const targets = allEcos.filter((e) => !GHSA_COVERED.has(e) && !SKIP_ECOSYSTEMS.has(e));
     totals.ecosystemsTotal = targets.length;
 
     for (const eco of targets) {

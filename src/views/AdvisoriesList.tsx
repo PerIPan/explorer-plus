@@ -9,6 +9,11 @@ import { PageHeader } from '../components/layout/PageHeader';
 import { DataTable, type ColumnDef } from '../components/shared/DataTable';
 import { Badge } from '../components/shared/Badge';
 import type { AdvisoryListEntry } from '../lib/types';
+import {
+  ADVISORY_CATEGORY_KEYS,
+  ADVISORY_ECOSYSTEM_CATEGORIES,
+  type AdvisoryEcosystemCategory,
+} from '../lib/advisoryEcosystems';
 
 const SEVERITIES = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'];
 
@@ -199,9 +204,15 @@ export function AdvisoriesList() {
   const searchParams = useSearchParams();
   const updateParams = useUpdateParams();
   const page = parseInt(searchParams.get('page') ?? '1', 10);
-  const severity = searchParams.get('severity') ?? '';
+  // Default landing filter: CRITICAL only. Combined with the fixed
+  // severity-DESC + published_at-DESC sort, the list opens with "newest
+  // critical first" — matches the SOC's "what hit me this week" intent.
+  // Empty string (user-selected "All severities") is respected; we only
+  // fall back to the default when the param is entirely absent from the URL.
+  const severity = searchParams.has('severity') ? (searchParams.get('severity') ?? '') : 'CRITICAL';
   const source = searchParams.get('source') ?? '';
   const ecosystem = searchParams.get('ecosystem') ?? '';
+  const category = searchParams.get('category') ?? '';
   const q = searchParams.get('q') ?? '';
   const hasCve = searchParams.get('has_cve') ?? '';
   // Default date floor stays blank — the user's intuition for "the advisory
@@ -211,8 +222,16 @@ export function AdvisoriesList() {
   const setParam = useCallback(
     (key: string, value: string) => {
       const updates: Record<string, string | null> = {};
-      if (value) updates[key] = value;
-      else updates[key] = null;
+      if (value) {
+        updates[key] = value;
+      } else if (key === 'severity') {
+        // Severity defaults to CRITICAL when absent; writing an explicit
+        // empty string keeps the URL param present so "All severities"
+        // survives re-renders without the default kicking back in.
+        updates[key] = '';
+      } else {
+        updates[key] = null;
+      }
       if (key !== 'page') updates.page = '1';
       updateParams(updates);
     },
@@ -225,15 +244,18 @@ export function AdvisoriesList() {
   useEffect(() => () => clearTimeout(debounceRef.current), []);
 
   const params = useMemo(() => {
-    const p: Record<string, string> = { page: String(page), limit: '50', order: 'desc' };
+    // Sort is fixed server-side to severity DESC + published_at DESC; no
+    // `order` param needed. Critical/new always surfaces at the top.
+    const p: Record<string, string> = { page: String(page), limit: '50' };
     if (severity) p.severity = severity;
     if (source) p.source = source;
     if (ecosystem) p.ecosystem = ecosystem;
+    if (category) p.category = category;
     if (q && q.length >= 3) p.q = q;
     if (hasCve) p.has_cve = hasCve;
     if (since) p.since = since;
     return p;
-  }, [page, severity, source, ecosystem, q, hasCve, since]);
+  }, [page, severity, source, ecosystem, category, q, hasCve, since]);
 
   const { data, isLoading } = useAdvisories(params);
 
@@ -259,10 +281,26 @@ export function AdvisoriesList() {
         />
 
         <select
+          value={category}
+          onChange={(e) => setParam('category', e.target.value)}
+          aria-label="Ecosystem category"
+          title="Group ecosystems into curated buckets. Container-image distros (Chainguard/Wolfi/MinimOS/…) publish tens of thousands of rebuild advisories — use this to opt in/out."
+          className="px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)]"
+        >
+          <option value="">All categories</option>
+          {ADVISORY_CATEGORY_KEYS.map((k) => (
+            <option key={k} value={k}>
+              {ADVISORY_ECOSYSTEM_CATEGORIES[k as AdvisoryEcosystemCategory].label}
+            </option>
+          ))}
+        </select>
+
+        <select
           value={source}
           onChange={(e) => setParam('source', e.target.value)}
+          aria-label="Filter by source"
+          title="Filter by source — GHSA for OSS packages, OSV for OS & distros. Category filter above usually makes this redundant."
           className="px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)]"
-          title="Filter by source"
         >
           <option value="">All sources</option>
           <option value="GHSA">GHSA (OSS packages)</option>
@@ -272,6 +310,7 @@ export function AdvisoriesList() {
         <select
           value={severity}
           onChange={(e) => setParam('severity', e.target.value)}
+          aria-label="Filter by severity"
           className="px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)]"
         >
           <option value="">All severities</option>
@@ -283,6 +322,7 @@ export function AdvisoriesList() {
         <select
           value={ecosystem}
           onChange={(e) => setParam('ecosystem', e.target.value)}
+          aria-label="Filter by specific ecosystem"
           className="px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)]"
         >
           <option value="">All ecosystems</option>
@@ -301,6 +341,7 @@ export function AdvisoriesList() {
         <select
           value={hasCve}
           onChange={(e) => setParam('has_cve', e.target.value)}
+          aria-label="Filter by CVE alias presence"
           className="px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)]"
           title="Filter by CVE alias presence"
         >

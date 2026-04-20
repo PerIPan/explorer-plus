@@ -4,6 +4,7 @@ import { jsonResponse, errorResponse } from '../../lib/handler';
 import { withCors, corsOptions as OPTIONS } from '../../lib/cors';
 import { paginationSchema } from '../lib/validate';
 import { escapeLikePattern } from '../lib/queries';
+import { ADVISORY_ECOSYSTEM_CATEGORIES, ADVISORY_CATEGORY_KEYS } from '../../../../src/lib/advisoryEcosystems';
 import { z } from 'zod';
 
 export { OPTIONS };
@@ -31,6 +32,9 @@ const querySchema = paginationSchema.extend({
   source: z.enum(['GHSA', 'OSV']).optional(),
   severity: z.enum(['CRITICAL', 'HIGH', 'MEDIUM', 'LOW']).optional(),
   ecosystem: z.string().regex(ECOSYSTEM_RE).optional(),
+  /** High-level category shortcut. Expands to a list of ecosystems server-side
+   *  — saves clients from maintaining per-category mapping tables. */
+  category: z.enum(ADVISORY_CATEGORY_KEYS as [string, ...string[]]).optional(),
   since: z.string().optional(),
   has_cve: z.enum(['true', 'false']).optional(),
 });
@@ -58,9 +62,32 @@ export async function GET(req: NextRequest) {
     return withCors(errorResponse(400, 'Invalid query parameters', 'VALIDATION_ERROR'));
   }
 
-  const { page, limit, q, source, severity, ecosystem, since, has_cve, order } = parsed.data;
+  const { page, limit, q, source, severity, ecosystem, category, since, has_cve } = parsed.data;
   const offset = (page - 1) * limit;
-  const sortDir = order === 'asc' ? 'ASC' : 'DESC';
+
+  // Category → ecosystem list. If `ecosystem` is also set, we honour both and
+  // rely on the SQL branches to intersect (the specific ecosystem must be
+  // inside the category bucket to match). Mostly users pick one OR the other.
+  const categoryEcos = category
+    ? ADVISORY_ECOSYSTEM_CATEGORIES[category as keyof typeof ADVISORY_ECOSYSTEM_CATEGORIES].ecosystems
+    : null;
+
+  // Fixed ordering: severity first (CRITICAL → HIGH → MEDIUM → LOW → unknown),
+  // newest-in-severity-bucket ties broken by published_at DESC, then stable
+  // by advisory_id. Matches user intent "severity first, newest within that".
+  // We don't expose an `order` toggle — the list is an ops view, not a date
+  // history; critical new items should always surface at the top.
+  const ORDER_CLAUSE = `
+    CASE severity
+      WHEN 'CRITICAL' THEN 4
+      WHEN 'HIGH'     THEN 3
+      WHEN 'MEDIUM'   THEN 2
+      WHEN 'LOW'      THEN 1
+      ELSE 0
+    END DESC,
+    published_at DESC NULLS LAST,
+    advisory_id DESC
+  `.trim();
 
   const sinceIso = (() => {
     if (!since) return null;
@@ -72,8 +99,14 @@ export async function GET(req: NextRequest) {
   // The overall query is UNION ALL of a GHSA SELECT and an OSV SELECT. Each
   // branch filters itself; branches can be fully skipped if `source` narrows.
 
-  const wantGhsa = !source || source === 'GHSA';
-  const wantOsv = !source || source === 'OSV';
+  // Category is a convenience filter that also narrows source: `oss-packages`
+  // implies GHSA only; the three OSV categories imply OSV only. Explicit
+  // `source` param is overridden by `category` when they disagree.
+  const effectiveSource = category
+    ? (category === 'oss-packages' ? 'GHSA' : 'OSV')
+    : source;
+  const wantGhsa = !effectiveSource || effectiveSource === 'GHSA';
+  const wantOsv = !effectiveSource || effectiveSource === 'OSV';
 
   const ghsaParams: unknown[] = [];
   const ghsaConds: string[] = ['g.withdrawn_at IS NULL'];
@@ -103,6 +136,15 @@ export async function GET(req: NextRequest) {
         WHERE LOWER(p.ecosystem) = $${ghsaParams.length}
       )`);
     }
+    if (categoryEcos && category === 'oss-packages') {
+      // Category list is lowercase (npm/pypi/go/…) — matches packages.ecosystem.
+      ghsaParams.push(categoryEcos);
+      ghsaConds.push(`g.ghsa_id IN (
+        SELECT gp.ghsa_id FROM ghsa_packages gp
+        JOIN packages p ON p.id = gp.package_id
+        WHERE LOWER(p.ecosystem) = ANY($${ghsaParams.length}::text[])
+      )`);
+    }
   }
 
   // --- Build OSV branch -----------------------------------------------------
@@ -111,7 +153,14 @@ export async function GET(req: NextRequest) {
   if (wantOsv) {
     if (severity) {
       osvParams.push(severity);
-      osvConds.push(`o.cvss_severity = $${osvParams.length}`);
+      // Coalesce against the CVE-alias'd severity from cve_details. Many
+      // OSV rows have NULL cvss_severity (distro rebuild advisories strip
+      // CVSS by convention) but carry a CVE alias whose severity we know.
+      // The LATERAL join below exposes `cve.cvss_severity`; filter matches
+      // either the native value or the inherited one.
+      osvConds.push(
+        `COALESCE(o.cvss_severity, cve.cvss_severity) = $${osvParams.length}`,
+      );
     }
     if (q) {
       osvParams.push(`%${escapeLikePattern(q)}%`);
@@ -133,6 +182,11 @@ export async function GET(req: NextRequest) {
     if (ecosystem) {
       osvParams.push(ecosystem);
       osvConds.push(`o.ecosystem = $${osvParams.length}`);
+    }
+    if (categoryEcos && category !== 'oss-packages') {
+      // OSV categories carry case-preserved names (Ubuntu, Debian, Linux, …).
+      osvParams.push(categoryEcos);
+      osvConds.push(`o.ecosystem = ANY($${osvParams.length}::text[])`);
     }
   }
 
@@ -176,23 +230,40 @@ export async function GET(req: NextRequest) {
     countBranches.push(`SELECT COUNT(*) AS n FROM ghsa_advisories g ${ghsaWhere}`);
   }
   if (wantOsv) {
+    // LATERAL join to cve_details via the first CVE alias — lets us backfill
+    // cvss_severity/cvss_score for OSV rows where the distro didn't publish
+    // CVSS data (Chainguard/Wolfi/MinimOS/Linux kernel etc. — ~64% of OSV).
+    // cve_details.cve_id is the primary key so this is an indexed point
+    // lookup per row. The backfill is derived at read time, nothing is
+    // persisted to osv_advisories — monthly full ingest cannot overwrite it.
+    const osvLateralJoin = `
+      LEFT JOIN LATERAL (
+        SELECT cd.cvss_severity, cd.cvss_score
+        FROM cve_details cd
+        WHERE cd.cve_id = ANY(o.aliases)
+        LIMIT 1
+      ) cve ON true
+    `;
     branches.push(`
       SELECT
         o.osv_id         AS advisory_id,
         'OSV'::text      AS source,
         (SELECT a FROM unnest(o.aliases) a WHERE a LIKE 'CVE-%' LIMIT 1) AS cve_id,
         o.summary        AS summary,
-        o.cvss_severity  AS severity,
-        o.cvss_score     AS cvss_score,
+        COALESCE(o.cvss_severity, cve.cvss_severity) AS severity,
+        COALESCE(o.cvss_score, cve.cvss_score)       AS cvss_score,
         o.published      AS published_at,
         ARRAY[o.ecosystem]                                        AS ecosystems,
         (SELECT COUNT(*)
            FROM osv_affected oa
            WHERE oa.osv_id = o.osv_id AND oa.ecosystem = o.ecosystem)::text AS package_count
       FROM osv_advisories o
+      ${osvLateralJoin}
       ${osvWhereRenum}
     `);
-    countBranches.push(`SELECT COUNT(*) AS n FROM osv_advisories o ${osvWhereRenum}`);
+    countBranches.push(
+      `SELECT COUNT(*) AS n FROM osv_advisories o ${osvLateralJoin} ${osvWhereRenum}`,
+    );
   }
 
   if (branches.length === 0) {
@@ -221,7 +292,7 @@ export async function GET(req: NextRequest) {
     const dataSql = `
       SELECT *
       FROM (${branches.join(' UNION ALL ')}) adv
-      ORDER BY published_at ${sortDir} NULLS LAST, advisory_id DESC
+      ORDER BY ${ORDER_CLAUSE}
       LIMIT $${limitIdx} OFFSET $${offsetIdx}
     `;
     rows = await query<UnifiedRow>(dataSql, allParams);
@@ -244,7 +315,7 @@ export async function GET(req: NextRequest) {
     const ghsaOnlyData = `
       SELECT *
       FROM (${branches[0]}) adv
-      ORDER BY published_at ${sortDir} NULLS LAST, advisory_id DESC
+      ORDER BY ${ORDER_CLAUSE}
       LIMIT $${ghsaParams.length + 1} OFFSET $${ghsaParams.length + 2}
     `;
     rows = await query<UnifiedRow>(ghsaOnlyData, [...ghsaParams, limit, offset]);

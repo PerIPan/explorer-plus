@@ -44,6 +44,12 @@ const GHSA_COVERED = new Set([
   'GitHub Actions',
 ]);
 
+// OSV buckets that are legitimate URLs but carry no useful data for us:
+//   - `[EMPTY]`: catch-all for NVD CVE stubs with no package, no summary, no
+//     aliases. 95%+ of rows are CVE-* IDs we already have in cve_details from
+//     CVElistV5 with full enrichment. Ingesting them just duplicates data.
+const SKIP_ECOSYSTEMS = new Set(['[EMPTY]']);
+
 const DATABASE_URL = process.env.DATABASE_URL || process.env.POSTGRES_URL;
 if (!DATABASE_URL) {
   console.error('DATABASE_URL required');
@@ -306,8 +312,8 @@ async function main() {
     console.log(`[osv] GHSA alias set: ${ghsaAliases.size} ids`);
 
     const allEcos = await fetchEcosystems();
-    const targets = allEcos.filter((e) => !GHSA_COVERED.has(e));
-    console.log(`[osv] ${targets.length} target ecosystems (skipped ${allEcos.length - targets.length} GHSA-covered)`);
+    const targets = allEcos.filter((e) => !GHSA_COVERED.has(e) && !SKIP_ECOSYSTEMS.has(e));
+    console.log(`[osv] ${targets.length} target ecosystems (skipped ${allEcos.length - targets.length} GHSA-covered + junk buckets)`);
 
     const totals = { scanned: 0, upserted: 0, skippedGhsa: 0, skippedMalformed: 0, errors: 0 };
 

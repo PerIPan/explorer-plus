@@ -780,6 +780,9 @@ export interface OsvAdvisory extends OsvListEntry {
   affected: OsvAffectedRef[];
   /** Any CVE IDs extracted from aliases[] — populated by the detail endpoint */
   cveIds: string[];
+  /** True when `cvssSeverity` / `cvssScore` were backfilled from a CVE alias
+   *  (distro didn't publish CVSS directly). Lets the UI show a "via CVE" hint. */
+  severityInherited?: boolean;
 }
 
 export interface OsvRef {
