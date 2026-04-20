@@ -62,7 +62,7 @@ export async function GET(req: NextRequest) {
 
     params.push(limit, offset);
     const dataResult = await query<{
-      id: string;
+      capecId: string;
       name: string;
       abstraction: string | null;
       likelihood: string | null;
@@ -72,7 +72,7 @@ export async function GET(req: NextRequest) {
       mitigationCount: string;
     }>(
       `SELECT
-         p.id, p.name, p.abstraction, p.likelihood, p.severity,
+         p.id AS "capecId", p.name, p.abstraction, p.likelihood, p.severity,
          p.cwe_ids AS "cweIds",
          (SELECT COUNT(DISTINCT cm.technique_id)::text
             FROM capec_mappings cm

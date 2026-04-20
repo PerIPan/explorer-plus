@@ -19,7 +19,7 @@ export async function GET(
   }
 
   const patternResult = await query<{
-    id: string;
+    capecId: string;
     name: string;
     description: string | null;
     abstraction: string | null;
@@ -33,7 +33,7 @@ export async function GET(
     exampleInstances: string[] | null;
     cweIds: string[] | null;
   }>(
-    `SELECT id, name, description, abstraction, status, likelihood, severity,
+    `SELECT id AS "capecId", name, description, abstraction, status, likelihood, severity,
             prerequisites,
             resources_required   AS "resourcesRequired",
             skills_required      AS "skillsRequired",

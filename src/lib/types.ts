@@ -639,7 +639,6 @@ export interface CapecListEntry extends CapecRef {
 }
 
 export interface CapecDetail extends CapecRef {
-  id: string;
   description: string | null;
   status: string | null;
   prerequisites: string[] | null;
