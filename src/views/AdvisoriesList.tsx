@@ -215,19 +215,24 @@ export function AdvisoriesList() {
   const category = searchParams.get('category') ?? '';
   const q = searchParams.get('q') ?? '';
   const hasCve = searchParams.get('has_cve') ?? '';
-  // Default date floor stays blank — the user's intuition for "the advisory
-  // universe" doesn't assume a 30-day window. Opt-in via the date picker.
-  const since = searchParams.get('since') ?? '';
+  // Default the date floor to "last 14 days" so the landing query hits a
+  // tight slice instead of paginating through hundreds of thousands of
+  // rows. Empty-string (user-selected "No date filter") still preserved
+  // via the URL param — see setParam. 14 days gives enough room for weekly
+  // review without burning DB on historical scans.
+  const defaultSince = new Date(Date.now() - 14 * 86400000).toISOString().split('T')[0];
+  const since = searchParams.has('since') ? (searchParams.get('since') ?? '') : defaultSince;
 
   const setParam = useCallback(
     (key: string, value: string) => {
       const updates: Record<string, string | null> = {};
       if (value) {
         updates[key] = value;
-      } else if (key === 'severity') {
-        // Severity defaults to CRITICAL when absent; writing an explicit
-        // empty string keeps the URL param present so "All severities"
-        // survives re-renders without the default kicking back in.
+      } else if (key === 'severity' || key === 'since') {
+        // Both default-applied params (severity=CRITICAL, since=last-14d)
+        // need an explicit empty-string in the URL to mean "user opted out
+        // of the default". Otherwise deleting the param re-applies the
+        // default on the next render.
         updates[key] = '';
       } else {
         updates[key] = null;
