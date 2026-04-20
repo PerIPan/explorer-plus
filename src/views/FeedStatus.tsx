@@ -192,42 +192,43 @@ export function FeedStatus() {
 interface FrameworkTable {
   key: string;
   label: string;
+  description: string;
   /** If true, empty state is intentional — source data pending, not a sync failure */
   expectedEmpty?: boolean;
 }
 
 const FRAMEWORK_TABLES: FrameworkTable[] = [
-  { key: 'owasp_top10', label: 'OWASP Top 10 (Web, ML, LLM)' },
-  { key: 'csf_subcategories', label: 'NIST CSF v2 (Subcategories)' },
-  { key: 'csf_technique_mappings', label: 'NIST CSF v2 (CRI Profile Mappings)' },
-  { key: 'csf_implementation_examples', label: 'NIST CSF v2 (Implementation Examples)' },
-  { key: 'csf_informative_references', label: 'NIST CSF v2 (Informative References — 800-53 + ISO 27001)' },
-  { key: 'ghsa_advisories', label: 'GitHub Security Advisories' },
-  { key: 'ghsa_weaknesses', label: 'GHSA CWE Mappings' },
-  { key: 'ghsa_packages', label: 'GHSA Affected Packages' },
-  { key: 'packages', label: 'Packages (derived from GHSA)' },
-  { key: 'nist_controls', label: 'NIST 800-53' },
-  { key: 'engage_mappings', label: 'MITRE Engage' },
-  { key: 'defensive_mappings', label: 'D3FEND' },
-  { key: 'detection_strategies', label: 'Detection Strategies' },
-  { key: 'detection_analytics', label: 'Detection Analytics' },
-  { key: 'react_actions', label: 'RE&CT' },
-  { key: 'veris_mappings', label: 'VERIS' },
-  { key: 'cloud_control_mappings', label: 'Cloud Controls (Azure + GCP)' },
-  { key: 'sigma_rules', label: 'Sigma Rules' },
-  { key: 'atomic_tests', label: 'Atomic Red Team' },
-  { key: 'external_actors', label: 'ETDA Actors' },
-  { key: 'applications', label: 'Applications (CVElistV5)' },
-  { key: 'capec_mappings', label: 'CAPEC Bridge' },
-  { key: 'capec_patterns', label: 'CAPEC Patterns (full taxonomy)' },
-  { key: 'capec_mitigations', label: 'CAPEC Mitigations' },
-  { key: 'osv_advisories', label: 'OSV Advisories (OS, distro, kernel)' },
-  { key: 'osv_affected', label: 'OSV Affected Packages' },
-  { key: 'ctid_mappings', label: 'CTID CVE→Technique' },
-  { key: 'atlas_xrefs', label: 'ATLAS Cross-References' },
-  { key: 'cve_details', label: 'CVE Details' },
-  { key: 'cve_weaknesses', label: 'CVE Weaknesses' },
-  { key: 'affected_products', label: 'Affected Products' },
+  { key: 'owasp_top10', label: 'OWASP Top 10 (Web, ML, LLM)', description: '30 categories across 3 frameworks — CWEs, ATT&CK techniques, ATLAS techniques' },
+  { key: 'csf_subcategories', label: 'NIST CSF v2 Subcategories', description: 'GV/ID/PR/DE/RS/RC functions — 23 subcategories from the 2024 release' },
+  { key: 'csf_technique_mappings', label: 'NIST CSF v2 → ATT&CK', description: 'CRI Profile crosswalk: CSF subcategory → ATT&CK technique' },
+  { key: 'csf_implementation_examples', label: 'NIST CSF v2 Examples', description: 'One-line implementation examples per CSF subcategory' },
+  { key: 'csf_informative_references', label: 'NIST CSF v2 References', description: 'Informative references into NIST 800-53 r5 and ISO 27001:2022' },
+  { key: 'ghsa_advisories', label: 'GitHub Security Advisories', description: 'Reviewed OSS package advisories — npm, PyPI, Maven, Go, …' },
+  { key: 'ghsa_weaknesses', label: 'GHSA CWE Mappings', description: 'CWE weakness categorisation per GHSA advisory' },
+  { key: 'ghsa_packages', label: 'GHSA Affected Packages', description: 'Per-package vulnerable/fixed version ranges' },
+  { key: 'packages', label: 'Packages (derived from GHSA)', description: 'Unique (ecosystem, package) pairs across 8 OSS ecosystems' },
+  { key: 'nist_controls', label: 'NIST 800-53', description: '5,200+ security controls from NIST 800-53 r5 mapped to ATT&CK' },
+  { key: 'engage_mappings', label: 'MITRE Engage', description: 'Adversary engagement activities — deception and engagement mappings' },
+  { key: 'defensive_mappings', label: 'D3FEND', description: 'Defensive countermeasures from the MITRE D3FEND knowledge graph' },
+  { key: 'detection_strategies', label: 'Detection Strategies', description: 'ATT&CK v18 detection strategies — high-level detection intent' },
+  { key: 'detection_analytics', label: 'Detection Analytics', description: 'Concrete analytics (pseudo-code / query logic) per detection strategy' },
+  { key: 'react_actions', label: 'RE&CT', description: 'ATC incident-response playbook actions — Identification, Containment, …' },
+  { key: 'veris_mappings', label: 'VERIS', description: 'Verizon DBIR incident classification (Actor/Action/Asset/Attribute)' },
+  { key: 'cloud_control_mappings', label: 'Cloud Controls (Azure + GCP)', description: 'Cloud provider security controls mapped to ATT&CK techniques' },
+  { key: 'sigma_rules', label: 'Sigma Rules', description: '3,100+ detection rules from SigmaHQ with ATT&CK mappings' },
+  { key: 'atomic_tests', label: 'Atomic Red Team', description: '1,770+ adversary-emulation tests (PowerShell/bash/batch)' },
+  { key: 'external_actors', label: 'ETDA / ThaiCERT Actors', description: '514 external threat actors — country, motivation, MITRE group mapping' },
+  { key: 'applications', label: 'Applications (CVElistV5)', description: 'Vendor/product rows extracted from CVE CPE data' },
+  { key: 'capec_mappings', label: 'CAPEC → ATT&CK Bridge', description: 'CWE → CAPEC → ATT&CK pivot, powers CVE→technique chain' },
+  { key: 'capec_patterns', label: 'CAPEC Patterns (full taxonomy)', description: '615 attack patterns with prerequisites, skills, consequences, related patterns' },
+  { key: 'capec_mitigations', label: 'CAPEC Mitigations', description: 'Per-pattern mitigation guidance from the CAPEC taxonomy' },
+  { key: 'osv_advisories', label: 'OSV Advisories (OS, distro, kernel)', description: 'Non-GHSA ecosystems — Linux, Debian, Ubuntu, Alpine, Android, OSS-Fuzz, …' },
+  { key: 'osv_affected', label: 'OSV Affected Packages', description: 'Per-package version ranges for OSV advisories' },
+  { key: 'ctid_mappings', label: 'CTID CVE → Technique', description: 'Hand-curated CVE to ATT&CK technique mappings from MITRE CTID' },
+  { key: 'atlas_xrefs', label: 'ATLAS Cross-References', description: 'ATT&CK ↔ ATLAS technique cross-walks (AI/ML adversary TTPs)' },
+  { key: 'cve_details', label: 'CVE Details', description: 'CVElistV5 corpus with CVSS, CWE, KEV flag, EPSS enrichment' },
+  { key: 'cve_weaknesses', label: 'CVE Weaknesses', description: 'CWE weakness categorisation per CVE' },
+  { key: 'affected_products', label: 'Affected Products', description: 'CVE ↔ application edges with version ranges' },
 ];
 
 function FrameworkStatus() {
@@ -237,12 +238,17 @@ function FrameworkStatus() {
     refetchInterval: 60_000,
   });
 
+  const fmt = (n: number | undefined): string => {
+    if (n == null) return '—';
+    return n.toLocaleString();
+  };
+
   return (
     <div className="space-y-3 mt-8">
       <h2 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
         Frameworks &amp; Static Data
       </h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="space-y-2">
         {FRAMEWORK_TABLES.map((fw) => {
           const count = data?.counts?.[fw.key];
           const hasData = count != null && count > 0;
@@ -252,26 +258,38 @@ function FrameworkStatus() {
             : isPending
               ? 'bg-[var(--accent-yellow)]'
               : 'bg-[var(--text-secondary)]';
+          const statusBadge = hasData ? (
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border bg-[var(--green-faint)] text-[var(--accent-green)] border-[var(--green-dim)]">
+              synced
+            </span>
+          ) : isPending ? (
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border bg-[var(--yellow-faint)] text-[var(--accent-yellow)] border-[var(--yellow-dim)]">
+              pending source
+            </span>
+          ) : (
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border bg-[var(--hover-overlay)] text-[var(--text-secondary)] border-[var(--border-color)]">
+              pending
+            </span>
+          );
           return (
-            <div key={fw.key} className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg p-5 space-y-3">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <span className={`inline-block w-2.5 h-2.5 rounded-full ${dotClass}`} />
-                  <h3 className="text-[var(--text-primary)] font-medium text-sm">{fw.label}</h3>
+            <div
+              key={fw.key}
+              className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-md px-4 py-2.5"
+            >
+              <div className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-3">
+                <span className={`inline-block w-2.5 h-2.5 rounded-full ${dotClass}`} />
+                <div className="min-w-0">
+                  <div className="text-[var(--text-primary)] font-medium text-sm truncate">
+                    {fw.label}
+                  </div>
+                  <div className="text-[11px] text-[var(--text-secondary)] truncate opacity-70">
+                    {fw.description}
+                  </div>
                 </div>
-                {hasData && (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border bg-[var(--green-faint)] text-[var(--accent-green)] border-[var(--green-dim)]">
-                    success
-                  </span>
-                )}
-                {isPending && (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border bg-[var(--yellow-faint)] text-[var(--accent-yellow)] border-[var(--yellow-dim)]">
-                    pending source
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-4 text-xs text-[var(--text-secondary)]">
-                <span>Last sync: <span className="text-[var(--text-primary)]">{hasData ? 'synced' : isPending ? 'awaiting source' : 'pending'}</span></span>
+                <span className="text-xs text-[var(--text-secondary)] whitespace-nowrap">
+                  {fmt(count)}{hasData ? ' rows' : ''}
+                </span>
+                {statusBadge}
               </div>
             </div>
           );
