@@ -174,20 +174,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </div>
               <p>
                 <strong>MITRE Explorer Plus</strong> — a multi-domain threat intelligence platform on{' '}
-                <em>MITRE ATT&CK</em>. Single interface for adversary behavior, detection, compliance, and application security — enriched with CTI reports and CVE vulnerability data.
+                <em>MITRE ATT&CK</em>. Single interface for adversary behavior, detection, compliance, and application security — enriched with CTI reports, CVE vulnerabilities, and open-source + distro advisories.
               </p>
               <ul className="space-y-2 pl-4 list-disc marker:text-[var(--accent-teal)]">
                 <li><strong>Multi-domain ATT&CK + ATLAS</strong> — Enterprise, ICS, Mobile, ATLAS (AI/ML threats) with domain switcher + "All Domains" cross-domain view</li>
-                <li><strong>A2A Agent Protocol v1.0</strong> — AI agents can query this knowledge base programmatically via the <a href="/.well-known/agent-card.json" target="_blank" rel="noopener noreferrer" className="text-[var(--accent-teal)] hover:underline">Agent Card</a>. 13 skills, 50 req/day, no auth. Example: <em className="text-[var(--text-secondary)]">"ask mitre-explorer.org, using the A2A Google GenAI protocol, 'which Applications have been affected by new CVEs published in the previous week, show me the relevant Techniques. Also show me the latest 2-day threat reports. Render what you get as a response, for me to look at.'"</em> Powered by Gemini</li>
+                <li><strong>A2A Agent Protocol v1.0</strong> — AI agents can query this knowledge base programmatically via the <a href="/.well-known/agent-card.json" target="_blank" rel="noopener noreferrer" className="text-[var(--accent-teal)] hover:underline">Agent Card</a>. 24 skills, 50 req/day, no auth. Example: <em className="text-[var(--text-secondary)]">"ask mitre-explorer.org, using the A2A Google GenAI protocol, 'which Applications have been affected by new CVEs published in the previous week, show me the relevant Techniques. Also show me the latest 2-day threat reports. Render what you get as a response, for me to look at.'"</em> Powered by Gemini</li>
                 <li><strong>Actor comparison</strong> — select up to 3 threat actors on the Matrix, see technique overlap color-coded, export as HTML</li>
                 <li><strong>360 Views</strong> — search any entity, explore via Technique Map, Actor Profile, Software Map, Application Map, Sector Map, or D3 force graph</li>
-                <li><strong>Applications</strong> — 7K+ vendor products linked to CVEs → CWE → CAPEC → ATT&CK techniques → threat groups. See which apps your adversaries target</li>
-                <li><strong>Frameworks</strong> — OWASP Top 10 (Web 2021, ML 2023, LLM 2025), NIST 800-53, MITRE Engage, D3FEND, RE&CT, VERIS incident classification, Azure + GCP cloud controls</li>
-                <li><strong>CVEs</strong> — since 2017, CISA KEV + NVD enrichment (CVSS scores), linked to ATT&CK techniques via CWE→CAPEC bridge + CTID hand-curated mappings</li>
+                <li><strong>Applications</strong> — 11K+ vendor products linked to CVEs → CWE → CAPEC → ATT&CK techniques → threat groups. See which apps your adversaries target</li>
+                <li><strong>Advisories</strong> — unified GHSA (OSS packages) + OSV (Linux kernel, Debian, Ubuntu, Alpine, Android, Red Hat, SUSE, Rocky, Alma, Chainguard, OSS-Fuzz …) with faceted filters — severity, ecosystem category, CVE-alias</li>
+                <li><strong>CVEs</strong> — since 2017, CISA KEV + NVD CVSS enrichment + EPSS exploit-probability scoring (First.org, daily), linked to ATT&CK via CWE→CAPEC bridge + CTID mappings, cross-referenced to distro advisories</li>
+                <li><strong>Frameworks</strong> — OWASP Top 10 (Web 2021, ML 2023, LLM 2025), NIST 800-53 r5, NIST CSF v2 (GV/ID/PR/DE/RS/RC with CRI Profile crosswalk), MITRE Engage, D3FEND, RE&CT, VERIS, Azure + GCP cloud controls, CAPEC (615 patterns, full taxonomy), EU Cyber Resilience Act reference</li>
                 <li><strong>IOCs</strong> — OTX + ThreatFox + MalwareBazaar, enriched with VirusTotal verdicts and sandbox-derived techniques</li>
                 <li><strong>Detection</strong> — Detection Strategies + Analytics (ATT&CK v18), SigmaHQ rules, Atomic Red Team tests, MITRE Caldera, D3FEND countermeasures</li>
                 <li><strong>Threat actors</strong> — 191 ATT&CK groups + 514 ThaiCERT/ETDA actors with category inference</li>
-                <li><strong>Data model</strong> — 20+ interconnected data sources: ATT&CK STIX, CVElistV5, CAPEC, NIST, CISA KEV, OTX, SigmaHQ, Atomic Red Team, D3FEND, VERIS, CTID</li>
+                <li><strong>Data model</strong> — 30+ interconnected data sources: ATT&CK STIX, ATLAS, CVElistV5, NVD, CAPEC, CWE, NIST 800-53, NIST CSF v2, CISA KEV, EPSS, OTX, SigmaHQ, Atomic Red Team, D3FEND, VERIS, CTID, GHSA, OSV</li>
                 <li><strong>Sector + domain filters</strong> — narrow everything by industry and ATT&CK domain (AND logic)</li>
                 <li><strong>Diamond Model</strong> — Adversary (Threat Actors) | Victim (Sectors) | Infrastructure (Applications) | Capability (Techniques)</li>
               </ul>
