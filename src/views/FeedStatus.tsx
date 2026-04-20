@@ -8,16 +8,35 @@ import type { FeedSyncStatus } from '../lib/types';
 
 const SOURCE_LABELS: Record<string, string> = {
   otx: 'AlienVault OTX',
-  abuse_ch: 'abuse.ch (ThreatFox + MalwareBazaar)',
-  cisa_kev: 'CISA Known Exploited Vulnerabilities',
-  rss: 'RSS Feeds (DFIR, Unit42, Microsoft, Talos)',
-  d3fend: 'D3FEND Defensive Mappings',
+  abuse_ch: 'abuse.ch',
+  cisa_kev: 'CISA KEV',
+  rss: 'RSS Feeds',
+  d3fend: 'D3FEND',
   nvd: 'NVD CVE Enrichment',
-  virustotal: 'VirusTotal Hash Enrichment',
-  matview_refresh: 'Matview refresh (app_technique_groups + package_summary)',
-  cve_products: 'CVE → Application enrichment (re-fetches NVD CPE data for CVEs missing products)',
-  epss: 'EPSS (First.org exploit-probability scores)',
-  osv: 'OSV (Open Source Vulnerabilities — Linux, Debian, Alpine, Ubuntu, Android, OSS-Fuzz, …)',
+  virustotal: 'VirusTotal',
+  matview_refresh: 'Matview refresh',
+  cve_products: 'CVE → Application enrichment',
+  epss: 'EPSS',
+  osv: 'OSV',
+};
+
+/**
+ * Short gray-text descriptions shown under each source label — one-liner
+ * explaining what the feed ingests. Matches the user's mental model better
+ * than the label alone.
+ */
+const SOURCE_DESCRIPTIONS: Record<string, string> = {
+  otx: 'AlienVault OTX pulses — threat reports + IOCs',
+  abuse_ch: 'ThreatFox + MalwareBazaar — IP/domain/hash IOCs',
+  cisa_kev: 'Known Exploited Vulnerabilities — CVE flagging',
+  rss: 'DFIR Report, Unit 42, Microsoft Security, Talos',
+  d3fend: 'Defensive countermeasure mappings to ATT&CK',
+  nvd: 'CVSS + CWE enrichment from NVD API',
+  virustotal: 'Sandbox verdicts + malware family for hashes',
+  matview_refresh: 'app_technique_groups + package_summary matviews',
+  cve_products: 'Retries NVD for CVEs missing CPE (vendor/product) data',
+  epss: 'First.org exploit-probability scoring, daily refreshed',
+  osv: 'OS, distro, kernel advisories — Linux, Debian, Ubuntu, Alpine, Android, OSS-Fuzz, …',
 };
 
 function formatTimeAgo(iso: string): string {
@@ -62,28 +81,34 @@ interface FeedCardProps {
   feed: FeedSyncStatus;
 }
 
+/**
+ * Compact single-row layout. Grid columns:
+ *   [dot] [label + description]  [last-sync]  [status-badge]
+ * Error messages render as an indented sub-row when present.
+ */
 function FeedCard({ feed }: FeedCardProps) {
+  const description = SOURCE_DESCRIPTIONS[feed.source];
   return (
-    <div className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg p-5 space-y-3">
-      {/* Header row */}
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <StatusDot status={feed.status} />
-          <h3 className="text-[var(--text-primary)] font-medium text-sm">
+    <div className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-md px-4 py-2.5">
+      <div className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-3">
+        <StatusDot status={feed.status} />
+        <div className="min-w-0">
+          <div className="text-[var(--text-primary)] font-medium text-sm truncate">
             {SOURCE_LABELS[feed.source] ?? feed.source}
-          </h3>
+          </div>
+          {description && (
+            <div className="text-[11px] text-[var(--text-secondary)] truncate opacity-70">
+              {description}
+            </div>
+          )}
         </div>
-      </div>
-
-      {/* Stats row */}
-      <div className="flex items-center gap-4 text-xs text-[var(--text-secondary)]">
-        <span>Last sync: <span className="text-[var(--text-primary)]">{formatTimeAgo(feed.lastSync)}</span></span>
+        <span className="text-xs text-[var(--text-secondary)] whitespace-nowrap">
+          {formatTimeAgo(feed.lastSync)}
+        </span>
         <StatusBadge status={feed.status} />
       </div>
-
-      {/* Error message */}
       {feed.error && (
-        <div className="text-xs text-[var(--accent-orange)] bg-[var(--orange-faint)] border border-[var(--orange-dim)] rounded p-2 font-mono break-words">
+        <div className="mt-2 ml-6 text-[11px] text-[var(--accent-orange)] bg-[var(--orange-faint)] border border-[var(--orange-dim)] rounded px-2 py-1 font-mono break-words">
           {feed.error}
         </div>
       )}
@@ -93,20 +118,24 @@ function FeedCard({ feed }: FeedCardProps) {
 
 const AUTO_ONLY_SOURCES = new Set(['nvd', 'virustotal']);
 
-/** Placeholder card for sources not yet in the DB log */
+/** Placeholder row for sources not yet in the DB log */
 function EmptyFeedCard({ source }: { source: string }) {
+  const description = SOURCE_DESCRIPTIONS[source];
   return (
-    <div className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg p-5 space-y-3">
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <span className="inline-block w-2.5 h-2.5 rounded-full bg-[var(--text-secondary)]" />
-          <h3 className="text-[var(--text-primary)] font-medium text-sm">
+    <div className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-md px-4 py-2.5">
+      <div className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-3">
+        <span className="inline-block w-2.5 h-2.5 rounded-full bg-[var(--text-secondary)]" />
+        <div className="min-w-0">
+          <div className="text-[var(--text-primary)] font-medium text-sm truncate">
             {SOURCE_LABELS[source] ?? source}
-          </h3>
+          </div>
+          {description && (
+            <div className="text-[11px] text-[var(--text-secondary)] truncate opacity-70">
+              {description}
+            </div>
+          )}
         </div>
-      </div>
-      <div className="flex items-center gap-4 text-xs text-[var(--text-secondary)]">
-        <span>Last sync: <span className="text-[var(--text-primary)]">—</span></span>
+        <span className="text-xs text-[var(--text-secondary)] whitespace-nowrap">—</span>
         <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border bg-[var(--hover-overlay)] text-[var(--text-secondary)] border-[var(--border-color)]">
           {AUTO_ONLY_SOURCES.has(source) ? 'scheduled' : 'pending'}
         </span>
@@ -115,7 +144,12 @@ function EmptyFeedCard({ source }: { source: string }) {
   );
 }
 
-const ALL_SOURCES = ['otx', 'abuse_ch', 'cisa_kev', 'rss', 'nvd', 'virustotal'];
+const ALL_SOURCES = [
+  'otx', 'abuse_ch', 'cisa_kev', 'rss',
+  'nvd', 'virustotal', 'cve_products',
+  'epss', 'osv',
+  'matview_refresh', 'd3fend',
+];
 
 export function FeedStatus() {
 
@@ -140,25 +174,12 @@ export function FeedStatus() {
         subtitle="CTI ingestion pipeline health and manual sync controls"
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="space-y-2">
         {ALL_SOURCES.map((source) => {
           const feed = feedMap.get(source);
-
-          if (!feed) {
-            return (
-              <EmptyFeedCard
-                key={source}
-                source={source}
-              />
-            );
-          }
-
-          return (
-            <FeedCard
-              key={source}
-              feed={feed}
-            />
-          );
+          return feed
+            ? <FeedCard key={source} feed={feed} />
+            : <EmptyFeedCard key={source} source={source} />;
         })}
       </div>
 

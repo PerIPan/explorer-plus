@@ -20,3 +20,6 @@ dist/
 docs/superpowers/specs/2026-03-23-virustotal-integration-research.md
 .gitignore
 .playwright-mcp/
+
+# Internal menu docs — local only
+docs/menu/
