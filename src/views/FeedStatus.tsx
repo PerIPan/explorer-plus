@@ -15,9 +15,11 @@ const SOURCE_LABELS: Record<string, string> = {
   nvd: 'NVD CVE Enrichment',
   virustotal: 'VirusTotal',
   matview_refresh: 'Matview refresh',
+  cve_delta: 'CVE Delta Ingest',
   cve_products: 'CVE → Application enrichment',
   epss: 'EPSS',
   osv: 'OSV',
+  csf: 'NIST CSF v2',
 };
 
 /**
@@ -34,9 +36,11 @@ const SOURCE_DESCRIPTIONS: Record<string, string> = {
   nvd: 'CVSS + CWE enrichment from NVD API',
   virustotal: 'Sandbox verdicts + malware family for hashes',
   matview_refresh: 'app_technique_groups + package_summary matviews',
+  cve_delta: 'NVD last-48h window — new CVEs + CVSS + affected products',
   cve_products: 'Retries NVD for CVEs missing CPE (vendor/product) data',
   epss: 'First.org exploit-probability scoring, daily refreshed',
   osv: 'OS, distro, kernel advisories — Linux, Debian, Ubuntu, Alpine, Android, OSS-Fuzz, …',
+  csf: 'NIST Cybersecurity Framework v2 subcategories + CRI Profile crosswalk',
 };
 
 function formatTimeAgo(iso: string): string {
@@ -146,8 +150,9 @@ function EmptyFeedCard({ source }: { source: string }) {
 
 const ALL_SOURCES = [
   'otx', 'abuse_ch', 'cisa_kev', 'rss',
-  'nvd', 'virustotal', 'cve_products',
-  'epss', 'osv',
+  'nvd', 'virustotal',
+  'cve_delta', 'cve_products',
+  'epss', 'osv', 'csf',
   'matview_refresh', 'd3fend',
 ];
 
