@@ -286,6 +286,28 @@ export function CveDetail() {
             {/* GitHub Advisory enrichment (lazy-loaded) */}
             {data.ghsa && <GhsaEnrichmentCard ghsaId={data.ghsa.ghsaId} summaryStub={data.ghsa.summary} />}
 
+            {/* Also in OSV — distro/kernel advisories that alias this CVE */}
+            {data.osvAdvisories && data.osvAdvisories.length > 0 && (
+              <div>
+                <h4 className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2">
+                  Also in OSV — {data.osvAdvisories.length} OS/distro advisor{data.osvAdvisories.length === 1 ? 'y' : 'ies'}
+                </h4>
+                <div className="flex flex-wrap gap-1.5">
+                  {data.osvAdvisories.map((o) => (
+                    <Link
+                      key={`${o.ecosystem}:${o.osvId}`}
+                      href={`/cti/osv/${encodeURIComponent(o.osvId)}`}
+                      title={o.summary ?? `${o.ecosystem} advisory`}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] border bg-[var(--yellow-faint)] text-[var(--accent-yellow)] border-[var(--yellow-dim)] hover:underline"
+                    >
+                      <span className="uppercase tracking-wide text-[10px] opacity-70">{o.ecosystem}</span>
+                      <span className="font-mono">{o.osvId}</span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Sources */}
             <section>
               <h3 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-2">

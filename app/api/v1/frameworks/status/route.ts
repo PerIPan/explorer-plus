@@ -82,5 +82,19 @@ export async function GET(_req: NextRequest) {
     counts.packages = 0;
   }
 
+  // OSV tables — separate try/catch for pre-migration environments
+  try {
+    const osv = await query<{ tbl: string; count: string }>(`
+      SELECT 'osv_advisories' AS tbl, COUNT(*)::text AS count FROM osv_advisories
+      UNION ALL SELECT 'osv_affected', COUNT(*)::text FROM osv_affected
+    `);
+    for (const row of osv.rows) {
+      counts[row.tbl] = parseInt(row.count, 10);
+    }
+  } catch {
+    counts.osv_advisories = 0;
+    counts.osv_affected = 0;
+  }
+
   return withCors(jsonResponse({ counts }, 300));
 }

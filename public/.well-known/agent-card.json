@@ -1,7 +1,7 @@
 {
   "id": "mitre-explorer",
   "name": "MITRE Explorer",
-  "description": "Threat intelligence agent for MITRE ATT&CK, ATLAS, CVE vulnerabilities, and application security. Query techniques, threat groups, campaigns, software, CVEs (with EPSS exploit-probability scoring), CAPEC attack patterns, detection strategies, and compliance mappings across Enterprise, ICS, Mobile, and ATLAS domains.",
+  "description": "Threat intelligence agent for MITRE ATT&CK, ATLAS, CVE vulnerabilities, and application security. Query techniques, threat groups, campaigns, software, CVEs (with EPSS exploit-probability scoring), CAPEC attack patterns, GHSA + OSV advisories (OSS packages, OS, distros, kernel, Android), detection strategies, and compliance mappings across Enterprise, ICS, Mobile, and ATLAS domains.",
   "url": "https://mitre-explorer.org/api/a2a",
   "version": "1.0.0",
   "protocolVersion": "1.0.0",
@@ -29,16 +29,17 @@
     {
       "id": "cve-lookup",
       "name": "CVE Vulnerability Lookup",
-      "description": "Search and retrieve CVE vulnerability details including CVSS scores, severity, CWEs, EPSS exploit-probability scores (First.org, daily refreshed), CAPEC attack patterns, affected applications, linked ATT&CK techniques, and CISA KEV status. Covers 21,000+ CVEs from 2017-2026.",
+      "description": "Search and retrieve CVE vulnerability details including CVSS scores, severity, CWEs, EPSS exploit-probability scores (First.org, daily refreshed), CAPEC attack patterns, affected applications, linked ATT&CK techniques, CISA KEV status, GHSA package advisories, and OSV OS/distro advisories (Linux kernel, Debian, Ubuntu, Alpine, Android, Rocky, Alma, SUSE, OSS-Fuzz) that alias the CVE. Covers 21,000+ CVEs from 2017-2026.",
       "examples": [
         "What is CVE-2024-3400?",
         "Show me critical CVEs affecting Apache HTTP Server",
         "What new CVEs were published in the last 7 days?",
         "Which CVEs are linked to technique T1190?",
         "What is the EPSS score for CVE-2021-44228?",
-        "Which CAPEC attack patterns apply to CVE-2024-3400?"
+        "Which CAPEC attack patterns apply to CVE-2024-3400?",
+        "Which Linux / Debian / Ubuntu distro advisories reference CVE-2024-1086?"
       ],
-      "tags": ["cve", "vulnerability", "security", "cvss", "epss", "capec", "cisa-kev"]
+      "tags": ["cve", "vulnerability", "security", "cvss", "epss", "capec", "osv", "cisa-kev"]
     },
     {
       "id": "technique-intelligence",
@@ -283,6 +284,32 @@
         "Find CAPEC patterns related to authentication bypass"
       ],
       "tags": ["capec", "attack-pattern", "search", "threat-modelling"]
+    },
+    {
+      "id": "advisories-search",
+      "name": "Unified Advisories Search",
+      "description": "Search across GHSA (GitHub Security Advisories — OSS packages: npm/PyPI/Maven/Go/NuGet/RubyGems/Composer/crates.io/Pub/Hex) AND OSV (OS + distro + kernel: Linux kernel, Debian, Ubuntu, Alpine, Android, Red Hat, Rocky Linux, AlmaLinux, SUSE, openSUSE, OSS-Fuzz, Bitnami, Chainguard, Wolfi, Hackage, CRAN, Julia). Filter by source, severity, ecosystem, date range, or CVE-alias presence. Returns one row per advisory with a source badge — no duplicates: our OSV ingest skips GHSA-covered ecosystems at fetch time and drops records aliasing existing GHSA rows.",
+      "examples": [
+        "Show me HIGH advisories on Debian this month",
+        "Find OSV advisories for the Linux kernel with CVE aliases",
+        "List CRITICAL GHSA advisories for npm in the last 7 days",
+        "Which Alpine advisories reference CVE-2024-1086?",
+        "Show all OS/distro advisories affecting openssl",
+        "What advisories apply to Android in 2024?"
+      ],
+      "tags": ["advisories", "ghsa", "osv", "vulnerabilities", "linux", "debian", "ubuntu", "alpine", "android", "kernel", "distros"]
+    },
+    {
+      "id": "osv-lookup",
+      "name": "OSV Advisory Detail",
+      "description": "Get full details for an OSV advisory (OS / distro / kernel) by native ID (DSA-*, USN-*, LBSEC-*, ALAS-*, KERN-*, RLSA-*, etc.): summary, description, aliases (CVE/GHSA), CVSS score + vector, affected packages grouped by ecosystem with vulnerable version ranges. Source: osv.dev — ingested daily with 7-day rolling delta and monthly full reconcile.",
+      "examples": [
+        "Show me DSA-5678-1 (Debian Security Advisory)",
+        "What packages are affected by USN-6543-1?",
+        "Get the OSV record for a Linux kernel CVE",
+        "Which Alpine packages are vulnerable per ALAS-2024-0001?"
+      ],
+      "tags": ["osv", "advisory", "linux", "debian", "ubuntu", "alpine", "android", "kernel", "distros"]
     }
   ],
   "extensions": {
@@ -298,6 +325,7 @@
       "CISA KEV (Known Exploited Vulnerabilities)",
       "NVD (CVSS enrichment)",
       "EPSS (First.org exploit-probability scoring, daily refreshed, 26,000+ scored CVEs)",
+      "OSV (Open Source Vulnerabilities — non-GHSA ecosystems: Linux kernel, Debian, Ubuntu, Alpine, Android, Red Hat, Rocky Linux, AlmaLinux, SUSE, openSUSE, openEuler, OSS-Fuzz, Bitnami, Chainguard, Wolfi, Hackage, CRAN, Julia, GHC, SwiftURL. Daily 7-day delta + monthly full reconcile. Disjoint from GHSA by ingest-time filter.)",
       "CAPEC STIX 2.1 (615 attack patterns with full taxonomy: prerequisites, skills, consequences, mitigations, related patterns; also used as CWE→CAPEC→ATT&CK bridge)",
       "CTID (hand-curated CVE→technique mappings)",
       "SigmaHQ (3,100+ detection rules)",
@@ -322,6 +350,8 @@
         "cve_list": "/cti/cves?q={query}&since={isoDate}",
         "ghsa_detail": "/cti/ghsa/{ghsaId}",
         "ghsa_list": "/cti/ghsa?q={query}&since={isoDate}",
+        "advisories_list": "/cti/advisories?q={query}&source={GHSA|OSV}&severity={CRITICAL|HIGH|MEDIUM|LOW}&ecosystem={ecosystem}&since={isoDate}",
+        "osv_detail": "/cti/osv/{osvId}",
         "package_detail": "/packages/{ecosystem}/{encodedName}",
         "package_list": "/packages",
         "application_360": "/?entity={vendor}%2F{product}&tab=application-map",
@@ -348,9 +378,11 @@
         "application": "#3b82f6",
         "cve": "#f472b6",
         "capec": "#eab308",
+        "osv": "#eab308",
+        "advisory": "#f472b6",
         "data_source": "#94a3b8"
       },
-      "example": "When listing CVEs, render each as a clickable link: [CVE-2024-3400](https://mitre-explorer.org/cti/cves/CVE-2024-3400). For techniques: [T1059](https://mitre-explorer.org/techniques/T1059). For groups: [APT29 (G0016)](https://mitre-explorer.org/?entity=G0016&tab=actor). For applications: [LiteLLM](https://mitre-explorer.org/?entity=litellm%2Flitellm&tab=application-map). For CAPEC patterns: [CAPEC-66 SQL Injection](https://mitre-explorer.org/cti/capec/CAPEC-66)."
+      "example": "When listing CVEs, render each as a clickable link: [CVE-2024-3400](https://mitre-explorer.org/cti/cves/CVE-2024-3400). For techniques: [T1059](https://mitre-explorer.org/techniques/T1059). For groups: [APT29 (G0016)](https://mitre-explorer.org/?entity=G0016&tab=actor). For applications: [LiteLLM](https://mitre-explorer.org/?entity=litellm%2Flitellm&tab=application-map). For CAPEC patterns: [CAPEC-66 SQL Injection](https://mitre-explorer.org/cti/capec/CAPEC-66). For GHSA advisories: [GHSA-jfh8-c2jp-5v3q](https://mitre-explorer.org/cti/ghsa/GHSA-jfh8-c2jp-5v3q). For OSV advisories: [DSA-5678-1](https://mitre-explorer.org/cti/osv/DSA-5678-1). For unified advisories list: [OSS advisories](https://mitre-explorer.org/cti/advisories?source=GHSA) or [OS/distro advisories](https://mitre-explorer.org/cti/advisories?source=OSV)."
     }
   }
 }

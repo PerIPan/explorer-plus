@@ -16,7 +16,7 @@ export async function GET(
     return withCors(errorResponse(400, 'Invalid CVE ID', 'VALIDATION_ERROR'));
   }
 
-  const [detailResult, sourcesResult, cwesResult, appsResult, techIocResult, techCapecResult, reportsResult, owaspResult, ghsaResult] =
+  const [detailResult, sourcesResult, cwesResult, appsResult, techIocResult, techCapecResult, reportsResult, owaspResult, ghsaResult, osvRes] =
     await Promise.all([
       query<{
         cve_id: string;
@@ -139,6 +139,35 @@ export async function GET(
          FROM ghsa_advisories WHERE cve_id = $1 LIMIT 1`,
         [id],
       ).catch(() => ({ rows: [] as Array<{ ghsaId: string; summary: string | null }> })),
+
+      // OSV cross-refs: non-GHSA (OS/distro/kernel) advisories that alias this
+      // CVE. GIN-indexed on `aliases` so the `&&` check is cheap. Wrapped in
+      // .catch for pre-migration envs without the osv_advisories table.
+      query<{
+        osvId: string;
+        ecosystem: string;
+        summary: string | null;
+        cvssScore: string | null;
+        cvssSeverity: string | null;
+        published: string | null;
+      }>(
+        `SELECT osv_id        AS "osvId",
+                ecosystem,
+                summary,
+                cvss_score    AS "cvssScore",
+                cvss_severity AS "cvssSeverity",
+                published
+         FROM osv_advisories
+         WHERE aliases && ARRAY[$1]::text[]
+         ORDER BY ecosystem, published DESC NULLS LAST
+         LIMIT 25`,
+        [id],
+      ).catch(() => ({
+        rows: [] as Array<{
+          osvId: string; ecosystem: string; summary: string | null;
+          cvssScore: string | null; cvssSeverity: string | null; published: string | null;
+        }>,
+      })),
     ]);
 
   // Resolve CAPEC attack patterns via CWE overlap. Safe on pre-migration envs
@@ -217,5 +246,13 @@ export async function GET(
     owaspCategories: owaspResult.rows,
     ghsa: ghsaResult.rows[0] ?? null,
     capecPatterns: capecResult.rows,
+    osvAdvisories: osvRes.rows.map((r) => ({
+      osvId: r.osvId,
+      ecosystem: r.ecosystem,
+      summary: r.summary,
+      cvssScore: r.cvssScore ? parseFloat(r.cvssScore) : null,
+      cvssSeverity: r.cvssSeverity,
+      published: r.published,
+    })),
   }, 300));
 }

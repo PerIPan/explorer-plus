@@ -28,12 +28,21 @@ const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL
 const CVE_RE = /^CVE-\d{4}-\d{4,}$/;
 const ATTACK_ID_RE = /^(AML\.)?(TA|T|G|S|M|C|CS|DS)\d{4}(\.\d{3})?$/;
 const CAPEC_ID_RE = /^CAPEC-\d+$/;
+// OSV IDs are highly heterogeneous — DSA-5678-1, USN-6543-1, LBSEC-2024-0001,
+// ALAS-2024-0017, RLSA-2024-1234, SUSE-SU-2024:0123-1, KERN-*, etc. Accept
+// anything that starts alnum and stays within a safe punctuation set.
+const OSV_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._\-/~:]{1,127}$/;
 const SECTOR_RE = /^[a-z][a-z0-9-]{1,28}[a-z0-9]$/;
 const DOMAIN_RE = /^(enterprise|ics|mobile|atlas)-attack$/;
 const SEVERITY_VALUES = new Set(['CRITICAL', 'HIGH', 'MEDIUM', 'LOW']);
 const CAPEC_SEVERITY_VALUES = new Set(['Very Low', 'Low', 'Medium', 'High', 'Very High']);
 const CAPEC_LIKELIHOOD_VALUES = new Set(['Low', 'Medium', 'High']);
 const CAPEC_ABSTRACTION_VALUES = new Set(['Meta', 'Standard', 'Detailed']);
+const ADVISORY_SOURCE_VALUES = new Set(['GHSA', 'OSV']);
+// Ecosystem whitelist — union of GHSA (lowercase) + OSV (mixed case, preserved).
+// Values here match what the /api/v1/advisories endpoint expects; it internally
+// lowercases the GHSA side and case-matches the OSV side.
+const ADVISORY_ECOSYSTEM_RE = /^[A-Za-z][A-Za-z0-9._\s-]{0,49}$/;
 
 function validateCveId(id: unknown): string | null {
   const s = String(id ?? '').trim();
@@ -48,6 +57,16 @@ function validateAttackId(id: unknown): string | null {
 function validateCapecId(id: unknown): string | null {
   const s = String(id ?? '').trim().toUpperCase();
   return CAPEC_ID_RE.test(s) ? s : null;
+}
+
+function validateOsvId(id: unknown): string | null {
+  const s = String(id ?? '').trim();
+  return OSV_ID_RE.test(s) ? s : null;
+}
+
+function validateAdvisoryEcosystem(eco: unknown): string | null {
+  const s = String(eco ?? '').trim();
+  return ADVISORY_ECOSYSTEM_RE.test(s) ? s : null;
 }
 
 function validateSector(slug: unknown): string | null {
@@ -82,7 +101,7 @@ const TOOL_DECLARATIONS = [
   },
   {
     name: 'get_cve_detail',
-    description: 'Get full details for a specific CVE including all CWEs, CVSS breakdown, EPSS score + percentile (First.org exploit-probability, 0..1), CAPEC attack patterns (via CWE overlap), affected applications, linked ATT&CK techniques (via CAPEC + CTID), OWASP Top 10 categories, GHSA alias, threat reports, and CISA KEV status. The `epssScore` field is the probability a CVE will be exploited in the next 30 days; `epssPercentile` is its rank vs all scored CVEs. The `capecPatterns` array contains mapped attack patterns with severity/likelihood/abstraction.',
+    description: 'Get full details for a specific CVE including all CWEs, CVSS breakdown, EPSS score + percentile (First.org exploit-probability, 0..1), CAPEC attack patterns (via CWE overlap), affected applications, linked ATT&CK techniques (via CAPEC + CTID), OWASP Top 10 categories, GHSA alias, threat reports, CISA KEV status, and `osvAdvisories` — OS / distro / kernel advisories (Debian DSA, Ubuntu USN, Linux, Alpine, Android, Rocky, Alma, SUSE, OSS-Fuzz) that alias this CVE. The `epssScore` field is the probability a CVE will be exploited in the next 30 days; `epssPercentile` is its rank vs all scored CVEs. The `capecPatterns` array contains mapped attack patterns with severity/likelihood/abstraction. The `osvAdvisories` array carries distro/kernel advisory IDs with their ecosystem and CVSS — surface these to users asking "which distros are affected".',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -465,6 +484,33 @@ const TOOL_DECLARATIONS = [
       },
     },
   },
+  {
+    name: 'search_advisories',
+    description: 'Unified search across GHSA (OSS packages: npm/PyPI/Maven/Go/NuGet/RubyGems/Composer/crates.io/Pub/Hex) AND OSV (OS + distro + kernel: Linux kernel, Debian, Ubuntu, Alpine, Android, Red Hat, Rocky, Alma, SUSE, openSUSE, OSS-Fuzz, Bitnami, Chainguard, Wolfi, Hackage, CRAN, Julia). Each row carries a `source: GHSA|OSV` badge; the two sources are disjoint by ingest (no duplicate advisories). Filter by source, severity, ecosystem, date, or CVE-alias presence. Returns advisoryId, source, cveId, summary, severity, cvssScore, publishedAt, ecosystems, packageCount.',
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        q: { type: "STRING", description: 'Keyword search over advisory ID, CVE ID, summary (min 3 chars)' },
+        source: { type: "STRING", description: 'Restrict to one source: "GHSA" (OSS packages) or "OSV" (OS/distros). Omit for both.' },
+        severity: { type: "STRING", description: 'Severity filter: CRITICAL, HIGH, MEDIUM, LOW' },
+        ecosystem: { type: "STRING", description: 'Ecosystem filter — GHSA uses lowercase names (npm, pypi, go, maven, rubygems, nuget, composer, rust, hex, pub); OSV uses case-preserved names (Linux, Debian, Ubuntu, Alpine, Android, Rocky Linux, AlmaLinux, SUSE, openSUSE, Bitnami, OSS-Fuzz, etc.)' },
+        since: { type: "STRING", description: 'ISO date — only advisories published after this date' },
+        has_cve: { type: "STRING", description: 'Filter by CVE alias presence: "true" or "false"' },
+        limit: { type: "NUMBER", description: 'Max results (default 50, max 100)' },
+      },
+    },
+  },
+  {
+    name: 'get_osv_detail',
+    description: 'Get full details for an OSV advisory by its native ID — distro / kernel / OS advisories from osv.dev (DSA-xxxx, USN-xxxx, LBSEC-xxxx, ALAS-xxxx, RLSA-xxxx, etc.). Returns summary, description, aliases (CVE/GHSA IDs), CVSS score + vector, and affected packages grouped by ecosystem with vulnerable version ranges. Covers only non-GHSA ecosystems (Linux, Debian, Ubuntu, Alpine, Android, Red Hat, Rocky, Alma, SUSE, OSS-Fuzz, Bitnami, etc.) — GHSA-covered ecosystems use get_ghsa_detail instead.',
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        osv_id: { type: "STRING", description: 'OSV native identifier, e.g. DSA-5678-1, USN-6543-1, LBSEC-2024-0001' },
+      },
+      required: ['osv_id'],
+    },
+  },
 ];
 
 // Dynamic system instruction -- injects current date so Gemini calculates relative dates correctly
@@ -481,6 +527,9 @@ Tool selection rules:
 - When asked about a SPECIFIC technique: use get_technique_detail for description + get_technique_intelligence for feeds
 - When asked about a SPECIFIC software/malware: use search_software to find the ID, then get_software_detail
 - When asked about a SPECIFIC CAPEC attack pattern (e.g. "CAPEC-66", "SQL Injection attack pattern"): use get_capec_detail; to list/filter patterns use search_capec
+- When asked about a SPECIFIC OSV / distro / kernel advisory (DSA-*, USN-*, ALAS-*, RLSA-*, LBSEC-*, etc.): use get_osv_detail
+- When asked about advisories broadly ("show me recent Debian advisories", "which Alpine CVEs this week", "OSS package vulnerabilities for npm"): use search_advisories with the ecosystem / source filter. This unifies GHSA (OSS packages) + OSV (OS/distros/kernels) into one list.
+- For GHSA-specific advisory detail (e.g. "GHSA-jfh8-c2jp-5v3q"): use get_ghsa_detail. For Debian/Ubuntu/Alpine/kernel advisories: use get_osv_detail.
 - "search_" tools return summaries/lists; "get_" tools return full profiles -- always prefer the full profile for specific entities
 - For OWASP categories: use get_owasp_top10 (optionally filtered by framework: web-2021, ml-2023, llm-2025), then get_owasp_category for details
 - OWASP links: [A01 Broken Access Control](https://mitre-explorer.org/frameworks/owasp/A01)
@@ -491,12 +540,15 @@ When responding:
 - For EVERY CVE mentioned, always include: CVE ID, CVSS score, severity (CRITICAL/HIGH/MEDIUM/LOW), published date, and linked ATT&CK techniques if available
 - If the CVE detail response includes epssScore and epssPercentile, surface them: "EPSS: 0.94 (97th percentile)" means 94% predicted exploitation in 30 days and ranked in top 3% of all scored CVEs. Omit cleanly when null.
 - If the CVE / GHSA / technique detail response includes capecPatterns, list them by CAPEC ID with severity (e.g. "CAPEC-66 SQL Injection — High severity") and link to [CAPEC-66](https://mitre-explorer.org/cti/capec/CAPEC-66)
+- If the CVE detail response includes an osvAdvisories array (distro/kernel advisories aliasing the CVE), surface them grouped by ecosystem with a short list per ecosystem. E.g. "Also affected: Debian ([DSA-5678-1](https://mitre-explorer.org/cti/osv/DSA-5678-1)), Ubuntu ([USN-6543-1](https://mitre-explorer.org/cti/osv/USN-6543-1)), Alpine, ..."
 - Include clickable markdown links to MITRE Explorer for every entity mentioned:
   - CVEs: [CVE-2024-3400](https://mitre-explorer.org/cti/cves/CVE-2024-3400)
   - Techniques: [T1059](https://mitre-explorer.org/techniques/T1059)
   - Groups: [APT29](https://mitre-explorer.org/?entity=G0016&tab=actor)
   - Applications: [LiteLLM](https://mitre-explorer.org/?entity=litellm%2Flitellm&tab=application-map)
   - CAPEC patterns: [CAPEC-66 SQL Injection](https://mitre-explorer.org/cti/capec/CAPEC-66)
+  - OSV advisories: [DSA-5678-1](https://mitre-explorer.org/cti/osv/DSA-5678-1)
+  - Unified advisories list: [advisories for Debian](https://mitre-explorer.org/cti/advisories?source=OSV&ecosystem=Debian)
 - Use tables for structured data when listing multiple items
 - Always mention total result count (e.g. "Showing 10 of 47 results")
 - Keep a consistent schema per entity type -- do not change column layout between responses
@@ -807,6 +859,38 @@ async function executeTool(name: string, args: Record<string, unknown>): Promise
       }
       params.set('limit', clampLimit(args.limit, 20, 50));
       return callInternalApi(`/capec?${params}`);
+    }
+    case 'search_advisories': {
+      const params = new URLSearchParams();
+      const q = sanitizeSearch(args.q);
+      if (q.length > 0 && q.length < 3) return { error: 'Search query must be at least 3 characters' };
+      if (q.length >= 3) params.set('q', q);
+      if (args.source) {
+        const s = String(args.source).toUpperCase();
+        if (ADVISORY_SOURCE_VALUES.has(s)) params.set('source', s);
+      }
+      if (args.severity) {
+        const sev = String(args.severity).toUpperCase();
+        if (SEVERITY_VALUES.has(sev)) params.set('severity', sev);
+      }
+      if (args.ecosystem) {
+        const eco = validateAdvisoryEcosystem(args.ecosystem);
+        if (eco) params.set('ecosystem', eco);
+      }
+      if (args.since) {
+        const d = new Date(String(args.since));
+        if (!isNaN(d.getTime())) params.set('since', d.toISOString());
+      }
+      if (args.has_cve === 'true' || args.has_cve === 'false') {
+        params.set('has_cve', String(args.has_cve));
+      }
+      params.set('limit', clampLimit(args.limit, 50, 100));
+      return callInternalApi(`/advisories?${params}`);
+    }
+    case 'get_osv_detail': {
+      const id = validateOsvId(args.osv_id);
+      if (!id) return { error: 'Invalid OSV ID format' };
+      return callInternalApi(`/osv/${encodeURIComponent(id)}`);
     }
     default:
       return { error: `Unknown tool: ${name}` };

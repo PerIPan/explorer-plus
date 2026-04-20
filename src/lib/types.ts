@@ -652,6 +652,16 @@ export interface CveDetail extends Omit<CveEntry, 'sources' | 'techniqueCount' |
   ghsa?: { ghsaId: string; summary: string | null } | null;
   /** Attack patterns whose referenced CWEs overlap this CVE's CWEs */
   capecPatterns: CapecRef[];
+  /** OS / distro / kernel advisories (OSV) that alias this CVE — populated
+   *  only when the CVE has non-GHSA ecosystem coverage (Linux, Debian, …). */
+  osvAdvisories?: Array<{
+    osvId: string;
+    ecosystem: string;
+    summary: string | null;
+    cvssScore: number | null;
+    cvssSeverity: string | null;
+    published: string | null;
+  }>;
 }
 
 // ── GHSA Types ────────────────────────────────────────────────────────────────
@@ -716,4 +726,67 @@ export interface CvePackagesResponse {
   cveId: string;
   ghsaId: string | null;
   packages: GhsaPackageRef[];
+}
+
+// ── Unified Advisory Types (GHSA + OSV) ──────────────────────────────────────
+//
+// Shape returned by `/api/v1/advisories`. Mirrors GhsaEntry closely but adds
+// a `source` discriminator and generalises the identifier name. UI renders
+// one row per advisory with a source badge.
+
+export interface AdvisoryListEntry {
+  advisoryId: string;             // 'GHSA-...' or raw OSV id
+  source: 'GHSA' | 'OSV';
+  cveId: string | null;
+  summary: string | null;
+  severity: string | null;        // CRITICAL | HIGH | MEDIUM | LOW (upper-case by convention)
+  cvssScore: number | null;
+  publishedAt: string | null;
+  ecosystems: string[];
+  packageCount: number;
+}
+
+// ── OSV Types ─────────────────────────────────────────────────────────────────
+//
+// OSV ingests NON-GHSA ecosystems only (Linux, Debian, Alpine, Android, etc.).
+// We never store OSV rows that overlap with `ghsa_advisories` — ingest-time
+// filter on both ecosystem AND alias ensures no dedup is needed at read time.
+
+export interface OsvListEntry {
+  osvId: string;
+  ecosystem: string;
+  aliases: string[];
+  summary: string | null;
+  cvssScore: number | null;
+  cvssSeverity: string | null;
+  published: string | null;
+  modified: string | null;
+  packageCount: number;
+}
+
+export interface OsvAffectedRef {
+  packageName: string;
+  packageEcosystem: string;
+  versions: string[] | null;
+  /** Raw OSV `ranges[]` — each entry has type (ECOSYSTEM/SEMVER/GIT) and events */
+  ranges: Array<Record<string, unknown>>;
+}
+
+export interface OsvAdvisory extends OsvListEntry {
+  details: string | null;
+  cvssVector: string | null;
+  /** Raw OSV `severity[]` — preserves multiple CVSS versions as published */
+  severityRaw: Array<{ type?: string; score?: string }>;
+  affected: OsvAffectedRef[];
+  /** Any CVE IDs extracted from aliases[] — populated by the detail endpoint */
+  cveIds: string[];
+}
+
+export interface OsvRef {
+  osvId: string;
+  ecosystem: string;
+  summary: string | null;
+  cvssScore: number | null;
+  cvssSeverity: string | null;
+  published: string | null;
 }

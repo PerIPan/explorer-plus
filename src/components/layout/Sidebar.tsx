@@ -54,7 +54,7 @@ const assetsNav: NavItem[] = [
 const ctiNav: NavItem[] = [
   { path: '/cti/reports', label: 'Reports', tooltip: 'threat intelligence reports from OTX, RSS feeds' },
   { path: '/cti/cves', label: 'CVEs', tooltip: 'known vulnerabilities from OTX, CISA KEV, enriched via NVD' },
-  { path: '/cti/ghsa', label: 'GHSA', tooltip: 'GitHub Security Advisories — library-level vulnerabilities for npm, PyPI, Go, Maven, and more' },
+  { path: '/cti/advisories', label: 'Advisories', tooltip: 'unified advisories list — GHSA (OSS packages: npm/PyPI/Maven/Go/…) + OSV (OS & distros: Linux kernel, Debian, Ubuntu, Alpine, Android, OSS-Fuzz, …). Separate detail pages per source.' },
   { path: '/cti/iocs', label: 'IOCs', tooltip: 'hashes, domains, IPs, URLs from AlienVault OTX, CISA KEV' },
 ];
 

@@ -17,6 +17,7 @@ const SOURCE_LABELS: Record<string, string> = {
   matview_refresh: 'Matview refresh (app_technique_groups + package_summary)',
   cve_products: 'CVE → Application enrichment (re-fetches NVD CPE data for CVEs missing products)',
   epss: 'EPSS (First.org exploit-probability scores)',
+  osv: 'OSV (Open Source Vulnerabilities — Linux, Debian, Alpine, Ubuntu, Android, OSS-Fuzz, …)',
 };
 
 function formatTimeAgo(iso: string): string {
@@ -199,6 +200,8 @@ const FRAMEWORK_TABLES: FrameworkTable[] = [
   { key: 'capec_mappings', label: 'CAPEC Bridge' },
   { key: 'capec_patterns', label: 'CAPEC Patterns (full taxonomy)' },
   { key: 'capec_mitigations', label: 'CAPEC Mitigations' },
+  { key: 'osv_advisories', label: 'OSV Advisories (OS, distro, kernel)' },
+  { key: 'osv_affected', label: 'OSV Affected Packages' },
   { key: 'ctid_mappings', label: 'CTID CVE→Technique' },
   { key: 'atlas_xrefs', label: 'ATLAS Cross-References' },
   { key: 'cve_details', label: 'CVE Details' },

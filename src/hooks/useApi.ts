@@ -36,6 +36,8 @@ import type {
   CvePackagesResponse,
   CapecListEntry,
   CapecDetail,
+  OsvAdvisory,
+  AdvisoryListEntry,
 } from '../lib/types';
 
 // Re-export for consumers that import from useApi
@@ -322,6 +324,28 @@ export function useGhsaDetail(ghsaId: string, enabled = true) {
     staleTime: FIVE_MIN,
   });
 }
+
+// ── Unified Advisories (GHSA + OSV) ───────────────────────────────────────────
+
+export function useAdvisories(params: Record<string, string> = EMPTY_PARAMS) {
+  return useQuery({
+    queryKey: ['advisories', params],
+    queryFn: () => apiFetch<PaginatedResponse<AdvisoryListEntry>>('/advisories', params),
+    staleTime: FIVE_MIN,
+  });
+}
+
+// ── OSV detail hook ───────────────────────────────────────────────────────────
+
+export function useOsvDetail(osvId: string, enabled = true) {
+  return useQuery({
+    queryKey: ['osv-detail', osvId],
+    queryFn: () => apiFetch<OsvAdvisory>(`/osv/${encodeURIComponent(osvId)}`),
+    enabled: enabled && Boolean(osvId),
+    staleTime: FIVE_MIN,
+  });
+}
+
 
 // ── Package hooks ─────────────────────────────────────────────────────────────
 
