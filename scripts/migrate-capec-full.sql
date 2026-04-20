@@ -23,7 +23,8 @@ CREATE TABLE IF NOT EXISTS capec_patterns (
   created_at          timestamptz NOT NULL DEFAULT now(),
   updated_at          timestamptz NOT NULL DEFAULT now()
 );
-CREATE INDEX IF NOT EXISTS idx_capec_patterns_abstraction ON capec_patterns(abstraction);
+-- Note: an earlier draft had CREATE INDEX ON capec_patterns(abstraction).
+-- Dropped — only 3 distinct values across 615 rows, planner seq-scans regardless.
 -- GIN index on cwe_ids array for fast "patterns for this CVE's CWEs" lookup
 -- (used by CVE + GHSA detail endpoints to surface attack patterns).
 CREATE INDEX IF NOT EXISTS idx_capec_patterns_cwe_ids_gin ON capec_patterns USING GIN (cwe_ids);
@@ -35,8 +36,8 @@ CREATE TABLE IF NOT EXISTS capec_mitigations (
 );
 
 CREATE TABLE IF NOT EXISTS capec_pattern_mitigations (
-  capec_id       text NOT NULL,
-  mitigation_id  text NOT NULL,
+  capec_id       text NOT NULL REFERENCES capec_patterns(id) ON DELETE CASCADE,
+  mitigation_id  text NOT NULL REFERENCES capec_mitigations(id) ON DELETE CASCADE,
   UNIQUE (capec_id, mitigation_id)
 );
 CREATE INDEX IF NOT EXISTS idx_capec_pm_capec ON capec_pattern_mitigations(capec_id);
@@ -44,8 +45,8 @@ CREATE INDEX IF NOT EXISTS idx_capec_pm_mit ON capec_pattern_mitigations(mitigat
 
 CREATE TABLE IF NOT EXISTS capec_related (
   id               uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  capec_id         text NOT NULL,
-  related_capec_id text NOT NULL,
+  capec_id         text NOT NULL REFERENCES capec_patterns(id) ON DELETE CASCADE,
+  related_capec_id text NOT NULL REFERENCES capec_patterns(id) ON DELETE CASCADE,
   nature           text NOT NULL,               -- 'ChildOf' | 'ParentOf' | 'CanPrecede' | 'CanFollow'
   UNIQUE (capec_id, related_capec_id, nature)
 );
