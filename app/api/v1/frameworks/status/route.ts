@@ -6,100 +6,55 @@ import { ECOSYSTEM_BY_CANONICAL } from '../../../../../src/lib/ecosystems';
 
 export { OPTIONS };
 
-export async function GET(_req: NextRequest) {
-  // Core query over tables guaranteed to exist in all environments
-  const result = await query<{ tbl: string; count: string }>(`
-    SELECT 'owasp_top10' AS tbl, COUNT(*)::text AS count FROM owasp_top10
-    UNION ALL SELECT 'nist_controls', COUNT(*)::text FROM nist_controls
-    UNION ALL SELECT 'engage_mappings', COUNT(*)::text FROM engage_mappings
-    UNION ALL SELECT 'defensive_mappings', COUNT(*)::text FROM defensive_mappings
-    UNION ALL SELECT 'detection_strategies', COUNT(*)::text FROM detection_strategies
-    UNION ALL SELECT 'detection_analytics', COUNT(*)::text FROM detection_analytics
-    UNION ALL SELECT 'react_actions', COUNT(*)::text FROM react_actions
-    UNION ALL SELECT 'veris_mappings', COUNT(*)::text FROM veris_mappings
-    UNION ALL SELECT 'cloud_control_mappings', COUNT(*)::text FROM cloud_control_mappings
-    UNION ALL SELECT 'sigma_rules', COUNT(*)::text FROM sigma_rules
-    UNION ALL SELECT 'atomic_tests', COUNT(*)::text FROM atomic_tests
-    UNION ALL SELECT 'external_actors', COUNT(*)::text FROM external_actors
-    UNION ALL SELECT 'applications', COUNT(*)::text FROM applications
-    UNION ALL SELECT 'capec_mappings', COUNT(*)::text FROM capec_mappings
-    UNION ALL SELECT 'cve_details', COUNT(*)::text FROM cve_details
-    UNION ALL SELECT 'cve_weaknesses', COUNT(*)::text FROM cve_weaknesses
-    UNION ALL SELECT 'affected_products', COUNT(*)::text FROM affected_products
-    UNION ALL SELECT 'ctid_mappings', COUNT(*)::text FROM capec_mappings WHERE capec_id = 'CTID-DIRECT'
-    UNION ALL SELECT 'atlas_xrefs', COUNT(*)::text FROM atlas_xrefs
-    UNION ALL SELECT 'csf_subcategories', COUNT(*)::text FROM csf_subcategories
-    UNION ALL SELECT 'csf_technique_mappings', COUNT(*)::text FROM csf_technique_mappings
-  `);
+// Approximate-count strategy: each COUNT(*) on a big table (cve_details ~26k,
+// osv_affected ~500k, sigma_rules ~3k, affected_products ~100k, nist_controls
+// ~5k) was a full seq scan — the union ran in ~10s. pg_class.reltuples is
+// autovacuum-maintained and returns in <50ms regardless of table size.
+// ±1% accuracy is fine for a dashboard row-count indicator. Tables that don't
+// exist in the environment simply don't come back from pg_class — no need for
+// per-group try/catch fallbacks.
+const ESTIMATED_TABLES = [
+  'owasp_top10', 'nist_controls', 'engage_mappings', 'defensive_mappings',
+  'detection_strategies', 'detection_analytics', 'react_actions', 'veris_mappings',
+  'cloud_control_mappings', 'sigma_rules', 'atomic_tests', 'external_actors',
+  'applications', 'capec_mappings', 'cve_details', 'cve_weaknesses',
+  'affected_products', 'atlas_xrefs',
+  'csf_subcategories', 'csf_technique_mappings',
+  'csf_implementation_examples', 'csf_informative_references',
+  'capec_patterns', 'capec_mitigations',
+  'ghsa_advisories', 'ghsa_weaknesses', 'ghsa_packages', 'packages',
+  'osv_advisories', 'osv_affected',
+];
 
-  const counts: Record<string, number> = {};
-  for (const row of result.rows) {
+export async function GET(_req: NextRequest) {
+  const counts: Record<string, number> = Object.fromEntries(
+    ESTIMATED_TABLES.map((t) => [t, 0]),
+  );
+
+  const estimates = await query<{ tbl: string; count: string }>(
+    `SELECT relname AS tbl, GREATEST(reltuples::bigint, 0)::text AS count
+     FROM pg_class
+     WHERE relname = ANY($1::text[])
+       AND relkind IN ('r', 'm')`,
+    [ESTIMATED_TABLES],
+  );
+  for (const row of estimates.rows) {
     counts[row.tbl] = parseInt(row.count, 10);
   }
 
-  // CSF enrichment tables — may not exist on unmigrated environments, degrade to 0
+  // CTID direct mappings need a filtered COUNT — reltuples can't do WHERE.
+  // capec_mappings is small (~2k rows), so this stays fast.
   try {
-    const enrich = await query<{ tbl: string; count: string }>(`
-      SELECT 'csf_implementation_examples' AS tbl, COUNT(*)::text AS count FROM csf_implementation_examples
-      UNION ALL SELECT 'csf_informative_references', COUNT(*)::text FROM csf_informative_references
-    `);
-    for (const row of enrich.rows) {
-      counts[row.tbl] = parseInt(row.count, 10);
-    }
+    const ctid = await query<{ count: string }>(
+      `SELECT COUNT(*)::text AS count FROM capec_mappings WHERE capec_id = 'CTID-DIRECT'`,
+    );
+    counts.ctid_mappings = parseInt(ctid.rows[0]?.count ?? '0', 10);
   } catch {
-    counts.csf_implementation_examples = 0;
-    counts.csf_informative_references = 0;
+    counts.ctid_mappings = 0;
   }
 
-  // CAPEC full-taxonomy tables — may not exist on unmigrated environments
-  try {
-    const capec = await query<{ tbl: string; count: string }>(`
-      SELECT 'capec_patterns' AS tbl, COUNT(*)::text AS count FROM capec_patterns
-      UNION ALL SELECT 'capec_mitigations', COUNT(*)::text FROM capec_mitigations
-    `);
-    for (const row of capec.rows) {
-      counts[row.tbl] = parseInt(row.count, 10);
-    }
-  } catch {
-    counts.capec_patterns = 0;
-    counts.capec_mitigations = 0;
-  }
-
-  // GHSA + Packages tables — separate try/catch so one missing table doesn't fallback-zero unrelated counts
-  try {
-    const ghsa = await query<{ tbl: string; count: string }>(`
-      SELECT 'ghsa_advisories' AS tbl, COUNT(*)::text AS count FROM ghsa_advisories
-      UNION ALL SELECT 'ghsa_weaknesses', COUNT(*)::text FROM ghsa_weaknesses
-      UNION ALL SELECT 'ghsa_packages', COUNT(*)::text FROM ghsa_packages
-      UNION ALL SELECT 'packages', COUNT(*)::text FROM packages
-    `);
-    for (const row of ghsa.rows) {
-      counts[row.tbl] = parseInt(row.count, 10);
-    }
-  } catch {
-    counts.ghsa_advisories = 0;
-    counts.ghsa_weaknesses = 0;
-    counts.ghsa_packages = 0;
-    counts.packages = 0;
-  }
-
-  // OSV tables — separate try/catch for pre-migration environments
-  try {
-    const osv = await query<{ tbl: string; count: string }>(`
-      SELECT 'osv_advisories' AS tbl, COUNT(*)::text AS count FROM osv_advisories
-      UNION ALL SELECT 'osv_affected', COUNT(*)::text FROM osv_affected
-    `);
-    for (const row of osv.rows) {
-      counts[row.tbl] = parseInt(row.count, 10);
-    }
-  } catch {
-    counts.osv_advisories = 0;
-    counts.osv_affected = 0;
-  }
-
-  // Ecosystem registry drift check — compare distinct DB ecosystems to the
-  // registry at src/lib/ecosystems.ts. Unknown DB ecosystems indicate OSV
-  // added a new bucket we haven't curated yet.
+  // Ecosystem registry drift — compare distinct DB ecosystems to the registry
+  // at src/lib/ecosystems.ts. Needs actual names, not counts, so stays exact.
   let ecosystemDrift: { registered: number; inDb: number; unknown: string[] } = {
     registered: ECOSYSTEM_BY_CANONICAL.size,
     inDb: 0,
@@ -122,5 +77,5 @@ export async function GET(_req: NextRequest) {
     // pre-migration env; leave defaults
   }
 
-  return withCors(jsonResponse({ counts, ecosystemDrift }, 300));
+  return withCors(jsonResponse({ counts, ecosystemDrift }, 900));
 }

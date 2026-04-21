@@ -37,5 +37,5 @@ export async function GET(_req: NextRequest) {
     metadata: null,
   }));
 
-  return withCors(jsonResponse({ data }));
+  return withCors(jsonResponse({ data }, 60));
 }
