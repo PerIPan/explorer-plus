@@ -361,7 +361,7 @@ function TableRowsSection({
                     {fw.description}
                   </div>
                 </div>
-                <span className="text-xs text-[var(--text-secondary)] whitespace-nowrap">
+                <span className="hidden text-xs text-[var(--text-secondary)] whitespace-nowrap">
                   {fmt(count)}{hasData ? ' rows' : ''}
                 </span>
                 {statusBadge}
