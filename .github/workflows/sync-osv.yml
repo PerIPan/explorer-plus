@@ -1,0 +1,59 @@
+name: Sync OSV Advisories
+
+# OSV ingest moved from Vercel cron to GitHub Actions because Vercel's cron
+# schedules are hard-capped at 300s on the Pro plan regardless of the route's
+# `maxDuration` setting. Our full-corpus ingest doesn't fit in that budget
+# (33 ecosystems × full-zip fetch + parse + batch UPSERT). GH Actions has
+# no per-run timeout that matters here.
+#
+# Two schedules:
+#   - 05:30 UTC daily → delta (records modified in the last 7 days)
+#   - 04:00 UTC on the 1st of each month → full (no cutoff, reconciles drift)
+
+on:
+  schedule:
+    - cron: '30 5 * * *'    # daily delta
+    - cron: '0 4 1 * *'     # monthly full (1st of month)
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Ingest mode'
+        required: true
+        default: 'delta'
+        type: choice
+        options:
+          - delta
+          - full
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    # Wall-clock ceiling. Full ingest has observed ~90 min; 2h is safe.
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install deps
+        run: npm install pg jszip cvss
+
+      - name: Determine mode
+        id: mode
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "mode=${{ github.event.inputs.mode }}" >> "$GITHUB_OUTPUT"
+          elif [ "$(date -u +'%d')" = "01" ]; then
+            # Monthly-full schedule runs alongside the daily on the 1st.
+            # When both fire, let the full one win.
+            echo "mode=full" >> "$GITHUB_OUTPUT"
+          else
+            echo "mode=delta" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run OSV sync (${{ steps.mode.outputs.mode }})
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: node scripts/sync-osv.mjs --mode=${{ steps.mode.outputs.mode }}

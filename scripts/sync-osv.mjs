@@ -14,10 +14,19 @@
 //   2. Drop any record whose aliases[] intersect an existing ghsa_id
 //      (defense-in-depth for rare cross-eco references)
 //
+// CLI args:
+//   --mode=delta     (default) — only upsert advisories modified within last 7 days
+//   --mode=full      — upsert every record, no cutoff (monthly reconcile)
+//
 // Usage (local / one-shot):
 //   DATABASE_URL=postgres://... node scripts/sync-osv.mjs
+//   DATABASE_URL=postgres://... node scripts/sync-osv.mjs --mode=full
 //
-// The Vercel cron at /api/cron/sync-osv runs an equivalent pipeline daily.
+// Vercel cron at /api/cron/sync-osv runs an EQUIVALENT pipeline but is
+// capped by Vercel at 300s for cron schedules regardless of maxDuration.
+// The full corpus does NOT fit in 300s — in production we run this script
+// from GitHub Actions on a schedule (see .github/workflows/sync-osv.yml)
+// where there is no per-run timeout.
 
 import pg from 'pg';
 import cvss from 'cvss';
@@ -25,6 +34,7 @@ import JSZip from 'jszip';
 
 const OSV_BASE = 'https://osv-vulnerabilities.storage.googleapis.com';
 const BATCH_SIZE = 500;
+const DELTA_DAYS = 7;
 
 // Ecosystems where GHSA already is the source of truth. OSV mirrors these —
 // skipping them avoids duplicate storage and eliminates the need for any
@@ -116,7 +126,7 @@ async function loadGhsaAliasSet(client) {
  * Ingest a single ecosystem's all.zip into osv_advisories + osv_affected.
  * Returns { scanned, upserted, skippedGhsa, skippedMalformed, errors }.
  */
-async function syncEcosystem(client, ecosystem, ghsaAliases) {
+async function syncEcosystem(client, ecosystem, ghsaAliases, modifiedSince) {
   const url = `${OSV_BASE}/${encodeURIComponent(ecosystem)}/all.zip`;
   const resp = await fetch(url);
   if (!resp.ok) {
@@ -250,6 +260,14 @@ async function syncEcosystem(client, ecosystem, ghsaAliases) {
       continue;
     }
 
+    // Delta mode: skip records older than the cutoff AND records with no
+    // `modified` timestamp (can't have changed if never stamped).
+    if (modifiedSince) {
+      if (!json.modified) continue;
+      const m = new Date(json.modified);
+      if (!isNaN(m.getTime()) && m < modifiedSince) continue;
+    }
+
     const aliases = Array.isArray(json.aliases) ? json.aliases : [];
 
     // Belt-and-suspenders: drop records that alias an existing GHSA row.
@@ -302,9 +320,75 @@ async function syncEcosystem(client, ecosystem, ghsaAliases) {
 
 // --- Main --------------------------------------------------------------------
 
+function parseArgs() {
+  let mode = 'delta';
+  for (const arg of process.argv.slice(2)) {
+    if (arg.startsWith('--mode=')) {
+      const v = arg.slice('--mode='.length);
+      if (v !== 'delta' && v !== 'full') {
+        console.error(`[osv] invalid --mode=${v}; expected delta or full`);
+        process.exit(1);
+      }
+      mode = v;
+    }
+  }
+  return { mode };
+}
+
+async function insertLogStart(client) {
+  // Stale cleanup — mirrors the cron's behavior
+  await client.query(
+    `UPDATE feed_sync_log SET status='error', completed_at=NOW(),
+       error_message='Stale (auto-cleaned on new run start)'
+     WHERE source='osv' AND status='running' AND started_at < NOW() - INTERVAL '30 minutes'`,
+  );
+  const res = await client.query(
+    `INSERT INTO feed_sync_log (source, status, started_at)
+     VALUES ('osv', 'running', NOW()) RETURNING id`,
+  );
+  return res.rows[0].id;
+}
+
+async function updateLogDone(client, logId, status, totals, mode, modifiedSince, errorMessage) {
+  await client.query(
+    `UPDATE feed_sync_log
+     SET status=$1, completed_at=NOW(),
+         records_inserted=$2, records_skipped=$3,
+         metadata=$4, error_message=$5
+     WHERE id=$6`,
+    [
+      status,
+      totals.upserted,
+      totals.skippedGhsa + totals.skippedMalformed,
+      JSON.stringify({
+        mode,
+        modifiedSince: modifiedSince?.toISOString() ?? null,
+        scanned: totals.scanned,
+        upserted: totals.upserted,
+        skippedGhsa: totals.skippedGhsa,
+        skippedMalformed: totals.skippedMalformed,
+        errors: totals.errors,
+        trigger: 'github-actions',
+      }),
+      errorMessage?.slice(0, 500) ?? null,
+      logId,
+    ],
+  );
+}
+
 async function main() {
+  const { mode } = parseArgs();
+  const modifiedSince = mode === 'delta'
+    ? new Date(Date.now() - DELTA_DAYS * 24 * 60 * 60 * 1000)
+    : null;
+
   const client = new pg.Client({ connectionString: DATABASE_URL });
   await client.connect();
+
+  const logId = await insertLogStart(client);
+  console.log(`[osv] mode=${mode} modifiedSince=${modifiedSince?.toISOString() ?? 'null'} logId=${logId}`);
+
+  const totals = { scanned: 0, upserted: 0, skippedGhsa: 0, skippedMalformed: 0, errors: 0 };
 
   try {
     console.log('[osv] loading GHSA alias set...');
@@ -315,12 +399,10 @@ async function main() {
     const targets = allEcos.filter((e) => !GHSA_COVERED.has(e) && !SKIP_ECOSYSTEMS.has(e));
     console.log(`[osv] ${targets.length} target ecosystems (skipped ${allEcos.length - targets.length} GHSA-covered + junk buckets)`);
 
-    const totals = { scanned: 0, upserted: 0, skippedGhsa: 0, skippedMalformed: 0, errors: 0 };
-
     for (const eco of targets) {
       const t0 = Date.now();
       try {
-        const r = await syncEcosystem(client, eco, ghsaAliases);
+        const r = await syncEcosystem(client, eco, ghsaAliases, modifiedSince);
         totals.scanned += r.scanned;
         totals.upserted += r.upserted;
         totals.skippedGhsa += r.skippedGhsa;
@@ -338,6 +420,12 @@ async function main() {
     }
 
     console.log('[osv] totals:', totals);
+    await updateLogDone(client, logId, 'success', totals, mode, modifiedSince, null);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[osv] fatal:', err);
+    await updateLogDone(client, logId, 'error', totals, mode, modifiedSince, msg);
+    throw err;
   } finally {
     await client.end();
   }
