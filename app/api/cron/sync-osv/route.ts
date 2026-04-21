@@ -4,9 +4,18 @@ import JSZip from 'jszip';
 const cvss = require('cvss');
 import { query } from '../../v1/lib/db';
 import { verifyCronAuth } from '../lib/auth';
-import { withSoftTimeout, DEFAULT_SOFT_TIMEOUT_MS } from '../lib/softTimeout';
+import { withSoftTimeout } from '../lib/softTimeout';
 
-export const maxDuration = 300;
+// OSV runs past the default 270s soft-timeout. We bumped `maxDuration` to
+// 800s; give the soft timer 30s headroom inside that so the terminal
+// UPDATE to feed_sync_log always lands before Vercel kills the function.
+const OSV_SOFT_TIMEOUT_MS = 770_000;
+
+// OSV daily delta touches 33 ecosystems serially — full-corpus zip fetch per
+// ecosystem even in delta mode (OSV doesn't publish per-day zips). At the
+// 300s default we hit soft timeout on every run processing ~47k records.
+// Bumped to 800s (Vercel Pro allows up to 900) so the whole corpus fits.
+export const maxDuration = 800;
 
 const OSV_BASE = 'https://osv-vulnerabilities.storage.googleapis.com';
 const BATCH_SIZE = 500;
@@ -419,7 +428,7 @@ export async function GET(req: NextRequest) {
   };
 
   try {
-    return await withSoftTimeout(doWork, DEFAULT_SOFT_TIMEOUT_MS);
+    return await withSoftTimeout(doWork, OSV_SOFT_TIMEOUT_MS);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error('[osv-cron] fatal:', err);
