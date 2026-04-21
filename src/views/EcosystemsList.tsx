@@ -158,7 +158,7 @@ function CategorySection({
 }
 
 function TableView({ rows }: { rows: EcosystemListRow[] }) {
-  const [sortKey, setSortKey] = useState<'last14d' | 'total' | 'critical' | 'name'>('last14d');
+  const [sortKey, setSortKey] = useState<'last14d' | 'total' | 'critical' | 'name'>('critical');
   const sorted = useMemo(() => {
     const copy = [...rows];
     if (sortKey === 'name') copy.sort((a, b) => a.displayName.localeCompare(b.displayName));
@@ -207,7 +207,9 @@ function TableView({ rows }: { rows: EcosystemListRow[] }) {
 export function EcosystemsList() {
   const searchParams = useSearchParams();
   const updateParams = useUpdateParams();
-  const view = (searchParams.get('view') === 'table' ? 'table' : 'grid') as View;
+  // Default to table — user feedback: "sort DESC on Critical" is easier to
+  // scan in table form. Grid stays available via ?view=grid.
+  const view = (searchParams.get('view') === 'grid' ? 'grid' : 'table') as View;
 
   // Collapsed state — URL-persisted via `collapsed=a,b,c`
   const collapsedParam = searchParams.get('collapsed') ?? '';
@@ -253,14 +255,14 @@ export function EcosystemsList() {
         <div className="inline-flex items-center rounded-md border border-[var(--border-color)] bg-[var(--surface-card)]">
           <button
             type="button"
-            onClick={() => updateParams({ view: null })}
+            onClick={() => updateParams({ view: 'grid' })}
             className={`px-3 py-1 text-xs ${view === 'grid' ? 'text-[var(--accent-teal)] font-semibold' : 'text-[var(--text-secondary)]'}`}
           >
             Grid
           </button>
           <button
             type="button"
-            onClick={() => updateParams({ view: 'table' })}
+            onClick={() => updateParams({ view: null })}
             className={`px-3 py-1 text-xs ${view === 'table' ? 'text-[var(--accent-teal)] font-semibold' : 'text-[var(--text-secondary)]'}`}
           >
             Table
