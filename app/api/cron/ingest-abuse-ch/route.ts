@@ -7,6 +7,14 @@ export const maxDuration = 300;
 
 const THREATFOX_API = 'https://threatfox-api.abuse.ch/api/v1/';
 const MALWAREBAZAAR_API = 'https://mb-api.abuse.ch/api/v1/';
+const BATCH_SIZE = 200;
+
+// abuse.ch IP-blocks GitHub Actions runners with 403 even when the Auth-Key
+// is valid (verified: same key returns 200 from a laptop, 403 from GH). So
+// unlike OSV / cve-products / cve-delta, we cannot migrate this off Vercel.
+// Instead we collapse the per-IOC INSERT roundtrips (the cause of the 270s
+// soft-timeout) into batched UPSERTs via unnest() — the daily ~500-2000
+// IOC payload now finishes in seconds instead of minutes.
 
 interface ThreatFoxIoc {
   ioc_type: string;
@@ -48,13 +56,104 @@ function normalizeIocValue(type: string, value: string): string {
   return value;
 }
 
+function normalizeMalware(m: string): string {
+  return m.toLowerCase().replace(/^(win|elf|js|apk|doc|osx|py|vbs)\./i, '').replace(/_/g, ' ');
+}
+
+interface SoftwareEntry { id: string; techniqueIds: string[] }
+
+async function buildSoftwareMap(malwareNames: string[]): Promise<Map<string, SoftwareEntry>> {
+  const swMap = new Map<string, SoftwareEntry>();
+  if (malwareNames.length === 0) return swMap;
+  const swBatch = await query<{ id: string; name: string }>(
+    `SELECT id, name FROM attack_software
+     WHERE LOWER(name) = ANY($1::text[])
+        OR LOWER(REPLACE(name, ' ', '_')) = ANY($1::text[])
+        OR EXISTS (
+          SELECT 1 FROM unnest(aliases) a
+          WHERE LOWER(a) = ANY($1::text[]) OR LOWER(REPLACE(a, ' ', '_')) = ANY($1::text[])
+        )`,
+    [malwareNames],
+  );
+  for (const sw of swBatch.rows) {
+    const techRes = await query<{ technique_id: string }>(
+      `SELECT technique_id FROM software_techniques WHERE software_id = $1`,
+      [sw.id],
+    );
+    const entry: SoftwareEntry = { id: sw.id, techniqueIds: techRes.rows.map((r) => r.technique_id) };
+    swMap.set(sw.name.toLowerCase(), entry);
+    swMap.set(sw.name.toLowerCase().replace(/ /g, '_'), entry);
+  }
+  return swMap;
+}
+
+interface IocRow { type: string; value: string; malware: string | null; firstSeen: string | null }
+
+async function batchInsertIocs(
+  source: 'threatfox' | 'malwarebazaar',
+  rows: IocRow[],
+): Promise<Array<{ id: string; value: string; malware_family: string | null }>> {
+  if (rows.length === 0) return [];
+  const inserted: Array<{ id: string; value: string; malware_family: string | null }> = [];
+  for (let i = 0; i < rows.length; i += BATCH_SIZE) {
+    const batch = rows.slice(i, i + BATCH_SIZE);
+    const r = await query<{ id: string; value: string; malware_family: string | null }>(
+      `INSERT INTO ioc_entries (type, value, source, malware_family, first_seen)
+       SELECT t, v, $1, m, NULLIF(fs, '')::timestamptz
+       FROM unnest($2::text[], $3::text[], $4::text[], $5::text[]) AS u(t, v, m, fs)
+       ON CONFLICT (type, value, source) DO NOTHING
+       RETURNING id, value, malware_family`,
+      [
+        source,
+        batch.map((b) => b.type),
+        batch.map((b) => b.value),
+        batch.map((b) => b.malware ?? ''),
+        batch.map((b) => b.firstSeen ?? ''),
+      ],
+    );
+    inserted.push(...r.rows);
+  }
+  return inserted;
+}
+
+async function batchLinkTechniques(
+  iocsByMalware: Map<string, string[]>,
+  swMap: Map<string, SoftwareEntry>,
+): Promise<void> {
+  const techArr: string[] = [];
+  const iocArr: string[] = [];
+  for (const [mw, iocIds] of iocsByMalware) {
+    const swEntry = swMap.get(mw);
+    if (!swEntry || swEntry.techniqueIds.length === 0) continue;
+    for (const tid of swEntry.techniqueIds) {
+      for (const iid of iocIds) {
+        techArr.push(tid);
+        iocArr.push(iid);
+      }
+    }
+  }
+  if (techArr.length === 0) return;
+  // Insert in chunks too — large pulses with many techniques can blow past
+  // postgres parameter limits otherwise.
+  for (let i = 0; i < techArr.length; i += 1000) {
+    const tBatch = techArr.slice(i, i + 1000);
+    const iBatch = iocArr.slice(i, i + 1000);
+    await query(
+      `INSERT INTO technique_iocs (technique_id, ioc_id, confidence)
+       SELECT t::uuid, i::uuid, 'inferred'
+       FROM unnest($1::text[], $2::text[]) AS u(t, i)
+       ON CONFLICT DO NOTHING`,
+      [tBatch, iBatch],
+    );
+  }
+}
+
 export async function GET(req: NextRequest) {
   const authError = verifyCronAuth(req);
   if (authError) return authError;
 
   const authKey = process.env.ABUSE_CH_AUTH_KEY ?? '';
 
-  // Clean up stale "running" entries (timed-out previous runs)
   await query(
     `UPDATE feed_sync_log
      SET status = 'error', completed_at = NOW(), error_message = 'Timed out (auto-cleaned)'
@@ -72,7 +171,6 @@ export async function GET(req: NextRequest) {
   let recordsSkipped = 0;
 
   const doWork = async (): Promise<NextResponse> => {
-    // -- ThreatFox ---------------------------------------------------------------
     let threatfoxOk = false;
     try {
       const tfResp = await fetch(THREATFOX_API, {
@@ -84,82 +182,41 @@ export async function GET(req: NextRequest) {
       if (tfResp.ok) {
         const tfData = (await tfResp.json()) as ThreatFoxResponse;
         if (tfData.query_status === 'ok' && Array.isArray(tfData.data)) {
-          // Collect unique malware family names for batch software lookup
-          // Normalize malware names: strip platform prefix, replace _ with space
-          const normalizeMalware = (m: string) =>
-            m.toLowerCase().replace(/^(win|elf|js|apk|doc|osx|py|vbs)\./i, '').replace(/_/g, ' ');
-
-          const malwareNames = [
-            ...new Set(
-              tfData.data
-                .map((ioc) => ioc.malware)
-                .filter((m): m is string => Boolean(m))
-                .map(normalizeMalware),
-            ),
-          ];
-
-          // Single batch query to resolve all malware families to software rows
-          const swMap = new Map<string, { id: string; techniqueIds: string[] }>();
-          if (malwareNames.length > 0) {
-            const swBatch = await query<{ id: string; name: string }>(
-              `SELECT id, name FROM attack_software
-               WHERE LOWER(name) = ANY($1::text[])
-                  OR LOWER(REPLACE(name, ' ', '_')) = ANY($1::text[])
-                  OR EXISTS (
-                    SELECT 1 FROM unnest(aliases) a WHERE LOWER(a) = ANY($1::text[]) OR LOWER(REPLACE(a, ' ', '_')) = ANY($1::text[])
-                  )`,
-              [malwareNames],
-            );
-
-            // Build lookup with both normalized forms
-            for (const sw of swBatch.rows) {
-              const techRes = await query<{ technique_id: string }>(
-                `SELECT technique_id FROM software_techniques WHERE software_id = $1`,
-                [sw.id],
-              );
-              const entry = { id: sw.id, techniqueIds: techRes.rows.map((r) => r.technique_id) };
-              swMap.set(sw.name.toLowerCase(), entry);
-              swMap.set(sw.name.toLowerCase().replace(/ /g, '_'), entry);
-            }
-          }
-
+          // Stage 1 — flatten + filter
+          const tfRows: IocRow[] = [];
           for (const ioc of tfData.data) {
             const iocType = mapThreatFoxType(ioc.ioc_type);
-            if (!iocType) continue;
-            const iocValue = normalizeIocValue(ioc.ioc_type, ioc.ioc);
-
-            const result = await query<{ id: string }>(
-              `INSERT INTO ioc_entries
-                 (type, value, source, malware_family, first_seen)
-               VALUES ($1, $2, 'threatfox', $3, $4)
-               ON CONFLICT (type, value, source) DO NOTHING
-               RETURNING id`,
-              [iocType, iocValue, ioc.malware || null, ioc.first_seen || null],
-            );
-
-            if (result.rows.length > 0) {
-              recordsInserted++;
-              const iocId = result.rows[0].id;
-
-              // Cross-reference via pre-resolved software map
-              if (ioc.malware) {
-                const swEntry = swMap.get(normalizeMalware(ioc.malware));
-                if (swEntry && swEntry.techniqueIds.length > 0) {
-                  const iocValues = swEntry.techniqueIds
-                    .map((_, i) => `($${i + 1}, $${swEntry.techniqueIds.length + 1}, 'inferred')`)
-                    .join(', ');
-                  await query(
-                    `INSERT INTO technique_iocs (technique_id, ioc_id, confidence)
-                     VALUES ${iocValues}
-                     ON CONFLICT DO NOTHING`,
-                    [...swEntry.techniqueIds, iocId],
-                  );
-                }
-              }
-            } else {
-              recordsSkipped++;
-            }
+            if (!iocType) { recordsSkipped++; continue; }
+            tfRows.push({
+              type: iocType,
+              value: normalizeIocValue(ioc.ioc_type, ioc.ioc),
+              malware: ioc.malware || null,
+              firstSeen: ioc.first_seen || null,
+            });
           }
+
+          // Stage 2 — resolve every malware family in one query
+          const malwareNames = [...new Set(
+            tfRows.map((r) => r.malware).filter((m): m is string => Boolean(m)).map(normalizeMalware),
+          )];
+          const swMap = await buildSoftwareMap(malwareNames);
+
+          // Stage 3 — batch UPSERT IOCs
+          const inserted = await batchInsertIocs('threatfox', tfRows);
+          recordsInserted += inserted.length;
+          recordsSkipped += tfRows.length - inserted.length;
+
+          // Stage 4 — group inserted IOCs by malware family + batch link to techniques
+          const iocsByMalware = new Map<string, string[]>();
+          for (const row of inserted) {
+            if (!row.malware_family) continue;
+            const norm = normalizeMalware(row.malware_family);
+            const list = iocsByMalware.get(norm);
+            if (list) list.push(row.id);
+            else iocsByMalware.set(norm, [row.id]);
+          }
+          await batchLinkTechniques(iocsByMalware, swMap);
+
           threatfoxOk = true;
         }
       } else {
@@ -169,13 +226,9 @@ export async function GET(req: NextRequest) {
       console.error('ThreatFox error (non-fatal):', tfErr);
     }
 
-    // -- MalwareBazaar -----------------------------------------------------------
     let mbOk = false;
     try {
-      // MalwareBazaar switched their endpoint to require form-encoded bodies
-      // (ThreatFox still accepts JSON). JSON now returns query_status:
-      // "missing_query" and the run silently produces zero MB IOCs. Keep the
-      // auth key in the header — it's valid for both.
+      // MalwareBazaar requires form-encoded bodies (ThreatFox accepts JSON).
       const mbResp = await fetch(MALWAREBAZAAR_API, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Auth-Key': authKey },
@@ -185,28 +238,20 @@ export async function GET(req: NextRequest) {
       if (mbResp.ok) {
         const mbData = (await mbResp.json()) as MalwareBazaarResponse;
         if (mbData.query_status === 'ok' && Array.isArray(mbData.data)) {
+          const mbRows: IocRow[] = [];
           for (const sample of mbData.data) {
-            if (sample.sha256_hash) {
-              const r = await query(
-                `INSERT INTO ioc_entries (type, value, source, malware_family, first_seen)
-                 VALUES ('hash', $1, 'malwarebazaar', $2, $3)
-                 ON CONFLICT (type, value, source) DO NOTHING
-                 RETURNING id`,
-                [sample.sha256_hash, sample.signature || null, sample.first_seen || null],
-              );
-              if (r.rows.length > 0) recordsInserted++; else recordsSkipped++;
-            }
-            if (sample.md5_hash) {
-              const r = await query(
-                `INSERT INTO ioc_entries (type, value, source, malware_family, first_seen)
-                 VALUES ('hash', $1, 'malwarebazaar', $2, $3)
-                 ON CONFLICT (type, value, source) DO NOTHING
-                 RETURNING id`,
-                [sample.md5_hash, sample.signature || null, sample.first_seen || null],
-              );
-              if (r.rows.length > 0) recordsInserted++; else recordsSkipped++;
+            for (const hash of [sample.sha256_hash, sample.md5_hash].filter((h): h is string => Boolean(h))) {
+              mbRows.push({
+                type: 'hash',
+                value: hash,
+                malware: sample.signature || null,
+                firstSeen: sample.first_seen || null,
+              });
             }
           }
+          const inserted = await batchInsertIocs('malwarebazaar', mbRows);
+          recordsInserted += inserted.length;
+          recordsSkipped += mbRows.length - inserted.length;
           mbOk = true;
         }
       } else {
@@ -223,12 +268,18 @@ export async function GET(req: NextRequest) {
     await query(
       `UPDATE feed_sync_log
        SET status = 'success', completed_at = NOW(),
-           records_inserted = $1, records_skipped = $2
-       WHERE id = $3 AND status = 'running'`,
-      [recordsInserted, recordsSkipped, logId],
+           records_inserted = $1, records_skipped = $2,
+           metadata = $3
+       WHERE id = $4 AND status = 'running'`,
+      [
+        recordsInserted,
+        recordsSkipped,
+        JSON.stringify({ threatfoxOk, malwareBazaarOk: mbOk }),
+        logId,
+      ],
     );
 
-    return NextResponse.json({ ok: true, source: 'abuse_ch', recordsInserted, recordsSkipped });
+    return NextResponse.json({ ok: true, source: 'abuse_ch', recordsInserted, recordsSkipped, threatfoxOk, mbOk });
   };
 
   try {
