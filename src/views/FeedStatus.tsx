@@ -36,7 +36,7 @@ const SOURCE_DESCRIPTIONS: Record<string, string> = {
   nvd: 'CVSS + CWE enrichment from NVD API',
   virustotal: 'Sandbox verdicts + malware family for hashes',
   matview_refresh: 'app_technique_groups + package_summary matviews',
-  cve_delta: 'NVD last-48h window — new CVEs + CVSS + affected products',
+  cve_delta: 'CVElistV5 git repo — last-48h delta of new CVEs + CVSS + affected products',
   cve_products: 'Retries NVD for CVEs missing CPE (vendor/product) data',
   epss: 'First.org exploit-probability scoring, daily refreshed',
   osv: 'OS, distro, kernel advisories — Linux, Debian, Ubuntu, Alpine, Android, OSS-Fuzz, …',

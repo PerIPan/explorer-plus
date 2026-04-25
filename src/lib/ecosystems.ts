@@ -65,6 +65,14 @@ const REGISTRY: EcosystemMeta[] = [
     homepage: 'https://hex.pm/', description: 'Erlang / Elixir package registry' },
   { slug: 'pub', displayName: 'Pub', canonical: 'pub', category: 'package-manager',
     homepage: 'https://pub.dev/', description: 'Dart / Flutter package registry' },
+  { slug: 'github-actions', displayName: 'GitHub Actions', canonical: 'actions', category: 'package-manager',
+    homepage: 'https://github.com/marketplace?type=actions', description: 'Reusable GitHub Actions workflow components' },
+  { slug: 'erlang', displayName: 'Erlang', canonical: 'erlang', category: 'package-manager',
+    homepage: 'https://www.erlang.org/', description: 'Erlang/OTP runtime + library advisories' },
+  { slug: 'opam', displayName: 'OPAM', canonical: 'opam', category: 'package-manager',
+    homepage: 'https://opam.ocaml.org/', description: 'OCaml package manager (OPAM) advisories' },
+  { slug: 'swift-pm', displayName: 'Swift Package Manager', canonical: 'swift', category: 'package-manager',
+    homepage: 'https://www.swift.org/package-manager/', description: 'Swift Package Manager (SwiftPM) advisories — distinct from the OSV SwiftURL bucket' },
 
   // ── OS distros (OSV-backed) ────────────────────────────────────────────────
   { slug: 'debian', displayName: 'Debian', canonical: 'Debian', category: 'os-distro',
@@ -87,6 +95,8 @@ const REGISTRY: EcosystemMeta[] = [
     homepage: 'https://secdb.alpinelinux.org/', description: 'Alpine Linux security database (secdb)' },
   { slug: 'mageia', displayName: 'Mageia', canonical: 'Mageia', category: 'os-distro',
     homepage: 'https://advisories.mageia.org/', description: 'Mageia Linux advisories (MGASA)' },
+  { slug: 'azure-linux', displayName: 'Azure Linux', canonical: 'Azure Linux', category: 'os-distro',
+    homepage: 'https://github.com/microsoft/azurelinux', description: 'Microsoft Azure Linux (formerly CBL-Mariner) — distro for Azure cloud + edge' },
 
   // ── Container distros (OSV-backed, high-volume rebuild advisories) ─────────
   { slug: 'chainguard', displayName: 'Chainguard', canonical: 'Chainguard', category: 'container-distro',

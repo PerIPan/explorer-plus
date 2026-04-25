@@ -1,0 +1,31 @@
+name: Sync abuse.ch (ThreatFox + MalwareBazaar)
+
+# Moved from Vercel cron because daily ThreatFox volume (~500-2000 IOCs)
+# × per-row Neon roundtrips for ioc_entries + technique_iocs blew past
+# the 270s soft-timeout. Same migration pattern as OSV / cve-products /
+# cve-delta — GH Actions has no per-run cap.
+
+on:
+  schedule:
+    - cron: '0 2 * * *'   # daily 02:00 UTC (matches the previous cron slot)
+  workflow_dispatch: {}
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install pg
+        run: npm install pg
+
+      - name: Run abuse.ch ingest
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          ABUSE_CH_AUTH_KEY: ${{ secrets.ABUSE_CH_AUTH_KEY }}
+        run: node scripts/sync-abuse-ch.mjs

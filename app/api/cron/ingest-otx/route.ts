@@ -9,6 +9,33 @@ const OTX_BASE = 'https://otx.alienvault.com/api/v1';
 const MAX_PAGES = 1;       // Keep small -- Vercel function timeout
 const PULSES_PER_PAGE = 1; // Single pulse per run to avoid OTX 504 timeouts
 
+// AlienVault's edge has been throwing repeated 504s recently. Retry transient
+// 5xx / 408 / 429 with exponential backoff before giving up — the cron only
+// fetches one pulse per run, so 3 attempts × max 6s backoff ≈ 9s worst case
+// stays well inside the 270s soft-timeout budget.
+async function fetchWithRetry(
+  url: string,
+  init: RequestInit,
+  attempts = 3,
+  baseDelayMs = 1500,
+): Promise<Response> {
+  let lastError: unknown;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      const r = await fetch(url, init);
+      const transient = r.status === 408 || r.status === 429 || r.status >= 500;
+      if (!transient || i === attempts - 1) return r;
+      console.warn(`[otx] transient ${r.status} on attempt ${i + 1}/${attempts}, retrying`);
+    } catch (err) {
+      lastError = err;
+      if (i === attempts - 1) throw err;
+      console.warn(`[otx] fetch error on attempt ${i + 1}/${attempts}: ${(err as Error).message}`);
+    }
+    await new Promise((res) => setTimeout(res, baseDelayMs * (2 ** i)));
+  }
+  throw lastError ?? new Error('fetchWithRetry exhausted');
+}
+
 interface OtxIndicator {
   type: string;
   indicator: string;
@@ -96,7 +123,7 @@ export async function GET(req: NextRequest) {
     let latestModified = lastCursor;
 
     while (url && pages < MAX_PAGES) {
-      const resp = await fetch(url, { headers: { 'X-OTX-API-KEY': apiKey } });
+      const resp = await fetchWithRetry(url, { headers: { 'X-OTX-API-KEY': apiKey } });
       if (!resp.ok) {
         throw new Error(`OTX API error: ${resp.status} ${resp.statusText}`);
       }
