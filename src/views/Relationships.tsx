@@ -78,7 +78,7 @@ interface TabDef {
 const TABS: TabDef[] = [
   { id: 'actor', label: 'Threat Actor Profile', forTypes: ['group', 'campaign', 'external_actor'] },
   { id: 'technique-map', label: 'Technique Map', forTypes: ['technique'] },
-  { id: 'software-map', label: 'Software Map', forTypes: ['software'] },
+  { id: 'software-map', label: 'Malware Map', forTypes: ['software'] },
   { id: 'mitigation-map', label: 'Mitigation Map', forTypes: ['mitigation'] },
   { id: 'data-source-map', label: 'Data Source Map', forTypes: ['data_source'] },
   { id: 'tactic-map', label: 'Tactic Map', forTypes: ['tactic'] },
@@ -588,7 +588,7 @@ export function Relationships() {
             Search for any{' '}
             <span className="font-medium text-[var(--text-primary)]">Technique</span>,{' '}
             <span className="font-medium text-[var(--text-primary)]">Actor</span>,{' '}
-            <span className="font-medium text-[var(--text-primary)]">Software</span>,{' '}
+            <span className="font-medium text-[var(--text-primary)]">Malware</span>,{' '}
             <span className="font-medium text-[var(--text-primary)]">Campaign</span>,{' '}
             <span className="font-medium text-[var(--text-primary)]">Mitigation</span>,{' '}
             <span className="font-medium text-[var(--text-primary)]">Tactic</span>,{' '}

@@ -126,7 +126,7 @@ function CampaignCard({ campaign }: { campaign: GroupCampaign }) {
             </NestedSection>
           )}
           {data.software && data.software.length > 0 && (
-            <NestedSection title="Software" count={data.software.length}>
+            <NestedSection title="Malware" count={data.software.length}>
               {data.software.map((s) => (
                 <EntityLink key={s.attackId} type="software" attackId={s.attackId} name={s.name}  useMap />
               ))}
@@ -774,7 +774,7 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
 
       {/* Software */}
       {software.length > 0 && (
-        <CollapsibleSection title="Software" count={software.length} defaultOpen>
+        <CollapsibleSection title="Malware" count={software.length} defaultOpen>
           <div className="flex flex-wrap gap-1.5">
             {software.map((s) => (
               <div key={s.attackId} className="flex items-center gap-1">

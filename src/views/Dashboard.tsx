@@ -305,7 +305,7 @@ export function Dashboard() {
           description="Threat actor groups"
         />
         <StatCard
-          label="Software"
+          label="Malware"
           value={stats.softwareCount}
           accent="text-[var(--accent-purple)]"
           href={isAtlas ? undefined : '/software'}

@@ -33,7 +33,7 @@ export function SoftwareDetail() {
       <PageHeader
         title={data.name}
         breadcrumb={[
-          { label: 'Software', href: '/software' },
+          { label: 'Malware', href: '/software' },
           { label: data.attackId },
         ]}
         titleAction={

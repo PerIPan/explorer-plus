@@ -39,7 +39,7 @@ const threatActorsNav: NavItem[] = [
 const attackNav: NavItem[] = [
   { path: '/tactics', label: 'Tactics', tooltip: 'kill chain phases: recon → impact' },
   { path: '/techniques', label: 'Techniques', tooltip: 'attack techniques and sub-techniques used by adversaries' },
-  { path: '/software', label: 'Software', tooltip: 'attacker view — malware and tools used by threat actors (vs Applications which are victim products)' },
+  { path: '/software', label: 'Malware', tooltip: 'attacker view — malware and tools used by threat actors (vs Applications which are victim products)' },
   { path: '/mitigations', label: 'Mitigations', tooltip: 'countermeasures to prevent or limit techniques' },
   { path: '/data-sources', label: 'Data Sources', tooltip: 'telemetry sources for detecting techniques' },
   { path: '/frameworks/detection', label: 'Detection', tooltip: 'ATT&CK v18 detection strategies and analytics' },
@@ -47,7 +47,7 @@ const attackNav: NavItem[] = [
 ];
 
 const assetsNav: NavItem[] = [
-  { path: '/applications', label: 'Applications', tooltip: 'defender view — vendor products that get exploited (vs Software which is attacker tools)' },
+  { path: '/applications', label: 'Applications', tooltip: 'defender view — vendor products that get exploited (vs Malware which is attacker tools)' },
   { path: '/ecosystems', label: 'Ecosystems', tooltip: 'per-ecosystem advisory dashboards — npm, PyPI, Debian, Ubuntu, Alpine, Android, Linux kernel, Chainguard, OSS-Fuzz, and more. Severity breakdowns + top affected packages' },
   { path: '/packages', label: 'Packages', tooltip: 'library/dependency packages with GHSA advisories (npm, PyPI, Go, Maven, RubyGems, NuGet, Composer, Rust)' },
 ];

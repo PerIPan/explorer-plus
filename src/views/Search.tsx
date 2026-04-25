@@ -176,7 +176,7 @@ export function Search() {
               <Badge label={`${data.groups.length} Groups`} variant="orange" />
             )}
             {data.software.length > 0 && (
-              <Badge label={`${data.software.length} Software`} variant="purple" />
+              <Badge label={`${data.software.length} Malware`} variant="purple" />
             )}
             {data.mitigations.length > 0 && (
               <Badge label={`${data.mitigations.length} Mitigations`} variant="green" />
@@ -231,7 +231,7 @@ export function Search() {
           {/* Software */}
           {data.software.length > 0 && (
             <section>
-              <SectionHeader label="Software" count={data.software.length} />
+              <SectionHeader label="Malware" count={data.software.length} />
               <div className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg divide-y divide-[var(--border-color)]">
                 {data.software.map((s) => (
                   <ResultRow

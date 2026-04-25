@@ -28,7 +28,7 @@ type TabId =
 const TABS: { id: TabId; label: string }[] = [
   { id: 'overview', label: 'Overview' },
   { id: 'groups', label: 'Groups' },
-  { id: 'software', label: 'Software' },
+  { id: 'software', label: 'Malware' },
   { id: 'mitigations', label: 'Mitigations' },
   { id: 'datasources', label: 'Data Sources' },
   { id: 'campaigns', label: 'Campaigns' },

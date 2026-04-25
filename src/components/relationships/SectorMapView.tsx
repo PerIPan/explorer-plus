@@ -180,7 +180,7 @@ export function SectorMapView({ sectorSlug }: SectorMapViewProps) {
       </MapCard>
 
       {/* SOFTWARE */}
-      <MapCard label="Software" icon={IconSoftware} count={data.software.length}>
+      <MapCard label="Malware" icon={IconSoftware} count={data.software.length}>
         {data.software.length > 0 ? (
           <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto">
             {data.software.map((s) => (

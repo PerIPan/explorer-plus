@@ -120,7 +120,7 @@ export function SoftwareList() {
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Software" subtitle="Malware and tools tracked by MITRE ATT&CK" />
+      <PageHeader title="Malware" subtitle="Malware and tools tracked by MITRE ATT&CK" />
 
       <div className="flex flex-wrap gap-3">
         <input
