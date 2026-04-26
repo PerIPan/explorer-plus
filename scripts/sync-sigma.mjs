@@ -110,15 +110,56 @@ async function findYamlFiles(dir) {
   return results;
 }
 
+async function insertLogStart(client) {
+  await client.query(
+    `UPDATE feed_sync_log SET status='error', completed_at=NOW(),
+       error_message='Stale (auto-cleaned on new run start)'
+     WHERE source='sigma' AND status='running' AND started_at < NOW() - INTERVAL '2 hours'`,
+  );
+  const r = await client.query(
+    `INSERT INTO feed_sync_log (source, status, started_at)
+     VALUES ('sigma', 'running', NOW()) RETURNING id`,
+  );
+  return r.rows[0].id;
+}
+
+async function updateLogDone(client, logId, status, counters, errorMessage) {
+  await client.query(
+    `UPDATE feed_sync_log
+     SET status=$1, completed_at=NOW(),
+         records_inserted=$2, records_skipped=$3,
+         metadata=$4, error_message=$5
+     WHERE id=$6`,
+    [
+      status,
+      counters.inserted + counters.updated,
+      counters.errors,
+      JSON.stringify({ ...counters, trigger: 'github-actions' }),
+      errorMessage?.slice(0, 500) ?? null,
+      logId,
+    ],
+  );
+}
+
 async function main() {
   const client = await pool.connect();
   let inserted = 0;
   let updated = 0;
   let errors = 0;
+  const startedAt = Date.now();
+  let logId;
 
   try {
+    logId = await insertLogStart(client);
     const files = await findYamlFiles(SIGMA_ROOT);
-    console.log(`Found ${files.length} Sigma YAML files`);
+    console.log(`Found ${files.length} Sigma YAML files (logId=${logId})`);
+
+    // Hard guard: a missing or empty SIGMA_ROOT is a clone failure, not a
+    // legitimate "no rules today" state. Fail loudly so the GH Actions UI
+    // and Feed Status page both flag it.
+    if (files.length === 0) {
+      throw new Error(`No Sigma YAML files at ${SIGMA_ROOT} — clone likely failed`);
+    }
 
     for (const file of files) {
       try {
@@ -188,7 +229,15 @@ async function main() {
       }
     }
 
-    console.log(`Sigma sync complete: ${inserted} inserted, ${updated} updated, ${errors} errors`);
+    const elapsedMs = Date.now() - startedAt;
+    console.log(`Sigma sync complete: ${inserted} inserted, ${updated} updated, ${errors} errors (${elapsedMs}ms)`);
+    if (logId) await updateLogDone(client, logId, 'success', { inserted, updated, errors, elapsedMs }, null);
+  } catch (err) {
+    if (logId) {
+      try { await updateLogDone(client, logId, 'error', { inserted, updated, errors, elapsedMs: Date.now() - startedAt }, err.message); }
+      catch (logErr) { console.error('Also failed to write error log row:', logErr.message); }
+    }
+    throw err;
   } finally {
     client.release();
     await pool.end();

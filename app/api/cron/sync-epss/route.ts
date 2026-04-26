@@ -109,6 +109,14 @@ export async function GET(req: NextRequest) {
     );
     await flush();
 
+    // FIRST.org publishes the score_date in a `#` comment on the first
+    // line. If they ever rotate the format, modelDate stays null and every
+    // EPSS row gets a NULL date — silent data-quality regression. Refuse
+    // to mark the run successful in that case.
+    if (!modelDate) {
+      throw new Error('EPSS feed missing score_date comment header — every row would write NULL model_date; refusing to commit run as success');
+    }
+
     await query(
       `UPDATE feed_sync_log
        SET status = 'success', completed_at = NOW(),

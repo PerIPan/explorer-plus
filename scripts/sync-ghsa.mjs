@@ -334,6 +334,39 @@ async function upsertGhsaPackages(client, ghsaId, rows) {
   );
 }
 
+// ── Sync-log helpers ────────────────────────────────────────────────────
+
+async function insertLogStart(client) {
+  await client.query(
+    `UPDATE feed_sync_log SET status='error', completed_at=NOW(),
+       error_message='Stale (auto-cleaned on new run start)'
+     WHERE source='ghsa' AND status='running' AND started_at < NOW() - INTERVAL '4 hours'`,
+  );
+  const res = await client.query(
+    `INSERT INTO feed_sync_log (source, status, started_at)
+     VALUES ('ghsa', 'running', NOW()) RETURNING id`,
+  );
+  return res.rows[0].id;
+}
+
+async function updateLogDone(client, logId, status, stats, errorMessage) {
+  await client.query(
+    `UPDATE feed_sync_log
+     SET status=$1, completed_at=NOW(),
+         records_inserted=$2, records_skipped=$3,
+         metadata=$4, error_message=$5
+     WHERE id=$6`,
+    [
+      status,
+      stats.advisories_updated,
+      stats.errors,
+      JSON.stringify({ ...stats, trigger: 'github-actions', mode: 'full' }),
+      errorMessage?.slice(0, 500) ?? null,
+      logId,
+    ],
+  );
+}
+
 // ── Main ────────────────────────────────────────────────────────────────
 
 const client = new pg.Client({ connectionString: DATABASE_URL });
@@ -354,10 +387,16 @@ const stats = {
   errors: 0,
 };
 
+const startedAt = Date.now();
+let logId;
+
 try {
   // Neon cold-start warmup
   console.log('Warming up Neon connection...');
   await client.query('SELECT 1');
+
+  logId = await insertLogStart(client);
+  console.log(`feed_sync_log id=${logId}`);
 
   console.log(`Syncing GHSA advisories publishedSince=${PUBLISHED_SINCE}...`);
   let after = null;
@@ -442,15 +481,34 @@ try {
     after = page.pageInfo.endCursor;
   }
 
-  // Refresh mat view after all pages committed
-  console.log('Refreshing package_summary (concurrent)...');
-  await client.query('REFRESH MATERIALIZED VIEW CONCURRENTLY package_summary');
+  // Refresh mat view on a FRESH client. The original client may have been
+  // idle for tens of minutes during the GraphQL crawl; Neon's idle reaper
+  // can drop it just as the long REFRESH starts. Isolating the refresh on
+  // a brand-new connection sidesteps that whole class of failure.
+  console.log('Refreshing package_summary (concurrent, fresh client)...');
+  const refreshClient = new pg.Client({ connectionString: DATABASE_URL });
+  await refreshClient.connect();
+  try {
+    await refreshClient.query('REFRESH MATERIALIZED VIEW CONCURRENTLY package_summary');
+  } finally {
+    await refreshClient.end();
+  }
 
+  stats.elapsedMs = Date.now() - startedAt;
   console.log('\n=== Sync complete ===');
   console.log(JSON.stringify(stats, null, 2));
+  if (logId) await updateLogDone(client, logId, 'success', stats, null);
 } catch (err) {
   console.error('\nSync failed:', err);
   console.log(JSON.stringify(stats, null, 2));
+  stats.elapsedMs = Date.now() - startedAt;
+  if (logId) {
+    try {
+      await updateLogDone(client, logId, 'error', stats, err.message);
+    } catch (logErr) {
+      console.error('Also failed to write error log row:', logErr.message);
+    }
+  }
   process.exit(1);
 } finally {
   await client.end();

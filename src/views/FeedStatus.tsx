@@ -20,6 +20,11 @@ const SOURCE_LABELS: Record<string, string> = {
   epss: 'EPSS',
   osv: 'OSV',
   csf: 'NIST CSF v2',
+  ghsa: 'GHSA (full)',
+  ghsa_delta: 'GHSA (delta)',
+  sigma: 'Sigma Rules',
+  atomic: 'Atomic Red Team',
+  site_health: 'Site health (VT self-scan)',
 };
 
 /**
@@ -41,6 +46,11 @@ const SOURCE_DESCRIPTIONS: Record<string, string> = {
   epss: 'First.org exploit-probability scoring, daily refreshed',
   osv: 'OS, distro, kernel advisories — Linux, Debian, Ubuntu, Alpine, Android, OSS-Fuzz, …',
   csf: 'NIST Cybersecurity Framework v2 subcategories + CRI Profile crosswalk',
+  ghsa: 'GitHub Security Advisories — full corpus rebase (monthly)',
+  ghsa_delta: 'GitHub Security Advisories — incremental delta (daily)',
+  sigma: 'SigmaHQ detection rules — weekly refresh',
+  atomic: 'Atomic Red Team adversary-emulation tests — weekly refresh',
+  site_health: 'VirusTotal self-scan of mitre-explorer.org (weekly)',
 };
 
 function formatTimeAgo(iso: string): string {
@@ -153,7 +163,9 @@ const ALL_SOURCES = [
   'nvd', 'virustotal',
   'cve_delta', 'cve_products',
   'epss', 'osv', 'csf',
+  'ghsa', 'ghsa_delta', 'sigma', 'atomic',
   'matview_refresh', 'd3fend',
+  'site_health',
 ];
 
 export function FeedStatus() {
