@@ -295,6 +295,39 @@ async function upsertAdvisory(client, adv, stats) {
   stats.advisoriesUpserted++;
 }
 
+// ── Sync-log helpers ────────────────────────────────────────────────────
+
+async function insertLogStart(client) {
+  await client.query(
+    `UPDATE feed_sync_log SET status='error', completed_at=NOW(),
+       error_message='Stale (auto-cleaned on new run start)'
+     WHERE source='ghsa_delta' AND status='running' AND started_at < NOW() - INTERVAL '30 minutes'`,
+  );
+  const r = await client.query(
+    `INSERT INTO feed_sync_log (source, status, started_at)
+     VALUES ('ghsa_delta', 'running', NOW()) RETURNING id`,
+  );
+  return r.rows[0].id;
+}
+
+async function updateLogDone(client, logId, status, stats, errorMessage) {
+  await client.query(
+    `UPDATE feed_sync_log
+     SET status=$1, completed_at=NOW(),
+         records_inserted=$2, records_skipped=$3,
+         metadata=$4, error_message=$5
+     WHERE id=$6`,
+    [
+      status,
+      stats.advisoriesUpserted,
+      stats.advisoriesFailed,
+      JSON.stringify({ ...stats, trigger: 'github-actions', mode: 'delta' }),
+      errorMessage?.slice(0, 500) ?? null,
+      logId,
+    ],
+  );
+}
+
 // ── Main ─────────────────────────────────────────────────────────────────
 
 const stats = {
@@ -307,9 +340,15 @@ const stats = {
 const client = new pg.Client({ connectionString: DATABASE_URL });
 await client.connect();
 
+const startedAt = Date.now();
+let logId;
+
 try {
   console.log('Reading advisories from stdin ...');
   await client.query('SELECT 1'); // Neon warmup
+  logId = await insertLogStart(client);
+  console.log(`feed_sync_log id=${logId}`);
+
   const advisories = await readAdvisories();
   stats.advisoriesRead = advisories.length;
   console.log(`Received ${advisories.length} advisories`);
@@ -337,11 +376,18 @@ try {
     await client.query('REFRESH MATERIALIZED VIEW CONCURRENTLY package_summary');
   }
 
+  stats.elapsedMs = Date.now() - startedAt;
   console.log('\n=== Delta sync complete ===');
   console.log(JSON.stringify(stats, null, 2));
+  if (logId) await updateLogDone(client, logId, 'success', stats, null);
 } catch (err) {
   console.error('\nDelta sync failed:', err);
   console.log(JSON.stringify(stats, null, 2));
+  stats.elapsedMs = Date.now() - startedAt;
+  if (logId) {
+    try { await updateLogDone(client, logId, 'error', stats, err.message); }
+    catch (logErr) { console.error('Also failed to write error log row:', logErr.message); }
+  }
   process.exit(1);
 } finally {
   await client.end();
