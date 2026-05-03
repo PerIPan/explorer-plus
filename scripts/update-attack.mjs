@@ -425,10 +425,12 @@ async function upsertCrossDomainEntity(pool, args) {
   const insertedKeys = new Set(insRes.rows.map((r) => r[conflictKey]));
 
   // Stage 2: update existing — merge domain arrays, refresh other cols.
+  // Use alias `t` (not the bare table name) inside SET; the UPDATE statement
+  // below is `UPDATE ${table} t …` so unqualified or `t.`-qualified is correct.
   const updateAssign = updateColumns
     .map((c) => {
       if (c === 'domain') {
-        return `domain = (SELECT array_agg(DISTINCT d) FROM unnest(${table}.domain || i.domain) AS d)`;
+        return `domain = (SELECT array_agg(DISTINCT d) FROM unnest(t.domain || i.domain) AS d)`;
       }
       return `${c} = i.${c}`;
     })
