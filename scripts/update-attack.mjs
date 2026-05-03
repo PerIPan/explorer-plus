@@ -165,21 +165,36 @@ function bundleHash(stixPath) {
 // --- Entity UPSERT helpers --------------------------------------------------
 
 /**
+ * Type-aware SELECT expression for jsonb-row inputs. Handles text/text[]/
+ * bool/int4/timestamptz/uuid uniformly.
+ */
+function jsonbColumnExpr(c) {
+  const name = c.name;
+  if (c.type === 'text[]') {
+    return `(SELECT array_agg(d) FROM jsonb_array_elements_text(r->'${name}') AS d) AS ${name}`;
+  }
+  if (c.type === 'timestamptz') return `NULLIF(r->>'${name}', '')::timestamptz AS ${name}`;
+  if (c.type === 'bool') return `(r->>'${name}')::bool AS ${name}`;
+  if (c.type === 'int4') return `NULLIF(r->>'${name}', '')::int4 AS ${name}`;
+  if (c.type === 'uuid') return `NULLIF(r->>'${name}', '')::uuid AS ${name}`;
+  return `r->>'${name}' AS ${name}`;
+}
+
+/**
  * Two-CTE UPSERT for entities WITHOUT cross-domain sharing (tactics,
- * techniques, mitigations, data_sources, data_components — these have
- * single-value `domain VARCHAR`). Returns {inserted, updated} counts.
+ * techniques, mitigations, data_sources, data_components). Returns
+ * {inserted, updated} counts.
  *
- * `xmax = 0` for insert/update detection is unreliable on PG 15+, so we
- * split into two CTEs: INSERT … ON CONFLICT DO NOTHING + UPDATE …
- * WHERE NOT IN (inserted). Each CTE returns its own keys; we union and
- * count.
+ * Implementation: uses jsonb input rather than parallel-array unnest so
+ * text[] columns (e.g. techniques.platforms) work correctly. The two-CTE
+ * split avoids `xmax = 0` which is unreliable on PG 15+.
  */
 async function upsertEntity(pool, args) {
   const { table, columns, rows, conflictKey, updateColumns } = args;
   if (rows.length === 0) return { inserted: 0, updated: 0 };
 
-  const colNames = columns.map((c) => c.name).join(', ');
-  const arrPlaceholders = columns.map((c, i) => `$${i + 1}::${c.type}[]`).join(', ');
+  const selectExprs = columns.map(jsonbColumnExpr).join(', ');
+  const colList = columns.map((c) => c.name).join(', ');
   const updateAssign = updateColumns
     .map((c) => `${c} = i.${c}`)
     .concat(['updated_at = NOW()'])
@@ -187,11 +202,11 @@ async function upsertEntity(pool, args) {
 
   const sql = `
     WITH input AS (
-      SELECT ${colNames} FROM unnest(${arrPlaceholders}) AS u(${colNames})
+      SELECT ${selectExprs} FROM jsonb_array_elements($1::jsonb) AS r
     ),
     inserted AS (
-      INSERT INTO ${table} (${colNames})
-      SELECT ${colNames} FROM input
+      INSERT INTO ${table} (${colList})
+      SELECT ${colList} FROM input
       ON CONFLICT (${conflictKey}) DO NOTHING
       RETURNING ${conflictKey}
     ),
@@ -207,9 +222,7 @@ async function upsertEntity(pool, args) {
     SELECT 'updated'  AS kind FROM updated
   `;
 
-  // pg interpolates JS arrays as Postgres arrays; nulls handled.
-  const params = columns.map((c) => rows.map((r) => r[c.name] ?? null));
-  const res = await pool.query(sql, params);
+  const res = await pool.query(sql, [JSON.stringify(rows)]);
   let inserted = 0, updated = 0;
   for (const row of res.rows) (row.kind === 'inserted' ? inserted++ : updated++);
   return { inserted, updated };
@@ -236,7 +249,7 @@ const TECHNIQUE_COLS = [
   { name: 'name', type: 'text' },
   { name: 'description', type: 'text' },
   { name: 'url', type: 'text' },
-  { name: 'platforms', type: 'text' },     // STORED as text[] but pass as text via array literal
+  { name: 'platforms', type: 'text[]' },
   { name: 'is_subtechnique', type: 'bool' },
   { name: 'detection', type: 'text' },
   { name: 'is_revoked', type: 'bool' },
@@ -383,20 +396,8 @@ async function upsertCrossDomainEntity(pool, args) {
   const { table, columns, rows, conflictKey, updateColumns } = args;
   if (rows.length === 0) return { inserted: 0, updated: 0 };
 
-  // Build SELECT-from-jsonb expression list.
-  const selectExprs = columns.map((c) => {
-    if (c.name === 'domain') {
-      // text[] from JSON array
-      return `(SELECT array_agg(d) FROM jsonb_array_elements_text(r->'domain') AS d) AS domain`;
-    }
-    if (c.type === 'text[]') {
-      return `(SELECT array_agg(d) FROM jsonb_array_elements_text(r->'${c.name}') AS d) AS ${c.name}`;
-    }
-    if (c.type === 'timestamptz') return `NULLIF(r->>'${c.name}', '')::timestamptz AS ${c.name}`;
-    if (c.type === 'bool') return `(r->>'${c.name}')::bool AS ${c.name}`;
-    if (c.type === 'int4') return `(r->>'${c.name}')::int4 AS ${c.name}`;
-    return `r->>'${c.name}' AS ${c.name}`;
-  }).join(', ');
+  // Reuse the shared jsonbColumnExpr helper for type-aware coercion.
+  const selectExprs = columns.map(jsonbColumnExpr).join(', ');
   const colList = columns.map((c) => c.name).join(', ');
   const json = JSON.stringify(rows);
 
