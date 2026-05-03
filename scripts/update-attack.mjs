@@ -95,10 +95,14 @@ async function releaseAdvisoryLock(pool) {
 }
 
 async function getLastVersion(pool) {
+  // Dry-runs are excluded — they don't actually advance the DB state, so
+  // they shouldn't gate the next real run.
   const r = await pool.query(
     `SELECT metadata->>'attackVersion' AS v
      FROM feed_sync_log
-     WHERE source='attack_update' AND status='success'
+     WHERE source='attack_update'
+       AND status='success'
+       AND COALESCE(metadata->>'dryRun', 'false') <> 'true'
      ORDER BY completed_at DESC NULLS LAST LIMIT 1`,
   );
   return r.rows[0]?.v ?? null;
@@ -260,6 +264,56 @@ const DATA_COMPONENT_COLS = [
 ];
 const DATA_COMPONENT_UPDATE = ['name', 'description', 'data_source_id', 'is_revoked', 'is_deprecated', 'domain', 'stix_modified'];
 
+// Cross-domain entities — `domain` column is TEXT[] (post preflight A).
+const GROUP_COLS = [
+  { name: 'stix_id', type: 'text' },
+  { name: 'attack_id', type: 'text' },
+  { name: 'name', type: 'text' },
+  { name: 'description', type: 'text' },
+  { name: 'url', type: 'text' },
+  { name: 'aliases', type: 'text[]' },
+  { name: 'is_revoked', type: 'bool' },
+  { name: 'is_deprecated', type: 'bool' },
+  { name: 'domain', type: 'text[]' },
+  { name: 'stix_created', type: 'timestamptz' },
+  { name: 'stix_modified', type: 'timestamptz' },
+];
+const GROUP_UPDATE = ['attack_id', 'name', 'description', 'url', 'aliases', 'is_revoked', 'is_deprecated', 'domain', 'stix_modified'];
+
+const SOFTWARE_COLS = [
+  { name: 'stix_id', type: 'text' },
+  { name: 'attack_id', type: 'text' },
+  { name: 'name', type: 'text' },
+  { name: 'description', type: 'text' },
+  { name: 'url', type: 'text' },
+  { name: 'type', type: 'text' },
+  { name: 'platforms', type: 'text[]' },
+  { name: 'aliases', type: 'text[]' },
+  { name: 'is_revoked', type: 'bool' },
+  { name: 'is_deprecated', type: 'bool' },
+  { name: 'domain', type: 'text[]' },
+  { name: 'stix_created', type: 'timestamptz' },
+  { name: 'stix_modified', type: 'timestamptz' },
+];
+const SOFTWARE_UPDATE = ['attack_id', 'name', 'description', 'url', 'type', 'platforms', 'aliases', 'is_revoked', 'is_deprecated', 'domain', 'stix_modified'];
+
+const CAMPAIGN_COLS = [
+  { name: 'stix_id', type: 'text' },
+  { name: 'attack_id', type: 'text' },
+  { name: 'name', type: 'text' },
+  { name: 'description', type: 'text' },
+  { name: 'url', type: 'text' },
+  { name: 'aliases', type: 'text[]' },
+  { name: 'first_seen', type: 'timestamptz' },
+  { name: 'last_seen', type: 'timestamptz' },
+  { name: 'is_revoked', type: 'bool' },
+  { name: 'is_deprecated', type: 'bool' },
+  { name: 'domain', type: 'text[]' },
+  { name: 'stix_created', type: 'timestamptz' },
+  { name: 'stix_modified', type: 'timestamptz' },
+];
+const CAMPAIGN_UPDATE = ['attack_id', 'name', 'description', 'url', 'aliases', 'first_seen', 'last_seen', 'is_revoked', 'is_deprecated', 'domain', 'stix_modified'];
+
 // --- Merge helpers ----------------------------------------------------------
 
 function mergeByStixId(extracted, key) {
@@ -271,6 +325,101 @@ function mergeByStixId(extracted, key) {
     }
   }
   return [...m.values()];
+}
+
+/**
+ * Cross-domain merge: collects every domain an entity appeared in across
+ * the per-domain extractions. Used for groups/software/campaigns where
+ * APT28 (G0007) lives in both Enterprise + ICS bundles. Returns rows
+ * with `domain` overridden to a deduped string array.
+ */
+function mergeByStixIdWithDomains(extracted, key) {
+  const m = new Map();
+  for (const domain of Object.keys(extracted)) {
+    for (const e of extracted[domain][key] ?? []) {
+      if (!e.stix_id) continue;
+      let entry = m.get(e.stix_id);
+      if (!entry) {
+        entry = { entity: { ...e }, domains: new Set() };
+        m.set(e.stix_id, entry);
+      }
+      entry.domains.add(domain);
+    }
+  }
+  return [...m.values()].map(({ entity, domains }) => ({
+    ...entity,
+    domain: [...domains],
+  }));
+}
+
+/**
+ * Cross-domain UPSERT: domain column is TEXT[] (post preflight A migration).
+ * Two-stage:
+ *   1. INSERT … ON CONFLICT DO NOTHING — captures genuine inserts.
+ *   2. UPDATE existing rows MERGING the domain array (array_agg DISTINCT).
+ *
+ * Input shape: rows array, with row.domain as JS array of domain strings.
+ * jsonb_array_elements lets us pass arbitrary-shaped rows in one param.
+ */
+async function upsertCrossDomainEntity(pool, args) {
+  const { table, columns, rows, conflictKey, updateColumns } = args;
+  if (rows.length === 0) return { inserted: 0, updated: 0 };
+
+  // Build SELECT-from-jsonb expression list.
+  const selectExprs = columns.map((c) => {
+    if (c.name === 'domain') {
+      // text[] from JSON array
+      return `(SELECT array_agg(d) FROM jsonb_array_elements_text(r->'domain') AS d) AS domain`;
+    }
+    if (c.type === 'text[]') {
+      return `(SELECT array_agg(d) FROM jsonb_array_elements_text(r->'${c.name}') AS d) AS ${c.name}`;
+    }
+    if (c.type === 'timestamptz') return `NULLIF(r->>'${c.name}', '')::timestamptz AS ${c.name}`;
+    if (c.type === 'bool') return `(r->>'${c.name}')::bool AS ${c.name}`;
+    if (c.type === 'int4') return `(r->>'${c.name}')::int4 AS ${c.name}`;
+    return `r->>'${c.name}' AS ${c.name}`;
+  }).join(', ');
+  const colList = columns.map((c) => c.name).join(', ');
+  const json = JSON.stringify(rows);
+
+  // Stage 1: pure inserts
+  const insSql = `
+    WITH input AS (
+      SELECT ${selectExprs} FROM jsonb_array_elements($1::jsonb) AS r
+    )
+    INSERT INTO ${table} (${colList})
+    SELECT ${colList} FROM input
+    ON CONFLICT (${conflictKey}) DO NOTHING
+    RETURNING ${conflictKey}
+  `;
+  const insRes = await pool.query(insSql, [json]);
+  const insertedKeys = new Set(insRes.rows.map((r) => r[conflictKey]));
+
+  // Stage 2: update existing — merge domain arrays, refresh other cols.
+  const updateAssign = updateColumns
+    .map((c) => {
+      if (c === 'domain') {
+        return `domain = (SELECT array_agg(DISTINCT d) FROM unnest(${table}.domain || i.domain) AS d)`;
+      }
+      return `${c} = i.${c}`;
+    })
+    .concat(['updated_at = NOW()'])
+    .join(', ');
+
+  const updSql = `
+    WITH input AS (
+      SELECT ${selectExprs} FROM jsonb_array_elements($1::jsonb) AS r
+    )
+    UPDATE ${table} t SET ${updateAssign}
+    FROM input i
+    WHERE t.${conflictKey} = i.${conflictKey}
+      AND t.${conflictKey} <> ALL($2::text[])
+    RETURNING t.${conflictKey}
+  `;
+  const updRes = await pool.query(updSql, [json, [...insertedKeys]]);
+  const updatedCount = updRes.rowCount ?? 0;
+
+  return { inserted: insertedKeys.size, updated: updatedCount };
 }
 
 // --- Main -------------------------------------------------------------------
@@ -425,7 +574,40 @@ async function main() {
       console.log(`[attack-update] data_components:   +${r.inserted} new / ~${r.updated} updated (skipped ${skipped})`);
     }
 
-    // Cross-domain entities (groups/software/campaigns) — Chunk 3.4 (next commit).
+    // --- Cross-domain entities — domain TEXT[] merge across bundle passes
+    {
+      const rows = mergeByStixIdWithDomains(extracted, 'threat_groups');
+      const r = await upsertCrossDomainEntity(pool, {
+        table: 'threat_groups', columns: GROUP_COLS, rows,
+        conflictKey: 'stix_id', updateColumns: GROUP_UPDATE,
+      });
+      counters.perTable.threat_groups = r;
+      counters.entitiesUpserted += r.inserted + r.updated;
+      console.log(`[attack-update] threat_groups:     +${r.inserted} new / ~${r.updated} updated`);
+    }
+
+    {
+      const rows = mergeByStixIdWithDomains(extracted, 'attack_software');
+      const r = await upsertCrossDomainEntity(pool, {
+        table: 'attack_software', columns: SOFTWARE_COLS, rows,
+        conflictKey: 'stix_id', updateColumns: SOFTWARE_UPDATE,
+      });
+      counters.perTable.attack_software = r;
+      counters.entitiesUpserted += r.inserted + r.updated;
+      console.log(`[attack-update] attack_software:   +${r.inserted} new / ~${r.updated} updated`);
+    }
+
+    {
+      const rows = mergeByStixIdWithDomains(extracted, 'campaigns');
+      const r = await upsertCrossDomainEntity(pool, {
+        table: 'campaigns', columns: CAMPAIGN_COLS, rows,
+        conflictKey: 'stix_id', updateColumns: CAMPAIGN_UPDATE,
+      });
+      counters.perTable.campaigns = r;
+      counters.entitiesUpserted += r.inserted + r.updated;
+      console.log(`[attack-update] campaigns:         +${r.inserted} new / ~${r.updated} updated`);
+    }
+
     // Relations — Chunk 4.
     // Verification harness — Chunk 5.
 
