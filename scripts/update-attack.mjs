@@ -349,10 +349,16 @@ const CAMPAIGN_UPDATE = ['attack_id', 'name', 'description', 'url', 'aliases', '
 
 function mergeByStixId(extracted, key) {
   // Keep first occurrence per stix_id across all domain extractions.
+  // Skip entries with empty attack_id (deprecated/revoked entities upstream
+  // that have no external_id) — they'd violate UNIQUE NOT NULL on attack_id
+  // when multiple such rows are upserted in one pass. Mirrors seed.py
+  // (line 626-628).
   const m = new Map();
   for (const domain of Object.keys(extracted)) {
     for (const e of extracted[domain][key] ?? []) {
-      if (e.stix_id && !m.has(e.stix_id)) m.set(e.stix_id, e);
+      if (!e.stix_id) continue;
+      if ('attack_id' in e && !e.attack_id) continue;
+      if (!m.has(e.stix_id)) m.set(e.stix_id, e);
     }
   }
   return [...m.values()];
@@ -369,6 +375,10 @@ function mergeByStixIdWithDomains(extracted, key) {
   for (const domain of Object.keys(extracted)) {
     for (const e of extracted[domain][key] ?? []) {
       if (!e.stix_id) continue;
+      // Skip deprecated/revoked entries with empty attack_id (same reason
+      // as mergeByStixId — UNIQUE NOT NULL on attack_id can't tolerate
+      // multiple empty rows).
+      if ('attack_id' in e && !e.attack_id) continue;
       let entry = m.get(e.stix_id);
       if (!entry) {
         entry = { entity: { ...e }, domains: new Set() };
