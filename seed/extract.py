@@ -567,3 +567,32 @@ def extract_all(stix_path: str = 'data/enterprise-attack.json', domain: str = 'e
         'campaign_software': _extract_campaign_software(attack),
         'group_campaigns': _extract_group_campaigns(attack),
     }
+
+
+# ---------------------------------------------------------------------------
+# CLI: emit normalised JSON to stdout for Node subprocess use.
+# Used by scripts/update-attack.mjs to delegate STIX parsing to the proven
+# mitreattack-python pipeline rather than maintaining a parallel JS port.
+# ---------------------------------------------------------------------------
+
+if __name__ == "__main__":
+    import argparse
+    import sys
+
+    parser = argparse.ArgumentParser(description="Emit ATT&CK STIX as normalised JSON.")
+    parser.add_argument(
+        "--domain",
+        required=True,
+        choices=["enterprise-attack", "mobile-attack", "ics-attack"],
+        help="ATT&CK domain key (matches STIX bundle filename).",
+    )
+    parser.add_argument(
+        "--stix-path",
+        required=False,
+        help="Path to STIX bundle file. Defaults to ./data/<domain>.json",
+    )
+    args = parser.parse_args()
+
+    stix_path = args.stix_path or f"./data/{args.domain}.json"
+    data = extract_all(stix_path, domain=args.domain)
+    json.dump(data, sys.stdout, default=str)
