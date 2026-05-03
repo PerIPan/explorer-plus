@@ -22,6 +22,7 @@
 import pg from 'pg';
 import fs from 'fs';
 import path from 'path';
+import crypto from 'node:crypto';
 import { spawnSync } from 'child_process';
 
 const DATABASE_URL = process.env.DATABASE_URL;
@@ -133,15 +134,30 @@ function extractStixDomain(domain, stixPath) {
   return JSON.parse(r.stdout);
 }
 
-function readSpecVersion(stixPath) {
-  // Prefer x_mitre_attack_spec_version on the bundle's marking-definition or
-  // x-mitre-collection object — fall back to scanning all objects.
+function readBundleVersions(stixPath) {
+  // Two distinct version concepts in a STIX bundle:
+  //   - x_mitre_version on the x-mitre-collection object → release version
+  //     ("19.0", "18.1") — what the dashboard displays.
+  //   - x_mitre_attack_spec_version → STIX format spec version ("3.3.0").
+  // We use attackVersion for both the dashboard label AND the strictly-greater
+  // version guard (it's the per-release identifier; spec version changes rarely).
   const bundle = JSON.parse(fs.readFileSync(stixPath, 'utf8'));
   for (const obj of bundle.objects ?? []) {
-    if (obj.x_mitre_attack_spec_version) return obj.x_mitre_attack_spec_version;
-    if (obj.x_mitre_version && obj.type === 'x-mitre-collection') return obj.x_mitre_version;
+    if (obj.type === 'x-mitre-collection') {
+      return {
+        attackVersion: obj.x_mitre_version ?? null,
+        specVersion: obj.x_mitre_attack_spec_version ?? null,
+        collectionName: obj.name ?? null,
+      };
+    }
   }
-  return null;
+  return { attackVersion: null, specVersion: null, collectionName: null };
+}
+
+function bundleHash(stixPath) {
+  // sha256 of the raw bundle bytes — stored in seed_metadata.stix_bundle_hash
+  // so a re-run on the same upstream bundle is detectable in the audit log.
+  return crypto.createHash('sha256').update(fs.readFileSync(stixPath)).digest('hex');
 }
 
 // --- Entity UPSERT helpers --------------------------------------------------
@@ -422,6 +438,84 @@ async function upsertCrossDomainEntity(pool, args) {
   return { inserted: insertedKeys.size, updated: updatedCount };
 }
 
+// --- Relation reconciler ----------------------------------------------------
+
+/**
+ * Bulk insert-then-delete-orphans across one relation table. Single pass:
+ *   1. INSERT every (parent, child) pair from STIX (with description if any),
+ *      ON CONFLICT DO UPDATE the description column.
+ *   2. DELETE pairs where parent is in the new set BUT the (parent, child)
+ *      pair is no longer in the new set.
+ *
+ * Scoping the DELETE to parents-in-the-new-set is critical: it stops us
+ * accidentally wiping relations belonging to entities not present in this
+ * run's bundles (e.g., revoked groups).
+ *
+ * Cross-domain merge: deduplicate by (parent_stix_id, child_stix_id) across
+ * all extracted domains so APT28's Enterprise + ICS technique sets unify
+ * into one reconcile pass.
+ */
+async function reconcileBulk(pool, args) {
+  const { key, table, parentCol, childCol, descCol, parentField, childField, parentKey, childKey, lookups, extracted } = args;
+
+  // Cross-domain merge by (parent_stix_id, child_stix_id) — keep first-seen
+  // description, dedupe pairs across bundles.
+  const seen = new Map(); // "p|c" → row
+  for (const domain of Object.keys(extracted)) {
+    for (const r of extracted[domain][key] ?? []) {
+      const compositeKey = `${r[parentField]}|${r[childField]}`;
+      if (!seen.has(compositeKey)) seen.set(compositeKey, r);
+    }
+  }
+
+  // Resolve stix_ids → UUIDs, drop pairs where either side is missing.
+  const parentIds = [];
+  const childIds = [];
+  const descriptions = [];
+  let unresolved = 0;
+  for (const r of seen.values()) {
+    const p = lookups[parentKey].get(r[parentField]);
+    const c = lookups[childKey].get(r[childField]);
+    if (!p || !c) { unresolved++; continue; }
+    parentIds.push(p);
+    childIds.push(c);
+    if (descCol) descriptions.push(r.description ?? null);
+  }
+  if (unresolved > 0) console.warn(`[attack-update]   ${table}: ${unresolved} relations skipped — parent or child stix_id not in DB`);
+  if (parentIds.length === 0) return { touched: 0, removed: 0, unresolved };
+
+  // Stage 1: insert + on-conflict-update
+  if (descCol) {
+    await pool.query(
+      `INSERT INTO ${table} (${parentCol}, ${childCol}, ${descCol})
+       SELECT p::uuid, c::uuid, d
+       FROM unnest($1::text[], $2::text[], $3::text[]) AS u(p, c, d)
+       ON CONFLICT (${parentCol}, ${childCol}) DO UPDATE SET ${descCol} = EXCLUDED.${descCol}`,
+      [parentIds, childIds, descriptions],
+    );
+  } else {
+    await pool.query(
+      `INSERT INTO ${table} (${parentCol}, ${childCol})
+       SELECT p::uuid, c::uuid
+       FROM unnest($1::text[], $2::text[]) AS u(p, c)
+       ON CONFLICT (${parentCol}, ${childCol}) DO NOTHING`,
+      [parentIds, childIds],
+    );
+  }
+
+  // Stage 2: delete orphans, scoped to parents in this run.
+  const delRes = await pool.query(
+    `DELETE FROM ${table}
+     WHERE ${parentCol} IN (SELECT DISTINCT p::uuid FROM unnest($1::text[]) AS p)
+       AND (${parentCol}, ${childCol}) NOT IN (
+         SELECT u.p::uuid, u.c::uuid FROM unnest($1::text[], $2::text[]) AS u(p, c)
+       )`,
+    [parentIds, childIds],
+  );
+
+  return { touched: parentIds.length, removed: delRes.rowCount ?? 0, unresolved };
+}
+
 // --- Main -------------------------------------------------------------------
 
 async function main() {
@@ -456,11 +550,20 @@ async function main() {
     // Fetch + extract all domains
     const tmpDir = fs.mkdtempSync(path.join('/tmp', 'attack-update-'));
     const extracted = {};
+    const perDomainMeta = {};   // domain → { attackVersion, specVersion, hash, sourceUrl }
     for (const domain of args.domains) {
       const stixPath = path.join(tmpDir, `${domain}.json`);
+      const sourceUrl = `${STIX_BASE}/${domain}/${domain}.json`;
       await fetchStixBundle(domain, stixPath);
-      detectedVersion = detectedVersion ?? readSpecVersion(stixPath);
-      console.log(`[attack-update] extracting ${domain}…`);
+      const v = readBundleVersions(stixPath);
+      perDomainMeta[domain] = {
+        attackVersion: v.attackVersion,
+        specVersion: v.specVersion,
+        hash: bundleHash(stixPath),
+        sourceUrl,
+      };
+      detectedVersion = detectedVersion ?? v.attackVersion;
+      console.log(`[attack-update] extracting ${domain}… (v${v.attackVersion ?? '?'} spec ${v.specVersion ?? '?'})`);
       extracted[domain] = extractStixDomain(domain, stixPath);
       console.log(`[attack-update]   ${domain}: techniques=${extracted[domain].techniques?.length ?? 0} groups=${extracted[domain].threat_groups?.length ?? 0} tactics=${extracted[domain].tactics?.length ?? 0}`);
     }
@@ -608,8 +711,80 @@ async function main() {
       console.log(`[attack-update] campaigns:         +${r.inserted} new / ~${r.updated} updated`);
     }
 
-    // Relations — Chunk 4.
-    // Verification harness — Chunk 5.
+    // --- Relations: bulk insert-then-delete-orphans across 9 join tables.
+    //     One reconcile per table, scoped to parents in the new STIX so we
+    //     don't accidentally wipe relations belonging to entities not in
+    //     this run's bundles.
+    {
+      // Build stix_id → DB UUID lookup maps for every entity type referenced.
+      console.log(`[attack-update] building stix_id → uuid lookup maps for relations…`);
+      const lookups = {};
+      for (const [key, table] of [
+        ['techniques', 'techniques'],
+        ['tactics', 'tactics'],
+        ['threat_groups', 'threat_groups'],
+        ['attack_software', 'attack_software'],
+        ['mitigations', 'mitigations'],
+        ['campaigns', 'campaigns'],
+        ['data_components', 'data_components'],
+      ]) {
+        const r = await pool.query(`SELECT stix_id, id FROM ${table}`);
+        lookups[key] = new Map(r.rows.map((row) => [row.stix_id, row.id]));
+        console.log(`[attack-update]   ${key}: ${lookups[key].size} entries`);
+      }
+
+      const relations = [
+        { key: 'technique_tactics',         table: 'technique_tactics',         parentKey: 'techniques',      parentCol: 'technique_id', childKey: 'tactics',         childCol: 'tactic_id',         parentField: 'technique_stix_id', childField: 'tactic_stix_id',        descCol: null },
+        { key: 'group_techniques',          table: 'group_techniques',          parentKey: 'threat_groups',   parentCol: 'group_id',     childKey: 'techniques',      childCol: 'technique_id',      parentField: 'group_stix_id',     childField: 'technique_stix_id',     descCol: 'description' },
+        { key: 'group_software',            table: 'group_software',            parentKey: 'threat_groups',   parentCol: 'group_id',     childKey: 'attack_software', childCol: 'software_id',       parentField: 'group_stix_id',     childField: 'software_stix_id',      descCol: 'description' },
+        { key: 'software_techniques',       table: 'software_techniques',       parentKey: 'attack_software', parentCol: 'software_id',  childKey: 'techniques',      childCol: 'technique_id',      parentField: 'software_stix_id',  childField: 'technique_stix_id',     descCol: 'description' },
+        { key: 'mitigation_techniques',     table: 'mitigation_techniques',     parentKey: 'mitigations',     parentCol: 'mitigation_id',childKey: 'techniques',      childCol: 'technique_id',      parentField: 'mitigation_stix_id',childField: 'technique_stix_id',     descCol: 'description' },
+        { key: 'campaign_techniques',       table: 'campaign_techniques',       parentKey: 'campaigns',       parentCol: 'campaign_id',  childKey: 'techniques',      childCol: 'technique_id',      parentField: 'campaign_stix_id',  childField: 'technique_stix_id',     descCol: 'description' },
+        { key: 'campaign_software',         table: 'campaign_software',         parentKey: 'campaigns',       parentCol: 'campaign_id',  childKey: 'attack_software', childCol: 'software_id',       parentField: 'campaign_stix_id',  childField: 'software_stix_id',      descCol: 'description' },
+        { key: 'group_campaigns',           table: 'group_campaigns',           parentKey: 'threat_groups',   parentCol: 'group_id',     childKey: 'campaigns',       childCol: 'campaign_id',       parentField: 'group_stix_id',     childField: 'campaign_stix_id',      descCol: 'description' },
+        { key: 'technique_data_components', table: 'technique_data_components', parentKey: 'techniques',      parentCol: 'technique_id', childKey: 'data_components', childCol: 'data_component_id',parentField: 'technique_stix_id', childField: 'data_component_stix_id',descCol: null },
+      ];
+
+      for (const rel of relations) {
+        const r = await reconcileBulk(pool, { ...rel, lookups, extracted });
+        counters.perTable[rel.table] = r;
+        console.log(`[attack-update] ${rel.table.padEnd(28)}: +${r.touched} edges touched / -${r.removed} orphans`);
+      }
+    }
+
+    // --- seed_metadata: one row per domain so the dashboard ATT&CK Version
+    //     widget reflects the new release. The seed_metadata table is
+    //     append-only — newest seeded_at wins for the dashboard query.
+    {
+      for (const domain of args.domains) {
+        const m = perDomainMeta[domain];
+        const counts = {
+          tactics: extracted[domain].tactics?.length ?? 0,
+          techniques: extracted[domain].techniques?.length ?? 0,
+          threat_groups: extracted[domain].threat_groups?.length ?? 0,
+          attack_software: extracted[domain].attack_software?.length ?? 0,
+          mitigations: extracted[domain].mitigations?.length ?? 0,
+          campaigns: extracted[domain].campaigns?.length ?? 0,
+          data_sources: extracted[domain].data_sources?.length ?? 0,
+          data_components: extracted[domain].data_components?.length ?? 0,
+        };
+        await pool.query(
+          `INSERT INTO seed_metadata (attack_version, domain, stix_bundle_hash, source_url, seeded_at, entity_counts, seed_duration_ms, seeded_by)
+           VALUES ($1, $2, $3, $4, NOW(), $5::jsonb, $6, 'update-attack.mjs')`,
+          [
+            m.attackVersion,
+            domain,
+            m.hash,
+            m.sourceUrl,
+            JSON.stringify(counts),
+            Date.now() - startedAt,
+          ],
+        );
+      }
+      console.log(`[attack-update] seed_metadata: wrote ${args.domains.length} rows for v${detectedVersion}`);
+    }
+
+    // --- Verification harness — Chunk 5 (next commit).
 
     const elapsedMs = Date.now() - startedAt;
     console.log(`[attack-update] done in ${elapsedMs}ms — entities: +${counters.entitiesUpserted} touched`);

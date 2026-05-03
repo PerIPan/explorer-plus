@@ -186,7 +186,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <li><strong>CVEs</strong> — since 2017, CISA KEV + NVD CVSS enrichment + EPSS exploit-probability scoring (First.org, daily), linked to ATT&CK via CWE→CAPEC bridge + CTID mappings, cross-referenced to distro advisories</li>
                 <li><strong>Frameworks</strong> — OWASP Top 10 (Web 2021, ML 2023, LLM 2025), NIST 800-53 r5, NIST CSF v2 (GV/ID/PR/DE/RS/RC with CRI Profile crosswalk), MITRE Engage, D3FEND, RE&CT, VERIS, Azure + GCP cloud controls, CAPEC (615 patterns, full taxonomy), EU Cyber Resilience Act reference</li>
                 <li><strong>IOCs</strong> — OTX + ThreatFox + MalwareBazaar, enriched with VirusTotal verdicts and sandbox-derived techniques</li>
-                <li><strong>Detection</strong> — Detection Strategies + Analytics (ATT&CK v18), SigmaHQ rules, Atomic Red Team tests, MITRE Caldera, D3FEND countermeasures</li>
+                <li><strong>Detection</strong> — Detection Strategies + Analytics (ATT&CK v19), SigmaHQ rules, Atomic Red Team tests, MITRE Caldera, D3FEND countermeasures</li>
                 <li><strong>Threat actors</strong> — 191 ATT&CK groups + 514 ThaiCERT/ETDA actors with category inference</li>
                 <li><strong>Data model</strong> — 30+ interconnected data sources: ATT&CK STIX, ATLAS, CVElistV5, NVD, CAPEC, CWE, NIST 800-53, NIST CSF v2, CISA KEV, EPSS, OTX, SigmaHQ, Atomic Red Team, D3FEND, VERIS, CTID, GHSA, OSV</li>
                 <li><strong>Sector + domain filters</strong> — narrow everything by industry and ATT&CK domain (AND logic)</li>
