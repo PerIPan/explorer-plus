@@ -4,6 +4,16 @@
 
 **Status:** Design v2 — incorporates architect / postgres / fullstack reviewer findings.
 
+## Files
+
+| Path | Role |
+|---|---|
+| [`scripts/update-attack.mjs`](../scripts/update-attack.mjs) | Main orchestrator — pool, advisory lock, STIX fetch + extract subprocess, entity UPSERTs, relation reconciler, snapshot/diff, `feed_sync_log` lifecycle |
+| [`scripts/lib/attack-snapshot.mjs`](../scripts/lib/attack-snapshot.mjs) | `captureSnapshot(pool)` — invariant JSON of counts, UUIDs, relation counts, orphan check |
+| [`scripts/lib/attack-diff.mjs`](../scripts/lib/attack-diff.mjs) | `diffSnapshots(pre, post)` — regression assertions + `summarizeDiff` for the audit log |
+| [`.github/workflows/update-attack.yml`](../.github/workflows/update-attack.yml) | `workflow_dispatch` wrapper — inputs: `domains`, `dry-run`, `force` |
+| [`seed/extract.py`](../seed/extract.py) | STIX parser; bottom-of-file `if __name__ == "__main__"` block emits the normalized dict as JSON for the Node subprocess |
+
 ---
 
 ## Why this exists
