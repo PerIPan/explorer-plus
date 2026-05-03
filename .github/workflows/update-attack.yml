@@ -1,0 +1,54 @@
+name: Update MITRE ATT&CK (manual)
+
+# Manual trigger only. MITRE releases roughly twice a year — a human
+# review gate before each content rotation is preferable to an automatic
+# schedule (which could push regressions silently between checks).
+
+on:
+  workflow_dispatch:
+    inputs:
+      domains:
+        description: 'Comma-separated domains (atlas-attack is out of scope — use sync-atlas.mjs)'
+        required: false
+        default: 'enterprise-attack,mobile-attack,ics-attack'
+      dry-run:
+        description: 'Preview only — no DB writes (still captures pre-snapshot)'
+        required: false
+        type: boolean
+        default: false
+      force:
+        description: 'Override the strictly-greater attack-version guard'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python STIX deps
+        run: pip install mitreattack-python==4.0.0
+
+      - name: Install pg
+        run: npm install pg
+
+      - name: Run update-attack
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          ARGS=()
+          if [ "${{ github.event.inputs.dry-run }}" = "true" ]; then ARGS+=(--dry-run); fi
+          if [ "${{ github.event.inputs.force }}" = "true" ]; then ARGS+=(--force); fi
+          ARGS+=(--domains="${{ github.event.inputs.domains }}")
+          node scripts/update-attack.mjs "${ARGS[@]}"
