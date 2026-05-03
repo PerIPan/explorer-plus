@@ -24,6 +24,8 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'node:crypto';
 import { spawnSync } from 'child_process';
+import { captureSnapshot } from './lib/attack-snapshot.mjs';
+import { diffSnapshots, summarizeDiff } from './lib/attack-diff.mjs';
 
 const DATABASE_URL = process.env.DATABASE_URL;
 if (!DATABASE_URL) { console.error('DATABASE_URL required'); process.exit(1); }
@@ -542,10 +544,18 @@ async function main() {
   let logId;
   const counters = { entitiesUpserted: 0, entitiesSkipped: 0, perTable: {} };
   let detectedVersion = null;
+  let preSnapshot = null;
+  let postSnapshot = null;
 
   try {
     logId = await insertLogStart(pool);
     console.log(`[attack-update] starting logId=${logId} domains=${args.domains.join(',')} dryRun=${args.dryRun} force=${args.force}`);
+
+    // Pre-snapshot — captured before any writes so the diff can prove no
+    // regression. Saved to feed_sync_log.metadata.preSnapshot for forensics.
+    console.log(`[attack-update] capturing pre-snapshot…`);
+    preSnapshot = await captureSnapshot(pool);
+    console.log(`[attack-update] pre: ${Object.entries(preSnapshot.counts).map(([t,n]) => `${t}=${n}`).join(' ')}`);
 
     // Fetch + extract all domains
     const tmpDir = fs.mkdtempSync(path.join('/tmp', 'attack-update-'));
@@ -575,12 +585,13 @@ async function main() {
     if (!args.force && lastVersion && detectedVersion && detectedVersion <= lastVersion) {
       throw new Error(`STIX spec version ${detectedVersion} not strictly greater than last successful run (${lastVersion}). Use --force to override.`);
     }
-    console.log(`[attack-update] STIX spec version ${detectedVersion ?? 'unknown'} (last successful: ${lastVersion ?? 'none'})`);
+    console.log(`[attack-update] ATT&CK version ${detectedVersion ?? 'unknown'} (last successful: ${lastVersion ?? 'none'})`);
 
     if (args.dryRun) {
       console.log('[attack-update] DRY-RUN: skipping all UPSERTs. Counts above are projected delta.');
       await updateLogDone(pool, logId, 'success', counters, {
         domains: args.domains, dryRun: true, attackVersion: detectedVersion,
+        preSnapshot,
         elapsedMs: Date.now() - startedAt,
       }, null);
       return;
@@ -784,13 +795,28 @@ async function main() {
       console.log(`[attack-update] seed_metadata: wrote ${args.domains.length} rows for v${detectedVersion}`);
     }
 
-    // --- Verification harness — Chunk 5 (next commit).
+    // --- Post-snapshot + diff — fail loud if any regression detected.
+    console.log(`[attack-update] capturing post-snapshot…`);
+    postSnapshot = await captureSnapshot(pool);
+    console.log(`[attack-update] post: ${Object.entries(postSnapshot.counts).map(([t,n]) => `${t}=${n}`).join(' ')}`);
+    const diff = diffSnapshots(preSnapshot, postSnapshot);
+    if (!diff.passed) {
+      throw new Error(`Verification failed: ${JSON.stringify(diff.failures.slice(0, 10))}`);
+    }
+    console.log(`[attack-update] verification passed — no count regressions, no UUIDs missing, no orphan sub-techniques`);
 
     const elapsedMs = Date.now() - startedAt;
+    const summary = summarizeDiff(preSnapshot, postSnapshot);
     console.log(`[attack-update] done in ${elapsedMs}ms — entities: +${counters.entitiesUpserted} touched`);
+    console.log(`[attack-update] entity deltas:`, JSON.stringify(summary.entities));
+    console.log(`[attack-update] relation deltas:`, JSON.stringify(summary.relations));
     await updateLogDone(pool, logId, 'success', counters, {
-      domains: args.domains, dryRun: false, attackVersion: detectedVersion,
-      perTable: counters.perTable, elapsedMs,
+      domains: args.domains,
+      dryRun: false,
+      attackVersion: detectedVersion,
+      perTable: counters.perTable,
+      summary,
+      elapsedMs,
     }, null);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
