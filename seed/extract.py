@@ -25,14 +25,19 @@ _TACTIC_SORT_ORDER: dict[str, int] = {
     'execution': 4,
     'persistence': 5,
     'privilege-escalation': 6,
-    'defense-evasion': 7,
-    'credential-access': 8,
-    'discovery': 9,
-    'lateral-movement': 10,
-    'collection': 11,
-    'command-and-control': 12,
-    'exfiltration': 13,
-    'impact': 14,
+    # v19 (2026-04-28): Defense Evasion split into Stealth (kept TA0005) and
+    # Defense Impairment (new TA0112). Stealth keeps the old slot 7. Defense
+    # Impairment takes slot 8; the rest shift +1.
+    'stealth': 7,
+    'defense-impairment': 8,
+    'defense-evasion': 7,        # legacy shortname — preserved so older bundles still parse
+    'credential-access': 9,
+    'discovery': 10,
+    'lateral-movement': 11,
+    'collection': 12,
+    'command-and-control': 13,
+    'exfiltration': 14,
+    'impact': 15,
     # ICS unique tactics (101-112 range to avoid collisions)
     'evasion': 107,
     'inhibit-response-function': 111,
