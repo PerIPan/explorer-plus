@@ -67,7 +67,7 @@ export async function GET(req: NextRequest) {
 
   if (domain) {
     params.push(domain);
-    conditions.push(`sw.domain = $${params.length}`);
+    conditions.push(`$${params.length} = ANY(sw.domain)`);
   }
 
   const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';

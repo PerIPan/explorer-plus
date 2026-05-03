@@ -60,7 +60,7 @@ export async function GET(
         ? `SELECT sw.attack_id AS "attackId", sw.name, sw.type, gs.description
            FROM group_software gs
            JOIN attack_software sw ON sw.id = gs.software_id
-           WHERE gs.group_id = $1 AND sw.domain = $2
+           WHERE gs.group_id = $1 AND $2 = ANY(sw.domain)
            ORDER BY sw.name ASC`
         : `SELECT sw.attack_id AS "attackId", sw.name, sw.type, gs.description
            FROM group_software gs
@@ -75,7 +75,7 @@ export async function GET(
                 c.first_seen AS "firstSeen", c.last_seen AS "lastSeen"
            FROM group_campaigns gc
            JOIN campaigns c ON c.id = gc.campaign_id
-           WHERE gc.group_id = $1 AND c.domain = $2
+           WHERE gc.group_id = $1 AND $2 = ANY(c.domain)
            ORDER BY c.name ASC`
         : `SELECT c.attack_id AS "attackId", c.name, gc.description,
                 c.first_seen AS "firstSeen", c.last_seen AS "lastSeen"

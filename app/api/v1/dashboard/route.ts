@@ -55,14 +55,14 @@ export async function GET(req: NextRequest) {
              (SELECT count(DISTINCT gsw.software_id)
               FROM group_software gsw
               JOIN attack_software sw ON sw.id = gsw.software_id
-                AND sw.is_revoked = false AND sw.is_deprecated = false AND sw.domain = $2
+                AND sw.is_revoked = false AND sw.is_deprecated = false AND $2 = ANY(sw.domain)
               JOIN group_sectors gs ON gs.group_id = gsw.group_id
               JOIN sectors s ON s.id = gs.sector_id WHERE s.slug = $1) AS "softwareCount",
              (SELECT count(*) FROM mitigations
               WHERE is_revoked = false AND is_deprecated = false AND domain = $2) AS "mitigationCount",
              (SELECT count(DISTINCT gc.campaign_id)
               FROM group_campaigns gc
-              JOIN campaigns cp ON cp.id = gc.campaign_id AND cp.domain = $2
+              JOIN campaigns cp ON cp.id = gc.campaign_id AND $2 = ANY(cp.domain)
               JOIN group_sectors gs ON gs.group_id = gc.group_id
               JOIN sectors s ON s.id = gs.sector_id WHERE s.slug = $1) AS "campaignCount",
              (SELECT count(*) FROM data_sources
@@ -116,7 +116,7 @@ export async function GET(req: NextRequest) {
              (SELECT count(DISTINCT sw.id) FROM attack_software sw
               WHERE sw.is_revoked = false AND sw.is_deprecated = false
               AND sw.id IN (
-                SELECT id FROM attack_software WHERE domain = $1
+                SELECT id FROM attack_software WHERE $1 = ANY(domain)
                 UNION
                 SELECT st.software_id FROM atlas_xrefs ax
                 JOIN techniques at2 ON at2.id = ax.atlas_technique_id AND at2.domain = $1
