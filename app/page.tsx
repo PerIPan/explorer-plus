@@ -4,7 +4,7 @@ import { DiamondLoader } from '../src/components/shared/FoldingDiamond';
 
 export const metadata: Metadata = {
   title: 'MITRE Explorer Plus — ATT&CK v19, CVEs, CTI',
-  description: 'MITRE ATT&CK v19 + ATLAS in one place — CTI reports, CVEs, applications, OSS packages, and threat-actor relationships across enterprise, mobile, ICS, and AI/ML.',
+  description: 'MITRE ATT&CK v19 + ATLAS — CTI reports, CVEs, applications, OSS packages, and threat-actor relationships across enterprise, mobile, ICS, and AI/ML.',
 };
 
 import { Relationships } from '../src/views/Relationships';
