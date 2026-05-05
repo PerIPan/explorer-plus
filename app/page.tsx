@@ -3,8 +3,8 @@ import { Suspense } from 'react';
 import { DiamondLoader } from '../src/components/shared/FoldingDiamond';
 
 export const metadata: Metadata = {
-  title: '360 Views — MITRE Explorer',
-  description: 'Search any entity and explore its relationships — technique maps, actor profiles, application maps, and force-directed graphs',
+  title: 'MITRE Explorer Plus — ATT&CK v19, CVEs, CTI',
+  description: 'MITRE ATT&CK v19 + ATLAS in one place — CTI reports, CVEs, applications, OSS packages, and threat-actor relationships across enterprise, mobile, ICS, and AI/ML.',
 };
 
 import { Relationships } from '../src/views/Relationships';
