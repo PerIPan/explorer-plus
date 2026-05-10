@@ -164,7 +164,6 @@ export function Attributions() {
           <li>This site is <strong>not affiliated with, sponsored by, or endorsed by MITRE Corporation</strong>. &ldquo;ATT&amp;CK&rdquo; and &ldquo;ATLAS&rdquo; are registered trademarks of MITRE Corporation.</li>
           <li>OWASP&reg; and the OWASP logo are trademarks of the OWASP Foundation.</li>
           <li>NIST does not endorse this product or service.</li>
-          <li>Application code is ISC-licensed; the source is at <a href="https://github.com/PerIPan/mitre-explorer-plus" target="_blank" rel="noopener noreferrer" className="text-[var(--accent-teal)] hover:underline">github.com/PerIPan/mitre-explorer-plus</a>.</li>
           <li>Errors or omissions in attribution? Reach out at <span className="text-[var(--accent-teal)]">contact @ mitre-explorer.org</span>.</li>
         </ul>
       </section>
