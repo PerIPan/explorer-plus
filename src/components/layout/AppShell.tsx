@@ -123,10 +123,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             type="button"
             onClick={() => setHelpOpen(true)}
             data-print-hide
-            className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--accent-teal)] hover:border-[var(--teal-dim)] transition-colors"
+            className="flex-shrink-0 px-3 h-8 inline-flex items-center justify-center rounded-md border border-[var(--border-color)] text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--accent-teal)] hover:border-[var(--teal-dim)] transition-colors"
             title="About this application"
           >
-            ?
+            info
           </button>
         </header>
 
@@ -194,6 +194,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </ul>
               <p className="text-[var(--text-secondary)] text-xs pt-2 border-t border-[var(--border-color)]">
                 <span className="text-[var(--accent-teal)]">contact @ mitre-explorer.org</span>
+                {' · '}<a href="/about/attributions" className="text-[var(--accent-teal)] hover:underline">Data attributions</a>
                 {' — '}Not affiliated with or endorsed by MITRE Corporation.
                 {/* GitHub link hidden for now — kept for re-enable: */}
                 {false && (
