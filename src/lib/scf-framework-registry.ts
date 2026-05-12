@@ -258,7 +258,7 @@ export const SCF_FRAMEWORK_REGISTRY: ScfFrameworkEntry[] = [
     license: 'CC BY-NC-SA 4.0 (ID-only here — text restricted)',
     license_class: 'cc-by-nc-sa',
     short_blurb: 'Prioritized set of safeguards (cross-referenced via SCF — full text not republished).',
-    aliases: ['CIS Controls v8.1', 'CIS Controls 8.1', 'CIS Controls v8'],
+    aliases: ['CIS CSC 8.1', 'CIS CSC 8', 'CIS Controls v8.1', 'CIS Controls 8.1', 'CIS Controls v8'],
   },
   {
     framework_key: 'nist-800-171-r3',
@@ -337,7 +337,7 @@ export const SCF_FRAMEWORK_REGISTRY: ScfFrameworkEntry[] = [
     license: 'CC BY 4.0',
     license_class: 'cc-by',
     short_blurb: 'Eight mitigation strategies — Maturity Levels 1-3 — for Australian organisations.',
-    aliases: ['Essential Eight', 'AU Essential 8', 'ACSC Essential Eight'],
+    aliases: ['Australia Essential 8', 'AU Essential 8', 'Essential Eight', 'ACSC Essential Eight'],
   },
   {
     framework_key: 'nist-ai-rmf',
@@ -353,19 +353,9 @@ export const SCF_FRAMEWORK_REGISTRY: ScfFrameworkEntry[] = [
     aliases: ['NIST AI RMF 1.0', 'NIST AI RMF', 'AI RMF'],
     effective: 'Published 26 January 2023',
   },
-  {
-    framework_key: 'mitre-attck-mitigations',
-    name: 'MITRE ATT&CK Mitigations',
-    version: 'v19',
-    source_org: 'MITRE',
-    upstream_url: 'https://attack.mitre.org/mitigations/',
-    region: 'global',
-    tier: 2,
-    license: 'ATT&CK Terms of Use',
-    license_class: 'permissive',
-    short_blurb: 'MITRE ATT&CK\'s own Mxxxx mitigations — cross-referenced from SCF.',
-    aliases: ['MITRE ATT&CK Mitigations', 'ATT&CK Mitigations', 'ATTACK Mitigations'],
-  },
+  // (Removed mitre-attck-mitigations: SCF's "MITRE ATT&CK" column maps to
+  // T-codes, not M-codes, and those flow into scf_attack_mappings. The /mitigations
+  // page on this site already lists Mxxxx separately.)
 ];
 
 export const TIER1_KEYS = SCF_FRAMEWORK_REGISTRY.filter((f) => f.tier === 1).map((f) => f.framework_key);

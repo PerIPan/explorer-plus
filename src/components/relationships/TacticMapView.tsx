@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useTactic } from '../../hooks/useApi';
 import { EntityLink } from '../shared/EntityLink';
 import { Badge } from '../shared/Badge';
@@ -293,6 +294,9 @@ export function TacticMapView({ attackId }: TacticMapViewProps) {
         )}
       </MapCard>
 
+      {/* Compliance emphasis — SCF-backed frameworks that most reference this tactic's techniques */}
+      <ComplianceTacticCard attackId={attackId} />
+
       {/* Reference */}
       {tactic.url && (
         <div className="px-1 pt-1">
@@ -325,5 +329,46 @@ export function TacticMapView({ attackId }: TacticMapViewProps) {
       )}
 
     </div>
+  );
+}
+
+/** Compliance emphasis — top frameworks referencing this tactic's techniques.
+ *  Closed by default. */
+function ComplianceTacticCard({ attackId }: { attackId: string }) {
+  const [rows, setRows] = useState<Array<{
+    framework_key: string; name: string; region: string; tier: number;
+    techniques_ref: number; controls: number;
+  }> | null>(null);
+
+  useEffect(() => {
+    const ctrl = new AbortController();
+    fetch(`/api/v1/compliance/tactics/${encodeURIComponent(attackId)}`, { signal: ctrl.signal })
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
+      .then((d) => { if (!ctrl.signal.aborted) setRows(d.frameworks ?? []); })
+      .catch(() => { if (!ctrl.signal.aborted) setRows([]); });
+    return () => ctrl.abort();
+  }, [attackId]);
+
+  if (rows === null || rows.length === 0) return null;
+  return (
+    <MapCard label="Compliance Emphasis (SCF)" icon={IconGrid} count={rows.length} defaultOpen={false}>
+      <div className="space-y-1.5">
+        {rows.map((r) => (
+          <div key={r.framework_key} className="flex items-baseline gap-2 text-xs">
+            <Link href={`/compliance/${r.framework_key}`} className="text-[var(--accent-teal)] hover:underline truncate max-w-[20rem]">
+              {r.name}
+            </Link>
+            <span className="text-[10px] uppercase text-[var(--text-secondary)] px-1 py-0.5 border border-[var(--border-color)] rounded">{r.region}</span>
+            <span className="ml-auto text-[var(--text-secondary)] font-mono tabular-nums">
+              {r.techniques_ref} tech · {r.controls} ctrl
+            </span>
+          </div>
+        ))}
+      </div>
+      <p className="mt-3 text-[10px] text-[var(--text-secondary)] italic">
+        Frameworks most frequently referencing this tactic's techniques. Mappings via{' '}
+        <a href="https://www.securecontrolsframework.com/" target="_blank" rel="noopener noreferrer" className="hover:underline">SCF</a> — <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer" className="hover:underline">CC BY 4.0</a>.
+      </p>
+    </MapCard>
   );
 }

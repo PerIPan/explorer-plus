@@ -74,6 +74,13 @@ const ALSO_ON_SITE: { label: string; href: string; note: string }[] = [
   { label: 'Atomic Red Team', href: '/frameworks/atomic', note: 'Red-team validation tests mapped to techniques.' },
 ];
 
+// Framework keys with an on-site reference page that should be linked from the
+// hub row when SCF coverage is empty (so users don't bounce off a blank
+// /compliance/<key> detail page).
+const FALLBACK_REFERENCE: Record<string, string> = {
+  'eu-cra': '/frameworks/cra',
+};
+
 export function ComplianceHub() {
   const [data, setData] = useState<ApiResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -279,14 +286,19 @@ function Section({ title, rows, defaultOpen }: { title: string; rows: Framework[
 
 function Row({ row }: { row: Framework }) {
   const hasCoverage = row.scf_controls > 0;
-  const techCount = hasCoverage ? `${row.techniques_filtered} tech` : 'no SCF data';
+  const techCount = hasCoverage ? `${row.techniques_filtered} tech` : 'not yet in SCF';
   const rawTitle = hasCoverage
     ? `${row.techniques_total} total techniques · ${row.scf_controls} SCF controls`
-    : 'Not yet covered by SCF — see upstream or cross-link';
+    : 'Framework tracked but the current SCF release has no ATT&CK cross-references for it yet.';
+  // When SCF has no data, route to the on-site reference page if we have one;
+  // the /compliance/<key> detail page would render empty.
+  const href = hasCoverage
+    ? `/compliance/${row.framework_key}`
+    : (FALLBACK_REFERENCE[row.framework_key] ?? `/compliance/${row.framework_key}`);
   return (
-    <li>
+    <li className={hasCoverage ? '' : 'opacity-70'}>
       <Link
-        href={`/compliance/${row.framework_key}`}
+        href={href}
         className="grid grid-cols-[auto_1fr_auto_auto_auto] items-center gap-3 px-3 py-2.5 hover:bg-[var(--hover-overlay)] transition-colors"
       >
         <span className={`w-2 h-2 rounded-full ${licenseDotColor(row.license)}`} aria-hidden="true" />

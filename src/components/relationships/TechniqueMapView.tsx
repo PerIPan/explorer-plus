@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
@@ -898,6 +898,9 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
         </MapRow>
       </MapCard>
 
+      {/* COMPLIANCE FRAMEWORKS — SCF-backed, closed by default */}
+      <ComplianceMapCard attackId={attackId} />
+
       {/* PROCEDURES */}
       {(() => {
         const procedures = groups.filter((g) => g.procedure);
@@ -924,6 +927,7 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
       {/* HOW TO TEST */}
       <MapCard label="How to Test" icon={IconTest}
         count={atomicTests.length}
+        defaultOpen={false}
       >
         {atomicTests.length > 0 ? (
           <>
@@ -1103,6 +1107,60 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
       })()}
 
     </div>
+  );
+}
+
+/** Compliance MapCard — SCF-backed regulatory frameworks referencing this technique.
+ *  Closed by default; the technique map already shows a lot. */
+function ComplianceMapCard({ attackId }: { attackId: string }) {
+  const [rows, setRows] = useState<Array<{
+    framework_key: string; name: string; region: string; tier: number;
+    controls: number; ref_ids: string[] | null; has_unresolved: boolean;
+  }> | null>(null);
+
+  useEffect(() => {
+    const ctrl = new AbortController();
+    fetch(`/api/v1/compliance/techniques/${encodeURIComponent(attackId)}`, { signal: ctrl.signal })
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
+      .then((d) => { if (!ctrl.signal.aborted) setRows(d.frameworks ?? []); })
+      .catch(() => { if (!ctrl.signal.aborted) setRows([]); });
+    return () => ctrl.abort();
+  }, [attackId]);
+
+  if (rows === null || rows.length === 0) return null;
+  return (
+    <MapCard
+      label="Compliance Frameworks (SCF)"
+      icon={IconShield}
+      count={rows.length}
+      defaultOpen={false}
+      actionHref="/compliance"
+      actionLabel="Browse all →"
+    >
+      <div className="space-y-1.5">
+        {rows.map((r) => (
+          <div key={r.framework_key} className="flex items-baseline gap-2 text-xs">
+            <Link href={`/compliance/${r.framework_key}`} className="text-[var(--accent-teal)] hover:underline truncate max-w-[18rem]">
+              {r.name}
+            </Link>
+            <span className="text-[10px] uppercase text-[var(--text-secondary)] px-1 py-0.5 border border-[var(--border-color)] rounded">
+              {r.region}
+            </span>
+            <span className="ml-auto text-[var(--text-secondary)] font-mono tabular-nums">
+              {r.controls} ctrl
+            </span>
+            {r.ref_ids && r.ref_ids.length > 0 && (
+              <span className="text-[var(--text-secondary)] truncate max-w-[14rem]" title={r.ref_ids.join(', ')}>
+                {r.ref_ids.slice(0, 3).join(', ')}{r.ref_ids.length > 3 ? ` +${r.ref_ids.length - 3}` : ''}
+              </span>
+            )}
+          </div>
+        ))}
+      </div>
+      <p className="mt-3 text-[10px] text-[var(--text-secondary)] italic">
+        Mappings via <a href="https://www.securecontrolsframework.com/" target="_blank" rel="noopener noreferrer" className="hover:underline">SCF</a> — <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer" className="hover:underline">CC BY 4.0</a>.
+      </p>
+    </MapCard>
   );
 }
 
