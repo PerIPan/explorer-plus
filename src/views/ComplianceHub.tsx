@@ -267,7 +267,7 @@ function Section({ title, rows, defaultOpen }: { title: string; rows: Framework[
         {title} <span className="text-[var(--text-secondary)] font-normal">({rows.length})</span>
       </button>
       {open && (
-        <ul className="divide-y divide-[var(--border-color)] border border-[var(--border-color)] rounded-md overflow-hidden">
+        <ul className="divide-y divide-[var(--border-color)] border border-[var(--border-color)] rounded-md overflow-hidden bg-[var(--surface-card)]">
           {rows.map((r) => (
             <Row key={r.framework_key} row={r} />
           ))}
