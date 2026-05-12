@@ -218,11 +218,11 @@ export function ComplianceHub() {
         <strong>Coverage:</strong> first number is filtered count — ATT&CK techniques referenced by <em>≥2</em> SCF controls in this framework, signalling depth of coverage. Second number is total SCF controls mapped to that framework.
       </p>
 
-      {/* Sections */}
-      <Section title="Global — Tier 1" rows={sections.tier1Global} defaultOpen />
-      <Section title="EU regulatory — Tier 1" rows={sections.tier1Eu} defaultOpen />
-      <Section title="US regulatory — Tier 1" rows={sections.tier1Us} defaultOpen />
-      <Section title="Sectoral & regional — Tier 2" rows={sections.tier2} defaultOpen />
+      {/* Sections — closed by default; the hub is dense, let users open what matters. */}
+      <Section title="Global — Tier 1" rows={sections.tier1Global} defaultOpen={false} />
+      <Section title="EU regulatory — Tier 1" rows={sections.tier1Eu} defaultOpen={false} />
+      <Section title="US regulatory — Tier 1" rows={sections.tier1Us} defaultOpen={false} />
+      <Section title="Sectoral & regional — Tier 2" rows={sections.tier2} defaultOpen={false} />
       {includeAll && (
         <Section title={`All other — Tier 3 (${sections.tier3.length})`} rows={sections.tier3} defaultOpen={false} />
       )}
