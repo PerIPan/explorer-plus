@@ -2,30 +2,32 @@
 
 > Bridge MITRE ATT&CK with the Secure Controls Framework's catalogue of ~250 compliance and regulatory frameworks. Add a "compliance lens" across every existing entity (techniques, tactics, threat groups, malware, sectors) and a new top-level Compliance section.
 
-**Author:** 2026-05-12 (v1) · 2026-05-12 (v2 — incorporates architect-reviewer + postgres-pro feedback)
+**Author:** 2026-05-12 (v1) · 2026-05-12 (v2 — architect-reviewer + postgres-pro feedback) · 2026-05-12 (v3 — domain-stratified rollout: Enterprise now, ATLAS/ICS/Mobile staged)
 
 ---
 
-## ⏸ Build status: paused, but the gap is smaller than feared
+## Coverage by domain (v3 reframe)
 
-Current SCF 2026.1.1 (May 2026) maps to **ATT&CK v16**. Our DB is on **v19**. Measured gap (2026-05-12):
+Current SCF 2026.1.1 (May 2026) maps to **ATT&CK v16**. Our DB is on **v19**. Measured 2026-05-12:
 
-| Metric | Count |
+| Domain | Total techniques | SCF mapped | Coverage |
+|---|---:|---:|---:|
+| **enterprise-attack** | 697 | **495** | **71%** ← launch-ready |
+| atlas-attack (AI/ML) | 155 | 0 | 0% — SCF doesn't cover AI |
+| mobile-attack | 124 | 1 | <1% — SCF doesn't cover Mobile |
+| ics-attack | 97 | 0 | 0% — SCF's ICS mappings live in IEC 62443 / NERC CIP / NIST 800-82 columns, mapped only to Enterprise techniques |
+
+**Top-100 most-used Enterprise techniques: 70% SCF coverage.** That's the lens that matters for everyday analyst/GRC use.
+
+**Why ATLAS / Mobile / ICS are 0% in SCF:** these domains have their own compliance ecosystems, not SCF's purview.
+
+| Domain | Native compliance regimes (Phase 9–11 data sources) |
 |---|---|
-| Unique attack_ids SCF references | **511** |
-| Active in our v19 DB | **496 (97%)** |
-| Revoked in v19 (mostly v19's `T1562.*` Impair Defenses restructure) | **15 (3%)** |
-| Deprecated | 0 |
-| Truly missing (renamed → new ID, original gone) | **0** |
-| v19 techniques without SCF mapping yet (post-v16 additions) | **784** |
+| **ATLAS (AI/ML)** | EU AI Act · NIST AI RMF · OWASP AI Exchange · ISO 42001 |
+| **Mobile** | OWASP MASVS · NIST 800-124 · MDM standards |
+| **ICS** | IEC 62443-2-1/3-3/4-2 · NERC CIP · NIST 800-82 (SCF has these columns but mapped only to Enterprise techniques — Phase 10 re-uses the data via different cross-walk) |
 
-**Practical impact:** 97% of SCF references resolve cleanly against v19. The 15 revoked attack_ids still exist in our `techniques` table (just flagged `is_revoked=true`) so joins work, counts work, the UI surfaces them with a small "maps to v19-revoked technique" badge on affected panels.
-
-The 784 v19 techniques without an SCF mapping aren't a bug — they just don't get compliance chips on their technique pages until SCF updates. Accurate UX.
-
-**Decision (v2):** the originally-proposed wait gate is **soft, not hard**. Build can proceed against current SCF 2026.1.1; the `is_unresolved` defense-in-depth covers the 3% revoked-ref gap, and the SEO/usability for the 22 featured frameworks is fully unblocked. We'll get a near-free completeness bump when SCF ships an ATT&CK-v19-aligned release later this year.
-
-(Original gate text preserved for context: monitor `github.com/securecontrolsframework/securecontrolsframework` releases for `MITRE / ATT&CK / 19+` column. When it lands, re-run the ingester to backfill mappings for the 784 currently-unmapped techniques.)
+**Decision (v3): domain-stratified rollout.** Ship Enterprise lens now (Phases 0–8). ATLAS / Mobile / ICS get domain-specific lenses in Phases 9–11 using regime-appropriate data we either already have or can fetch separately. SCF version-skew is a 3% (15/511) gap on Enterprise — covered by `is_unresolved` defense-in-depth.
 
 ---
 
@@ -58,7 +60,7 @@ Outcome: the product becomes a **threat-driven ⇄ compliance-driven bridge**. C
 
 | # | Decision | Choice | Rationale |
 |---|---|---|---|
-| 1 | Sidebar placement | **Single new entry** `Compliance` in a new section, peer to Frameworks | One click. Existing CRA + OWASP AI stay where they are in Frameworks (no migration). |
+| 1 | Sidebar placement (v3) | **New `Compliance` section** with 4 nested entries, one per ATT&CK domain. Existing CRA + OWASP AI stay in Frameworks (no migration). | Per-domain entries make the scope of compliance coverage visible at a glance + leave room for the staged ATLAS/Mobile/ICS rollouts. |
 | 2 | Default framework set | **22 curated** (Tier 1 + Tier 2). All 250+ ingested but hidden behind toggle. | Cards/rows for 250 = unusable. Curated = scannable in one screen. |
 | 3 | Page primitive | **Rows, not cards** | Matches our Feed Status / Ecosystems Table pattern. 22 rows fit one viewport. |
 | 4 | Default view on framework detail page | **Article-first** (Compliance → ATT&CK), with toggle for technique-first | Angle B = the GRC magnet. Analyst inverse is one click. |
@@ -208,12 +210,28 @@ CREATE TABLE scf_sector_compliance_summary (
    ```
 3. `ALTER TABLE … RENAME` is near-instant (AccessExclusiveLock held microseconds). Readers see either old or new full state — never partial.
 
-### Routes (new)
+### Routes (new — v3 domain-stratified)
 
 | Route | Page | Phase |
 |---|---|---|
-| `/compliance` | Hub directory (rows of 22 featured frameworks + expand toggles) | 1 |
-| `/compliance/<framework_key>` | Per-framework detail page (Article ↔ Technique views) | 2 |
+| `/compliance` | Meta-hub: 4 domain cards (Enterprise / ATLAS / ICS / Mobile) with coverage stats. Click a domain → its hub | 1 |
+| `/compliance/enterprise` | Enterprise hub — rows of 22 featured frameworks via SCF | 1 |
+| `/compliance/atlas` | ATLAS hub — wip stub until Phase 9 | 1 (stub) → 9 (live) |
+| `/compliance/ics` | ICS hub — wip stub until Phase 10 | 1 (stub) → 10 (live) |
+| `/compliance/mobile` | Mobile hub — wip stub until Phase 11 | 1 (stub) → 11 (live) |
+| `/compliance/<framework_key>` | Per-framework detail page (Article ↔ Technique views). Flat namespace; a framework like NIS2 may appear in multiple domain hubs but lives at a single URL | 2 |
+
+### Sidebar (v3)
+
+```
+Compliance                          ← new section header
+  Enterprise          → /compliance/enterprise        live (Phase 1)
+  ATLAS – wip         → /compliance/atlas             stub (live in Phase 9)
+  ICS – wip           → /compliance/ics               stub (live in Phase 10)
+  Mobile – wip        → /compliance/mobile            stub (live in Phase 11)
+```
+
+The "wip" badges match the existing CRA / OWASP AI pattern — users understand them. Each stub page explains what regimes it'll cover, the planned timeline, and links to upstream sources (EU AI Act on EUR-Lex, IEC 62443 storefront, OWASP MASVS, etc.) so the page has value even before its data ingest lands.
 
 ### Routes (existing — get a new panel)
 
@@ -396,8 +414,16 @@ EU regulations are open via EUR-Lex; link there for the law text.
 | 7 | Sector regulatory obligations + group-coverage cross-reference on `/sectors/<id>` (reads `scf_sector_compliance_summary` + `sector-regime-affinity.ts`) | 0.5 day | Hand-curated sector→regime lookup |
 | 8 | Sidebar entry, sitemap, structured-data JSON-LD, attribution updates (global footer) | 0.25 day | v2: lighter — overlap matview moved to Phase 2 |
 | 8.5 | **Observability** — orphan-mapping count in `/feed-status`, framework_key alias drift detection, slow-query alerting, per-Tier-1 framework_key disappearance pager | 0.5 day | v2: new — covers postgres/architect drift concerns |
+| **9** | **ATLAS compliance lens** — `/compliance/atlas` populated. Reuses existing data we already have: OWASP AI Exchange page, ATLAS xrefs table, NIST AI RMF, EU AI Act stub. New table `atlas_compliance_refs` maps ATLAS techniques → AI-regime articles. Same row-dense layout, same entity-side roll-up panels for ATLAS techniques. | 1 day | v3: new |
+| **10** | **ICS compliance lens** — `/compliance/ics` populated. Re-uses SCF data (IEC 62443-2-1/3-3/4-2, NERC CIP columns already in `scf_framework_refs`) but cross-walks via OT-specific authoritative-source curation. Adds NIST 800-82 r3 references. | 1 day | v3: new — no new ingester, different presentation of existing SCF rows |
+| **11** | **Mobile compliance lens** — `/compliance/mobile` populated. Pulls OWASP MASVS (CC BY-SA, fetchable) + NIST 800-124 r2 (public domain). Smaller catalog (~50 controls vs SCF's 1469). | 0.5 day | v3: new — smaller surface |
 
-**Total: ~5.0 days** (was 4.5 — added 0.5d for the perf-budget + observability phases). MVP (Phases 0–3) is ~2.75 days.
+**Totals (v3):**
+- **Enterprise MVP (Phases 0–3):** ~2.75 days
+- **Enterprise full (Phases 0–8.5):** ~5.0 days
+- **Multi-domain (Phases 0–11):** ~7.5 days
+
+Domain-stratified means each subsequent phase ships value to a new audience segment without rework of earlier phases.
 
 **Phase ordering rationale (v2):**
 - **Overlap precomp moved earlier** (Phase 8 → Phase 2) — `/compliance/<framework>` shows "Related Frameworks (overlap)" so the table that powers it must exist before that page ships
