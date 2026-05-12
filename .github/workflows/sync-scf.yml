@@ -1,0 +1,61 @@
+name: sync-scf
+
+# Twice-yearly + manual. SCF ships quarterly but our review cadence is 6-monthly.
+on:
+  schedule:
+    - cron: '0 0 10 1,7 *'  # 10 Jan + 10 Jul at 00:00 UTC
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'SCF release tag to ingest (default: latest)'
+        required: false
+        type: string
+      dry_run:
+        description: 'Dry-run (no DB writes)'
+        required: false
+        default: false
+        type: boolean
+      force:
+        description: 'Skip version guard'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sync-scf
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install deps
+        run: npm ci --omit=dev --include=optional || npm ci
+
+      - name: Run sync-scf
+        run: |
+          ARGS=""
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            ARGS="$ARGS --version=${{ github.event.inputs.version }}"
+          fi
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            ARGS="$ARGS --dry-run"
+          fi
+          if [ "${{ github.event.inputs.force }}" = "true" ]; then
+            ARGS="$ARGS --force"
+          fi
+          echo "Args: $ARGS"
+          node --experimental-strip-types scripts/sync-scf.mjs $ARGS

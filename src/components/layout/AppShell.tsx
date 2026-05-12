@@ -188,7 +188,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <li><strong>IOCs</strong> — OTX + ThreatFox + MalwareBazaar, enriched with VirusTotal verdicts and sandbox-derived techniques</li>
                 <li><strong>Detection</strong> — Detection Strategies + Analytics (ATT&CK v19), SigmaHQ rules, Atomic Red Team tests, MITRE Caldera, D3FEND countermeasures</li>
                 <li><strong>Threat actors</strong> — 191 ATT&CK groups + 514 ThaiCERT/ETDA actors with category inference</li>
-                <li><strong>Data model</strong> — 30+ interconnected data sources: ATT&CK STIX, ATLAS, CVElistV5, NVD, CAPEC, CWE, NIST 800-53, NIST CSF v2, CISA KEV, EPSS, OTX, SigmaHQ, Atomic Red Team, D3FEND, VERIS, CTID, GHSA, OSV</li>
+                <li><strong>Compliance</strong> — regulatory + audit frameworks (NIS2, DORA, PCI DSS, NIST 800-53, HIPAA, GDPR, CMMC, ...) bridged to ATT&CK via the Secure Controls Framework (SCF)</li>
+                <li><strong>Data model</strong> — 30+ interconnected data sources: ATT&CK STIX, ATLAS, CVElistV5, NVD, CAPEC, CWE, NIST 800-53, NIST CSF v2, CISA KEV, EPSS, OTX, SigmaHQ, Atomic Red Team, D3FEND, VERIS, CTID, GHSA, OSV, SCF</li>
                 <li><strong>Sector + domain filters</strong> — narrow everything by industry and ATT&CK domain (AND logic)</li>
                 <li><strong>Diamond Model</strong> — Adversary (Threat Actors) | Victim (Sectors) | Infrastructure (Applications) | Capability (Techniques)</li>
               </ul>

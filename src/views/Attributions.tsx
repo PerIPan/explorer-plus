@@ -42,6 +42,7 @@ const ATTRIBUTION_REQUIRED: Source[] = [
   { name: 'GHSA (GitHub Security Advisories)', url: 'https://github.com/advisories', license: 'CC BY 4.0', licenseUrl: 'https://docs.github.com/en/site-policy/github-terms/github-terms-for-additional-products-and-features#advisory-database', blurb: 'OSS package advisories — npm, PyPI, Maven, Go, RubyGems, Composer, Rust, etc.' },
   { name: 'EPSS (FIRST.org)', url: 'https://www.first.org/epss/', license: 'CC BY 4.0', licenseUrl: 'https://www.first.org/epss/data_access', blurb: 'Exploit Prediction Scoring System — daily probability scores per CVE.' },
   { name: 'ThaiCERT / ETDA Actor Encyclopedia', url: 'https://apt.etda.or.th/', license: 'CC BY 4.0', blurb: '500+ external threat-actor profiles.' },
+  { name: 'Secure Controls Framework (SCF)', url: 'https://www.securecontrolsframework.com/', license: 'CC BY 4.0', licenseUrl: 'https://creativecommons.org/licenses/by/4.0/', blurb: 'Catalogue of 1,469 controls cross-mapped to ~250 compliance and regulatory frameworks. Powers /compliance/* — the regulatory lens (NIS2, DORA, PCI DSS, ISO 27002, HIPAA, GDPR, NIST 800-53, CMMC, ...).' },
 ];
 
 const ENRICHMENT_API: Source[] = [

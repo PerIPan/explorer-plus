@@ -112,7 +112,7 @@ const TOOL_DECLARATIONS = [
   },
   {
     name: 'get_technique_intelligence',
-    description: 'Get intelligence for an ATT&CK or ATLAS technique: threat groups, Sigma rules, Atomic tests, D3FEND countermeasures, affected applications, detection strategies.',
+    description: 'Get intelligence for an ATT&CK or ATLAS technique: threat groups, Sigma rules, Atomic tests, D3FEND countermeasures, affected applications, detection strategies. For regulatory/compliance frameworks (NIS2, DORA, PCI DSS, ISO 27002, HIPAA, GDPR, NIST 800-53, CMMC, EU CRA, EU AI Act) referencing this technique, use get_technique_compliance instead — they are NOT returned by this tool.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -511,6 +511,39 @@ const TOOL_DECLARATIONS = [
       required: ['osv_id'],
     },
   },
+  {
+    name: 'list_compliance_frameworks',
+    description: 'List compliance and regulatory frameworks bridged to MITRE ATT&CK via the Secure Controls Framework (SCF). Curated default set is 22 Tier 1+2 frameworks (NIS2, DORA, PCI DSS, NIST 800-53 r5, NIST CSF v2, ISO 27002, HIPAA, GDPR, CMMC 2, EU AI Act, EU CRA, OWASP Top 10, EU DORA, CIS Controls v8.1, NIST 800-171 r3, FedRAMP r5, NERC CIP, IEC 62443, UK Cyber Essentials, AU Essential Eight, NIST AI RMF, MITRE ATT&CK Mitigations). Returns framework_key (stable URL slug for /compliance/<key>), name, version, source_org, upstream_url, region, tier, license, scf_controls (count of SCF controls mapped to this framework), techniques_total (distinct ATT&CK techniques referenced), techniques_filtered (techniques referenced by ≥2 SCF controls — the depth-of-coverage metric). Use this to answer "what compliance frameworks does X cover?" or "which framework has the deepest ATT&CK coverage?".',
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        include_all: { type: "BOOLEAN", description: 'When true returns Tier 3 long-tail (~250 frameworks); default returns curated 22.' },
+      },
+    },
+  },
+  {
+    name: 'get_compliance_framework',
+    description: 'Get full detail for a single compliance framework: metadata, all ATT&CK techniques it references (with the article/section ID that cites each), grouped by article/section. Also returns related frameworks ranked by technique overlap. Use this to answer "what techniques does NIS2 cover?" or "which DORA articles map to T1059?". Returns a 404 when the framework_key is unknown — never invent slugs; if uncertain, call list_compliance_frameworks first to confirm the slug.',
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        framework_key: { type: "STRING", description: 'Stable URL slug — e.g. eu-nis2, eu-dora, pci-dss-4, nist-800-53-r5, hipaa-security-rule, gdpr, eu-cra, eu-ai-act, cmmc-2, owasp-top10-2025, soc-2-tsc, iso-27002-2022, fedramp-r5, nerc-cip-2024, iec-62443, uk-cyber-essentials, au-essential-8, nist-ai-rmf, cis-controls-8-1, nist-800-171-r3' },
+      },
+      required: ['framework_key'],
+    },
+  },
+  {
+    name: 'get_technique_compliance',
+    description: 'Get the compliance-framework chip list for a single ATT&CK technique: which Tier 1+2 frameworks (NIS2, DORA, PCI DSS, ISO, HIPAA, ...) reference this technique, the SCF control count per framework, and the specific framework article/section IDs (ref_ids) that cite it. Use this to answer "if I mitigate T1059, which compliance regimes do I satisfy?". Returns empty `frameworks` array when no SCF mapping exists for the technique — treat that as authoritative "not covered", do NOT infer or hallucinate a mapping.',
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        attack_id: { type: "STRING", description: 'ATT&CK technique ID, e.g. T1059, T1059.001, T1190' },
+        include_all: { type: "BOOLEAN", description: 'Include Tier 3 long-tail frameworks (default false — Tier 1+2 only).' },
+      },
+      required: ['attack_id'],
+    },
+  },
 ];
 
 // Dynamic system instruction -- injects current date so Gemini calculates relative dates correctly
@@ -533,6 +566,7 @@ Tool selection rules:
 - "search_" tools return summaries/lists; "get_" tools return full profiles -- always prefer the full profile for specific entities
 - For OWASP categories: use get_owasp_top10 (optionally filtered by framework: web-2021, ml-2023, llm-2025), then get_owasp_category for details
 - OWASP links: [A01 Broken Access Control](https://mitre-explorer.org/frameworks/owasp/A01)
+- For COMPLIANCE / regulatory questions (NIS2, DORA, PCI DSS, ISO 27002, HIPAA, GDPR, CMMC, FedRAMP, NIST 800-53, NIST CSF v2, EU CRA, EU AI Act, OWASP Top 10, etc.): use list_compliance_frameworks to discover, get_compliance_framework for a single framework's techniques and articles, get_technique_compliance to find which frameworks reference a given T-ID. These are bridged to ATT&CK via the Secure Controls Framework (SCF, CC BY 4.0). Curated default = 22 Tier 1+2 frameworks; pass include_all=true for the ~250 long-tail. Coverage is FINITE — if a framework or framework/technique pair returns no data, state explicitly that the SCF crosswalk does not cover it; never infer a mapping. Compliance link example: [EU NIS2](https://mitre-explorer.org/compliance/eu-nis2).
 - You MUST generate a human-readable summary from the tool results -- never return empty or "No response generated"
 
 When responding:
@@ -891,6 +925,23 @@ async function executeTool(name: string, args: Record<string, unknown>): Promise
       const id = validateOsvId(args.osv_id);
       if (!id) return { error: 'Invalid OSV ID format' };
       return callInternalApi(`/osv/${encodeURIComponent(id)}`);
+    }
+    case 'list_compliance_frameworks': {
+      const params = new URLSearchParams();
+      if (args.include_all === true || args.include_all === 'true') params.set('include_all', '1');
+      return callInternalApi(`/compliance/frameworks?${params}`);
+    }
+    case 'get_compliance_framework': {
+      const key = String(args.framework_key ?? '').trim().toLowerCase();
+      if (!/^[a-z0-9][a-z0-9-]{1,80}$/.test(key)) return { error: 'Invalid framework_key format' };
+      return callInternalApi(`/compliance/frameworks/${encodeURIComponent(key)}`);
+    }
+    case 'get_technique_compliance': {
+      const id = validateAttackId(args.attack_id);
+      if (!id) return { error: 'Invalid ATT&CK ID format' };
+      const params = new URLSearchParams();
+      if (args.include_all === true || args.include_all === 'true') params.set('include_all', '1');
+      return callInternalApi(`/compliance/techniques/${encodeURIComponent(id)}?${params}`);
     }
     default:
       return { error: `Unknown tool: ${name}` };

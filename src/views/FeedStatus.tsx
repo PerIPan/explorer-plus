@@ -25,6 +25,7 @@ const SOURCE_LABELS: Record<string, string> = {
   sigma: 'Sigma Rules',
   atomic: 'Atomic Red Team',
   site_health: 'Site health (VT self-scan)',
+  scf: 'SCF (Secure Controls Framework)',
 };
 
 /**
@@ -51,6 +52,7 @@ const SOURCE_DESCRIPTIONS: Record<string, string> = {
   sigma: 'SigmaHQ detection rules — weekly refresh',
   atomic: 'Atomic Red Team adversary-emulation tests — weekly refresh',
   site_health: 'VirusTotal self-scan of mitre-explorer.org (weekly)',
+  scf: 'Secure Controls Framework XLSX — 1469 controls × ~250 framework mappings, ingested twice a year (Jan/Jul)',
 };
 
 function formatTimeAgo(iso: string): string {
@@ -165,7 +167,7 @@ const ALL_SOURCES = [
   'epss', 'osv', 'csf',
   'ghsa', 'ghsa_delta', 'sigma', 'atomic',
   'matview_refresh', 'd3fend',
-  'site_health',
+  'site_health', 'scf',
 ];
 
 export function FeedStatus() {

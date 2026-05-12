@@ -4,6 +4,7 @@ import { useGroups } from '../hooks/useApi';
 import { PageHeader } from '../components/layout/PageHeader';
 import { EntityLink } from '../components/shared/EntityLink';
 import { DiamondLoader } from '../components/shared/FoldingDiamond';
+import { ComplianceShadowSection } from '../components/shared/ComplianceShadowSection';
 
 export function SectorDetail() {
   const { sectorName } = useParams<{ sectorName: string }>();
@@ -36,6 +37,14 @@ export function SectorDetail() {
           { label: decodedName },
         ]}
       />
+
+      {decodedName && (
+        <ComplianceShadowSection
+          kind="sectors"
+          entityId={decodedName}
+          title="Regulatory obligations"
+        />
+      )}
 
       <div className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg p-5">
         <h3 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-4">

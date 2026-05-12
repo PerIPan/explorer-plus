@@ -7,6 +7,7 @@ import { Badge } from '../components/shared/Badge';
 import { DeprecatedBadge } from '../components/shared/DeprecatedBadge';
 import { sanitize, sanitizeMarkdown } from '../lib/sanitize';
 import { DiamondLoader } from '../components/shared/FoldingDiamond';
+import { ComplianceShadowSection } from '../components/shared/ComplianceShadowSection';
 
 export function SoftwareDetail() {
   const { attackId } = useParams<{ attackId: string }>();
@@ -112,6 +113,8 @@ export function SoftwareDetail() {
           View on MITRE ATT&CK
         </a>
       )}
+
+      {data.attackId && <ComplianceShadowSection kind="software" entityId={data.attackId} />}
 
       <div className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg p-5">
         <div className="flex items-center gap-4 mb-3">

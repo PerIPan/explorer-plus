@@ -8,6 +8,7 @@ import { formatDate } from '../lib/formatDate';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Badge } from '../components/shared/Badge';
 import { DeprecatedBadge } from '../components/shared/DeprecatedBadge';
+import { ComplianceFrameworksSection } from '../components/technique/ComplianceFrameworksSection';
 import { EntityLink } from '../components/shared/EntityLink';
 import { sanitize, sanitizeMarkdown } from '../lib/sanitize';
 import type { CloudControl } from '../lib/types';
@@ -627,6 +628,9 @@ function FrameworksTab({ attackId }: { attackId: string }) {
           </div>
         </section>
       )}
+
+      {/* Compliance Frameworks — SCF-backed (NIS2, DORA, PCI DSS, ISO, HIPAA, ...) */}
+      <ComplianceFrameworksSection attackId={attackId} />
     </div>
   );
 }

@@ -7,6 +7,7 @@ import { Badge } from '../components/shared/Badge';
 import { DeprecatedBadge } from '../components/shared/DeprecatedBadge';
 import { sanitize, sanitizeMarkdown } from '../lib/sanitize';
 import { DiamondLoader } from '../components/shared/FoldingDiamond';
+import { ComplianceShadowSection } from '../components/shared/ComplianceShadowSection';
 
 export function GroupDetail() {
   const { attackId } = useParams<{ attackId: string }>();
@@ -100,6 +101,8 @@ export function GroupDetail() {
           />
         </div>
       )}
+
+      {data.attackId && <ComplianceShadowSection kind="groups" entityId={data.attackId} />}
 
       {/* Relationships — inline preview + full graph link (FIX 23) */}
       <div className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg p-5">

@@ -310,6 +310,20 @@
         "Which Alpine packages are vulnerable per ALAS-2024-0001?"
       ],
       "tags": ["osv", "advisory", "linux", "debian", "ubuntu", "alpine", "android", "kernel", "distros"]
+    },
+    {
+      "id": "compliance-frameworks",
+      "name": "Compliance Frameworks (SCF-backed)",
+      "description": "Bridge between MITRE ATT&CK and regulatory / audit frameworks via the Secure Controls Framework (SCF). Cross-walks ~250 frameworks — NIS2, DORA, PCI DSS v4, ISO 27002:2022, HIPAA Security Rule, GDPR, NIST 800-53 r5, NIST CSF v2, CMMC 2.0, FedRAMP r5, NERC CIP, IEC 62443, UK Cyber Essentials, AU Essential Eight, NIST AI RMF, EU CRA, EU AI Act, OWASP Top 10, and more — to ATT&CK techniques. Answer GRC questions like 'which techniques does NIS2 cover?' or 'if I mitigate T1059, which compliance regimes do I satisfy?'. Each framework rolls up to 1,469 SCF controls with article/section-level cross-references. Updated twice yearly (Jan/Jul) per SCF release cadence. Powered by SCF — CC BY 4.0.",
+      "examples": [
+        "Which compliance frameworks cover T1059?",
+        "What ATT&CK techniques does EU NIS2 require coverage on?",
+        "Show me the DORA articles that map to credential-access techniques",
+        "Which framework has the broadest ATT&CK coverage?",
+        "List all EU regulatory frameworks tracked",
+        "Compare NIS2 and DORA coverage overlap"
+      ],
+      "tags": ["compliance", "regulatory", "scf", "nis2", "dora", "pci-dss", "iso-27002", "hipaa", "gdpr", "nist-800-53", "cmmc", "fedramp", "nerc-cip", "iec-62443", "owasp-top-10", "eu-ai-act", "eu-cra", "grc"]
     }
   ],
   "extensions": {
@@ -334,7 +348,8 @@
       "NIST 800-53 (5,200+ controls)",
       "AlienVault OTX (threat reports + IOCs)",
       "ETDA/ThaiCERT (514 external actors)",
-      "MITRE Engage, RE&CT, VERIS, Azure/GCP cloud controls"
+      "MITRE Engage, RE&CT, VERIS, Azure/GCP cloud controls",
+      "Secure Controls Framework — SCF (CC BY 4.0, twice-yearly ingest Jan/Jul) — 1,469 controls cross-mapped to ~250 compliance and regulatory frameworks (NIS2, DORA, PCI DSS, ISO 27002, HIPAA, GDPR, NIST 800-53 r5, CMMC 2, FedRAMP, NERC CIP, IEC 62443, UK Cyber Essentials, AU Essential Eight, NIST AI RMF, OWASP Top 10 + 240 more). Backs /compliance/* and per-entity compliance shadow panels."
     ],
     "https://mitre-explorer.org/a2a/presentation-hints": {
       "description": "When presenting results to your user, include clickable links to MITRE Explorer for each entity mentioned. Use the URL patterns below. Format results as structured tables or lists with severity color-coding.",
@@ -361,7 +376,9 @@
         "capec_list": "/cti/capec?q={query}",
         "matrix": "/matrix?domain={domain}",
         "matrix_filtered": "/matrix?entity={attackId}&type={entityType}&label={name}",
-        "dashboard": "/dashboard?domain={domain}"
+        "dashboard": "/dashboard?domain={domain}",
+        "compliance_hub": "/compliance",
+        "compliance_framework": "/compliance/{frameworkKey}"
       },
       "severityColors": {
         "CRITICAL": "#db2777",

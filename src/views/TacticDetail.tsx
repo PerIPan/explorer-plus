@@ -7,6 +7,7 @@ import { PageHeader } from '../components/layout/PageHeader';
 import { EntityLink } from '../components/shared/EntityLink';
 import { sanitize, sanitizeMarkdown } from '../lib/sanitize';
 import { DiamondLoader } from '../components/shared/FoldingDiamond';
+import { ComplianceEmphasisSection } from '../components/tactic/ComplianceEmphasisSection';
 
 export function TacticDetail() {
   const { attackId } = useParams<{ attackId: string }>();
@@ -70,6 +71,8 @@ export function TacticDetail() {
           </p>
         </div>
       )}
+
+      {data.attackId && <ComplianceEmphasisSection attackId={data.attackId} />}
 
       {/* Techniques list with search filter */}
       <div className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg p-5">

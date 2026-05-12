@@ -26,6 +26,7 @@ interface NavSection {
 const topNav: NavItem[] = [
   { path: '/', label: '360 Views', tooltip: 'explore entity connections — graph and dedicated map views for every entity type' },
   { path: '/matrix', label: 'Matrix', tooltip: 'att&ck technique matrix heatmap — tactics vs techniques' },
+  { path: '/compliance', label: 'Compliance', tooltip: 'regulatory and audit frameworks (NIS2, DORA, PCI DSS, NIST 800-53, HIPAA, GDPR, CMMC, ...) bridged to ATT&CK via the Secure Controls Framework (SCF)' },
   { path: '/dashboard', label: 'Overview', tooltip: 'summary stats, charts, and top threat groups' },
   { path: '/cti/feed-status', label: 'Feed Status', tooltip: 'CTI feed ingestion health and manual sync controls' },
 ];
