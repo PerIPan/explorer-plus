@@ -142,7 +142,7 @@ export function ComplianceHub() {
     <div className="p-6 max-w-6xl">
       <PageHeader
         title="Compliance"
-        subtitle="Regulatory and audit frameworks bridged to MITRE ATT&CK via the Secure Controls Framework (SCF)."
+        subtitle="Regulatory and audit frameworks bridged to MITRE ATT&CK Enterprise via the Secure Controls Framework (SCF). ATLAS, ICS, and Mobile have their own compliance ecosystems and are not covered here."
       />
 
       {/* Meta strip */}
