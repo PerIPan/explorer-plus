@@ -78,8 +78,7 @@ export function ComplianceFrameworkDetail({ frameworkKey }: { frameworkKey: stri
       .then((d: ApiPayload) => {
         if (ctrl.signal.aborted) return;
         setData(d);
-        // Pre-open the first 3 sections.
-        setOpenSections(new Set(d.sections.slice(0, 3).map((s) => s.section)));
+        // All sections start closed — let the user pick what to expand.
       })
       .catch((e) => { if (!ctrl.signal.aborted) setError(e.message); });
     return () => ctrl.abort();
