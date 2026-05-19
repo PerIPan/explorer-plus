@@ -197,12 +197,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <span className="text-[var(--accent-teal)]">contact @ mitre-explorer.org</span>
                 {' · '}<a href="/about/attributions" className="text-[var(--accent-teal)] hover:underline">Data attributions</a>
                 {' — '}Not affiliated with or endorsed by MITRE Corporation.
-                {/* GitHub link hidden for now — kept for re-enable: */}
-                {false && (
-                  <>
-                    {' | '}<a href="https://github.com/PerIPan/explorer-plus" target="_blank" rel="noopener noreferrer" className="text-[var(--accent-blue)] hover:underline">GitHub</a>
-                  </>
-                )}
               </p>
             </div>
           </div>
