@@ -38,7 +38,7 @@ export function SectorsList() {
         columns={columns}
         data={data?.data ?? []}
         loading={isLoading}
-        onRowClick={(row) => router.push(`/sectors/${row.slug ?? encodeURIComponent(row.name)}`)}
+        onRowClick={(row) => router.push(`/?entity=${encodeURIComponent(row.slug ?? row.name)}&tab=sector-map`)}
         rowKey={(row) => row.name}
         emptyMessage="No sectors found."
       />

@@ -27,16 +27,13 @@ const topNav: NavItem[] = [
   { path: '/', label: '360 Views', tooltip: 'explore entity connections — graph and dedicated map views for every entity type' },
   { path: '/matrix', label: 'Matrix', tooltip: 'att&ck technique matrix heatmap — tactics vs techniques' },
   { path: '/dashboard', label: 'Overview', tooltip: 'summary stats, charts, and top threat groups' },
+  { path: '/sectors', label: 'Sectors', tooltip: 'industry sectors targeted by threat groups — click any sector for its 360 view' },
   { path: '/cti/feed-status', label: 'Feed Status', tooltip: 'CTI feed ingestion health and manual sync controls' },
 ];
 
-const threatActorsNav: NavItem[] = [
+const attackNav: NavItem[] = [
   { path: '/groups', label: 'Groups', tooltip: 'tracked threat actor groups (APT29, Lazarus, etc.)' },
   { path: '/campaigns', label: 'Campaigns', tooltip: 'named intrusion campaigns with timelines' },
-  { path: '/sectors', label: 'Sectors', tooltip: 'industry sectors targeted by threat groups' },
-];
-
-const attackNav: NavItem[] = [
   { path: '/tactics', label: 'Tactics', tooltip: 'kill chain phases: recon → impact' },
   { path: '/techniques', label: 'Techniques', tooltip: 'attack techniques and sub-techniques used by adversaries' },
   { path: '/software', label: 'Malware', tooltip: 'attacker view — malware and tools used by threat actors (vs Applications which are victim products)' },
@@ -236,15 +233,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       {/* Separator */}
       <div className="mx-4 border-t border-[var(--border-color)]" />
 
-      {/* Threat Actors Section */}
-      <div className="px-2 py-3">
-        <CollapsibleNavSection label="Threat Actors" items={threatActorsNav} />
-      </div>
-
-      {/* Separator */}
-      <div className="mx-4 border-t border-[var(--border-color)]" />
-
-      {/* ATT&CK Section — merged offensive + defensive ATT&CK taxonomy */}
+      {/* ATT&CK Section — groups + campaigns + offensive/defensive taxonomy */}
       <div className="px-2 py-3">
         <CollapsibleNavSection label="ATT&CK" items={attackNav} />
       </div>
