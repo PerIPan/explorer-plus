@@ -147,7 +147,7 @@ async function resolveLatestRelease() {
   const url = `https://api.github.com/repos/${SCF_REPO}/releases/latest`;
   const resp = await fetch(url, {
     signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-    headers: { 'User-Agent': 'mitre-explorer-plus-sync-scf' },
+    headers: { 'User-Agent': 'explorer-plus-sync-scf' },
   });
   if (!resp.ok) throw new Error(`GitHub releases API ${resp.status}`);
   const data = await resp.json();

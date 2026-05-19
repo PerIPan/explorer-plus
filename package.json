@@ -20,16 +20,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/PerIPan/mitre-attack-explorer.git"
+    "url": "git+https://github.com/PerIPan/explorer-plus.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "module",
   "bugs": {
-    "url": "https://github.com/PerIPan/mitre-attack-explorer/issues"
+    "url": "https://github.com/PerIPan/explorer-plus/issues"
   },
-  "homepage": "https://github.com/PerIPan/mitre-attack-explorer#readme",
+  "homepage": "https://github.com/PerIPan/explorer-plus#readme",
   "dependencies": {
     "@google/genai": "^1.47.0",
     "@tailwindcss/postcss": "^4.2.2",

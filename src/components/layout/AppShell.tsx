@@ -200,7 +200,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 {/* GitHub link hidden for now — kept for re-enable: */}
                 {false && (
                   <>
-                    {' | '}<a href="https://github.com/PerIPan/mitre-explorer-plus" target="_blank" rel="noopener noreferrer" className="text-[var(--accent-blue)] hover:underline">GitHub</a>
+                    {' | '}<a href="https://github.com/PerIPan/explorer-plus" target="_blank" rel="noopener noreferrer" className="text-[var(--accent-blue)] hover:underline">GitHub</a>
                   </>
                 )}
               </p>
