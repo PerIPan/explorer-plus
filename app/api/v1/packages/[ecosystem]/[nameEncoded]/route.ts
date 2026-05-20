@@ -149,28 +149,18 @@ export async function GET(
  *  the same component — distinguished by source='OSV'. ghsaId carries the
  *  OSV native id (DSA-/USN-/ALAS-/etc.). */
 async function handleOsvPackage(rawEco: string, packageName: string) {
-  // Try ecosystem as-given first, then case-preserved alternatives.
-  const ecoCandidates = Array.from(new Set([
-    rawEco,
-    rawEco.charAt(0).toUpperCase() + rawEco.slice(1),
-    rawEco.toUpperCase(),
-    rawEco.toLowerCase(),
-  ]));
-
-  let resolvedEco: string | null = null;
-  for (const candidate of ecoCandidates) {
-    const exists = await query<{ n: string }>(
-      `SELECT COUNT(*)::text AS n FROM osv_affected WHERE ecosystem=$1 AND package_name=$2 LIMIT 1`,
-      [candidate, packageName],
-    );
-    if (parseInt(exists.rows[0].n, 10) > 0) {
-      resolvedEco = candidate;
-      break;
-    }
-  }
-  if (!resolvedEco) {
+  // Single case-insensitive lookup — no N+1 loop. Returns the stored
+  // ecosystem value (case preserved) so subsequent queries use the same form.
+  const resolve = await query<{ ecosystem: string }>(
+    `SELECT ecosystem FROM osv_affected
+     WHERE LOWER(ecosystem) = LOWER($1) AND package_name = $2
+     LIMIT 1`,
+    [rawEco, packageName],
+  );
+  if (resolve.rows.length === 0) {
     return withCors(errorResponse(404, 'Package not found', 'NOT_FOUND'));
   }
+  const resolvedEco = resolve.rows[0].ecosystem;
 
   const advRes = await query<{
     osvId: string;
@@ -193,7 +183,9 @@ async function handleOsvPackage(rawEco: string, packageName: string) {
        NULL::text  AS "fixedVersion"
      FROM osv_affected oa
      JOIN osv_advisories a ON a.osv_id = oa.osv_id AND a.ecosystem = oa.ecosystem
-     WHERE oa.ecosystem = $1 AND oa.package_name = $2
+     WHERE oa.ecosystem = $1
+       AND oa.package_ecosystem = oa.ecosystem
+       AND oa.package_name = $2
      ORDER BY a.published DESC NULLS LAST, a.osv_id DESC
      LIMIT 500`,
     [resolvedEco, packageName],

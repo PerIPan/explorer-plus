@@ -153,8 +153,8 @@ CREATE TABLE IF NOT EXISTS scf_technique_heat (
   group_count  INTEGER NOT NULL DEFAULT 0,
   updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-CREATE INDEX IF NOT EXISTS idx_scf_technique_heat_kev  ON scf_technique_heat(has_kev) WHERE has_kev;
-CREATE INDEX IF NOT EXISTS idx_scf_technique_heat_epss ON scf_technique_heat(max_epss DESC NULLS LAST);
+-- No secondary indexes — scf_technique_heat is ~700 rows (one per technique).
+-- PG planner will always seq-scan; B-tree indexes would just be write overhead.
 
 -- 9. Framework coverage summary — feeds /compliance hub. Pre-computed at end
 --    of each ingest. PK lookup, <10ms. 250 rows max.
