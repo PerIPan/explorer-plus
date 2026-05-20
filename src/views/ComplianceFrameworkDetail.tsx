@@ -354,56 +354,62 @@ function RefItem({ refData }: { refData: { ref_id: string; techniques: Technique
   );
 }
 
-/** A single tactic block: header chip + nested parent/sub-technique chips. */
+/** A single tactic block: collapsible header + nested parent/sub-technique chips.
+ *  Closed by default — sections are still dense even after grouping. */
 function TacticGroup({ tactic, techniques }: { tactic: string; techniques: TechniqueRef[] }) {
-  // Group sub-techniques under their parent attack_id. A row is considered a
-  // "parent header" when another row has parent_attack_id == its attack_id.
-  // A standalone (no subs) renders as its own chip.
-  const byParent = new Map<string, TechniqueRef[]>(); // parent attack_id → subs
+  const [open, setOpen] = useState(false);
+  const byParent = new Map<string, TechniqueRef[]>();
   const standalone: TechniqueRef[] = [];
-  const parentInList = new Map<string, TechniqueRef>(); // explicit parent entry in same group
+  const parentInList = new Map<string, TechniqueRef>();
 
   for (const t of techniques) {
     if (t.parent_attack_id) {
       if (!byParent.has(t.parent_attack_id)) byParent.set(t.parent_attack_id, []);
       byParent.get(t.parent_attack_id)!.push(t);
     } else {
-      // Not a sub-technique; either standalone or possibly a parent the list explicitly includes.
       parentInList.set(t.attack_id, t);
     }
   }
   for (const [parentId, parentT] of parentInList.entries()) {
-    if (!byParent.has(parentId)) {
-      standalone.push(parentT);
-    }
+    if (!byParent.has(parentId)) standalone.push(parentT);
   }
 
   return (
     <div>
-      <div className="text-[10px] uppercase tracking-wider text-[var(--accent-teal)] font-semibold mb-1">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-[var(--accent-teal)] font-semibold mb-1 hover:text-[var(--accent-teal-light)] transition-colors"
+      >
+        <svg
+          className={`w-2.5 h-2.5 transition-transform ${open ? 'rotate-90' : ''}`}
+          fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden="true"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+        </svg>
         {tactic}
-        <span className="text-[var(--text-secondary)] font-normal ml-1.5">
-          ({techniques.length})
-        </span>
-      </div>
-      <div className="flex flex-wrap gap-x-3 gap-y-1.5 pl-1">
-        {[...byParent.entries()]
-          .sort((a, b) => a[0].localeCompare(b[0]))
-          .map(([parentId, subs]) => (
-            <ParentBlock
-              key={parentId}
-              parentId={parentId}
-              parent={parentInList.get(parentId) ?? null}
-              parentName={subs.find((s) => s.parent_name)?.parent_name ?? null}
-              subs={subs.sort((a, b) => a.attack_id.localeCompare(b.attack_id))}
-            />
-          ))}
-        {standalone
-          .sort((a, b) => a.attack_id.localeCompare(b.attack_id))
-          .map((t) => (
-            <TechniqueChip key={t.attack_id} t={t} />
-          ))}
-      </div>
+        <span className="text-[var(--text-secondary)] font-normal">({techniques.length})</span>
+      </button>
+      {open && (
+        <div className="flex flex-wrap gap-x-3 gap-y-1.5 pl-4">
+          {[...byParent.entries()]
+            .sort((a, b) => a[0].localeCompare(b[0]))
+            .map(([parentId, subs]) => (
+              <ParentBlock
+                key={parentId}
+                parentId={parentId}
+                parent={parentInList.get(parentId) ?? null}
+                parentName={subs.find((s) => s.parent_name)?.parent_name ?? null}
+                subs={subs.sort((a, b) => a.attack_id.localeCompare(b.attack_id))}
+              />
+            ))}
+          {standalone
+            .sort((a, b) => a.attack_id.localeCompare(b.attack_id))
+            .map((t) => (
+              <TechniqueChip key={t.attack_id} t={t} />
+            ))}
+        </div>
+      )}
     </div>
   );
 }
