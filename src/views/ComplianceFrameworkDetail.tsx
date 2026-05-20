@@ -605,7 +605,7 @@ function TacticGroup({
         <TacticHeatSummary techniques={techniques} />
       </button>
       {open && (
-        <div className="flex flex-wrap gap-x-3 gap-y-1.5 pl-4 pb-2">
+        <div className="pl-4 pb-2 pr-2 space-y-1.5">
           {[...byParent.entries()]
             .sort((a, b) => a[0].localeCompare(b[0]))
             .map(([parentId, subs]) => (
@@ -620,7 +620,7 @@ function TacticGroup({
           {standalone
             .sort((a, b) => a.attack_id.localeCompare(b.attack_id))
             .map((t) => (
-              <TechniqueChip key={t.attack_id} t={t} />
+              <TechniqueChip key={t.attack_id} t={t} rowLayout />
             ))}
         </div>
       )}
