@@ -163,18 +163,24 @@ export async function GET(
 
   const recentRes = isGhsaEco
     ? await query<RecentRow>(
-        `SELECT DISTINCT
-                g.ghsa_id         AS "advisoryId",
-                'GHSA'::text      AS source,
-                g.cve_id          AS "cveId",
-                g.summary         AS summary,
-                g.severity        AS severity,
-                g.cvss_score::text AS "cvssScore",
-                g.published_at    AS "publishedAt"
+        // Use EXISTS instead of DISTINCT + JOIN. Multiple packages per advisory
+        // (within the same ecosystem) would otherwise produce duplicate rows;
+        // PG also rejects DISTINCT + ORDER BY <CASE expression> (42P10).
+        `SELECT
+            g.ghsa_id         AS "advisoryId",
+            'GHSA'::text      AS source,
+            g.cve_id          AS "cveId",
+            g.summary         AS summary,
+            g.severity        AS severity,
+            g.cvss_score::text AS "cvssScore",
+            g.published_at    AS "publishedAt"
          FROM ghsa_advisories g
-         JOIN ghsa_packages gp ON gp.ghsa_id = g.ghsa_id
-         JOIN packages p ON p.id = gp.package_id
-         WHERE g.withdrawn_at IS NULL AND LOWER(p.ecosystem) = $1
+         WHERE g.withdrawn_at IS NULL
+           AND EXISTS (
+             SELECT 1 FROM ghsa_packages gp
+             JOIN packages p ON p.id = gp.package_id
+             WHERE gp.ghsa_id = g.ghsa_id AND LOWER(p.ecosystem) = $1
+           )
          ORDER BY
            CASE g.severity WHEN 'CRITICAL' THEN 4 WHEN 'HIGH' THEN 3
                            WHEN 'MEDIUM' THEN 2 WHEN 'LOW' THEN 1 ELSE 0 END DESC,

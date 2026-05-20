@@ -13,8 +13,11 @@ export async function GET(
 ) {
   const { ecosystem: rawEco, nameEncoded: rawName } = await params;
 
-  const ecosystem = rawEco.toLowerCase();
-  if (!ECOSYSTEM_RE.test(ecosystem)) {
+  // Ecosystems can be either lowercase (GHSA-tracked: npm, pypi, …) or
+  // case-preserved (OSV-tracked: Ubuntu, Debian, Alpine, …). Validate the
+  // lowercased form for the regex check but preserve original case for OSV lookup.
+  const ecosystemLc = rawEco.toLowerCase();
+  if (!ECOSYSTEM_RE.test(ecosystemLc)) {
     return withCors(errorResponse(400, 'Invalid ecosystem', 'VALIDATION_ERROR'));
   }
 
@@ -41,11 +44,14 @@ export async function GET(
      FROM packages
      WHERE ecosystem = $1 AND package_name = $2
      LIMIT 1`,
-    [ecosystem, packageName],
+    [ecosystemLc, packageName],
   );
 
+  // Not in GHSA packages — fall back to OSV-tracked packages (Ubuntu/Debian/
+  // Alpine/Android/Rocky/Alma/SUSE/etc.). osv_affected stores ecosystem with
+  // case preserved as the user provided in the URL.
   if (pkgResult.rows.length === 0) {
-    return withCors(errorResponse(404, 'Package not found', 'NOT_FOUND'));
+    return handleOsvPackage(rawEco, packageName);
   }
 
   const pkg = pkgResult.rows[0];
@@ -127,10 +133,105 @@ export async function GET(
         ecosystem: pkg.ecosystem,
         packageName: pkg.packageName,
         purl: pkg.purl,
+        source: 'GHSA',
         advisoryCount: advisories.length,
         severityCounts,
         advisories,
         linkedTechniques: techResult.rows,
+      },
+      3600,
+    ),
+  );
+}
+
+/** OSV-sourced package detail (Ubuntu, Debian, Alpine, Android, etc.).
+ *  Shape kept compatible with the GHSA path so PackageDetail.tsx renders
+ *  the same component — distinguished by source='OSV'. ghsaId carries the
+ *  OSV native id (DSA-/USN-/ALAS-/etc.). */
+async function handleOsvPackage(rawEco: string, packageName: string) {
+  // Try ecosystem as-given first, then case-preserved alternatives.
+  const ecoCandidates = Array.from(new Set([
+    rawEco,
+    rawEco.charAt(0).toUpperCase() + rawEco.slice(1),
+    rawEco.toUpperCase(),
+    rawEco.toLowerCase(),
+  ]));
+
+  let resolvedEco: string | null = null;
+  for (const candidate of ecoCandidates) {
+    const exists = await query<{ n: string }>(
+      `SELECT COUNT(*)::text AS n FROM osv_affected WHERE ecosystem=$1 AND package_name=$2 LIMIT 1`,
+      [candidate, packageName],
+    );
+    if (parseInt(exists.rows[0].n, 10) > 0) {
+      resolvedEco = candidate;
+      break;
+    }
+  }
+  if (!resolvedEco) {
+    return withCors(errorResponse(404, 'Package not found', 'NOT_FOUND'));
+  }
+
+  const advRes = await query<{
+    osvId: string;
+    cveId: string | null;
+    summary: string | null;
+    severity: string | null;
+    cvssScore: string | null;
+    publishedAt: string;
+    vulnerableRange: string | null;
+    fixedVersion: string | null;
+  }>(
+    `SELECT
+       a.osv_id    AS "osvId",
+       (SELECT alias FROM unnest(a.aliases) AS alias WHERE alias LIKE 'CVE-%' LIMIT 1) AS "cveId",
+       a.summary   AS summary,
+       a.severity  AS severity,
+       a.cvss_score::text AS "cvssScore",
+       a.published AS "publishedAt",
+       NULL::text  AS "vulnerableRange",
+       NULL::text  AS "fixedVersion"
+     FROM osv_affected oa
+     JOIN osv_advisories a ON a.osv_id = oa.osv_id AND a.ecosystem = oa.ecosystem
+     WHERE oa.ecosystem = $1 AND oa.package_name = $2
+     ORDER BY a.published DESC NULLS LAST, a.osv_id DESC
+     LIMIT 500`,
+    [resolvedEco, packageName],
+  );
+
+  const severityCounts: Record<string, number> = {};
+  for (const adv of advRes.rows) {
+    if (adv.severity) severityCounts[adv.severity] = (severityCounts[adv.severity] ?? 0) + 1;
+  }
+
+  const advisories = advRes.rows.map((r) => ({
+    // ghsaId field reused so PackageDetail.tsx can render OSV ids the same way.
+    ghsaId: r.osvId,
+    cveId: r.cveId,
+    summary: r.summary,
+    severity: r.severity,
+    cvssScore: r.cvssScore ? parseFloat(r.cvssScore) : null,
+    publishedAt: r.publishedAt,
+    withdrawnAt: null,
+    packageCount: 1,
+    ecosystems: [resolvedEco],
+    techniqueCount: 0,
+    vulnerableRange: r.vulnerableRange,
+    fixedVersion: r.fixedVersion,
+  }));
+
+  return withCors(
+    jsonResponse(
+      {
+        packageId: `osv:${resolvedEco}:${packageName}`,
+        ecosystem: resolvedEco,
+        packageName,
+        purl: null,
+        source: 'OSV',
+        advisoryCount: advisories.length,
+        severityCounts,
+        advisories,
+        linkedTechniques: [],
       },
       3600,
     ),

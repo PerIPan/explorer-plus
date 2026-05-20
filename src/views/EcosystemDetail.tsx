@@ -202,7 +202,7 @@ export function EcosystemDetail() {
             <ul className="divide-y divide-[var(--border-color)]">
               {recentAdvisories.map((a) => (
                 <li key={`${a.source}:${a.advisoryId}`} className="px-3 py-2 bg-[var(--surface-card)]">
-                  <div className="grid grid-cols-[auto_auto_1fr_auto] items-center gap-3 text-xs">
+                  <div className="grid grid-cols-[auto_auto_auto_1fr_auto] items-center gap-3 text-xs">
                     <SeverityBadge severity={a.severity} />
                     <span
                       className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold border ${
@@ -220,15 +220,20 @@ export function EcosystemDetail() {
                       {a.advisoryId}
                       {a.cveId && <span className="ml-2 text-[var(--accent-pink)]">{a.cveId}</span>}
                     </Link>
-                    <span className="text-[10px] text-[var(--text-secondary)]">
+                    {a.summary ? (
+                      <span
+                        className="text-[11px] text-[var(--text-secondary)] truncate"
+                        title={a.summary}
+                      >
+                        {a.summary}
+                      </span>
+                    ) : (
+                      <span />
+                    )}
+                    <span className="text-[10px] text-[var(--text-secondary)] shrink-0">
                       {a.publishedAt ? formatDate(a.publishedAt) : '—'}
                     </span>
                   </div>
-                  {a.summary && (
-                    <div className="text-[11px] text-[var(--text-secondary)] mt-1 ml-20 truncate">
-                      {a.summary}
-                    </div>
-                  )}
                 </li>
               ))}
             </ul>
