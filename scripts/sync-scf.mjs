@@ -597,22 +597,27 @@ async function rebuildTechniqueHeat(client, dryRun) {
     await client.query(`TRUNCATE scf_technique_heat`);
     const r = await client.query(`
       WITH cve_tech AS (
-        -- Join via cve_weaknesses (all CWEs per CVE) so we don't under-count
-        -- against cve_details.cwe_id (primary CWE only). Also picks up
-        -- CTID-direct synthetic CWE mappings inserted by sync-ctid-cve-mappings.mjs.
+        -- Window CVE counts to current + previous calendar year (rolling).
+        -- KEV / EPSS are evaluated across the full record (current state),
+        -- but the count itself is the recent-activity signal.
         SELECT cm.attack_technique_id AS attack_id,
-               COUNT(DISTINCT cw.cve_id) AS cves,
+               COUNT(DISTINCT cw.cve_id) FILTER (
+                 WHERE c.published_at >= date_trunc('year', NOW()) - INTERVAL '1 year'
+               ) AS cves,
                BOOL_OR(c.is_kev) AS has_kev,
                MAX(c.epss_score) AS max_epss
         FROM cve_weaknesses cw
-        JOIN cve_details   c  ON c.cve_id = cw.cve_id
+        JOIN cve_details    c  ON c.cve_id = cw.cve_id
         JOIN capec_mappings cm ON cm.cwe_id = cw.cwe_id AND cm.attack_technique_id IS NOT NULL
         GROUP BY cm.attack_technique_id
       ),
       ghsa_tech AS (
-        SELECT cm.attack_technique_id AS attack_id, COUNT(DISTINCT gw.ghsa_id) AS ghsa
+        SELECT cm.attack_technique_id AS attack_id,
+               COUNT(DISTINCT gw.ghsa_id) AS ghsa
         FROM ghsa_weaknesses gw
+        JOIN ghsa_advisories g ON g.ghsa_id = gw.ghsa_id
         JOIN capec_mappings cm ON cm.cwe_id = gw.cwe_id AND cm.attack_technique_id IS NOT NULL
+        WHERE g.published_at >= date_trunc('year', NOW()) - INTERVAL '1 year'
         GROUP BY cm.attack_technique_id
       ),
       group_tech AS (
