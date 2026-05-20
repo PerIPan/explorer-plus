@@ -12,7 +12,33 @@ interface TechniqueRef {
   attack_id: string;
   technique_name: string | null;
   tactic: string | null;
+  parent_attack_id: string | null;
+  parent_name: string | null;
   scf_id: string;
+}
+
+// Enterprise ATT&CK kill-chain order. Anything not in this list (ICS/Mobile
+// tactics, or null when technique→tactic join missed) sorts at the end.
+const TACTIC_ORDER: Record<string, number> = {
+  'Reconnaissance':        1,
+  'Resource Development':  2,
+  'Initial Access':        3,
+  'Execution':             4,
+  'Persistence':           5,
+  'Privilege Escalation':  6,
+  'Defense Evasion':       7,
+  'Credential Access':     8,
+  'Discovery':             9,
+  'Lateral Movement':     10,
+  'Collection':           11,
+  'Command and Control':  12,
+  'Exfiltration':         13,
+  'Impact':               14,
+};
+
+function tacticOrder(name: string | null): number {
+  if (!name) return 99;
+  return TACTIC_ORDER[name] ?? 50;
 }
 
 interface SectionData {
@@ -294,21 +320,134 @@ export function ComplianceFrameworkDetail({ frameworkKey }: { frameworkKey: stri
   );
 }
 
+/** Render the techniques under a ref_id, grouped by tactic (kill-chain order)
+ *  with sub-techniques nested under their parent. */
 function RefItem({ refData }: { refData: { ref_id: string; techniques: TechniqueRef[] } }) {
+  // Dedup by attack_id first.
   const uniqTechs = new Map<string, TechniqueRef>();
   for (const t of refData.techniques) if (!uniqTechs.has(t.attack_id)) uniqTechs.set(t.attack_id, t);
+  const techs = [...uniqTechs.values()];
+
+  // Group by tactic.
+  const byTactic = new Map<string, TechniqueRef[]>();
+  for (const t of techs) {
+    const k = t.tactic ?? '(unspecified)';
+    if (!byTactic.has(k)) byTactic.set(k, []);
+    byTactic.get(k)!.push(t);
+  }
+  const tacticEntries = [...byTactic.entries()].sort(
+    (a, b) => tacticOrder(a[0] === '(unspecified)' ? null : a[0]) - tacticOrder(b[0] === '(unspecified)' ? null : b[0]),
+  );
 
   return (
     <li className="px-3 py-2">
-      <div className="text-[11px] font-mono text-[var(--text-secondary)] mb-1">{refData.ref_id}</div>
-      <div className="flex flex-wrap gap-x-3 gap-y-1">
-        {[...uniqTechs.values()].map((t) => (
-          <Link key={t.attack_id} href={`/cti/techniques/${t.attack_id}`} className="text-xs text-[var(--accent-teal)] hover:underline truncate max-w-[18rem]">
-            <span className="font-mono">{t.attack_id}</span>
-            {t.technique_name && <span className="text-[var(--text-secondary)] ml-1">{t.technique_name}</span>}
-          </Link>
+      <div className="flex items-baseline gap-2 mb-1.5">
+        <span className="text-[11px] font-mono text-[var(--text-secondary)]">{refData.ref_id}</span>
+        <span className="text-[10px] text-[var(--text-secondary)]">{techs.length} techniques</span>
+      </div>
+      <div className="space-y-2">
+        {tacticEntries.map(([tactic, techsInTactic]) => (
+          <TacticGroup key={tactic} tactic={tactic} techniques={techsInTactic} />
         ))}
       </div>
     </li>
+  );
+}
+
+/** A single tactic block: header chip + nested parent/sub-technique chips. */
+function TacticGroup({ tactic, techniques }: { tactic: string; techniques: TechniqueRef[] }) {
+  // Group sub-techniques under their parent attack_id. A row is considered a
+  // "parent header" when another row has parent_attack_id == its attack_id.
+  // A standalone (no subs) renders as its own chip.
+  const byParent = new Map<string, TechniqueRef[]>(); // parent attack_id → subs
+  const standalone: TechniqueRef[] = [];
+  const parentInList = new Map<string, TechniqueRef>(); // explicit parent entry in same group
+
+  for (const t of techniques) {
+    if (t.parent_attack_id) {
+      if (!byParent.has(t.parent_attack_id)) byParent.set(t.parent_attack_id, []);
+      byParent.get(t.parent_attack_id)!.push(t);
+    } else {
+      // Not a sub-technique; either standalone or possibly a parent the list explicitly includes.
+      parentInList.set(t.attack_id, t);
+    }
+  }
+  for (const [parentId, parentT] of parentInList.entries()) {
+    if (!byParent.has(parentId)) {
+      standalone.push(parentT);
+    }
+  }
+
+  return (
+    <div>
+      <div className="text-[10px] uppercase tracking-wider text-[var(--accent-teal)] font-semibold mb-1">
+        {tactic}
+        <span className="text-[var(--text-secondary)] font-normal ml-1.5">
+          ({techniques.length})
+        </span>
+      </div>
+      <div className="flex flex-wrap gap-x-3 gap-y-1.5 pl-1">
+        {[...byParent.entries()]
+          .sort((a, b) => a[0].localeCompare(b[0]))
+          .map(([parentId, subs]) => (
+            <ParentBlock
+              key={parentId}
+              parentId={parentId}
+              parent={parentInList.get(parentId) ?? null}
+              parentName={subs.find((s) => s.parent_name)?.parent_name ?? null}
+              subs={subs.sort((a, b) => a.attack_id.localeCompare(b.attack_id))}
+            />
+          ))}
+        {standalone
+          .sort((a, b) => a.attack_id.localeCompare(b.attack_id))
+          .map((t) => (
+            <TechniqueChip key={t.attack_id} t={t} />
+          ))}
+      </div>
+    </div>
+  );
+}
+
+/** Parent technique header + indented subs. */
+function ParentBlock({
+  parentId,
+  parent,
+  parentName,
+  subs,
+}: {
+  parentId: string;
+  parent: TechniqueRef | null;
+  parentName: string | null;
+  subs: TechniqueRef[];
+}) {
+  const displayName = parent?.technique_name ?? parentName ?? null;
+  return (
+    <div className="w-full">
+      <Link
+        href={`/cti/techniques/${parentId}`}
+        className="text-xs text-[var(--accent-teal)] hover:underline inline-flex items-baseline gap-1.5"
+      >
+        <span className="font-mono">{parentId}</span>
+        {displayName && <span className="text-[var(--text-secondary)]">{displayName}</span>}
+        <span className="text-[10px] text-[var(--text-secondary)]">({subs.length} sub{subs.length === 1 ? '' : 's'})</span>
+      </Link>
+      <div className="flex flex-wrap gap-x-3 gap-y-1 pl-4 mt-1">
+        {subs.map((t) => (
+          <TechniqueChip key={t.attack_id} t={t} dim />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function TechniqueChip({ t, dim }: { t: TechniqueRef; dim?: boolean }) {
+  return (
+    <Link
+      href={`/cti/techniques/${t.attack_id}`}
+      className={`text-xs hover:underline truncate max-w-[20rem] ${dim ? 'text-[var(--text-secondary)] hover:text-[var(--accent-teal)]' : 'text-[var(--accent-teal)]'}`}
+    >
+      <span className="font-mono">{t.attack_id}</span>
+      {t.technique_name && <span className="text-[var(--text-secondary)] ml-1">{t.technique_name}</span>}
+    </Link>
   );
 }

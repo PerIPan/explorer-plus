@@ -22,6 +22,8 @@ interface RawRow {
   attack_id: string;
   technique_name: string | null;
   tactic: string | null;
+  parent_attack_id: string | null;
+  parent_name: string | null;
   is_unresolved: boolean;
 }
 
@@ -72,10 +74,13 @@ export async function GET(req: NextRequest, ctx: RouteCtx) {
             fr.ref_id, fr.scf_id, m.attack_id,
             t.name AS technique_name,
             ta.name AS tactic,
+            tp.attack_id AS parent_attack_id,
+            tp.name AS parent_name,
             m.is_unresolved
      FROM scf_framework_refs fr
      JOIN scf_attack_mappings m ON m.scf_id = fr.scf_id
-     LEFT JOIN techniques t ON t.attack_id = m.attack_id
+     LEFT JOIN techniques t  ON t.attack_id = m.attack_id
+     LEFT JOIN techniques tp ON tp.id = t.parent_technique_id
      LEFT JOIN LATERAL (
        SELECT tac.name
        FROM technique_tactics tt
@@ -90,7 +95,14 @@ export async function GET(req: NextRequest, ctx: RouteCtx) {
   );
 
   // Group into articles (sections)
-  type TechRef = { attack_id: string; technique_name: string | null; tactic: string | null; scf_id: string };
+  type TechRef = {
+    attack_id: string;
+    technique_name: string | null;
+    tactic: string | null;
+    parent_attack_id: string | null;
+    parent_name: string | null;
+    scf_id: string;
+  };
   const bySection = new Map<string, Map<string, TechRef[]>>();
   const techToRefs = new Map<string, { technique_name: string | null; tactic: string | null; refs: Set<string> }>();
   const articleSet = new Set<string>();
@@ -106,6 +118,8 @@ export async function GET(req: NextRequest, ctx: RouteCtx) {
       attack_id: row.attack_id,
       technique_name: row.technique_name,
       tactic: row.tactic,
+      parent_attack_id: row.parent_attack_id,
+      parent_name: row.parent_name,
       scf_id: row.scf_id,
     });
 
