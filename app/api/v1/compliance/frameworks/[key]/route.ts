@@ -22,6 +22,7 @@ interface RawRow {
   attack_id: string;
   technique_name: string | null;
   tactic: string | null;
+  tactic_attack_id: string | null;
   parent_attack_id: string | null;
   parent_name: string | null;
   is_unresolved: boolean;
@@ -77,6 +78,7 @@ export async function GET(req: NextRequest, ctx: RouteCtx) {
             fr.ref_id, fr.scf_id, m.attack_id,
             t.name AS technique_name,
             ta.name AS tactic,
+            ta.attack_id AS tactic_attack_id,
             tp.attack_id AS parent_attack_id,
             tp.name AS parent_name,
             m.is_unresolved,
@@ -87,7 +89,7 @@ export async function GET(req: NextRequest, ctx: RouteCtx) {
      LEFT JOIN techniques tp ON tp.id = t.parent_technique_id
      LEFT JOIN scf_technique_heat h ON h.attack_id = m.attack_id
      LEFT JOIN LATERAL (
-       SELECT tac.name
+       SELECT tac.name, tac.attack_id
        FROM technique_tactics tt
        JOIN tactics tac ON tac.id = tt.tactic_id
        WHERE tt.technique_id = t.id
@@ -104,6 +106,7 @@ export async function GET(req: NextRequest, ctx: RouteCtx) {
     attack_id: string;
     technique_name: string | null;
     tactic: string | null;
+    tactic_attack_id: string | null;
     parent_attack_id: string | null;
     parent_name: string | null;
     scf_id: string;
@@ -128,6 +131,7 @@ export async function GET(req: NextRequest, ctx: RouteCtx) {
       attack_id: row.attack_id,
       technique_name: row.technique_name,
       tactic: row.tactic,
+      tactic_attack_id: row.tactic_attack_id,
       parent_attack_id: row.parent_attack_id,
       parent_name: row.parent_name,
       scf_id: row.scf_id,

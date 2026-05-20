@@ -13,6 +13,7 @@ interface TechniqueRef {
   attack_id: string;
   technique_name: string | null;
   tactic: string | null;
+  tactic_attack_id: string | null;
   parent_attack_id: string | null;
   parent_name: string | null;
   scf_id: string;
@@ -21,6 +22,15 @@ interface TechniqueRef {
   max_epss: number | null;
   ghsa_count: number;
   group_count: number;
+}
+
+// All technique / sub-technique chips link to the 360 view (entity map) rather
+// than the detail page — per user preference for compliance UI navigation.
+function techniqueHref(attackId: string): string {
+  return `/?entity=${encodeURIComponent(attackId)}&tab=technique-map`;
+}
+function tacticHref(tacticAttackId: string): string {
+  return `/?entity=${encodeURIComponent(tacticAttackId)}&tab=tactic-map`;
 }
 
 /** Tiny compact chip — used for heat badges next to a technique.
@@ -180,6 +190,24 @@ function HeatLegend() {
         </div>
       )}
     </div>
+  );
+}
+
+/** "360 →" link that opens the tactic's 360 view. Sits after the heat badges
+ *  inside the TacticGroup header button — uses `e.stopPropagation` so clicking
+ *  this doesn't also toggle the open/close state. */
+function TacticThreeSixtyLink({ techniques }: { techniques: TechniqueRef[] }) {
+  const tid = techniques.find((t) => t.tactic_attack_id)?.tactic_attack_id;
+  if (!tid) return null;
+  return (
+    <Link
+      href={tacticHref(tid)}
+      onClick={(e) => e.stopPropagation()}
+      className="ml-1 text-[10px] font-medium text-[var(--accent-teal)] hover:underline normal-case tracking-normal"
+      title={`Open 360 view for ${tid}`}
+    >
+      360 →
+    </Link>
   );
 }
 
@@ -449,7 +477,7 @@ export function ComplianceFrameworkDetail({ frameworkKey }: { frameworkKey: stri
         <ul className="divide-y divide-[var(--border-color)] border border-[var(--border-color)] rounded-md">
           {data.techniques.map((t) => (
             <li key={t.attack_id} className="px-3 py-2 grid grid-cols-[6rem_1fr_auto] items-baseline gap-3">
-              <Link href={`/techniques/${t.attack_id}`} className="text-sm font-mono text-[var(--accent-teal)] hover:underline">
+              <Link href={techniqueHref(t.attack_id)} className="text-sm font-mono text-[var(--accent-teal)] hover:underline">
                 {t.attack_id}
               </Link>
               <div className="min-w-0">
@@ -533,8 +561,13 @@ function RefItem({ refData }: { refData: { ref_id: string; techniques: Technique
         <span className="text-[10px] text-[var(--text-secondary)]">{techs.length} techniques</span>
       </div>
       <div className="space-y-2">
-        {tacticEntries.map(([tactic, techsInTactic]) => (
-          <TacticGroup key={tactic} tactic={tactic} techniques={techsInTactic} />
+        {tacticEntries.map(([tactic, techsInTactic], idx) => (
+          <TacticGroup
+            key={tactic}
+            tactic={tactic}
+            techniques={techsInTactic}
+            defaultOpen={idx === 0}
+          />
         ))}
       </div>
     </li>
@@ -542,9 +575,18 @@ function RefItem({ refData }: { refData: { ref_id: string; techniques: Technique
 }
 
 /** A single tactic block: collapsible header + nested parent/sub-technique chips.
- *  Closed by default — sections are still dense even after grouping. */
-function TacticGroup({ tactic, techniques }: { tactic: string; techniques: TechniqueRef[] }) {
-  const [open, setOpen] = useState(false);
+ *  Closed by default — sections are still dense even after grouping.
+ *  `defaultOpen` is set true for the first tactic in a section. */
+function TacticGroup({
+  tactic,
+  techniques,
+  defaultOpen = false,
+}: {
+  tactic: string;
+  techniques: TechniqueRef[];
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
   // Memoise the per-tactic grouping — without this each accordion toggle on the
   // outer section re-runs Map construction for every TacticGroup that isn't
   // open (and there can be 14 per section × many sections).
@@ -585,6 +627,7 @@ function TacticGroup({ tactic, techniques }: { tactic: string; techniques: Techn
         {tactic}
         <span className="text-[var(--text-secondary)] font-normal">({techniques.length})</span>
         <TacticHeatSummary techniques={techniques} />
+        <TacticThreeSixtyLink techniques={techniques} />
       </button>
       {open && (
         <div className="flex flex-wrap gap-x-3 gap-y-1.5 pl-4 pb-2">
@@ -626,7 +669,7 @@ function ParentBlock({
   return (
     <div className="w-full">
       <div className="inline-flex items-baseline gap-1.5">
-        <Link href={`/techniques/${parentId}`} className="text-xs text-[var(--accent-teal)] hover:underline">
+        <Link href={techniqueHref(parentId)} className="text-xs text-[var(--accent-teal)] hover:underline">
           <span className="font-mono">{parentId}</span>
           {displayName && <span className="text-[var(--text-secondary)] ml-1">{displayName}</span>}
         </Link>
@@ -646,7 +689,7 @@ function TechniqueChip({ t, dim }: { t: TechniqueRef; dim?: boolean }) {
   return (
     <span className="inline-flex items-baseline gap-1 max-w-full">
       <Link
-        href={`/techniques/${t.attack_id}`}
+        href={techniqueHref(t.attack_id)}
         className={`text-xs hover:underline truncate max-w-[22rem] ${dim ? 'text-[var(--text-secondary)] hover:text-[var(--accent-teal)]' : 'text-[var(--accent-teal)]'}`}
       >
         <span className="font-mono">{t.attack_id}</span>
