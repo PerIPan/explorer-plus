@@ -590,6 +590,53 @@ async function rebuildSoftwareSummary(client, dryRun) {
   }
 }
 
+async function rebuildTechniqueHeat(client, dryRun) {
+  if (dryRun) return 0;
+  await client.query('BEGIN');
+  try {
+    await client.query(`TRUNCATE scf_technique_heat`);
+    const r = await client.query(`
+      WITH cve_tech AS (
+        SELECT cm.attack_technique_id AS attack_id,
+               COUNT(DISTINCT c.cve_id) AS cves,
+               BOOL_OR(c.is_kev) AS has_kev,
+               MAX(c.epss_score) AS max_epss
+        FROM cve_details c
+        JOIN capec_mappings cm ON cm.cwe_id = c.cwe_id AND cm.attack_technique_id IS NOT NULL
+        WHERE c.cwe_id IS NOT NULL
+        GROUP BY cm.attack_technique_id
+      ),
+      ghsa_tech AS (
+        SELECT cm.attack_technique_id AS attack_id, COUNT(DISTINCT gw.ghsa_id) AS ghsa
+        FROM ghsa_weaknesses gw
+        JOIN capec_mappings cm ON cm.cwe_id = gw.cwe_id AND cm.attack_technique_id IS NOT NULL
+        GROUP BY cm.attack_technique_id
+      ),
+      group_tech AS (
+        SELECT t.attack_id, COUNT(DISTINCT gt.group_id) AS groups
+        FROM techniques t JOIN group_techniques gt ON gt.technique_id = t.id
+        GROUP BY t.attack_id
+      )
+      INSERT INTO scf_technique_heat (attack_id, cve_count, has_kev, max_epss, ghsa_count, group_count)
+      SELECT t.attack_id,
+             COALESCE(ct.cves, 0),
+             COALESCE(ct.has_kev, false),
+             ct.max_epss,
+             COALESCE(gh.ghsa, 0),
+             COALESCE(gtc.groups, 0)
+      FROM techniques t
+      LEFT JOIN cve_tech   ct  ON ct.attack_id  = t.attack_id
+      LEFT JOIN ghsa_tech  gh  ON gh.attack_id  = t.attack_id
+      LEFT JOIN group_tech gtc ON gtc.attack_id = t.attack_id
+    `);
+    await client.query('COMMIT');
+    return r.rowCount ?? 0;
+  } catch (e) {
+    await client.query('ROLLBACK');
+    throw e;
+  }
+}
+
 async function rebuildFrameworkCoverage(client, dryRun) {
   if (dryRun) return 0;
   await client.query('BEGIN');
@@ -853,11 +900,13 @@ async function main() {
     const softSum = await rebuildSoftwareSummary(client, args.dryRun);
     const sectorSum = await rebuildSectorSummary(client, args.dryRun);
     const coverage = await rebuildFrameworkCoverage(client, args.dryRun);
+    const heatRows = await rebuildTechniqueHeat(client, args.dryRun);
     meta.overlapRows = overlap;
     meta.groupSummaryRows = groupSum;
     meta.softwareSummaryRows = softSum;
     meta.sectorSummaryRows = sectorSum;
     meta.coverageRows = coverage;
+    meta.heatRows = heatRows;
 
     const post = await snapshot(client);
     console.log('[sync-scf] POST:', post);

@@ -15,6 +15,71 @@ interface TechniqueRef {
   parent_attack_id: string | null;
   parent_name: string | null;
   scf_id: string;
+  cve_count: number;
+  has_kev: boolean;
+  max_epss: number | null;
+  ghsa_count: number;
+  group_count: number;
+}
+
+/** Tiny compact chip — used for heat badges next to a technique. */
+function HeatBadges({ t }: { t: TechniqueRef }) {
+  const badges: { label: string; cls: string; title: string }[] = [];
+  if (t.has_kev) {
+    badges.push({
+      label: 'KEV',
+      cls: 'bg-red-500/20 text-red-300 border-red-500/40',
+      title: 'At least one linked CVE is in CISA Known Exploited Vulnerabilities',
+    });
+  }
+  if (t.max_epss != null && t.max_epss >= 0.5) {
+    badges.push({
+      label: `EPSS ${t.max_epss.toFixed(2)}`,
+      cls: 'bg-orange-500/20 text-orange-300 border-orange-500/40',
+      title: 'Maximum EPSS exploit-probability across linked CVEs (≥0.5 = exploit predicted within 30 days)',
+    });
+  }
+  if (t.cve_count >= 100) {
+    badges.push({
+      label: `CVE ${t.cve_count.toLocaleString()}`,
+      cls: 'bg-pink-500/15 text-pink-300 border-pink-500/30',
+      title: `Linked CVEs (via CWE → CAPEC → ATT&CK)`,
+    });
+  }
+  if (t.ghsa_count >= 100) {
+    badges.push({
+      label: `GHSA ${t.ghsa_count.toLocaleString()}`,
+      cls: 'bg-purple-500/15 text-purple-300 border-purple-500/30',
+      title: `Linked GitHub Security Advisories (OSS package angle)`,
+    });
+  }
+  if (t.group_count >= 20) {
+    badges.push({
+      label: `WIDE ${t.group_count}`,
+      cls: 'bg-amber-500/15 text-amber-300 border-amber-500/40',
+      title: 'Number of tracked threat groups using this technique',
+    });
+  } else if (t.group_count >= 5) {
+    badges.push({
+      label: `${t.group_count} groups`,
+      cls: 'bg-slate-500/15 text-[var(--text-secondary)] border-[var(--border-color)]',
+      title: 'Number of tracked threat groups using this technique',
+    });
+  }
+  if (badges.length === 0) return null;
+  return (
+    <span className="inline-flex flex-wrap gap-1 ml-1.5">
+      {badges.map((b) => (
+        <span
+          key={b.label}
+          title={b.title}
+          className={`text-[9px] font-mono px-1 py-0.5 rounded border ${b.cls}`}
+        >
+          {b.label}
+        </span>
+      ))}
+    </span>
+  );
 }
 
 // Enterprise ATT&CK kill-chain order. Anything not in this list (ICS/Mobile
@@ -455,14 +520,14 @@ function ParentBlock({
   const displayName = parent?.technique_name ?? parentName ?? null;
   return (
     <div className="w-full">
-      <Link
-        href={`/techniques/${parentId}`}
-        className="text-xs text-[var(--accent-teal)] hover:underline inline-flex items-baseline gap-1.5"
-      >
-        <span className="font-mono">{parentId}</span>
-        {displayName && <span className="text-[var(--text-secondary)]">{displayName}</span>}
+      <div className="inline-flex items-baseline gap-1.5">
+        <Link href={`/techniques/${parentId}`} className="text-xs text-[var(--accent-teal)] hover:underline">
+          <span className="font-mono">{parentId}</span>
+          {displayName && <span className="text-[var(--text-secondary)] ml-1">{displayName}</span>}
+        </Link>
         <span className="text-[10px] text-[var(--text-secondary)]">({subs.length} sub{subs.length === 1 ? '' : 's'})</span>
-      </Link>
+        {parent && <HeatBadges t={parent} />}
+      </div>
       <div className="flex flex-wrap gap-x-3 gap-y-1 pl-4 mt-1">
         {subs.map((t) => (
           <TechniqueChip key={t.attack_id} t={t} dim />
@@ -474,12 +539,15 @@ function ParentBlock({
 
 function TechniqueChip({ t, dim }: { t: TechniqueRef; dim?: boolean }) {
   return (
-    <Link
-      href={`/techniques/${t.attack_id}`}
-      className={`text-xs hover:underline truncate max-w-[20rem] ${dim ? 'text-[var(--text-secondary)] hover:text-[var(--accent-teal)]' : 'text-[var(--accent-teal)]'}`}
-    >
-      <span className="font-mono">{t.attack_id}</span>
-      {t.technique_name && <span className="text-[var(--text-secondary)] ml-1">{t.technique_name}</span>}
-    </Link>
+    <span className="inline-flex items-baseline gap-1 max-w-full">
+      <Link
+        href={`/techniques/${t.attack_id}`}
+        className={`text-xs hover:underline truncate max-w-[22rem] ${dim ? 'text-[var(--text-secondary)] hover:text-[var(--accent-teal)]' : 'text-[var(--accent-teal)]'}`}
+      >
+        <span className="font-mono">{t.attack_id}</span>
+        {t.technique_name && <span className="text-[var(--text-secondary)] ml-1">{t.technique_name}</span>}
+      </Link>
+      <HeatBadges t={t} />
+    </span>
   );
 }

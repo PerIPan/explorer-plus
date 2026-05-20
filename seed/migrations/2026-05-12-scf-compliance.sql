@@ -142,6 +142,20 @@ CREATE TABLE IF NOT EXISTS scf_sector_compliance_summary (
 CREATE INDEX IF NOT EXISTS idx_scf_sector_summary
   ON scf_sector_compliance_summary(sector_id);
 
+-- 10. Per-technique heat signals — drives compliance-page badges.
+--     Refreshed at end of each SCF ingest. Cheap (one CTE roll-up).
+CREATE TABLE IF NOT EXISTS scf_technique_heat (
+  attack_id    VARCHAR(20) PRIMARY KEY,
+  cve_count    INTEGER NOT NULL DEFAULT 0,
+  has_kev      BOOLEAN NOT NULL DEFAULT false,
+  max_epss     NUMERIC(6,5),
+  ghsa_count   INTEGER NOT NULL DEFAULT 0,
+  group_count  INTEGER NOT NULL DEFAULT 0,
+  updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_scf_technique_heat_kev  ON scf_technique_heat(has_kev) WHERE has_kev;
+CREATE INDEX IF NOT EXISTS idx_scf_technique_heat_epss ON scf_technique_heat(max_epss DESC NULLS LAST);
+
 -- 9. Framework coverage summary — feeds /compliance hub. Pre-computed at end
 --    of each ingest. PK lookup, <10ms. 250 rows max.
 CREATE TABLE IF NOT EXISTS scf_framework_coverage (

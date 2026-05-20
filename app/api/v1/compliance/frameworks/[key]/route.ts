@@ -69,18 +69,23 @@ export async function GET(req: NextRequest, ctx: RouteCtx) {
   // DISTINCT ON the (ref_id, attack_id, scf_id) tuple avoids Cartesian fan-out
   // when a control × technique pair appears via multiple framework refs. We
   // also pick a stable "primary tactic" by tactic.attack_id rather than UUID.
-  const mappingsRes = await query<RawRow>(
+  const mappingsRes = await query<RawRow & {
+    cve_count: number | null; has_kev: boolean | null;
+    max_epss: string | null; ghsa_count: number | null; group_count: number | null;
+  }>(
     `SELECT DISTINCT ON (fr.ref_id, fr.scf_id, m.attack_id)
             fr.ref_id, fr.scf_id, m.attack_id,
             t.name AS technique_name,
             ta.name AS tactic,
             tp.attack_id AS parent_attack_id,
             tp.name AS parent_name,
-            m.is_unresolved
+            m.is_unresolved,
+            h.cve_count, h.has_kev, h.max_epss, h.ghsa_count, h.group_count
      FROM scf_framework_refs fr
      JOIN scf_attack_mappings m ON m.scf_id = fr.scf_id
      LEFT JOIN techniques t  ON t.attack_id = m.attack_id
      LEFT JOIN techniques tp ON tp.id = t.parent_technique_id
+     LEFT JOIN scf_technique_heat h ON h.attack_id = m.attack_id
      LEFT JOIN LATERAL (
        SELECT tac.name
        FROM technique_tactics tt
@@ -102,6 +107,11 @@ export async function GET(req: NextRequest, ctx: RouteCtx) {
     parent_attack_id: string | null;
     parent_name: string | null;
     scf_id: string;
+    cve_count: number;
+    has_kev: boolean;
+    max_epss: number | null;
+    ghsa_count: number;
+    group_count: number;
   };
   const bySection = new Map<string, Map<string, TechRef[]>>();
   const techToRefs = new Map<string, { technique_name: string | null; tactic: string | null; refs: Set<string> }>();
@@ -121,6 +131,11 @@ export async function GET(req: NextRequest, ctx: RouteCtx) {
       parent_attack_id: row.parent_attack_id,
       parent_name: row.parent_name,
       scf_id: row.scf_id,
+      cve_count: Number(row.cve_count ?? 0),
+      has_kev: Boolean(row.has_kev),
+      max_epss: row.max_epss != null ? Number(row.max_epss) : null,
+      ghsa_count: Number(row.ghsa_count ?? 0),
+      group_count: Number(row.group_count ?? 0),
     });
 
     if (!techToRefs.has(row.attack_id)) {
