@@ -1,0 +1,35 @@
+name: refresh-cti-heat
+
+# Monthly refresh of scf_technique_heat. CVE / EPSS / GHSA / KEV update daily;
+# this picks up those deltas without waiting for the twice-yearly SCF sync.
+on:
+  schedule:
+    - cron: '0 6 1 * *'   # 1st of each month at 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: refresh-cti-heat
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install deps
+        run: npm ci --omit=dev --include=optional || npm ci
+
+      - name: Refresh CTI heat
+        run: node scripts/refresh-cti-heat.mjs

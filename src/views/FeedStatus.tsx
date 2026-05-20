@@ -26,6 +26,7 @@ const SOURCE_LABELS: Record<string, string> = {
   atomic: 'Atomic Red Team',
   site_health: 'Site health (VT self-scan)',
   scf: 'SCF (Secure Controls Framework)',
+  cti_heat_refresh: 'CTI heat refresh (compliance badges)',
 };
 
 /**
@@ -167,7 +168,7 @@ const ALL_SOURCES = [
   'epss', 'osv', 'csf',
   'ghsa', 'ghsa_delta', 'sigma', 'atomic',
   'matview_refresh', 'd3fend',
-  'site_health', 'scf',
+  'site_health', 'scf', 'cti_heat_refresh',
 ];
 
 export function FeedStatus() {
