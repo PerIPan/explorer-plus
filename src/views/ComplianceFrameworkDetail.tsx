@@ -662,19 +662,21 @@ function ParentBlock({
   const displayName = parent?.technique_name ?? parentName ?? null;
   return (
     <div className="w-full">
-      <div className="inline-flex items-baseline gap-1.5">
+      <div className="flex items-baseline gap-1.5 flex-wrap">
         <Link href={techniqueHref(parentId)} className="text-xs text-[var(--accent-teal)] hover:underline">
           <span className="font-mono">{parentId}</span>
-          {displayName && <span className="text-[var(--text-secondary)] ml-1">{displayName}</span>}
+          {displayName && <span className="text-[var(--text-primary)] ml-1">{displayName}</span>}
         </Link>
         <span className="text-[10px] text-[var(--text-secondary)]">({subs.length} sub{subs.length === 1 ? '' : 's'})</span>
         {parent && <HeatBadges t={parent} />}
       </div>
-      <div className="flex flex-wrap gap-x-3 gap-y-1 pl-4 mt-1">
+      <ul className="pl-5 mt-1 space-y-0.5 border-l border-[var(--border-color)] ml-2">
         {subs.map((t) => (
-          <TechniqueChip key={t.attack_id} t={t} dim />
+          <li key={t.attack_id} className="pl-2">
+            <TechniqueChip t={t} dim />
+          </li>
         ))}
-      </div>
+      </ul>
     </div>
   );
 }
