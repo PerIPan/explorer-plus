@@ -41,6 +41,29 @@ function tacticOrder(name: string | null): number {
   return TACTIC_ORDER[name] ?? 50;
 }
 
+// Tactic signature colors. Listed as literal class strings so Tailwind's
+// content scanner picks them up. Each tactic gets a dot + tinted header.
+const TACTIC_COLOR_CLASS: Record<string, { text: string; dot: string; tint: string }> = {
+  'Reconnaissance':        { text: 'text-sky-400',    dot: 'bg-sky-400',    tint: 'bg-sky-400/10' },
+  'Resource Development':  { text: 'text-teal-400',   dot: 'bg-teal-400',   tint: 'bg-teal-400/10' },
+  'Initial Access':        { text: 'text-blue-500',   dot: 'bg-blue-500',   tint: 'bg-blue-500/10' },
+  'Execution':             { text: 'text-purple-500', dot: 'bg-purple-500', tint: 'bg-purple-500/10' },
+  'Persistence':           { text: 'text-indigo-500', dot: 'bg-indigo-500', tint: 'bg-indigo-500/10' },
+  'Privilege Escalation':  { text: 'text-violet-500', dot: 'bg-violet-500', tint: 'bg-violet-500/10' },
+  'Defense Evasion':       { text: 'text-slate-400',  dot: 'bg-slate-400',  tint: 'bg-slate-400/10' },
+  'Credential Access':     { text: 'text-yellow-500', dot: 'bg-yellow-500', tint: 'bg-yellow-500/10' },
+  'Discovery':             { text: 'text-lime-500',   dot: 'bg-lime-500',   tint: 'bg-lime-500/10' },
+  'Lateral Movement':      { text: 'text-green-500',  dot: 'bg-green-500',  tint: 'bg-green-500/10' },
+  'Collection':            { text: 'text-amber-500',  dot: 'bg-amber-500',  tint: 'bg-amber-500/10' },
+  'Command and Control':   { text: 'text-orange-500', dot: 'bg-orange-500', tint: 'bg-orange-500/10' },
+  'Exfiltration':          { text: 'text-red-400',    dot: 'bg-red-400',    tint: 'bg-red-400/10' },
+  'Impact':                { text: 'text-rose-500',   dot: 'bg-rose-500',   tint: 'bg-rose-500/10' },
+};
+const TACTIC_COLOR_FALLBACK = { text: 'text-[var(--text-secondary)]', dot: 'bg-[var(--text-secondary)]', tint: 'bg-[var(--hover-overlay)]' };
+function tacticColors(name: string) {
+  return TACTIC_COLOR_CLASS[name] ?? TACTIC_COLOR_FALLBACK;
+}
+
 interface SectionData {
   section: string;
   ref_count: number;
@@ -374,12 +397,14 @@ function TacticGroup({ tactic, techniques }: { tactic: string; techniques: Techn
     if (!byParent.has(parentId)) standalone.push(parentT);
   }
 
+  const colors = tacticColors(tactic);
+
   return (
-    <div>
+    <div className={`rounded ${open ? colors.tint : ''}`}>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-[var(--accent-teal)] font-semibold mb-1 hover:text-[var(--accent-teal-light)] transition-colors"
+        className={`flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-semibold mb-1 px-1.5 py-0.5 ${colors.text} hover:opacity-80 transition-opacity`}
       >
         <svg
           className={`w-2.5 h-2.5 transition-transform ${open ? 'rotate-90' : ''}`}
@@ -387,11 +412,12 @@ function TacticGroup({ tactic, techniques }: { tactic: string; techniques: Techn
         >
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
         </svg>
+        <span className={`w-1.5 h-1.5 rounded-full ${colors.dot}`} aria-hidden="true" />
         {tactic}
         <span className="text-[var(--text-secondary)] font-normal">({techniques.length})</span>
       </button>
       {open && (
-        <div className="flex flex-wrap gap-x-3 gap-y-1.5 pl-4">
+        <div className="flex flex-wrap gap-x-3 gap-y-1.5 pl-4 pb-2">
           {[...byParent.entries()]
             .sort((a, b) => a[0].localeCompare(b[0]))
             .map(([parentId, subs]) => (
