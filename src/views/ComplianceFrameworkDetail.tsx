@@ -45,8 +45,8 @@ function HeatBadges({ t }: { t: TechniqueRef }) {
   }
   if (t.max_epss != null && t.max_epss >= 0.5) {
     badges.push({
-      label: `HOT ${t.max_epss.toFixed(2)}`,
-      title: 'HOT = max EPSS exploit-probability across linked CVEs (≥0.5 = exploit predicted within 30 days)',
+      label: `EPSS ${t.max_epss.toFixed(2)}`,
+      title: 'Maximum EPSS exploit-probability across linked CVEs (≥0.5 = exploit predicted within 30 days)',
     });
   }
   if (t.cve_count >= 100) {
@@ -99,9 +99,9 @@ const LEGEND_ROWS: Array<{
     calc: 'BOOL_OR(c.is_kev) across all CVEs linked to the technique via the CWE → CAPEC → ATT&CK bridge. Cumulative since the catalog started — once on KEV, stays.',
   },
   {
-    label: 'HOT N',
-    short: 'exploit-probability (≥0.5)',
-    definition: "HOT = max EPSS exploit-probability across linked CVEs. EPSS (Exploit Prediction Scoring System) is a daily-updated probability (0.00-1.00) that a CVE will be exploited in the next 30 days. Produced by FIRST.org's EPSS SIG using ML over public exploit signals.",
+    label: 'EPSS X.XX',
+    short: 'exploit-probability (≥0.5) — counts as "HOT" in tactic summary',
+    definition: "EPSS (Exploit Prediction Scoring System) — a daily-updated probability (0.00-1.00) that a CVE will be exploited in the next 30 days. Produced by FIRST.org's EPSS SIG using ML over public exploit signals.",
     calc: 'MAX(c.epss_score) across all CVEs linked to the technique. Shows the single most likely CVE in the next 30 days. Snapshot — refreshed monthly. Tactic-header `N HOT` counts techniques in that tactic whose EPSS reaches the 0.5 threshold.',
   },
   {
@@ -148,16 +148,16 @@ function HeatLegend() {
           {openExplain ? 'Hide definitions ▴' : 'How is this calculated? ▾'}
         </button>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1.5 text-[11px]">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-2 text-[12px]">
         {LEGEND_ROWS.map((r) => (
           <div key={r.label} className="flex items-baseline gap-2">
             <span
-              className={`inline-flex items-baseline gap-1 font-mono text-[10px] px-1.5 py-0.5 rounded border whitespace-nowrap shrink-0 cursor-help ${BADGE_CLS}`}
+              className={`inline-flex items-baseline gap-1.5 font-mono text-xs px-2 py-0.5 rounded border whitespace-nowrap shrink-0 cursor-help ${BADGE_CLS}`}
               title={`${r.definition}\n\nCalc: ${r.calc}`}
             >
               {r.label}
               <span
-                className="inline-flex items-center justify-center w-3 h-3 rounded-full border border-[var(--text-secondary)] text-[8px] font-bold leading-none"
+                className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-[var(--text-secondary)] text-[9px] font-bold leading-none"
                 aria-label="More info"
               >
                 i
