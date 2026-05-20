@@ -7,6 +7,7 @@ import {
   getFrameworkEntry,
   type ScfFrameworkEntry,
 } from '../lib/scf-framework-registry';
+import { tacticColors as sharedTacticColors, tacticOrder as sharedTacticOrder } from '../lib/tacticColors';
 
 interface TechniqueRef {
   attack_id: string;
@@ -82,52 +83,8 @@ function HeatBadges({ t }: { t: TechniqueRef }) {
   );
 }
 
-// Enterprise ATT&CK kill-chain order. Anything not in this list (ICS/Mobile
-// tactics, or null when technique→tactic join missed) sorts at the end.
-const TACTIC_ORDER: Record<string, number> = {
-  'Reconnaissance':        1,
-  'Resource Development':  2,
-  'Initial Access':        3,
-  'Execution':             4,
-  'Persistence':           5,
-  'Privilege Escalation':  6,
-  'Defense Evasion':       7,
-  'Credential Access':     8,
-  'Discovery':             9,
-  'Lateral Movement':     10,
-  'Collection':           11,
-  'Command and Control':  12,
-  'Exfiltration':         13,
-  'Impact':               14,
-};
-
-function tacticOrder(name: string | null): number {
-  if (!name) return 99;
-  return TACTIC_ORDER[name] ?? 50;
-}
-
-// Tactic signature colors. Listed as literal class strings so Tailwind's
-// content scanner picks them up. Each tactic gets a dot + tinted header.
-const TACTIC_COLOR_CLASS: Record<string, { text: string; dot: string; tint: string }> = {
-  'Reconnaissance':        { text: 'text-sky-400',    dot: 'bg-sky-400',    tint: 'bg-sky-400/10' },
-  'Resource Development':  { text: 'text-teal-400',   dot: 'bg-teal-400',   tint: 'bg-teal-400/10' },
-  'Initial Access':        { text: 'text-blue-500',   dot: 'bg-blue-500',   tint: 'bg-blue-500/10' },
-  'Execution':             { text: 'text-purple-500', dot: 'bg-purple-500', tint: 'bg-purple-500/10' },
-  'Persistence':           { text: 'text-indigo-500', dot: 'bg-indigo-500', tint: 'bg-indigo-500/10' },
-  'Privilege Escalation':  { text: 'text-violet-500', dot: 'bg-violet-500', tint: 'bg-violet-500/10' },
-  'Defense Evasion':       { text: 'text-slate-400',  dot: 'bg-slate-400',  tint: 'bg-slate-400/10' },
-  'Credential Access':     { text: 'text-yellow-500', dot: 'bg-yellow-500', tint: 'bg-yellow-500/10' },
-  'Discovery':             { text: 'text-lime-500',   dot: 'bg-lime-500',   tint: 'bg-lime-500/10' },
-  'Lateral Movement':      { text: 'text-green-500',  dot: 'bg-green-500',  tint: 'bg-green-500/10' },
-  'Collection':            { text: 'text-amber-500',  dot: 'bg-amber-500',  tint: 'bg-amber-500/10' },
-  'Command and Control':   { text: 'text-orange-500', dot: 'bg-orange-500', tint: 'bg-orange-500/10' },
-  'Exfiltration':          { text: 'text-red-400',    dot: 'bg-red-400',    tint: 'bg-red-400/10' },
-  'Impact':                { text: 'text-rose-500',   dot: 'bg-rose-500',   tint: 'bg-rose-500/10' },
-};
-const TACTIC_COLOR_FALLBACK = { text: 'text-[var(--text-secondary)]', dot: 'bg-[var(--text-secondary)]', tint: 'bg-[var(--hover-overlay)]' };
-function tacticColors(name: string) {
-  return TACTIC_COLOR_CLASS[name] ?? TACTIC_COLOR_FALLBACK;
-}
+const tacticOrder = sharedTacticOrder;
+const tacticColors = sharedTacticColors;
 
 interface SectionData {
   section: string;
@@ -360,7 +317,12 @@ export function ComplianceFrameworkDetail({ frameworkKey }: { frameworkKey: stri
               </Link>
               <div className="min-w-0">
                 <div className="text-sm text-[var(--text-primary)] truncate">{t.technique_name ?? '(unknown)'}</div>
-                {t.tactic && <div className="text-[11px] text-[var(--text-secondary)]">{t.tactic}</div>}
+                {t.tactic && (
+                  <div className={`text-[11px] inline-flex items-center gap-1 ${tacticColors(t.tactic).text}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${tacticColors(t.tactic).dot}`} aria-hidden="true" />
+                    {t.tactic}
+                  </div>
+                )}
               </div>
               <div className="text-xs text-[var(--text-secondary)] text-right truncate max-w-md">
                 {t.refs.slice(0, 5).join(', ')}{t.refs.length > 5 ? ` +${t.refs.length - 5}` : ''}
