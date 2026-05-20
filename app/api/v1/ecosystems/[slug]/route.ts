@@ -164,11 +164,13 @@ export async function GET(
         [meta.canonical],
       )
     : query<RecentRow>(
+        // Ubuntu/distro OSV rows often have a NULL summary; fall back to the
+        // first 240 chars of details so the inline preview + tooltip have copy.
         `SELECT
            o.osv_id          AS "advisoryId",
            'OSV'::text       AS source,
            (SELECT a FROM unnest(o.aliases) a WHERE a LIKE 'CVE-%' LIMIT 1) AS "cveId",
-           o.summary         AS summary,
+           LEFT(COALESCE(NULLIF(o.summary, ''), o.details), 240) AS summary,
            COALESCE(o.cvss_severity, cve.cvss_severity) AS severity,
            COALESCE(o.cvss_score, cve.cvss_score)::text AS "cvssScore",
            o.published       AS "publishedAt"
