@@ -36,45 +36,39 @@ function tacticHref(tacticAttackId: string): string {
 /** Tiny compact chip — used for heat badges next to a technique.
  *  Solid backgrounds with white/dark text for readability in both themes. */
 function HeatBadges({ t }: { t: TechniqueRef }) {
-  const badges: { label: string; cls: string; title: string }[] = [];
+  const badges: { label: string; title: string }[] = [];
   if (t.has_kev) {
     badges.push({
       label: 'KEV',
-      cls: 'bg-red-600 text-white border-red-700',
       title: 'At least one linked CVE is in CISA Known Exploited Vulnerabilities',
     });
   }
   if (t.max_epss != null && t.max_epss >= 0.5) {
     badges.push({
       label: `EPSS ${t.max_epss.toFixed(2)}`,
-      cls: 'bg-orange-600 text-white border-orange-700',
       title: 'Maximum EPSS exploit-probability across linked CVEs (≥0.5 = exploit predicted within 30 days)',
     });
   }
   if (t.cve_count >= 100) {
     badges.push({
       label: `CVE ${t.cve_count.toLocaleString()}`,
-      cls: 'bg-pink-600 text-white border-pink-700',
       title: `Linked CVEs (via CWE → CAPEC → ATT&CK)`,
     });
   }
   if (t.ghsa_count >= 100) {
     badges.push({
       label: `GHSA ${t.ghsa_count.toLocaleString()}`,
-      cls: 'bg-purple-600 text-white border-purple-700',
       title: `Linked GitHub Security Advisories (OSS package angle)`,
     });
   }
   if (t.group_count >= 20) {
     badges.push({
       label: `WIDE ${t.group_count}`,
-      cls: 'bg-amber-600 text-white border-amber-700',
       title: 'Number of tracked threat groups using this technique',
     });
   } else if (t.group_count >= 5) {
     badges.push({
       label: `${t.group_count} groups`,
-      cls: 'bg-slate-600 text-white border-slate-700',
       title: 'Number of tracked threat groups using this technique',
     });
   }
@@ -85,7 +79,7 @@ function HeatBadges({ t }: { t: TechniqueRef }) {
         <span
           key={b.label}
           title={b.title}
-          className={`text-[10px] font-mono px-1.5 py-0.5 rounded border whitespace-nowrap ${b.cls}`}
+          className={`text-[10px] font-mono px-1.5 py-0.5 rounded border whitespace-nowrap ${BADGE_CLS}`}
         >
           {b.label}
         </span>
@@ -100,56 +94,56 @@ const LEGEND_ROWS: Array<{
 }> = [
   {
     label: 'KEV',
-    cls: 'bg-red-600 text-white border-red-700',
     short: "linked CVE on CISA's actively-exploited list",
     definition: 'CISA Known Exploited Vulnerabilities — a curated catalog of CVEs that are actively being exploited in the wild. Maintained by the US Cybersecurity and Infrastructure Security Agency since November 2021.',
     calc: 'BOOL_OR(c.is_kev) across all CVEs linked to the technique via the CWE → CAPEC → ATT&CK bridge. Cumulative since the catalog started — once on KEV, stays.',
   },
   {
     label: 'EPSS X.XX',
-    cls: 'bg-orange-600 text-white border-orange-700',
     short: 'max EPSS exploit-probability (≥0.5)',
     definition: "EPSS (Exploit Prediction Scoring System) — a daily-updated probability (0.00-1.00) that a CVE will be exploited in the next 30 days. Produced by FIRST.org's EPSS SIG using ML over public exploit signals.",
     calc: 'MAX(c.epss_score) across all CVEs linked to the technique. Shows the single most likely CVE in the next 30 days. Snapshot — refreshed monthly.',
   },
   {
     label: 'CVE N',
-    cls: 'bg-pink-600 text-white border-pink-700',
     short: 'linked CVEs (≥100)',
     definition: 'Common Vulnerabilities and Exposures — public catalog of disclosed vulnerabilities. Each CVE has a unique ID, severity, and is mapped to one or more CWE weakness types.',
     calc: 'COUNT(DISTINCT cve.cve_id) where cve.published_at is in the current or previous calendar year (rolling window). Joined via cve_weaknesses → CAPEC → ATT&CK technique. Includes CTID hand-curated direct mappings.',
   },
   {
     label: 'GHSA N',
-    cls: 'bg-purple-600 text-white border-purple-700',
     short: 'linked OSS advisories (≥100)',
     definition: 'GitHub Security Advisories — GHSA-xxxx-xxxx-xxxx identifiers for vulnerabilities in open-source packages. Covers npm, PyPI, Maven, Go, RubyGems, NuGet, Composer, crates.io, Hex, Pub.',
     calc: 'COUNT(DISTINCT ghsa.ghsa_id) where ghsa.published_at is in the current or previous calendar year (rolling window). Joined via ghsa_weaknesses → CAPEC → ATT&CK technique.',
   },
   {
     label: 'WIDE N',
-    cls: 'bg-amber-600 text-white border-amber-700',
     short: 'tracked threat groups (≥20)',
     definition: 'Threat groups in MITRE ATT&CK — named adversary groups (APT29, Lazarus, Volt Typhoon, etc.) that MITRE attributes specific techniques to based on open-source incident reporting.',
     calc: 'COUNT(DISTINCT group_id) across the group_techniques table. Cumulative across all ATT&CK release history (since ~2015). No recency weighting — a 2015 attribution counts the same as 2026.',
   },
 ];
 
+// Single neutral chip style — used for every heat badge (legend + inline next to
+// techniques + tactic-header summary). Keeps the page focused; signal comes
+// from presence + count, not colour.
+const BADGE_CLS = 'bg-transparent text-[var(--text-primary)] border-[var(--border-color)]';
+
 function HeatLegend() {
   const [openExplain, setOpenExplain] = useState(false);
   return (
     <div className="mb-4 px-4 py-3 rounded-md border border-[var(--border-color)] bg-[var(--surface-card)]">
-      <div className="flex items-baseline justify-between mb-2 gap-2 flex-wrap">
-        <div className="text-[10px] uppercase tracking-wider font-semibold text-[var(--text-secondary)] flex items-baseline gap-2">
-          <span>CTI heat signals</span>
-          <span className="text-[var(--text-secondary)] font-normal normal-case tracking-normal">
-            ·  CVE / GHSA scoped to current + previous calendar year (rolling)
+      <div className="flex items-baseline justify-between mb-3 gap-2 flex-wrap">
+        <div className="flex items-baseline gap-2 flex-wrap">
+          <h2 className="text-sm font-semibold text-[var(--text-primary)]">CTI heat signals</h2>
+          <span className="text-xs text-[var(--text-secondary)]">
+            · CVE / GHSA scoped to current + previous calendar year (rolling)
           </span>
         </div>
         <button
           type="button"
           onClick={() => setOpenExplain((v) => !v)}
-          className="text-[10px] text-[var(--accent-teal)] hover:underline"
+          className="text-[11px] text-[var(--accent-teal)] hover:underline"
         >
           {openExplain ? 'Hide definitions ▴' : 'How is this calculated? ▾'}
         </button>
@@ -157,7 +151,7 @@ function HeatLegend() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1.5 text-[11px]">
         {LEGEND_ROWS.map((r) => (
           <div key={r.label} className="flex items-baseline gap-2" title={`${r.definition}\n\nCalc: ${r.calc}`}>
-            <span className={`font-mono text-[10px] px-1.5 py-0.5 rounded border whitespace-nowrap shrink-0 ${r.cls}`}>
+            <span className={`font-mono text-[10px] px-1.5 py-0.5 rounded border whitespace-nowrap shrink-0 ${BADGE_CLS}`}>
               {r.label}
             </span>
             <span className="text-[var(--text-secondary)]">{r.short}</span>
@@ -169,7 +163,7 @@ function HeatLegend() {
           {LEGEND_ROWS.map((r) => (
             <div key={r.label}>
               <div className="flex items-baseline gap-2 mb-1">
-                <span className={`font-mono text-[10px] px-1.5 py-0.5 rounded border whitespace-nowrap shrink-0 ${r.cls}`}>
+                <span className={`font-mono text-[10px] px-1.5 py-0.5 rounded border whitespace-nowrap shrink-0 ${BADGE_CLS}`}>
                   {r.label}
                 </span>
                 <span className="text-[var(--text-primary)] font-medium">{r.short}</span>
@@ -226,17 +220,17 @@ function TacticHeatSummary({ techniques }: { techniques: TechniqueRef[] }) {
   return (
     <span className="inline-flex flex-wrap gap-1 ml-1.5">
       {kev > 0 && (
-        <span title="Techniques with CISA KEV exposure" className="text-[9px] font-mono px-1.5 py-0.5 rounded border whitespace-nowrap bg-red-600 text-white border-red-700">
+        <span title="Techniques with CISA KEV exposure" className={`text-[9px] font-mono px-1.5 py-0.5 rounded border whitespace-nowrap ${BADGE_CLS}`}>
           {kev} KEV
         </span>
       )}
       {hot > 0 && (
-        <span title="Techniques with EPSS ≥ 0.5 (predicted exploit within 30 days)" className="text-[9px] font-mono px-1.5 py-0.5 rounded border whitespace-nowrap bg-orange-600 text-white border-orange-700">
+        <span title="Techniques with EPSS ≥ 0.5 (predicted exploit within 30 days)" className={`text-[9px] font-mono px-1.5 py-0.5 rounded border whitespace-nowrap ${BADGE_CLS}`}>
           {hot} HOT
         </span>
       )}
       {wide > 0 && (
-        <span title="Techniques used by ≥20 tracked threat groups" className="text-[9px] font-mono px-1.5 py-0.5 rounded border whitespace-nowrap bg-amber-600 text-white border-amber-700">
+        <span title="Techniques used by ≥20 tracked threat groups" className={`text-[9px] font-mono px-1.5 py-0.5 rounded border whitespace-nowrap ${BADGE_CLS}`}>
           {wide} WIDE
         </span>
       )}
