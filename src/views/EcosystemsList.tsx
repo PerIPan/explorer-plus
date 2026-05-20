@@ -158,7 +158,7 @@ function CategorySection({
 }
 
 function TableView({ rows }: { rows: EcosystemListRow[] }) {
-  const [sortKey, setSortKey] = useState<'last14d' | 'total' | 'critical' | 'name'>('critical');
+  const [sortKey, setSortKey] = useState<'last14d' | 'total' | 'critical' | 'name'>('last14d');
   const sorted = useMemo(() => {
     const copy = [...rows];
     if (sortKey === 'name') copy.sort((a, b) => a.displayName.localeCompare(b.displayName));
