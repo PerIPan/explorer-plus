@@ -187,24 +187,6 @@ function HeatLegend() {
   );
 }
 
-/** "360 →" link that opens the tactic's 360 view. Sits after the heat badges
- *  inside the TacticGroup header button — uses `e.stopPropagation` so clicking
- *  this doesn't also toggle the open/close state. */
-function TacticThreeSixtyLink({ techniques }: { techniques: TechniqueRef[] }) {
-  const tid = techniques.find((t) => t.tactic_attack_id)?.tactic_attack_id;
-  if (!tid) return null;
-  return (
-    <Link
-      href={tacticHref(tid)}
-      onClick={(e) => e.stopPropagation()}
-      className="ml-1 text-[10px] font-medium text-[var(--accent-teal)] hover:underline normal-case tracking-normal"
-      title={`Open 360 view for ${tid}`}
-    >
-      360 →
-    </Link>
-  );
-}
-
 /** Aggregate heat summary shown next to a tactic header — answers "how dangerous
  *  is this tactic for this article?". Counts KEV / HOT (EPSS≥0.5) / WIDE (≥20 groups). */
 function TacticHeatSummary({ techniques }: { techniques: TechniqueRef[] }) {
@@ -621,7 +603,6 @@ function TacticGroup({
         {tactic}
         <span className="text-[var(--text-secondary)] font-normal">({techniques.length})</span>
         <TacticHeatSummary techniques={techniques} />
-        <TacticThreeSixtyLink techniques={techniques} />
       </button>
       {open && (
         <div className="flex flex-wrap gap-x-3 gap-y-1.5 pl-4 pb-2">
