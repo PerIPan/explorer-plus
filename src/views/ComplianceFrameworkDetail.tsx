@@ -662,18 +662,22 @@ function ParentBlock({
   const displayName = parent?.technique_name ?? parentName ?? null;
   return (
     <div className="w-full">
-      <div className="flex items-baseline gap-1.5 flex-wrap">
-        <Link href={techniqueHref(parentId)} className="text-xs text-[var(--accent-teal)] hover:underline">
-          <span className="font-mono">{parentId}</span>
-          {displayName && <span className="text-[var(--text-primary)] ml-1">{displayName}</span>}
-        </Link>
-        <span className="text-[10px] text-[var(--text-secondary)]">({subs.length} sub{subs.length === 1 ? '' : 's'})</span>
-        {parent && <HeatBadges t={parent} />}
+      <div className="flex items-baseline justify-between gap-2">
+        <div className="flex items-baseline gap-1.5 min-w-0">
+          <Link href={techniqueHref(parentId)} className="text-xs text-[var(--accent-teal)] hover:underline truncate">
+            <span className="font-mono">{parentId}</span>
+            {displayName && <span className="text-[var(--text-primary)] ml-1">{displayName}</span>}
+          </Link>
+          <span className="text-[10px] text-[var(--text-secondary)] shrink-0">({subs.length} sub{subs.length === 1 ? '' : 's'})</span>
+        </div>
+        <span className="shrink-0">
+          {parent && <HeatBadges t={parent} />}
+        </span>
       </div>
       <ul className="pl-5 mt-1 space-y-0.5 border-l border-[var(--border-color)] ml-2">
         {subs.map((t) => (
           <li key={t.attack_id} className="pl-2">
-            <TechniqueChip t={t} dim />
+            <TechniqueChip t={t} dim rowLayout />
           </li>
         ))}
       </ul>
@@ -681,7 +685,29 @@ function ParentBlock({
   );
 }
 
-function TechniqueChip({ t, dim }: { t: TechniqueRef; dim?: boolean }) {
+function TechniqueChip({ t, dim, rowLayout }: { t: TechniqueRef; dim?: boolean; rowLayout?: boolean }) {
+  // Two modes:
+  //   rowLayout (used for sub-technique list items + standalone vertical rows):
+  //     full-width flex with the link on the left, badges right-aligned —
+  //     gives a tidy column of aligned badges.
+  //   chip (default, used for standalone chips inside a tactic-group wrap):
+  //     inline-flex, badges sit immediately after the name.
+  if (rowLayout) {
+    return (
+      <div className="flex items-baseline justify-between gap-2 w-full">
+        <Link
+          href={techniqueHref(t.attack_id)}
+          className={`text-xs hover:underline truncate min-w-0 ${dim ? 'text-[var(--text-secondary)] hover:text-[var(--accent-teal)]' : 'text-[var(--accent-teal)]'}`}
+        >
+          <span className="font-mono">{t.attack_id}</span>
+          {t.technique_name && <span className="text-[var(--text-secondary)] ml-1">{t.technique_name}</span>}
+        </Link>
+        <span className="shrink-0">
+          <HeatBadges t={t} />
+        </span>
+      </div>
+    );
+  }
   return (
     <span className="inline-flex items-baseline gap-1 max-w-full">
       <Link
