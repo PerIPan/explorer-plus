@@ -8,20 +8,33 @@ export const TACTIC_COLOR_CLASS: Record<
   string,
   { text: string; dot: string; tint: string; border: string }
 > = {
-  'Reconnaissance':        { text: 'text-sky-400',    dot: 'bg-sky-400',    tint: 'bg-sky-400/10',    border: 'border-sky-400/40' },
-  'Resource Development':  { text: 'text-teal-400',   dot: 'bg-teal-400',   tint: 'bg-teal-400/10',   border: 'border-teal-400/40' },
-  'Initial Access':        { text: 'text-blue-500',   dot: 'bg-blue-500',   tint: 'bg-blue-500/10',   border: 'border-blue-500/40' },
-  'Execution':             { text: 'text-purple-500', dot: 'bg-purple-500', tint: 'bg-purple-500/10', border: 'border-purple-500/40' },
-  'Persistence':           { text: 'text-indigo-500', dot: 'bg-indigo-500', tint: 'bg-indigo-500/10', border: 'border-indigo-500/40' },
-  'Privilege Escalation':  { text: 'text-violet-500', dot: 'bg-violet-500', tint: 'bg-violet-500/10', border: 'border-violet-500/40' },
-  'Defense Evasion':       { text: 'text-slate-400',  dot: 'bg-slate-400',  tint: 'bg-slate-400/10',  border: 'border-slate-400/40' },
-  'Credential Access':     { text: 'text-yellow-500', dot: 'bg-yellow-500', tint: 'bg-yellow-500/10', border: 'border-yellow-500/40' },
-  'Discovery':             { text: 'text-lime-500',   dot: 'bg-lime-500',   tint: 'bg-lime-500/10',   border: 'border-lime-500/40' },
-  'Lateral Movement':      { text: 'text-green-500',  dot: 'bg-green-500',  tint: 'bg-green-500/10',  border: 'border-green-500/40' },
-  'Collection':            { text: 'text-amber-500',  dot: 'bg-amber-500',  tint: 'bg-amber-500/10',  border: 'border-amber-500/40' },
-  'Command and Control':   { text: 'text-orange-500', dot: 'bg-orange-500', tint: 'bg-orange-500/10', border: 'border-orange-500/40' },
-  'Exfiltration':          { text: 'text-red-400',    dot: 'bg-red-400',    tint: 'bg-red-400/10',    border: 'border-red-400/40' },
-  'Impact':                { text: 'text-rose-500',   dot: 'bg-rose-500',   tint: 'bg-rose-500/10',   border: 'border-rose-500/40' },
+  // ---- Enterprise (kill-chain progression) -----------------------------
+  'Reconnaissance':           { text: 'text-sky-400',     dot: 'bg-sky-400',     tint: 'bg-sky-400/10',     border: 'border-sky-400/40' },
+  'Resource Development':     { text: 'text-teal-400',    dot: 'bg-teal-400',    tint: 'bg-teal-400/10',    border: 'border-teal-400/40' },
+  'Initial Access':           { text: 'text-blue-500',    dot: 'bg-blue-500',    tint: 'bg-blue-500/10',    border: 'border-blue-500/40' },
+  'Execution':                { text: 'text-purple-500',  dot: 'bg-purple-500',  tint: 'bg-purple-500/10',  border: 'border-purple-500/40' },
+  'Persistence':              { text: 'text-indigo-500',  dot: 'bg-indigo-500',  tint: 'bg-indigo-500/10',  border: 'border-indigo-500/40' },
+  'Privilege Escalation':     { text: 'text-violet-500',  dot: 'bg-violet-500',  tint: 'bg-violet-500/10',  border: 'border-violet-500/40' },
+  'Defense Evasion':          { text: 'text-slate-400',   dot: 'bg-slate-400',   tint: 'bg-slate-400/10',   border: 'border-slate-400/40' },
+  'Credential Access':        { text: 'text-yellow-500',  dot: 'bg-yellow-500',  tint: 'bg-yellow-500/10',  border: 'border-yellow-500/40' },
+  'Discovery':                { text: 'text-lime-500',    dot: 'bg-lime-500',    tint: 'bg-lime-500/10',    border: 'border-lime-500/40' },
+  'Lateral Movement':         { text: 'text-green-500',   dot: 'bg-green-500',   tint: 'bg-green-500/10',   border: 'border-green-500/40' },
+  'Collection':               { text: 'text-amber-500',   dot: 'bg-amber-500',   tint: 'bg-amber-500/10',   border: 'border-amber-500/40' },
+  'Command and Control':      { text: 'text-orange-500',  dot: 'bg-orange-500',  tint: 'bg-orange-500/10',  border: 'border-orange-500/40' },
+  'Exfiltration':             { text: 'text-red-400',     dot: 'bg-red-400',     tint: 'bg-red-400/10',     border: 'border-red-400/40' },
+  'Impact':                   { text: 'text-rose-500',    dot: 'bg-rose-500',    tint: 'bg-rose-500/10',    border: 'border-rose-500/40' },
+  // ---- ICS (cyan family — operational technology) ----------------------
+  'Evasion':                  { text: 'text-cyan-400',    dot: 'bg-cyan-400',    tint: 'bg-cyan-400/10',    border: 'border-cyan-400/40' },
+  'Inhibit Response Function':{ text: 'text-cyan-500',    dot: 'bg-cyan-500',    tint: 'bg-cyan-500/10',    border: 'border-cyan-500/40' },
+  'Impair Process Control':   { text: 'text-cyan-600',    dot: 'bg-cyan-600',    tint: 'bg-cyan-600/10',    border: 'border-cyan-600/40' },
+  // ---- ATLAS (AI/ML — fuchsia family) ----------------------------------
+  'AI Model Access':          { text: 'text-fuchsia-400', dot: 'bg-fuchsia-400', tint: 'bg-fuchsia-400/10', border: 'border-fuchsia-400/40' },
+  'AI Attack Staging':        { text: 'text-fuchsia-500', dot: 'bg-fuchsia-500', tint: 'bg-fuchsia-500/10', border: 'border-fuchsia-500/40' },
+  // ---- Mobile (emerald family) -----------------------------------------
+  'Stealth':                  { text: 'text-emerald-400', dot: 'bg-emerald-400', tint: 'bg-emerald-400/10', border: 'border-emerald-400/40' },
+  'Defense Impairment':       { text: 'text-emerald-500', dot: 'bg-emerald-500', tint: 'bg-emerald-500/10', border: 'border-emerald-500/40' },
+  'Network Effects':          { text: 'text-emerald-600', dot: 'bg-emerald-600', tint: 'bg-emerald-600/10', border: 'border-emerald-600/40' },
+  'Remote Service Effects':   { text: 'text-emerald-700', dot: 'bg-emerald-700', tint: 'bg-emerald-700/10', border: 'border-emerald-700/40' },
 };
 
 const FALLBACK = {

@@ -597,13 +597,16 @@ async function rebuildTechniqueHeat(client, dryRun) {
     await client.query(`TRUNCATE scf_technique_heat`);
     const r = await client.query(`
       WITH cve_tech AS (
+        -- Join via cve_weaknesses (all CWEs per CVE) so we don't under-count
+        -- against cve_details.cwe_id (primary CWE only). Also picks up
+        -- CTID-direct synthetic CWE mappings inserted by sync-ctid-cve-mappings.mjs.
         SELECT cm.attack_technique_id AS attack_id,
-               COUNT(DISTINCT c.cve_id) AS cves,
+               COUNT(DISTINCT cw.cve_id) AS cves,
                BOOL_OR(c.is_kev) AS has_kev,
                MAX(c.epss_score) AS max_epss
-        FROM cve_details c
-        JOIN capec_mappings cm ON cm.cwe_id = c.cwe_id AND cm.attack_technique_id IS NOT NULL
-        WHERE c.cwe_id IS NOT NULL
+        FROM cve_weaknesses cw
+        JOIN cve_details   c  ON c.cve_id = cw.cve_id
+        JOIN capec_mappings cm ON cm.cwe_id = cw.cwe_id AND cm.attack_technique_id IS NOT NULL
         GROUP BY cm.attack_technique_id
       ),
       ghsa_tech AS (

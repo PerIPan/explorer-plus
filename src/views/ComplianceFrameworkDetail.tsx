@@ -23,47 +23,48 @@ interface TechniqueRef {
   group_count: number;
 }
 
-/** Tiny compact chip — used for heat badges next to a technique. */
+/** Tiny compact chip — used for heat badges next to a technique.
+ *  Solid backgrounds with white/dark text for readability in both themes. */
 function HeatBadges({ t }: { t: TechniqueRef }) {
   const badges: { label: string; cls: string; title: string }[] = [];
   if (t.has_kev) {
     badges.push({
       label: 'KEV',
-      cls: 'bg-red-500/20 text-red-300 border-red-500/40',
+      cls: 'bg-red-600 text-white border-red-700',
       title: 'At least one linked CVE is in CISA Known Exploited Vulnerabilities',
     });
   }
   if (t.max_epss != null && t.max_epss >= 0.5) {
     badges.push({
       label: `EPSS ${t.max_epss.toFixed(2)}`,
-      cls: 'bg-orange-500/20 text-orange-300 border-orange-500/40',
+      cls: 'bg-orange-600 text-white border-orange-700',
       title: 'Maximum EPSS exploit-probability across linked CVEs (≥0.5 = exploit predicted within 30 days)',
     });
   }
   if (t.cve_count >= 100) {
     badges.push({
       label: `CVE ${t.cve_count.toLocaleString()}`,
-      cls: 'bg-pink-500/15 text-pink-300 border-pink-500/30',
+      cls: 'bg-pink-600 text-white border-pink-700',
       title: `Linked CVEs (via CWE → CAPEC → ATT&CK)`,
     });
   }
   if (t.ghsa_count >= 100) {
     badges.push({
       label: `GHSA ${t.ghsa_count.toLocaleString()}`,
-      cls: 'bg-purple-500/15 text-purple-300 border-purple-500/30',
+      cls: 'bg-purple-600 text-white border-purple-700',
       title: `Linked GitHub Security Advisories (OSS package angle)`,
     });
   }
   if (t.group_count >= 20) {
     badges.push({
       label: `WIDE ${t.group_count}`,
-      cls: 'bg-amber-500/15 text-amber-300 border-amber-500/40',
+      cls: 'bg-amber-600 text-white border-amber-700',
       title: 'Number of tracked threat groups using this technique',
     });
   } else if (t.group_count >= 5) {
     badges.push({
       label: `${t.group_count} groups`,
-      cls: 'bg-slate-500/15 text-[var(--text-secondary)] border-[var(--border-color)]',
+      cls: 'bg-slate-600 text-white border-slate-700',
       title: 'Number of tracked threat groups using this technique',
     });
   }
@@ -74,11 +75,44 @@ function HeatBadges({ t }: { t: TechniqueRef }) {
         <span
           key={b.label}
           title={b.title}
-          className={`text-[9px] font-mono px-1 py-0.5 rounded border ${b.cls}`}
+          className={`text-[10px] font-mono px-1.5 py-0.5 rounded border whitespace-nowrap ${b.cls}`}
         >
           {b.label}
         </span>
       ))}
+    </span>
+  );
+}
+
+/** Aggregate heat summary shown next to a tactic header — answers "how dangerous
+ *  is this tactic for this article?". Counts KEV / HOT (EPSS≥0.5) / WIDE (≥20 groups). */
+function TacticHeatSummary({ techniques }: { techniques: TechniqueRef[] }) {
+  let kev = 0;
+  let hot = 0;
+  let wide = 0;
+  for (const t of techniques) {
+    if (t.has_kev) kev++;
+    if (t.max_epss != null && t.max_epss >= 0.5) hot++;
+    if (t.group_count >= 20) wide++;
+  }
+  if (kev === 0 && hot === 0 && wide === 0) return null;
+  return (
+    <span className="inline-flex flex-wrap gap-1 ml-1.5">
+      {kev > 0 && (
+        <span title="Techniques with CISA KEV exposure" className="text-[9px] font-mono px-1.5 py-0.5 rounded border whitespace-nowrap bg-red-600 text-white border-red-700">
+          {kev} KEV
+        </span>
+      )}
+      {hot > 0 && (
+        <span title="Techniques with EPSS ≥ 0.5 (predicted exploit within 30 days)" className="text-[9px] font-mono px-1.5 py-0.5 rounded border whitespace-nowrap bg-orange-600 text-white border-orange-700">
+          {hot} HOT
+        </span>
+      )}
+      {wide > 0 && (
+        <span title="Techniques used by ≥20 tracked threat groups" className="text-[9px] font-mono px-1.5 py-0.5 rounded border whitespace-nowrap bg-amber-600 text-white border-amber-700">
+          {wide} WIDE
+        </span>
+      )}
     </span>
   );
 }
@@ -408,21 +442,26 @@ function RefItem({ refData }: { refData: { ref_id: string; techniques: Technique
  *  Closed by default — sections are still dense even after grouping. */
 function TacticGroup({ tactic, techniques }: { tactic: string; techniques: TechniqueRef[] }) {
   const [open, setOpen] = useState(false);
-  const byParent = new Map<string, TechniqueRef[]>();
-  const standalone: TechniqueRef[] = [];
-  const parentInList = new Map<string, TechniqueRef>();
-
-  for (const t of techniques) {
-    if (t.parent_attack_id) {
-      if (!byParent.has(t.parent_attack_id)) byParent.set(t.parent_attack_id, []);
-      byParent.get(t.parent_attack_id)!.push(t);
-    } else {
-      parentInList.set(t.attack_id, t);
+  // Memoise the per-tactic grouping — without this each accordion toggle on the
+  // outer section re-runs Map construction for every TacticGroup that isn't
+  // open (and there can be 14 per section × many sections).
+  const { byParent, standalone, parentInList } = useMemo(() => {
+    const bp = new Map<string, TechniqueRef[]>();
+    const sa: TechniqueRef[] = [];
+    const pl = new Map<string, TechniqueRef>();
+    for (const t of techniques) {
+      if (t.parent_attack_id) {
+        if (!bp.has(t.parent_attack_id)) bp.set(t.parent_attack_id, []);
+        bp.get(t.parent_attack_id)!.push(t);
+      } else {
+        pl.set(t.attack_id, t);
+      }
     }
-  }
-  for (const [parentId, parentT] of parentInList.entries()) {
-    if (!byParent.has(parentId)) standalone.push(parentT);
-  }
+    for (const [parentId, parentT] of pl.entries()) {
+      if (!bp.has(parentId)) sa.push(parentT);
+    }
+    return { byParent: bp, standalone: sa, parentInList: pl };
+  }, [techniques]);
 
   const colors = tacticColors(tactic);
 
@@ -442,6 +481,7 @@ function TacticGroup({ tactic, techniques }: { tactic: string; techniques: Techn
         <span className={`w-1.5 h-1.5 rounded-full ${colors.dot}`} aria-hidden="true" />
         {tactic}
         <span className="text-[var(--text-secondary)] font-normal">({techniques.length})</span>
+        <TacticHeatSummary techniques={techniques} />
       </button>
       {open && (
         <div className="flex flex-wrap gap-x-3 gap-y-1.5 pl-4 pb-2">
