@@ -282,7 +282,7 @@ export function ComplianceFrameworkDetail({ frameworkKey }: { frameworkKey: stri
       {/* Heat badge legend — grid layout, predictable column widths */}
       <div className="mb-4 px-4 py-3 rounded-md border border-[var(--border-color)] bg-[var(--surface-card)]">
         <div className="text-[10px] uppercase tracking-wider font-semibold text-[var(--text-secondary)] mb-2">
-          Heat signals
+          CTI heat signals
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1.5 text-[11px]">
           <div className="flex items-baseline gap-2">
