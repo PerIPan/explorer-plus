@@ -99,10 +99,10 @@ const LEGEND_ROWS: Array<{
     calc: 'BOOL_OR(c.is_kev) across all CVEs linked to the technique via the CWE → CAPEC → ATT&CK bridge. Cumulative since the catalog started — once on KEV, stays.',
   },
   {
-    label: 'EPSS X.XX',
-    short: 'exploit-probability (≥0.5) — counts as "HOT" in tactic summary',
-    definition: "EPSS (Exploit Prediction Scoring System) — a daily-updated probability (0.00-1.00) that a CVE will be exploited in the next 30 days. Produced by FIRST.org's EPSS SIG using ML over public exploit signals.",
-    calc: 'MAX(c.epss_score) across all CVEs linked to the technique. Shows the single most likely CVE in the next 30 days. Snapshot — refreshed monthly. Tactic-header `N HOT` counts techniques in that tactic whose EPSS reaches the 0.5 threshold.',
+    label: 'HOT N',
+    short: 'exploit-probability (EPSS ≥ 0.5)',
+    definition: "EPSS (Exploit Prediction Scoring System) — a daily-updated probability (0.00-1.00) that a CVE will be exploited in the next 30 days. Produced by FIRST.org's EPSS SIG using ML over public exploit signals. `HOT N` in the tactic summary counts techniques whose max EPSS reaches 0.5.",
+    calc: 'MAX(c.epss_score) across all CVEs linked to the technique. Per-technique chip shows the score as `EPSS 0.94`. Snapshot — refreshed monthly.',
   },
   {
     label: 'CVE N',
