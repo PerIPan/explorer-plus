@@ -154,7 +154,14 @@ function HeatLegend() {
             <span className={`font-mono text-[10px] px-1.5 py-0.5 rounded border whitespace-nowrap shrink-0 ${BADGE_CLS}`}>
               {r.label}
             </span>
-            <span className="text-[var(--text-secondary)]">{r.short}</span>
+            <span className="text-[var(--text-secondary)] flex-1 min-w-0">{r.short}</span>
+            <span
+              className="inline-flex items-center justify-center w-4 h-4 rounded-full border border-[var(--border-color)] text-[9px] font-bold text-[var(--text-secondary)] hover:text-[var(--accent-teal)] hover:border-[var(--accent-teal)] cursor-help shrink-0"
+              title={`${r.definition}\n\nCalc: ${r.calc}`}
+              aria-label="More info"
+            >
+              i
+            </span>
           </div>
         ))}
       </div>
