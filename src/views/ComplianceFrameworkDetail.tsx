@@ -267,7 +267,7 @@ export function ComplianceFrameworkDetail({ frameworkKey }: { frameworkKey: stri
         <ul className="divide-y divide-[var(--border-color)] border border-[var(--border-color)] rounded-md">
           {data.techniques.map((t) => (
             <li key={t.attack_id} className="px-3 py-2 grid grid-cols-[6rem_1fr_auto] items-baseline gap-3">
-              <Link href={`/cti/techniques/${t.attack_id}`} className="text-sm font-mono text-[var(--accent-teal)] hover:underline">
+              <Link href={`/techniques/${t.attack_id}`} className="text-sm font-mono text-[var(--accent-teal)] hover:underline">
                 {t.attack_id}
               </Link>
               <div className="min-w-0">
@@ -430,7 +430,7 @@ function ParentBlock({
   return (
     <div className="w-full">
       <Link
-        href={`/cti/techniques/${parentId}`}
+        href={`/techniques/${parentId}`}
         className="text-xs text-[var(--accent-teal)] hover:underline inline-flex items-baseline gap-1.5"
       >
         <span className="font-mono">{parentId}</span>
@@ -449,7 +449,7 @@ function ParentBlock({
 function TechniqueChip({ t, dim }: { t: TechniqueRef; dim?: boolean }) {
   return (
     <Link
-      href={`/cti/techniques/${t.attack_id}`}
+      href={`/techniques/${t.attack_id}`}
       className={`text-xs hover:underline truncate max-w-[20rem] ${dim ? 'text-[var(--text-secondary)] hover:text-[var(--accent-teal)]' : 'text-[var(--accent-teal)]'}`}
     >
       <span className="font-mono">{t.attack_id}</span>
