@@ -125,10 +125,22 @@ export function CampaignsList() {
       header: 'Domain',
       width: '70px',
       align: 'center',
-      render: (row) =>
-        row.domain ? (
-          <span className="text-[10px] text-[var(--text-secondary)] uppercase block text-center">{row.domain.replace('-attack', '')}</span>
-        ) : null,
+      render: (row) => {
+        // `domain` is TEXT[] post-migration (a campaign can span multiple
+        // ATT&CK domains). Coerce defensively so older string-domain rows
+        // (and renderer-typed-as-string clients) don't crash.
+        const domains: string[] = Array.isArray(row.domain)
+          ? row.domain
+          : row.domain
+            ? [row.domain as unknown as string]
+            : [];
+        if (domains.length === 0) return null;
+        return (
+          <span className="text-[10px] text-[var(--text-secondary)] uppercase block text-center">
+            {domains.map((d) => d.replace('-attack', '')).join(', ')}
+          </span>
+        );
+      },
     },
   ];
 

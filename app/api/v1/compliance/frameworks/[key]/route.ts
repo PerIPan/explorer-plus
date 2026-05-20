@@ -194,7 +194,10 @@ export async function GET(req: NextRequest, ctx: RouteCtx) {
         techniques,
         related: overlapRes.rows,
       },
-      900,
+      // Framework + SCF mapping data is static between deploys (refreshed via
+      // sync-scf.yml twice yearly). 24h cache with 7d SWR cuts cold-invoke load
+      // significantly on the heaviest framework pages.
+      86400,
     ),
   );
 }

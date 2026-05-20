@@ -1116,12 +1116,15 @@ export async function POST(req: NextRequest) {
 
       const ai = new GoogleGenAI({ apiKey });
       const toolsConfig = [{ functionDeclarations: TOOL_DECLARATIONS as any }];
+      // Hoist once per request — the function is pure modulo today's date,
+      // which doesn't change across the agentic loop (max 4 calls / request).
+      const systemInstruction = buildSystemInstruction();
 
       // Initial Gemini call with function declarations
       const response = await ai.models.generateContent({
         model: MODEL,
         contents: [{ role: 'user', parts: [{ text: userText }] }],
-        config: { systemInstruction: buildSystemInstruction(), tools: toolsConfig },
+        config: { systemInstruction, tools: toolsConfig },
       });
 
       const candidate = response.candidates?.[0];
@@ -1184,7 +1187,7 @@ export async function POST(req: NextRequest) {
           const followUp = await ai.models.generateContent({
             model: MODEL,
             contents: conversationParts as any,
-            config: { systemInstruction: buildSystemInstruction(), tools: toolsConfig },
+            config: { systemInstruction, tools: toolsConfig },
           });
 
           totalTokens += followUp.usageMetadata?.totalTokenCount ?? 0;

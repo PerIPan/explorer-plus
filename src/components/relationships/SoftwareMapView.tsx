@@ -225,7 +225,11 @@ export function SoftwareMapView({ attackId }: SoftwareMapViewProps) {
             variant={software.type === 'malware' ? 'pink' : 'purple'}
           />
           {software.domain && (
-            <Badge label={software.domain.replace('-attack', '')} variant="neutral" />
+            <Badge
+              label={(Array.isArray(software.domain) ? software.domain : [software.domain as unknown as string])
+                .map((d: string) => d.replace('-attack', '')).join(', ')}
+              variant="neutral"
+            />
           )}
           {platforms.map((p) => (
             <Badge key={p} label={p} variant="blue" />

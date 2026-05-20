@@ -111,10 +111,21 @@ export function SoftwareList() {
       header: 'Domain',
       width: '70px',
       align: 'center',
-      render: (row) =>
-        row.domain ? (
-          <span className="text-[10px] text-[var(--text-secondary)] uppercase block text-center">{row.domain.replace('-attack', '')}</span>
-        ) : null,
+      render: (row) => {
+        // attack_software.domain is TEXT[] (migration 2026-04-28). Coerce
+        // defensively for backward compat.
+        const domains: string[] = Array.isArray(row.domain)
+          ? (row.domain as unknown as string[])
+          : row.domain
+            ? [row.domain as unknown as string]
+            : [];
+        if (domains.length === 0) return null;
+        return (
+          <span className="text-[10px] text-[var(--text-secondary)] uppercase block text-center">
+            {domains.map((d) => d.replace('-attack', '')).join(', ')}
+          </span>
+        );
+      },
     },
   ];
 

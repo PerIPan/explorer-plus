@@ -56,8 +56,10 @@ export async function GET(
     unrated: string;
   }
 
-  const statsRes = isGhsaEco
-    ? await query<StatsRow>(
+  // Stats / top-packages / recent-advisories are independent queries — run them
+  // in parallel to cut wall-clock by ~2-3× (was sequential awaits).
+  const statsPromise = isGhsaEco
+    ? query<StatsRow>(
         `SELECT
            COUNT(DISTINCT g.ghsa_id)::text AS total,
            COUNT(DISTINCT g.ghsa_id) FILTER (WHERE g.published_at >= NOW() - INTERVAL '14 days')::text AS last14d,
@@ -74,7 +76,7 @@ export async function GET(
          WHERE g.withdrawn_at IS NULL AND LOWER(p.ecosystem) = $1`,
         [meta.canonical],
       )
-    : await query<StatsRow>(
+    : query<StatsRow>(
         `SELECT
            COUNT(*)::text AS total,
            COUNT(*) FILTER (WHERE o.published >= NOW() - INTERVAL '14 days')::text AS last14d,
@@ -93,35 +95,16 @@ export async function GET(
          WHERE o.ecosystem = $1`,
         [meta.canonical],
       );
-  const s = statsRes.rows[0];
-  const stats = s
-    ? {
-        total: parseInt(s.total, 10),
-        last14d: parseInt(s.last14d, 10),
-        last30d: parseInt(s.last30d, 10),
-        criticalLast30d: parseInt(s.critLast30d, 10),
-      }
-    : { total: 0, last14d: 0, last30d: 0, criticalLast30d: 0 };
 
-  const severityBreakdown = s
-    ? {
-        CRITICAL: parseInt(s.crit, 10),
-        HIGH: parseInt(s.high, 10),
-        MEDIUM: parseInt(s.med, 10),
-        LOW: parseInt(s.low, 10),
-        UNRATED: parseInt(s.unrated, 10),
-      }
-    : { CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0, UNRATED: 0 };
-
-  // --- Top packages ---------------------------------------------------------
+  // --- Top packages query (parallel) ---------------------------------------
 
   interface TopPkgRow {
     packageName: string;
     advisoryCount: string;
   }
 
-  const topPkgsRes = isGhsaEco
-    ? await query<TopPkgRow>(
+  const topPkgsPromise = isGhsaEco
+    ? query<TopPkgRow>(
         `SELECT p.package_name AS "packageName",
                 COUNT(DISTINCT g.ghsa_id)::text AS "advisoryCount"
          FROM ghsa_advisories g
@@ -133,7 +116,7 @@ export async function GET(
          LIMIT ${TOP_PACKAGES}`,
         [meta.canonical],
       )
-    : await query<TopPkgRow>(
+    : query<TopPkgRow>(
         `SELECT oa.package_name AS "packageName",
                 COUNT(*)::text AS "advisoryCount"
          FROM osv_affected oa
@@ -144,12 +127,7 @@ export async function GET(
         [meta.canonical],
       );
 
-  const topPackages = topPkgsRes.rows.map((r) => ({
-    packageName: r.packageName,
-    advisoryCount: parseInt(r.advisoryCount, 10),
-  }));
-
-  // --- Recent advisories ----------------------------------------------------
+  // --- Recent advisories query (parallel) ----------------------------------
 
   interface RecentRow {
     advisoryId: string;
@@ -161,11 +139,8 @@ export async function GET(
     publishedAt: string | null;
   }
 
-  const recentRes = isGhsaEco
-    ? await query<RecentRow>(
-        // Use EXISTS instead of DISTINCT + JOIN. Multiple packages per advisory
-        // (within the same ecosystem) would otherwise produce duplicate rows;
-        // PG also rejects DISTINCT + ORDER BY <CASE expression> (42P10).
+  const recentPromise = isGhsaEco
+    ? query<RecentRow>(
         `SELECT
             g.ghsa_id         AS "advisoryId",
             'GHSA'::text      AS source,
@@ -188,7 +163,7 @@ export async function GET(
          LIMIT ${RECENT_ADVISORIES}`,
         [meta.canonical],
       )
-    : await query<RecentRow>(
+    : query<RecentRow>(
         `SELECT
            o.osv_id          AS "advisoryId",
            'OSV'::text       AS source,
@@ -211,6 +186,37 @@ export async function GET(
          LIMIT ${RECENT_ADVISORIES}`,
         [meta.canonical],
       );
+
+  const [statsRes, topPkgsRes, recentRes] = await Promise.all([
+    statsPromise,
+    topPkgsPromise,
+    recentPromise,
+  ]);
+
+  const s = statsRes.rows[0];
+  const stats = s
+    ? {
+        total: parseInt(s.total, 10),
+        last14d: parseInt(s.last14d, 10),
+        last30d: parseInt(s.last30d, 10),
+        criticalLast30d: parseInt(s.critLast30d, 10),
+      }
+    : { total: 0, last14d: 0, last30d: 0, criticalLast30d: 0 };
+
+  const severityBreakdown = s
+    ? {
+        CRITICAL: parseInt(s.crit, 10),
+        HIGH: parseInt(s.high, 10),
+        MEDIUM: parseInt(s.med, 10),
+        LOW: parseInt(s.low, 10),
+        UNRATED: parseInt(s.unrated, 10),
+      }
+    : { CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0, UNRATED: 0 };
+
+  const topPackages = topPkgsRes.rows.map((r) => ({
+    packageName: r.packageName,
+    advisoryCount: parseInt(r.advisoryCount, 10),
+  }));
 
   const recentAdvisories = recentRes.rows.map((r) => ({
     advisoryId: r.advisoryId,

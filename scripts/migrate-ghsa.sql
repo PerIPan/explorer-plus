@@ -40,6 +40,9 @@ CREATE TABLE IF NOT EXISTS packages (
 );
 
 CREATE INDEX IF NOT EXISTS idx_packages_ecosystem ON packages(ecosystem);
+-- /ecosystems/<slug> filters on LOWER(p.ecosystem); plain B-tree on the bare
+-- column can't satisfy that predicate — expression index is required.
+CREATE INDEX IF NOT EXISTS idx_packages_ecosystem_lower ON packages (LOWER(ecosystem));
 CREATE INDEX IF NOT EXISTS idx_packages_name_trgm ON packages USING gin (package_name gin_trgm_ops);
 
 -- 4. GHSA advisories
