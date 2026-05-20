@@ -279,33 +279,33 @@ export function ComplianceFrameworkDetail({ frameworkKey }: { frameworkKey: stri
         </div>
       </div>
 
-      {/* Heat badge legend — explains the signal next to each technique. */}
-      <div className="mb-4 px-3 py-2 rounded-md border border-[var(--border-color)] bg-[var(--surface-card)] flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[10px]">
-        <span className="text-[var(--text-secondary)] uppercase tracking-wider font-semibold">Heat signals:</span>
-        <span className="inline-flex items-center gap-1">
-          <span className="font-mono px-1.5 py-0.5 rounded border whitespace-nowrap bg-red-600 text-white border-red-700">KEV</span>
-          <span className="text-[var(--text-secondary)]">linked CVE on CISA's actively-exploited list</span>
-        </span>
-        <span className="text-[var(--border-color)]">·</span>
-        <span className="inline-flex items-center gap-1">
-          <span className="font-mono px-1.5 py-0.5 rounded border whitespace-nowrap bg-orange-600 text-white border-orange-700">EPSS 0.94</span>
-          <span className="text-[var(--text-secondary)]">max EPSS exploit-probability (≥0.5)</span>
-        </span>
-        <span className="text-[var(--border-color)]">·</span>
-        <span className="inline-flex items-center gap-1">
-          <span className="font-mono px-1.5 py-0.5 rounded border whitespace-nowrap bg-pink-600 text-white border-pink-700">CVE 487</span>
-          <span className="text-[var(--text-secondary)]">linked CVEs (≥100)</span>
-        </span>
-        <span className="text-[var(--border-color)]">·</span>
-        <span className="inline-flex items-center gap-1">
-          <span className="font-mono px-1.5 py-0.5 rounded border whitespace-nowrap bg-purple-600 text-white border-purple-700">GHSA 312</span>
-          <span className="text-[var(--text-secondary)]">linked OSS advisories (≥100)</span>
-        </span>
-        <span className="text-[var(--border-color)]">·</span>
-        <span className="inline-flex items-center gap-1">
-          <span className="font-mono px-1.5 py-0.5 rounded border whitespace-nowrap bg-amber-600 text-white border-amber-700">WIDE 47</span>
-          <span className="text-[var(--text-secondary)]">tracked threat groups using it (≥20)</span>
-        </span>
+      {/* Heat badge legend — grid layout, predictable column widths */}
+      <div className="mb-4 px-4 py-3 rounded-md border border-[var(--border-color)] bg-[var(--surface-card)]">
+        <div className="text-[10px] uppercase tracking-wider font-semibold text-[var(--text-secondary)] mb-2">
+          Heat signals
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1.5 text-[11px]">
+          <div className="flex items-baseline gap-2">
+            <span className="font-mono text-[10px] px-1.5 py-0.5 rounded border whitespace-nowrap bg-red-600 text-white border-red-700 shrink-0">KEV</span>
+            <span className="text-[var(--text-secondary)]">linked CVE on CISA's actively-exploited list</span>
+          </div>
+          <div className="flex items-baseline gap-2">
+            <span className="font-mono text-[10px] px-1.5 py-0.5 rounded border whitespace-nowrap bg-orange-600 text-white border-orange-700 shrink-0">EPSS 0.94</span>
+            <span className="text-[var(--text-secondary)]">max EPSS exploit-probability (≥0.5)</span>
+          </div>
+          <div className="flex items-baseline gap-2">
+            <span className="font-mono text-[10px] px-1.5 py-0.5 rounded border whitespace-nowrap bg-pink-600 text-white border-pink-700 shrink-0">CVE 487</span>
+            <span className="text-[var(--text-secondary)]">linked CVEs (≥100)</span>
+          </div>
+          <div className="flex items-baseline gap-2">
+            <span className="font-mono text-[10px] px-1.5 py-0.5 rounded border whitespace-nowrap bg-purple-600 text-white border-purple-700 shrink-0">GHSA 312</span>
+            <span className="text-[var(--text-secondary)]">linked OSS advisories (≥100)</span>
+          </div>
+          <div className="flex items-baseline gap-2">
+            <span className="font-mono text-[10px] px-1.5 py-0.5 rounded border whitespace-nowrap bg-amber-600 text-white border-amber-700 shrink-0">WIDE 47</span>
+            <span className="text-[var(--text-secondary)]">tracked threat groups (≥20)</span>
+          </div>
+        </div>
       </div>
 
       {/* View toggle */}

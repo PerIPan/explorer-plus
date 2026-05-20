@@ -28,6 +28,7 @@ const topNav: NavItem[] = [
   { path: '/matrix', label: 'Matrix', tooltip: 'att&ck technique matrix heatmap — tactics vs techniques' },
   { path: '/dashboard', label: 'Overview', tooltip: 'summary stats, charts, and top threat groups' },
   { path: '/sectors', label: 'Sectors', tooltip: 'industry sectors targeted by threat groups — click any sector for its 360 view' },
+  { path: '/compliance', label: 'Compliance', tooltip: 'regulatory and audit frameworks (NIS2, DORA, PCI DSS, NIST 800-53, HIPAA, GDPR, CMMC, ...) bridged to ATT&CK Enterprise via the Secure Controls Framework (SCF)' },
   { path: '/cti/feed-status', label: 'Feed Status', tooltip: 'CTI feed ingestion health and manual sync controls' },
 ];
 
@@ -72,7 +73,6 @@ const frameworksNav: NavItem[] = [
 
 const extendedIntelNav: NavItem[] = [
   { path: '/external-actors', label: 'Non-MITRE Actors', tooltip: '500+ threat actors from ThaiCERT encyclopedia' },
-  { path: '/compliance', label: 'Compliance', tooltip: 'regulatory and audit frameworks (NIS2, DORA, PCI DSS, NIST 800-53, HIPAA, GDPR, CMMC, ...) bridged to ATT&CK Enterprise via the Secure Controls Framework (SCF)' },
 ];
 
 function NavItemLink({ path, label, tooltip, end }: NavItem & { end?: boolean }) {
