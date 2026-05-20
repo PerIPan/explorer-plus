@@ -90,7 +90,7 @@ function HeatBadges({ t }: { t: TechniqueRef }) {
 
 /** Legend block — explains the heat badges with definitions + calculations. */
 const LEGEND_ROWS: Array<{
-  label: string; cls: string; short: string; definition: string; calc: string;
+  label: string; short: string; definition: string; calc: string;
 }> = [
   {
     label: 'KEV',
