@@ -20,8 +20,13 @@
     "streaming": false,
     "pushNotifications": false
   },
-  "defaultInputModes": ["text/plain"],
-  "defaultOutputModes": ["application/json", "text/plain"],
+  "defaultInputModes": [
+    "text/plain"
+  ],
+  "defaultOutputModes": [
+    "application/json",
+    "text/plain"
+  ],
   "authentication": {
     "schemes": []
   },
@@ -39,7 +44,16 @@
         "Which CAPEC attack patterns apply to CVE-2024-3400?",
         "Which Linux / Debian / Ubuntu distro advisories reference CVE-2024-1086?"
       ],
-      "tags": ["cve", "vulnerability", "security", "cvss", "epss", "capec", "osv", "cisa-kev"]
+      "tags": [
+        "cve",
+        "vulnerability",
+        "security",
+        "cvss",
+        "epss",
+        "capec",
+        "osv",
+        "cisa-kev"
+      ]
     },
     {
       "id": "technique-intelligence",
@@ -52,7 +66,15 @@
         "Show me ATLAS technique AML.T0051",
         "Which CAPEC attack patterns map to T1190?"
       ],
-      "tags": ["technique", "attack", "atlas", "detection", "sigma", "d3fend", "capec"]
+      "tags": [
+        "technique",
+        "attack",
+        "atlas",
+        "detection",
+        "sigma",
+        "d3fend",
+        "capec"
+      ]
     },
     {
       "id": "threat-group-profile",
@@ -64,7 +86,12 @@
         "Show me the profile of Lazarus Group",
         "Compare APT28 and APT29 techniques"
       ],
-      "tags": ["threat-group", "apt", "adversary", "actor"]
+      "tags": [
+        "threat-group",
+        "apt",
+        "adversary",
+        "actor"
+      ]
     },
     {
       "id": "application-security",
@@ -73,10 +100,15 @@
       "examples": [
         "What CVEs affect LiteLLM?",
         "Show the attack surface for Microsoft Windows Server 2022",
-        "Which threat groups target Apache Tomcat?",
-        "What are the top 10 most vulnerable applications?"
+        "Which threat groups target Apache Tomcat?"
       ],
-      "tags": ["application", "software", "cpe", "vulnerability", "attack-surface"]
+      "tags": [
+        "application",
+        "software",
+        "cpe",
+        "vulnerability",
+        "attack-surface"
+      ]
     },
     {
       "id": "sector-threat-landscape",
@@ -87,7 +119,11 @@
         "Show the threat landscape for financial services",
         "Which techniques are most used against energy sector?"
       ],
-      "tags": ["sector", "industry", "threat-landscape"]
+      "tags": [
+        "sector",
+        "industry",
+        "threat-landscape"
+      ]
     },
     {
       "id": "detection-search",
@@ -99,7 +135,14 @@
         "What Atomic tests exist for T1059?",
         "List Azure cloud controls for T1190"
       ],
-      "tags": ["sigma", "detection", "nist", "compliance", "d3fend", "atomic"]
+      "tags": [
+        "sigma",
+        "detection",
+        "nist",
+        "compliance",
+        "d3fend",
+        "atomic"
+      ]
     },
     {
       "id": "cti-reports",
@@ -107,10 +150,14 @@
       "description": "Access recent CTI reports from AlienVault OTX, DFIR Report, Unit42, Microsoft Security, and Talos. Reports are mapped to ATT&CK techniques with IOC indicators.",
       "examples": [
         "Show me the latest threat reports",
-        "What reports mention T1059?",
-        "Any recent reports about ransomware?"
+        "What threat reports are linked to technique T1059?"
       ],
-      "tags": ["cti", "threat-report", "otx", "ioc"]
+      "tags": [
+        "cti",
+        "threat-report",
+        "otx",
+        "ioc"
+      ]
     },
     {
       "id": "entity-search",
@@ -121,7 +168,11 @@
         "Find all entities related to Mimikatz",
         "What entities match 'remote code execution'?"
       ],
-      "tags": ["search", "entity", "cross-domain"]
+      "tags": [
+        "search",
+        "entity",
+        "cross-domain"
+      ]
     },
     {
       "id": "software-analysis",
@@ -132,7 +183,12 @@
         "Search for ransomware tools",
         "Which groups use Mimikatz?"
       ],
-      "tags": ["malware", "tool", "software", "cobalt-strike"]
+      "tags": [
+        "malware",
+        "tool",
+        "software",
+        "cobalt-strike"
+      ]
     },
     {
       "id": "campaign-intelligence",
@@ -143,7 +199,11 @@
         "Show campaigns targeting the financial sector",
         "List recent campaigns by APT29"
       ],
-      "tags": ["campaign", "operation", "timeline"]
+      "tags": [
+        "campaign",
+        "operation",
+        "timeline"
+      ]
     },
     {
       "id": "mitigation-guidance",
@@ -154,7 +214,11 @@
         "What mitigations exist for credential theft?",
         "Show me network-based mitigations"
       ],
-      "tags": ["mitigation", "defense", "countermeasure"]
+      "tags": [
+        "mitigation",
+        "defense",
+        "countermeasure"
+      ]
     },
     {
       "id": "ioc-feed",
@@ -165,7 +229,14 @@
         "Search for Emotet IOCs",
         "What malicious hashes were reported today?"
       ],
-      "tags": ["ioc", "indicator", "hash", "ip", "domain", "virustotal"]
+      "tags": [
+        "ioc",
+        "indicator",
+        "hash",
+        "ip",
+        "domain",
+        "virustotal"
+      ]
     },
     {
       "id": "sigma-rules",
@@ -176,7 +247,12 @@
         "Show critical Sigma rules for T1059",
         "Find Sigma rules for PowerShell abuse"
       ],
-      "tags": ["sigma", "detection", "siem", "rule"]
+      "tags": [
+        "sigma",
+        "detection",
+        "siem",
+        "rule"
+      ]
     },
     {
       "id": "atomic-red-team",
@@ -187,7 +263,12 @@
         "Show me Linux persistence tests",
         "What tests exist for lateral movement?"
       ],
-      "tags": ["atomic", "red-team", "emulation", "testing"]
+      "tags": [
+        "atomic",
+        "red-team",
+        "emulation",
+        "testing"
+      ]
     },
     {
       "id": "external-actors",
@@ -198,7 +279,12 @@
         "What is known about Lazarus Group?",
         "List actors targeting critical infrastructure"
       ],
-      "tags": ["actor", "attribution", "country", "state-sponsor"]
+      "tags": [
+        "actor",
+        "attribution",
+        "country",
+        "state-sponsor"
+      ]
     },
     {
       "id": "owasp-top10",
@@ -213,7 +299,16 @@
         "Which ATLAS techniques map to LLM01 Prompt Injection?",
         "Compare Web and LLM OWASP supply chain risks"
       ],
-      "tags": ["owasp", "top10", "web-security", "appsec", "compliance", "ml-security", "llm-security", "ai-risks"]
+      "tags": [
+        "owasp",
+        "top10",
+        "web-security",
+        "appsec",
+        "compliance",
+        "ml-security",
+        "llm-security",
+        "ai-risks"
+      ]
     },
     {
       "id": "ghsa-lookup",
@@ -225,7 +320,15 @@
         "Get the GitHub advisory for the log4shell vulnerability",
         "Which CAPEC attack patterns apply to GHSA-jfh8-c2jp-5v3q?"
       ],
-      "tags": ["ghsa", "github", "advisory", "appsec", "vulnerabilities", "supply-chain", "capec"]
+      "tags": [
+        "ghsa",
+        "github",
+        "advisory",
+        "appsec",
+        "vulnerabilities",
+        "supply-chain",
+        "capec"
+      ]
     },
     {
       "id": "package-vulnerabilities",
@@ -237,7 +340,16 @@
         "Is maven/org.apache.logging.log4j:log4j-core vulnerable?",
         "What CVEs affect the go package github.com/containerd/containerd?"
       ],
-      "tags": ["packages", "npm", "pypi", "go", "maven", "supply-chain", "appsec", "vulnerabilities"]
+      "tags": [
+        "packages",
+        "npm",
+        "pypi",
+        "go",
+        "maven",
+        "supply-chain",
+        "appsec",
+        "vulnerabilities"
+      ]
     },
     {
       "id": "ghsa-search",
@@ -249,7 +361,13 @@
         "List GHSA-only vulnerabilities (no CVE assigned) from the last 30 days",
         "Show me HIGH-severity Python package vulnerabilities"
       ],
-      "tags": ["ghsa", "github", "advisory", "search", "vulnerabilities"]
+      "tags": [
+        "ghsa",
+        "github",
+        "advisory",
+        "search",
+        "vulnerabilities"
+      ]
     },
     {
       "id": "cve-to-packages",
@@ -259,7 +377,13 @@
         "Which packages are affected by CVE-2021-44228?",
         "Show me the package versions vulnerable to CVE-2022-22965"
       ],
-      "tags": ["cve", "packages", "ghsa", "supply-chain", "remediation"]
+      "tags": [
+        "cve",
+        "packages",
+        "ghsa",
+        "supply-chain",
+        "remediation"
+      ]
     },
     {
       "id": "capec-lookup",
@@ -271,7 +395,13 @@
         "Which ATT&CK techniques map to CAPEC-206?",
         "What mitigations exist for CAPEC-63 Cross-Site Scripting?"
       ],
-      "tags": ["capec", "attack-pattern", "cwe", "adversary-modelling", "threat-modelling"]
+      "tags": [
+        "capec",
+        "attack-pattern",
+        "cwe",
+        "adversary-modelling",
+        "threat-modelling"
+      ]
     },
     {
       "id": "capec-search",
@@ -283,7 +413,12 @@
         "Which Standard-abstraction patterns have High likelihood?",
         "Find CAPEC patterns related to authentication bypass"
       ],
-      "tags": ["capec", "attack-pattern", "search", "threat-modelling"]
+      "tags": [
+        "capec",
+        "attack-pattern",
+        "search",
+        "threat-modelling"
+      ]
     },
     {
       "id": "advisories-search",
@@ -297,7 +432,19 @@
         "Show all OS/distro advisories affecting openssl",
         "What advisories apply to Android in 2024?"
       ],
-      "tags": ["advisories", "ghsa", "osv", "vulnerabilities", "linux", "debian", "ubuntu", "alpine", "android", "kernel", "distros"]
+      "tags": [
+        "advisories",
+        "ghsa",
+        "osv",
+        "vulnerabilities",
+        "linux",
+        "debian",
+        "ubuntu",
+        "alpine",
+        "android",
+        "kernel",
+        "distros"
+      ]
     },
     {
       "id": "osv-lookup",
@@ -309,7 +456,17 @@
         "Get the OSV record for a Linux kernel CVE",
         "Which Alpine packages are vulnerable per ALAS-2024-0001?"
       ],
-      "tags": ["osv", "advisory", "linux", "debian", "ubuntu", "alpine", "android", "kernel", "distros"]
+      "tags": [
+        "osv",
+        "advisory",
+        "linux",
+        "debian",
+        "ubuntu",
+        "alpine",
+        "android",
+        "kernel",
+        "distros"
+      ]
     },
     {
       "id": "compliance-frameworks",
@@ -323,7 +480,26 @@
         "List all EU regulatory frameworks tracked",
         "Compare NIS2 and DORA coverage overlap"
       ],
-      "tags": ["compliance", "regulatory", "scf", "nis2", "dora", "pci-dss", "iso-27002", "hipaa", "gdpr", "nist-800-53", "cmmc", "fedramp", "nerc-cip", "iec-62443", "owasp-top-10", "eu-ai-act", "eu-cra", "grc"]
+      "tags": [
+        "compliance",
+        "regulatory",
+        "scf",
+        "nis2",
+        "dora",
+        "pci-dss",
+        "iso-27002",
+        "hipaa",
+        "gdpr",
+        "nist-800-53",
+        "cmmc",
+        "fedramp",
+        "nerc-cip",
+        "iec-62443",
+        "owasp-top-10",
+        "eu-ai-act",
+        "eu-cra",
+        "grc"
+      ]
     }
   ],
   "extensions": {

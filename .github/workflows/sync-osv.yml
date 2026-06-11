@@ -7,12 +7,13 @@ name: Sync OSV Advisories
 # no per-run timeout that matters here.
 #
 # Two schedules:
-#   - 05:30 UTC daily → delta (records modified in the last 7 days)
+#   - 05:30 UTC every 2 days → delta (records modified in the last 7 days —
+#     window comfortably covers the 48h cadence; halves Neon compute, ~10 h/mo)
 #   - 04:00 UTC on the 1st of each month → full (no cutoff, reconciles drift)
 
 on:
   schedule:
-    - cron: '30 5 * * *'    # daily delta
+    - cron: '30 5 */2 * *'  # delta every 2 days
     - cron: '0 4 1 * *'     # monthly full (1st of month)
   workflow_dispatch:
     inputs:
