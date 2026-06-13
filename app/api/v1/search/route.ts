@@ -105,5 +105,5 @@ export async function GET(req: NextRequest) {
     data_sources: dsResult.rows,
     owasp: owaspResult.rows,
     csf: csfResult.rows,
-  }, 300));
+  }, 3600));
 }

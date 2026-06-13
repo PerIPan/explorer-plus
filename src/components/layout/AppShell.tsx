@@ -66,11 +66,128 @@ function ThemeToggle() {
   );
 }
 
+/** Public REST API reference — rendered in the info modal's "API" tab.
+ *  Documents the open, keyless /api/v1 surface that already powers the site. */
+const API_GROUPS: { label: string; routes: { path: string; desc: string }[] }[] = [
+  {
+    label: 'ATT&CK core',
+    routes: [
+      { path: '/techniques', desc: 'list + filter techniques (domain, tactic, platform, search)' },
+      { path: '/techniques/{attackId}', desc: 'full technique detail' },
+      { path: '/tactics', desc: 'kill-chain tactics' },
+      { path: '/software', desc: 'malware + tools' },
+      { path: '/mitigations', desc: 'countermeasures' },
+      { path: '/data-sources', desc: 'detection data sources' },
+      { path: '/matrix', desc: 'tactic × technique matrix' },
+    ],
+  },
+  {
+    label: 'Threat actors',
+    routes: [
+      { path: '/groups', desc: 'ATT&CK threat groups' },
+      { path: '/groups/{attackId}', desc: 'group profile — techniques, software, campaigns, sectors' },
+      { path: '/campaigns', desc: 'named intrusion campaigns' },
+      { path: '/external-actors', desc: '500+ ThaiCERT / ETDA actors' },
+      { path: '/sectors', desc: 'targeted industry sectors' },
+    ],
+  },
+  {
+    label: 'Vulnerabilities & advisories',
+    routes: [
+      { path: '/cves', desc: 'CVEs — CVSS, EPSS, KEV, CWE (filter by severity, date)' },
+      { path: '/cves/{cveId}', desc: 'CVE detail + linked techniques + advisories' },
+      { path: '/advisories', desc: 'unified GHSA + OSV advisory list' },
+      { path: '/ghsa/{ghsaId}', desc: 'GitHub Security Advisory detail' },
+      { path: '/packages', desc: 'OSS / distro packages' },
+      { path: '/ecosystems', desc: 'per-ecosystem advisory dashboards' },
+      { path: '/capec', desc: 'CAPEC attack patterns' },
+    ],
+  },
+  {
+    label: 'Frameworks & compliance',
+    routes: [
+      { path: '/frameworks/owasp', desc: 'OWASP Top 10 (web / ML / LLM)' },
+      { path: '/frameworks/csf', desc: 'NIST CSF v2 subcategories' },
+      { path: '/frameworks/nist', desc: 'NIST 800-53 controls' },
+      { path: '/compliance/frameworks', desc: 'SCF-bridged frameworks (NIS2, DORA, PCI, ...)' },
+      { path: '/compliance/frameworks/{key}', desc: 'framework → ATT&CK technique detail' },
+    ],
+  },
+  {
+    label: 'CTI feeds & search',
+    routes: [
+      { path: '/cves?severity=CRITICAL', desc: '— example: filtered query' },
+      { path: '/feed/reports', desc: 'CTI reports (OTX, DFIR, Unit42, ...)' },
+      { path: '/feed/iocs', desc: 'IOCs — IPs, domains, hashes, URLs' },
+      { path: '/feed/sigma', desc: 'Sigma detection rules' },
+      { path: '/feed/atomic', desc: 'Atomic Red Team tests' },
+      { path: '/search?q=', desc: 'cross-domain entity search' },
+      { path: '/dashboard', desc: 'aggregate stats' },
+    ],
+  },
+];
+
+function ApiReference() {
+  return (
+    <div className="px-6 py-5 space-y-4 text-sm text-[var(--text-primary)] leading-relaxed">
+      <p>
+        <strong>Open REST API.</strong> Every page on this site is backed by a public, keyless JSON API —
+        you can query the same data directly. No auth, no sign-up, open CORS.
+      </p>
+      <div className="rounded-md border border-[var(--border-color)] bg-[var(--surface-card)] px-4 py-3 font-mono text-xs space-y-1">
+        <div><span className="text-[var(--text-secondary)]">Base URL</span>{'  '}<span className="text-[var(--accent-teal)]">https://mitre-explorer.org/api/v1</span></div>
+        <div><span className="text-[var(--text-secondary)]">Format{'   '}</span>{'  '}JSON · open CORS · cache-friendly (CDN-cached)</div>
+        <div><span className="text-[var(--text-secondary)]">Auth{'     '}</span>{'  '}none — keyless</div>
+      </div>
+
+      <p className="text-xs text-[var(--text-secondary)]">
+        Lists return <code className="text-[var(--accent-teal)]">{`{ data: [...], pagination: {...} }`}</code>;
+        detail routes return the entity object. Paginate with <code>page</code> + <code>limit</code>; filter with query params.
+      </p>
+
+      {/* curl examples */}
+      <div className="rounded-md border border-[var(--border-color)] bg-[var(--surface-card)] px-4 py-3 font-mono text-[11px] space-y-1.5 overflow-x-auto">
+        <div className="text-[var(--text-secondary)]"># technique detail</div>
+        <div>curl https://mitre-explorer.org/api/v1/techniques/T1059</div>
+        <div className="text-[var(--text-secondary)] pt-1"># critical CVEs, newest first</div>
+        <div>curl &apos;https://mitre-explorer.org/api/v1/cves?severity=CRITICAL&amp;limit=5&apos;</div>
+        <div className="text-[var(--text-secondary)] pt-1"># cross-domain search</div>
+        <div>curl &apos;https://mitre-explorer.org/api/v1/search?q=lazarus&apos;</div>
+      </div>
+
+      {/* endpoint groups */}
+      <div className="space-y-3">
+        {API_GROUPS.map((g) => (
+          <div key={g.label}>
+            <div className="text-[11px] font-bold uppercase tracking-wider text-[var(--accent-teal)] mb-1">{g.label}</div>
+            <ul className="space-y-0.5">
+              {g.routes.map((r) => (
+                <li key={r.path} className="flex flex-wrap items-baseline gap-x-2 text-xs">
+                  <code className="font-mono text-[var(--text-primary)]">{r.path}</code>
+                  <span className="text-[var(--text-secondary)]">{r.desc}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+
+      <p className="text-xs text-[var(--text-secondary)] pt-2 border-t border-[var(--border-color)]">
+        <strong className="text-[var(--text-primary)]">Fair use.</strong> Open and unmetered for normal use; heavy automated
+        traffic is rate-limited per IP at the edge. For programmatic AI-agent access use the{' '}
+        <a href="/.well-known/agent-card.json" target="_blank" rel="noopener noreferrer" className="text-[var(--accent-teal)] hover:underline">A2A Agent Card</a>{' '}
+        (50 req/day). Bulk users: contact us for a static data dump rather than crawling.
+      </p>
+    </div>
+  );
+}
+
 /** Root layout shell — sidebar + top bar + page content */
 export function AppShell({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [modelOpen, setModelOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
+  const [helpTab, setHelpTab] = useState<'about' | 'api'>('about');
 
   return (
     <div className="flex min-h-screen bg-[var(--surface-deep)]">
@@ -161,14 +278,30 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             onClick={e => e.stopPropagation()}
           >
             <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border-color)]">
-              <h2 className="text-lg font-semibold text-[var(--text-primary)]">about MITRE Explorer Plus (v19)</h2>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setHelpTab('about')}
+                  className={`px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${helpTab === 'about' ? 'text-[var(--accent-teal)] bg-[var(--teal-faint)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
+                >
+                  About
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setHelpTab('api')}
+                  className={`px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${helpTab === 'api' ? 'text-[var(--accent-teal)] bg-[var(--teal-faint)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
+                >
+                  API
+                </button>
+              </div>
               <button onClick={() => setHelpOpen(false)} className="p-2 rounded-md text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--hover-overlay)]">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
-            <div className="px-6 py-5 space-y-4 text-sm text-[var(--text-primary)] leading-relaxed">
+            {helpTab === 'api' && <ApiReference />}
+            <div className={`px-6 py-5 space-y-4 text-sm text-[var(--text-primary)] leading-relaxed ${helpTab === 'about' ? '' : 'hidden'}`}>
               <div className="flex justify-center pb-2">
                 <img src="/diamond-favicon.svg" alt="MITRE Explorer Plus" className="w-12 h-12" />
               </div>

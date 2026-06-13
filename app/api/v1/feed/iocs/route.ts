@@ -126,5 +126,5 @@ export async function GET(req: NextRequest) {
   return withCors(jsonResponse({
     data,
     pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
-  }));
+  }, 1800));
 }
