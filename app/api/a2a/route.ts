@@ -967,13 +967,20 @@ const IP_SALT = process.env.A2A_IP_SALT || (() => {
 })();
 
 function getRawClientIp(req: NextRequest): string {
-  // Trust Vercel's infrastructure-set headers first. These are written by the
-  // Vercel edge and cannot be spoofed by the user agent:
-  //   - `x-vercel-forwarded-for` (preferred): real client IP
-  //   - `x-real-ip` (legacy): also set by Vercel
-  // DO NOT trust the user-supplied `x-forwarded-for`: an attacker can send
-  // `X-Forwarded-For: <anything>` and rotate through "fresh" IPs to bypass
-  // our 50-req/day quota.
+  // Trust only infrastructure-set headers — never the user-supplied
+  // `x-forwarded-for` (an attacker can spoof it to rotate through "fresh"
+  // IPs and bypass the 50-req/day quota).
+  //
+  // Header precedence:
+  //   1. `cf-connecting-ip` — set by Cloudflare when the zone is proxied.
+  //      Cloudflare overwrites/strips a client-supplied value, so it's the
+  //      true client IP whenever we sit behind Cloudflare. Must be checked
+  //      FIRST, because with Cloudflare in front Vercel's own headers would
+  //      otherwise show Cloudflare's edge IP and bucket every caller together.
+  //   2. `x-vercel-forwarded-for` — Vercel edge, real client IP (direct-to-Vercel).
+  //   3. `x-real-ip` — legacy Vercel.
+  const cfIp = req.headers.get('cf-connecting-ip');
+  if (cfIp) return cfIp.trim();
   const vercelIp = req.headers.get('x-vercel-forwarded-for');
   if (vercelIp) return vercelIp.split(',')[0].trim();
   const realIp = req.headers.get('x-real-ip');
