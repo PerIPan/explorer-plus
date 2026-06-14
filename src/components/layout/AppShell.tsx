@@ -127,6 +127,49 @@ const API_GROUPS: { label: string; routes: { path: string; desc: string }[] }[] 
   },
 ];
 
+/** Agent2Agent (A2A) tab — how AI agents query the knowledge base programmatically. */
+function AgentToAgent() {
+  return (
+    <div className="px-6 py-5 space-y-4 text-sm text-[var(--text-primary)] leading-relaxed">
+      <p>
+        <strong>Agent2Agent (A2A) protocol.</strong> AI agents can query this knowledge base
+        programmatically — discover the available skills, call them, and get back structured
+        threat-intel. Open and keyless; powered by Gemini function-calling.
+      </p>
+
+      <div className="rounded-md border border-[var(--border-color)] bg-[var(--surface-card)] px-4 py-3 font-mono text-xs space-y-1">
+        <div><span className="text-[var(--text-secondary)]">Agent Card</span>{'  '}
+          <a href="/.well-known/agent-card.json" target="_blank" rel="noopener noreferrer" className="text-[var(--accent-teal)] hover:underline">/.well-known/agent-card.json</a>
+        </div>
+        <div><span className="text-[var(--text-secondary)]">Endpoint{'  '}</span>{'  '}POST /api/a2a</div>
+        <div><span className="text-[var(--text-secondary)]">Skills{'    '}</span>{'  '}25 skills · 39 tools</div>
+        <div><span className="text-[var(--text-secondary)]">Limit{'     '}</span>{'  '}50 requests/day per IP · no auth</div>
+        <div><span className="text-[var(--text-secondary)]">Protocol{'  '}</span>{'  '}A2A (JSON-RPC) · Gemini function-calling</div>
+      </div>
+
+      <p className="text-xs text-[var(--text-secondary)]">
+        Agents fetch the Agent Card to learn the skills (CVE lookup, technique intelligence,
+        threat-group profiles, advisories, CAPEC, compliance frameworks, …), then issue a
+        natural-language request. The agent chains the right tools and returns a structured
+        result + a rendered summary.
+      </p>
+
+      {/* Example prompt */}
+      <div>
+        <div className="text-[11px] font-bold uppercase tracking-wider text-[var(--accent-teal)] mb-1">Example</div>
+        <div className="rounded-md border border-[var(--border-color)] bg-[var(--surface-card)] px-4 py-3 text-xs italic text-[var(--text-secondary)]">
+          &ldquo;Ask mitre-explorer.org, using the A2A protocol: <span className="not-italic text-[var(--text-primary)]">which Applications have been affected by new CVEs published in the previous week? Show the relevant ATT&amp;CK techniques, plus the latest 2-day threat reports. Render the result for me.</span>&rdquo;
+        </div>
+      </div>
+
+      <p className="text-[11px] text-[var(--text-secondary)]">
+        Build agent-facing apps with the latest Claude or Gemini models. The Agent Card is the
+        machine-readable contract — point any A2A-capable agent at it.
+      </p>
+    </div>
+  );
+}
+
 function ApiReference() {
   return (
     <div className="px-6 py-5 space-y-4 text-sm text-[var(--text-primary)] leading-relaxed">
@@ -187,7 +230,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [modelOpen, setModelOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
-  const [helpTab, setHelpTab] = useState<'about' | 'api'>('about');
+  const [helpTab, setHelpTab] = useState<'about' | 'api' | 'a2a'>('about');
 
   return (
     <div className="flex min-h-screen bg-[var(--surface-deep)]">
@@ -293,6 +336,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 >
                   API
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setHelpTab('a2a')}
+                  className={`px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${helpTab === 'a2a' ? 'text-[var(--accent-teal)] bg-[var(--teal-faint)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
+                >
+                  Agent2Agent
+                </button>
               </div>
               <button onClick={() => setHelpOpen(false)} className="p-2 rounded-md text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--hover-overlay)]">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -301,6 +351,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </button>
             </div>
             {helpTab === 'api' && <ApiReference />}
+            {helpTab === 'a2a' && <AgentToAgent />}
             <div className={`px-6 py-5 space-y-4 text-sm text-[var(--text-primary)] leading-relaxed ${helpTab === 'about' ? '' : 'hidden'}`}>
               <div className="flex justify-center pb-2">
                 <img src="/diamond-favicon.svg" alt="MITRE Explorer Plus" className="w-12 h-12" />
@@ -311,7 +362,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </p>
               <ul className="space-y-2 pl-4 list-disc marker:text-[var(--accent-teal)]">
                 <li><strong>Multi-domain ATT&CK + ATLAS</strong> — Enterprise, ICS, Mobile, ATLAS (AI/ML threats) with domain switcher + "All Domains" cross-domain view</li>
-                <li><strong>A2A Agent Protocol v1.0</strong> — AI agents can query this knowledge base programmatically via the <a href="/.well-known/agent-card.json" target="_blank" rel="noopener noreferrer" className="text-[var(--accent-teal)] hover:underline">Agent Card</a>. 24 skills, 50 req/day, no auth. Example: <em className="text-[var(--text-secondary)]">"ask mitre-explorer.org, using the A2A Google GenAI protocol, 'which Applications have been affected by new CVEs published in the previous week, show me the relevant Techniques. Also show me the latest 2-day threat reports. Render what you get as a response, for me to look at.'"</em> Powered by Gemini</li>
+<li><strong>Agent2Agent (A2A) protocol</strong> — AI agents can query this knowledge base programmatically. See the <strong>Agent2Agent</strong> tab.</li>
                 <li><strong>Actor comparison</strong> — select up to 3 threat actors on the Matrix, see technique overlap color-coded, export as HTML</li>
                 <li><strong>360 Views</strong> — search any entity, explore via Technique Map, Actor Profile, Malware Map, Application Map, Sector Map, or D3 force graph</li>
                 <li><strong>Applications</strong> — 11K+ vendor products linked to CVEs → CWE → CAPEC → ATT&CK techniques → threat groups. See which apps your adversaries target</li>
