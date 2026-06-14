@@ -315,6 +315,12 @@ async function main() {
     // Slim matview: only the 3 ID columns needed for joins. technique_name /
     // group_name / technique_id(uuid) were previously denormalised here but
     // are resolved via JOIN at query time now — saves ~185 MB on the matview.
+    // Exclude catch-all CWEs (those mapping to >10 distinct ATT&CK techniques,
+    // e.g. CWE-200 Info Exposure → 26, CWE-284 Improper Access Control → 25).
+    // Without this, every CVE tagged with a generic CWE fans out across dozens
+    // of unrelated techniques — an info-disclosure CVE would imply OS Credential
+    // Dumping. Curated CTID-DIRECT edges use 1:1 synthetic CWEs, so they survive.
+    // Threshold is self-adapting (recomputed from the data each rebuild).
     await pool.query(`
       CREATE MATERIALIZED VIEW app_technique_groups AS
       SELECT DISTINCT
@@ -324,6 +330,11 @@ async function main() {
       FROM affected_products ap
       JOIN cve_weaknesses cw     ON cw.cve_id = ap.cve_id
       JOIN capec_mappings cm     ON cm.cwe_id = cw.cwe_id AND cm.technique_id IS NOT NULL
+        AND cm.cwe_id NOT IN (
+          SELECT cwe_id FROM capec_mappings
+          WHERE technique_id IS NOT NULL
+          GROUP BY cwe_id HAVING COUNT(DISTINCT technique_id) > 10
+        )
       JOIN techniques t          ON t.id = cm.technique_id
       JOIN group_techniques gt   ON gt.technique_id = t.id
       JOIN threat_groups tg      ON tg.id = gt.group_id

@@ -94,6 +94,11 @@ export async function GET(
            CASE WHEN cm.capec_id = 'CTID-DIRECT' THEN 'ctid' ELSE 'capec' END AS source
          FROM cve_weaknesses cw
          JOIN capec_mappings cm ON cm.cwe_id = cw.cwe_id AND cm.technique_id IS NOT NULL
+           AND cm.cwe_id NOT IN (
+             SELECT cwe_id FROM capec_mappings
+             WHERE technique_id IS NOT NULL
+             GROUP BY cwe_id HAVING COUNT(DISTINCT technique_id) > 10
+           )
          JOIN techniques t ON t.id = cm.technique_id
          WHERE cw.cve_id = $1`,
         [id],
@@ -116,6 +121,11 @@ export async function GET(
            UNION
            SELECT cm.technique_id FROM cve_weaknesses cw
            JOIN capec_mappings cm ON cm.cwe_id = cw.cwe_id AND cm.technique_id IS NOT NULL
+             AND cm.cwe_id NOT IN (
+               SELECT cwe_id FROM capec_mappings
+               WHERE technique_id IS NOT NULL
+               GROUP BY cwe_id HAVING COUNT(DISTINCT technique_id) > 10
+             )
            WHERE cw.cve_id = $1
          )
          ORDER BY r.published_at DESC NULLS LAST
