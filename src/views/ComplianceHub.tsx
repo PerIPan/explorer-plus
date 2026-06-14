@@ -213,9 +213,10 @@ export function ComplianceHub() {
         </div>
       </div>
 
-      {/* Inline tooltip explaining the filtered count metric */}
+      {/* Inline tooltip explaining the filtered count metric + the honest caveat */}
       <p className="mb-4 text-[11px] text-[var(--text-secondary)] italic">
-        <strong>Coverage:</strong> first number is filtered count — ATT&CK techniques referenced by <em>≥2</em> SCF controls in this framework, signalling depth of coverage. Second number is total SCF controls mapped to that framework.
+        <strong>Coverage:</strong> first number is filtered count — ATT&CK techniques referenced by <em>≥2</em> SCF controls in this framework. Second number is total SCF controls mapped.
+        {' '}These mappings express <em>detection / monitoring intent</em> — &ldquo;a control in this framework would observe this technique&rdquo; — not verified mitigation or legal scope. Broad controls (e.g. continuous monitoring) map to many techniques, so coverage counts cluster high and are best read as relative depth, not a governance guarantee.
       </p>
 
       {/* Sections — closed by default; the hub is dense, let users open what matters. */}

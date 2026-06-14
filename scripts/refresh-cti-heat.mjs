@@ -31,24 +31,20 @@ async function main() {
     const inserted = await client.query(`
       INSERT INTO scf_technique_heat (attack_id, cve_count, has_kev, max_epss, ghsa_count, group_count)
       WITH cve_tech AS (
+        -- CURATED CVE->technique links only (capec_id='CTID-DIRECT', the
+        -- analyst hand-mapped edges from sync-ctid-cve-mappings.mjs). The
+        -- inferred CWE->CAPEC path fans catch-all CWEs (CWE-200/284/285/20)
+        -- onto unrelated techniques, inverting the heat map; CTID-direct is
+        -- precise and KEV-backed. No publish-date window: the curated set is
+        -- small and intentionally includes notable older exploited CVEs.
         SELECT cm.attack_technique_id AS attack_id,
-               COUNT(DISTINCT cw.cve_id) FILTER (
-                 WHERE c.published_at >= date_trunc('year', NOW()) - INTERVAL '1 year'
-               ) AS cves,
-               BOOL_OR(c.is_kev) AS has_kev,
-               MAX(c.epss_score) AS max_epss
+               COUNT(DISTINCT cw.cve_id) AS cves,
+               BOOL_OR(c.is_kev) AS has_kev
         FROM cve_weaknesses cw
         JOIN cve_details    c  ON c.cve_id = cw.cve_id
-        JOIN capec_mappings cm ON cm.cwe_id = cw.cwe_id AND cm.attack_technique_id IS NOT NULL
-        GROUP BY cm.attack_technique_id
-      ),
-      ghsa_tech AS (
-        SELECT cm.attack_technique_id AS attack_id,
-               COUNT(DISTINCT gw.ghsa_id) AS ghsa
-        FROM ghsa_weaknesses gw
-        JOIN ghsa_advisories g ON g.ghsa_id = gw.ghsa_id
-        JOIN capec_mappings cm ON cm.cwe_id = gw.cwe_id AND cm.attack_technique_id IS NOT NULL
-        WHERE g.published_at >= date_trunc('year', NOW()) - INTERVAL '1 year'
+        JOIN capec_mappings cm ON cm.cwe_id = cw.cwe_id
+                              AND cm.capec_id = 'CTID-DIRECT'
+                              AND cm.attack_technique_id IS NOT NULL
         GROUP BY cm.attack_technique_id
       ),
       group_tech AS (
@@ -59,12 +55,11 @@ async function main() {
       SELECT t.attack_id,
              COALESCE(ct.cves, 0),
              COALESCE(ct.has_kev, false),
-             ct.max_epss,
-             COALESCE(gh.ghsa, 0),
+             NULL::numeric,   -- max_epss retired: EPSS-max pins ~0.94 over any KEV-containing set, so it never differentiates
+             0,               -- ghsa_count retired: no curated GHSA->technique grounding (CTID maps CVEs, not GHSA)
              COALESCE(gtc.groups, 0)
       FROM techniques t
       LEFT JOIN cve_tech   ct  ON ct.attack_id  = t.attack_id
-      LEFT JOIN ghsa_tech  gh  ON gh.attack_id  = t.attack_id
       LEFT JOIN group_tech gtc ON gtc.attack_id = t.attack_id
     `);
     await client.query('COMMIT');

@@ -40,25 +40,13 @@ function HeatBadges({ t }: { t: TechniqueRef }) {
   if (t.has_kev) {
     badges.push({
       label: 'KEV',
-      title: 'At least one linked CVE is in CISA Known Exploited Vulnerabilities',
+      title: 'A curated CVE for this technique is in CISA Known Exploited Vulnerabilities',
     });
   }
-  if (t.max_epss != null && t.max_epss >= 0.5) {
-    badges.push({
-      label: `EPSS ${t.max_epss.toFixed(2)}`,
-      title: 'Maximum EPSS exploit-probability across linked CVEs (≥0.5 = exploit predicted within 30 days)',
-    });
-  }
-  if (t.cve_count >= 100) {
+  if (t.cve_count >= 3) {
     badges.push({
       label: `CVE ${t.cve_count.toLocaleString()}`,
-      title: `Linked CVEs (via CWE → CAPEC → ATT&CK)`,
-    });
-  }
-  if (t.ghsa_count >= 100) {
-    badges.push({
-      label: `GHSA ${t.ghsa_count.toLocaleString()}`,
-      title: `Linked GitHub Security Advisories (OSS package angle)`,
+      title: 'Curated CVE→technique links (CTID / CISA hand-mapped — not CWE inference)',
     });
   }
   if (t.group_count >= 20) {
@@ -94,33 +82,21 @@ const LEGEND_ROWS: Array<{
 }> = [
   {
     label: 'KEV',
-    short: "linked CVE on CISA's actively-exploited list",
-    definition: 'CISA Known Exploited Vulnerabilities — a curated catalog of CVEs that are actively being exploited in the wild. Maintained by the US Cybersecurity and Infrastructure Security Agency since November 2021.',
-    calc: 'BOOL_OR(c.is_kev) across all CVEs linked to the technique via the CWE → CAPEC → ATT&CK bridge. Cumulative since the catalog started — once on KEV, stays.',
-  },
-  {
-    label: 'HOT N',
-    short: 'exploit-probability (EPSS ≥ 0.5)',
-    definition: "EPSS (Exploit Prediction Scoring System) — a daily-updated probability (0.00-1.00) that a CVE will be exploited in the next 30 days. Produced by FIRST.org's EPSS SIG using ML over public exploit signals. `HOT N` in the tactic summary counts techniques whose max EPSS reaches 0.5.",
-    calc: 'MAX(c.epss_score) across all CVEs linked to the technique. Per-technique chip shows the score as `EPSS 0.94`. Snapshot — refreshed monthly.',
+    short: "curated CVE on CISA's actively-exploited list",
+    definition: 'CISA Known Exploited Vulnerabilities — a catalog of CVEs confirmed exploited in the wild. Maintained by CISA since November 2021.',
+    calc: 'A curated (CTID / CISA hand-mapped) CVE for this technique is on CISA KEV. Grounded on the precise CVE→technique mappings, NOT CWE→CAPEC inference.',
   },
   {
     label: 'CVE N',
-    short: 'linked CVEs (≥100)',
-    definition: 'Common Vulnerabilities and Exposures — public catalog of disclosed vulnerabilities. Each CVE has a unique ID, severity, and is mapped to one or more CWE weakness types.',
-    calc: 'COUNT(DISTINCT cve.cve_id) where cve.published_at is in the current or previous calendar year (rolling window). Joined via cve_weaknesses → CAPEC → ATT&CK technique. Includes CTID hand-curated direct mappings.',
-  },
-  {
-    label: 'GHSA N',
-    short: 'linked OSS advisories (≥100)',
-    definition: 'GitHub Security Advisories — GHSA-xxxx-xxxx-xxxx identifiers for vulnerabilities in open-source packages. Covers npm, PyPI, Maven, Go, RubyGems, NuGet, Composer, crates.io, Hex, Pub.',
-    calc: 'COUNT(DISTINCT ghsa.ghsa_id) where ghsa.published_at is in the current or previous calendar year (rolling window). Joined via ghsa_weaknesses → CAPEC → ATT&CK technique.',
+    short: 'curated CVE→technique links',
+    definition: 'Count of CVEs analyst-mapped directly to this technique (CTID / CISA curated). These are high-confidence, hand-validated links — not the broad CWE→CAPEC inference, which fans catch-all weakness types onto unrelated techniques.',
+    calc: "COUNT(DISTINCT cve) over capec_mappings rows with capec_id='CTID-DIRECT' for this technique. Shown when ≥3. Covers ~45 techniques with strong real-world exploitation evidence (e.g. T1190, T1203, T1059, T1068).",
   },
   {
     label: 'WIDE N',
     short: 'tracked threat groups (≥20)',
-    definition: 'Threat groups in MITRE ATT&CK — named adversary groups (APT29, Lazarus, Volt Typhoon, etc.) that MITRE attributes specific techniques to based on open-source incident reporting.',
-    calc: 'COUNT(DISTINCT group_id) across the group_techniques table. Cumulative across all ATT&CK release history (since ~2015). No recency weighting — a 2015 attribution counts the same as 2026.',
+    definition: 'Named ATT&CK adversary groups (APT29, Lazarus, Volt Typhoon, …) that MITRE attributes this technique to, from open-source incident reporting.',
+    calc: 'COUNT(DISTINCT group_id) over group_techniques — sourced directly from ATT&CK, no inference. Cumulative across ATT&CK history; no recency weighting.',
   },
 ];
 
@@ -137,7 +113,7 @@ function HeatLegend() {
         <div className="flex items-baseline gap-2 flex-wrap">
           <h2 className="text-sm font-semibold text-[var(--text-primary)]">CTI heat signals</h2>
           <span className="text-xs text-[var(--text-secondary)]">
-            · CVE / GHSA scoped to current + previous calendar year (rolling)
+            · curated CVE links + threat-group breadth (not CWE inference)
           </span>
         </div>
         <button
@@ -197,27 +173,20 @@ function HeatLegend() {
 }
 
 /** Aggregate heat summary shown next to a tactic header — answers "how dangerous
- *  is this tactic for this article?". Counts KEV / HOT (EPSS≥0.5) / WIDE (≥20 groups). */
+ *  is this tactic for this article?". Counts KEV-backed and WIDE (≥20 groups) techniques. */
 function TacticHeatSummary({ techniques }: { techniques: TechniqueRef[] }) {
   let kev = 0;
-  let hot = 0;
   let wide = 0;
   for (const t of techniques) {
     if (t.has_kev) kev++;
-    if (t.max_epss != null && t.max_epss >= 0.5) hot++;
     if (t.group_count >= 20) wide++;
   }
-  if (kev === 0 && hot === 0 && wide === 0) return null;
+  if (kev === 0 && wide === 0) return null;
   return (
     <span className="inline-flex flex-wrap gap-1 ml-1.5">
       {kev > 0 && (
-        <span title="Techniques with CISA KEV exposure" className={`text-[9px] font-mono px-1.5 py-0.5 rounded border whitespace-nowrap ${BADGE_CLS}`}>
+        <span title="Techniques with a curated CISA-KEV CVE" className={`text-[9px] font-mono px-1.5 py-0.5 rounded border whitespace-nowrap ${BADGE_CLS}`}>
           {kev} KEV
-        </span>
-      )}
-      {hot > 0 && (
-        <span title="Techniques with EPSS ≥ 0.5 (predicted exploit within 30 days)" className={`text-[9px] font-mono px-1.5 py-0.5 rounded border whitespace-nowrap ${BADGE_CLS}`}>
-          {hot} HOT
         </span>
       )}
       {wide > 0 && (
@@ -374,7 +343,13 @@ export function ComplianceFrameworkDetail({ frameworkKey }: { frameworkKey: stri
           )}
         </div>
         <div className="mt-4 pt-3 border-t border-[var(--border-color)] flex flex-wrap gap-4 text-sm">
-          <span><strong className="text-[var(--text-primary)]">{data.techniques.length}</strong> ATT&CK techniques</span>
+          {/* Headline uses the same metric as the /compliance hub: techniques
+              referenced by >=2 SCF controls. data.techniques.length (>=1 control)
+              is shown as the wider "referenced" figure so the two views agree. */}
+          <span title="ATT&CK techniques referenced by ≥2 SCF controls — the depth-of-coverage metric shown on the Compliance hub. Mappings reflect detection/monitoring intent, not verified mitigation.">
+            <strong className="text-[var(--text-primary)]">{f.techniques_filtered ?? data.techniques.length}</strong> ATT&CK techniques
+            <span className="text-[var(--text-secondary)] text-xs"> (≥2 controls; {data.techniques.length} referenced)</span>
+          </span>
           {f.scf_controls !== null && (
             <>
               <span className="text-[var(--border-color)]">·</span>
