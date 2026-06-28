@@ -3,6 +3,7 @@ import { query } from '../../../lib/db';
 import { jsonResponse, errorResponse } from '../../../../lib/handler';
 import { withCors, corsOptions as OPTIONS } from '../../../../lib/cors';
 import { attackIdSchema } from '../../../lib/validate';
+import { notCatchallCwe } from '../../../lib/inference';
 
 export { OPTIONS };
 
@@ -85,7 +86,7 @@ export async function GET(
     query<{ categoryId: string; name: string; framework: string }>(
       `SELECT DISTINCT o.category_id AS "categoryId", o.name, o.framework
        FROM owasp_top10 o
-       JOIN capec_mappings cm ON cm.cwe_id = ANY(o.cwe_ids)
+       JOIN capec_mappings cm ON cm.cwe_id = ANY(o.cwe_ids) AND ${notCatchallCwe('cm.cwe_id')}
        WHERE cm.attack_technique_id = $1 AND cm.technique_id IS NOT NULL
        ORDER BY o.framework, o.category_id`,
       [attackId],

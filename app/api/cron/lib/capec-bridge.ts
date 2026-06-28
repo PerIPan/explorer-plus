@@ -6,6 +6,7 @@
 
 import { query } from '../../v1/lib/db';
 import { getParentId } from '../../v1/lib/getParentId';
+import { CATCHALL_CWE_THRESHOLD } from '../../v1/lib/inference';
 
 const CAPEC_STIX_URL =
   'https://raw.githubusercontent.com/mitre/cti/master/capec/2.1/stix-capec.json';
@@ -46,6 +47,15 @@ async function loadBridge(): Promise<Map<string, Set<string>>> {
       }
     }
   }
+  // Drop catch-all CWEs (those mapping to more than CATCHALL_CWE_THRESHOLD
+  // distinct techniques). Generic CWEs like CWE-200 / CWE-284 otherwise fan
+  // every CVE that carries them out across dozens of unrelated techniques —
+  // here that fan-out would leak back through the 'ioc' source via
+  // technique_iocs. Mirrors the SQL exclusion in app/api/v1/lib/inference.ts.
+  for (const [cwe, techs] of result) {
+    if (techs.size > CATCHALL_CWE_THRESHOLD) result.delete(cwe);
+  }
+
   // Only cache after successful full parse
   cweToTechniques = result;
   return cweToTechniques;

@@ -599,7 +599,13 @@ async function syncCapecBridge(techniqueMap) {
       for (const tid of attackIds) cweToTechs.get(cwe).add(tid);
     }
   }
-  console.log(`  CWEs mapped: ${cweToTechs.size}`);
+  // Drop catch-all CWEs (mapping to >10 distinct techniques) so generic CWEs
+  // like CWE-200 don't fan every CVE IOC out across unrelated techniques.
+  // Threshold mirrors CATCHALL_CWE_THRESHOLD in app/api/v1/lib/inference.ts.
+  for (const [cwe, techs] of cweToTechs) {
+    if (techs.size > 10) cweToTechs.delete(cwe);
+  }
+  console.log(`  CWEs mapped (after catch-all exclusion): ${cweToTechs.size}`);
 
   // Find CVE IOCs with CWE IDs that have no technique links yet
   const client = await pool.connect();

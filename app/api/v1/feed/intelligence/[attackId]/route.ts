@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { query } from '../../../lib/db';
 import { jsonResponse, errorResponse } from '../../../../lib/handler';
 import { withCors, corsOptions as OPTIONS } from '../../../../lib/cors';
+import { notCatchallCwe } from '../../../lib/inference';
 
 export { OPTIONS };
 
@@ -174,7 +175,7 @@ export async function GET(
            WHERE ti.technique_id = $1
            UNION
            SELECT cw.cve_id FROM cve_weaknesses cw
-           JOIN capec_mappings cm ON cm.cwe_id = cw.cwe_id AND cm.technique_id = $1
+           JOIN capec_mappings cm ON cm.cwe_id = cw.cwe_id AND cm.technique_id = $1 AND ${notCatchallCwe('cm.cwe_id')}
          )
          ORDER BY cd.published_at DESC NULLS LAST
          LIMIT 4`,

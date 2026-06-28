@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { query } from '../../lib/db';
 import { jsonResponse, errorResponse } from '../../../lib/handler';
 import { withCors, corsOptions as OPTIONS } from '../../../lib/cors';
+import { notCatchallCwe } from '../../lib/inference';
 
 export { OPTIONS };
 
@@ -85,7 +86,7 @@ export async function GET(
     query<{ attackId: string; name: string }>(
       `SELECT DISTINCT t.attack_id AS "attackId", t.name
        FROM ghsa_weaknesses w
-       JOIN capec_mappings cm ON cm.cwe_id = w.cwe_id AND cm.technique_id IS NOT NULL
+       JOIN capec_mappings cm ON cm.cwe_id = w.cwe_id AND cm.technique_id IS NOT NULL AND ${notCatchallCwe('cm.cwe_id')}
        JOIN techniques t ON t.id = cm.technique_id
        WHERE w.ghsa_id = $1
        ORDER BY t.attack_id`,

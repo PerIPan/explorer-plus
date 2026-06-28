@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { query } from '../../../lib/db';
 import { jsonResponse, errorResponse } from '../../../../lib/handler';
 import { withCors, corsOptions as OPTIONS } from '../../../../lib/cors';
+import { notCatchallCwe } from '../../../lib/inference';
 
 export { OPTIONS };
 
@@ -44,7 +45,7 @@ export async function GET(
        JOIN packages p ON p.id = gp.package_id
        JOIN ghsa_advisories g ON g.ghsa_id = gp.ghsa_id AND g.withdrawn_at IS NULL
        JOIN ghsa_weaknesses w ON w.ghsa_id = g.ghsa_id
-       JOIN capec_mappings cm ON cm.cwe_id = w.cwe_id AND cm.technique_id IS NOT NULL
+       JOIN capec_mappings cm ON cm.cwe_id = w.cwe_id AND cm.technique_id IS NOT NULL AND ${notCatchallCwe('cm.cwe_id')}
        JOIN techniques t ON t.id = cm.technique_id AND t.attack_id = $1
        GROUP BY p.id, p.ecosystem, p.package_name
        ORDER BY COUNT(DISTINCT g.ghsa_id) DESC, p.ecosystem, p.package_name

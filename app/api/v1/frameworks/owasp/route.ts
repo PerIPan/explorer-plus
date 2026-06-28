@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { query } from '../../lib/db';
 import { jsonResponse } from '../../../lib/handler';
 import { withCors, corsOptions as OPTIONS } from '../../../lib/cors';
+import { notCatchallCwe } from '../../lib/inference';
 
 export { OPTIONS };
 
@@ -21,7 +22,7 @@ export async function GET(req: NextRequest) {
        SELECT o.id,
          (SELECT COUNT(DISTINCT cm.attack_technique_id)
           FROM capec_mappings cm
-          WHERE cm.technique_id IS NOT NULL AND cm.cwe_id = ANY(o.cwe_ids))::text AS technique_count,
+          WHERE cm.technique_id IS NOT NULL AND cm.cwe_id = ANY(o.cwe_ids) AND ${notCatchallCwe('cm.cwe_id')})::text AS technique_count,
          (SELECT COUNT(DISTINCT cw.cve_id)
           FROM cve_weaknesses cw
           WHERE cw.cwe_id = ANY(o.cwe_ids))::text AS cve_count

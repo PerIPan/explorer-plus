@@ -94,10 +94,15 @@ export async function GET(
           JOIN ioc_entries ie ON ie.id = ti.ioc_id AND ie.type = 'cve'
           WHERE gs.sector_id = $1 LIMIT 200)
          UNION
-         (SELECT cw.cve_id FROM group_sectors gs
-          JOIN group_techniques gt ON gt.group_id = gs.group_id
-          JOIN capec_mappings cm ON cm.technique_id = gt.technique_id AND cm.cwe_id IS NOT NULL
-          JOIN cve_weaknesses cw ON cw.cwe_id = cm.cwe_id
+         -- Grounded CVE path: real CVEs affecting the applications already
+         -- linked to this sector's groups via the (catch-all-guarded)
+         -- app_technique_groups matview — the same basis as the apps list
+         -- below. Replaces a prior reverse CWE fan-out (technique→CWE→every
+         -- CVE sharing that CWE) that linked sectors to unrelated CVEs.
+         (SELECT ap.cve_id FROM group_sectors gs
+          JOIN threat_groups tg ON tg.id = gs.group_id
+          JOIN app_technique_groups atg ON atg.group_attack_id = tg.attack_id
+          JOIN affected_products ap ON ap.application_id = atg.application_id
           WHERE gs.sector_id = $1 LIMIT 200)
        )
        ORDER BY cd.published_at DESC NULLS LAST

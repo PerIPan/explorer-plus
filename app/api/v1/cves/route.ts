@@ -4,6 +4,7 @@ import { jsonResponse, errorResponse } from '../../lib/handler';
 import { withCors, corsOptions as OPTIONS } from '../../lib/cors';
 import { paginationSchema } from '../lib/validate';
 import { escapeLikePattern } from '../lib/queries';
+import { notCatchallCwe } from '../lib/inference';
 import { z } from 'zod';
 
 export { OPTIONS };
@@ -62,7 +63,7 @@ export async function GET(req: NextRequest) {
     params.push(technique);
     conditions.push(`cd.cve_id IN (
       SELECT cw.cve_id FROM cve_weaknesses cw
-      JOIN capec_mappings cm ON cm.cwe_id = cw.cwe_id
+      JOIN capec_mappings cm ON cm.cwe_id = cw.cwe_id AND ${notCatchallCwe('cm.cwe_id')}
       JOIN techniques t ON t.id = cm.technique_id AND t.attack_id = $${params.length}
       UNION
       SELECT i.value FROM ioc_entries i
@@ -146,7 +147,7 @@ export async function GET(req: NextRequest) {
          WHERE i.type = 'cve' AND i.value IN (SELECT cve_id FROM page)
          UNION
          SELECT cw.cve_id, cm.technique_id, t.attack_id
-         FROM cve_weaknesses cw JOIN capec_mappings cm ON cm.cwe_id = cw.cwe_id AND cm.technique_id IS NOT NULL
+         FROM cve_weaknesses cw JOIN capec_mappings cm ON cm.cwe_id = cw.cwe_id AND cm.technique_id IS NOT NULL AND ${notCatchallCwe('cm.cwe_id')}
          JOIN techniques t ON t.id = cm.technique_id
          WHERE cw.cve_id IN (SELECT cve_id FROM page)
        ) sub GROUP BY cve_id

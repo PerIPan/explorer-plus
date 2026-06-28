@@ -128,7 +128,15 @@ pkg_tech AS (
   FROM ghsa_packages gp
   JOIN ghsa_advisories g ON g.ghsa_id = gp.ghsa_id AND g.withdrawn_at IS NULL
   JOIN ghsa_weaknesses w ON w.ghsa_id = g.ghsa_id
+  -- Exclude catch-all CWEs (>10 distinct techniques) so generic weaknesses
+  -- don't inflate per-package technique_count. Mirrors CATCHALL_CWE_THRESHOLD
+  -- in app/api/v1/lib/inference.ts and the app_technique_groups matview.
   JOIN capec_mappings cm ON cm.cwe_id = w.cwe_id AND cm.technique_id IS NOT NULL
+    AND cm.cwe_id NOT IN (
+      SELECT cwe_id FROM capec_mappings
+      WHERE technique_id IS NOT NULL
+      GROUP BY cwe_id HAVING COUNT(DISTINCT technique_id) > 10
+    )
   GROUP BY gp.package_id
 )
 SELECT
