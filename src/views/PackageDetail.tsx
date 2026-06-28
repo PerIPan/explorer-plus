@@ -167,11 +167,16 @@ export function PackageDetail() {
         {data.linkedTechniques.length === 0 ? (
           <p className="text-xs text-[var(--text-secondary)]">No techniques reachable via CWE→CAPEC bridge.</p>
         ) : (
-          <div className="flex flex-wrap gap-1.5">
-            {data.linkedTechniques.map((t) => (
-              <EntityLink key={t.attackId} type="technique" attackId={t.attackId} name={t.name} useMap />
-            ))}
-          </div>
+          <>
+            <p className="text-[11px] text-[var(--text-secondary)] italic mb-2">
+              Inferred via the CWE→CAPEC→ATT&CK bridge — not curated mappings.
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {data.linkedTechniques.map((t) => (
+                <EntityLink key={t.attackId} type="technique" attackId={t.attackId} name={t.name} useMap />
+              ))}
+            </div>
+          </>
         )}
       </FrameworkMapCard>
     </div>

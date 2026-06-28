@@ -238,14 +238,20 @@ function TargetedSectors({ sectors }: { sectors: GroupSector[] }) {
   };
 
   return (
-    <div className="flex flex-wrap gap-1.5">
-      {sectors.map((s) => (
-        <Badge
-          key={s.name}
-          label={s.name}
-          variant={SECTOR_COLORS[s.name] ?? 'neutral'}
-        />
-      ))}
+    <div className="space-y-2">
+      <p className="text-[11px] text-[var(--text-secondary)] italic">
+        Auto-derived from keyword matches in the group’s description —
+        indicative, not analyst-curated.
+      </p>
+      <div className="flex flex-wrap gap-1.5">
+        {sectors.map((s) => (
+          <Badge
+            key={s.name}
+            label={s.name}
+            variant={SECTOR_COLORS[s.name] ?? 'neutral'}
+          />
+        ))}
+      </div>
     </div>
   );
 }
@@ -582,10 +588,15 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
           </CollapsibleSection>
         )}
 
-        {/* Targeted Applications — collapsed */}
+        {/* Applications sharing techniques — collapsed. Inferred via
+            CVE→CWE→CAPEC technique overlap, not observed targeting. */}
         {(group as { targetedApps?: Array<{ normalized: string; vendor: string; product: string; cveCount: number }> }).targetedApps?.length ? (
-          <CollapsibleSection title="Targeted Applications" count={(group as { targetedApps: Array<unknown> }).targetedApps.length} defaultOpen={false}>
-            <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto" tabIndex={0} aria-label="Targeted applications">
+          <CollapsibleSection title="Applications Sharing Techniques" count={(group as { targetedApps: Array<unknown> }).targetedApps.length} defaultOpen={false}>
+            <p className="text-[11px] text-[var(--text-secondary)] italic mb-2">
+              Applications whose CVEs map (via CWE→CAPEC) to techniques this group
+              uses — inferred technique overlap, not observed targeting.
+            </p>
+            <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto" tabIndex={0} aria-label="Applications sharing techniques">
               {(group as { targetedApps: Array<{ normalized: string; vendor: string; product: string; cveCount: number }> }).targetedApps.map((app) => (
                 <a
                   key={app.normalized}

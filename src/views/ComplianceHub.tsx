@@ -289,7 +289,7 @@ function Row({ row }: { row: Framework }) {
   const hasCoverage = row.scf_controls > 0;
   const techCount = hasCoverage ? `${row.techniques_filtered} tech` : 'not yet in SCF';
   const rawTitle = hasCoverage
-    ? `${row.techniques_total} total techniques · ${row.scf_controls} SCF controls`
+    ? `${row.techniques_filtered} of ${row.techniques_total} techniques referenced by ≥2 SCF controls · ${row.scf_controls} SCF controls. Relative detection/monitoring depth — not a governance or compliance guarantee.`
     : 'Framework tracked but the current SCF release has no ATT&CK cross-references for it yet.';
   // When SCF has no data, route to the on-site reference page if we have one;
   // the /compliance/<key> detail page would render empty.

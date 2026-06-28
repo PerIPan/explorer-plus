@@ -194,9 +194,12 @@ export function GhsaDetail() {
       {/* Linked ATT&CK techniques */}
       {data.techniques.length > 0 && (
         <section>
-          <h2 className="text-sm font-semibold text-[var(--text-primary)] uppercase tracking-wider mb-2">
+          <h2 className="text-sm font-semibold text-[var(--text-primary)] uppercase tracking-wider mb-1">
             Linked ATT&CK Techniques ({data.techniques.length})
           </h2>
+          <p className="text-[11px] text-[var(--text-secondary)] italic mb-2">
+            Inferred via the CWE→CAPEC→ATT&CK bridge — not curated mappings.
+          </p>
           <div className="flex flex-wrap gap-1.5">
             {data.techniques.map((t) => (
               <EntityLink key={t.attackId} type="technique" attackId={t.attackId} name={t.name} useMap />

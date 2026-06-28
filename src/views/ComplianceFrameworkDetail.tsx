@@ -162,9 +162,11 @@ function HeatLegend() {
             </div>
           ))}
           <p className="text-[10px] text-[var(--text-secondary)] italic pt-2 border-t border-[var(--border-color)]">
-            Bridges: CVE → CWE → CAPEC → ATT&CK (MITRE) + CTID hand-curated direct mappings.
-            GHSA → CWE → CAPEC → ATT&CK. Threshold for each badge: KEV any, EPSS ≥ 0.5,
-            CVE / GHSA ≥ 100, WIDE ≥ 20.
+            Grounded on CTID hand-curated CVE→technique mappings (capec_id =
+            ‘CTID-DIRECT’), <strong>not</strong> broad CWE→CAPEC inference.
+            Thresholds: <strong>KEV</strong> — any curated CVE on CISA KEV;{' '}
+            <strong>CVE N</strong> — shown at ≥ 3; <strong>WIDE N</strong> — ≥ 20
+            tracked threat groups (or an “N groups” chip at ≥ 5).
           </p>
         </div>
       )}
