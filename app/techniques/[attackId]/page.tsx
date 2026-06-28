@@ -4,6 +4,7 @@ import { Suspense } from 'react';
 import { fetchTechnique } from '../../lib/data';
 import { DiamondLoader } from '../../../src/components/shared/FoldingDiamond';
 import { TechniqueDetail } from '../../../src/views/TechniqueDetail';
+import { SITE_URL } from '../../../src/lib/site';
 
 // Canonical upstream URL for entity disambiguation (sameAs). ATLAS (AML.*)
 // techniques live on atlas.mitre.org; Enterprise sub-techniques use a slashed
@@ -22,7 +23,7 @@ export async function generateMetadata({ params }: { params: Promise<{ attackId:
   return {
     title,
     description,
-    openGraph: { title, description, url: `https://mitre-explorer.org/techniques/${data.attack_id}` },
+    openGraph: { title, description, url: `${SITE_URL}/techniques/${data.attack_id}` },
   };
 }
 
@@ -38,7 +39,7 @@ export default async function Page({ params }: { params: Promise<{ attackId: str
   // nonce is required by the CSP; this page is already dynamically rendered
   // (root layout reads the nonce), so there's no caching penalty.
   const nonce = (await headers()).get('x-nonce') ?? '';
-  const url = `https://mitre-explorer.org/techniques/${data.attack_id}`;
+  const url = `${SITE_URL}/techniques/${data.attack_id}`;
   const sameAs = upstreamTechniqueUrl(data.attack_id);
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -48,7 +49,7 @@ export default async function Page({ params }: { params: Promise<{ attackId: str
     name: `${data.attack_id} ${data.name}`,
     headline: `${data.attack_id} ${data.name}`,
     description: data.description?.slice(0, 300) ?? `MITRE ATT&CK technique ${data.attack_id} — ${data.name}`,
-    isPartOf: { '@type': 'WebSite', '@id': 'https://mitre-explorer.org/#website' },
+    isPartOf: { '@type': 'WebSite', '@id': `${SITE_URL}/#website` },
     about: {
       '@type': 'DefinedTerm',
       name: `${data.attack_id} ${data.name}`,

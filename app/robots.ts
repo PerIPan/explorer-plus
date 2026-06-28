@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next';
+import { SITE_URL } from '../src/lib/site';
 
 // AI answer-engine / search crawlers we explicitly welcome (GEO). Same content
 // access as everyone else; /api/ and /search stay out of the index.
@@ -18,6 +19,6 @@ export default function robots(): MetadataRoute.Robots {
       { userAgent: '*', allow: '/', disallow },
       ...AI_CRAWLERS.map((userAgent) => ({ userAgent, allow: '/', disallow })),
     ],
-    sitemap: 'https://mitre-explorer.org/sitemap.xml',
+    sitemap: `${SITE_URL}/sitemap.xml`,
   };
 }

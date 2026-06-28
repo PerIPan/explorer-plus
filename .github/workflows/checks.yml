@@ -1,0 +1,21 @@
+name: Checks
+
+# Lightweight code-consistency gate (no DB, no deps). Surfaces config drift on
+# every push/PR to main without blocking Vercel deploys.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  consistency:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      # Fails if the catch-all CWE threshold drifts between inference.ts and the
+      # SQL/mjs build-time copies (see scripts/check-catchall-threshold.mjs).
+      - run: node scripts/check-catchall-threshold.mjs

@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next';
 import { query } from './api/v1/lib/db';
+import { SITE_URL as BASE_URL } from '../src/lib/site';
 
 // Force dynamic rendering so the sitemap hits the DB at request time, not at
 // build time (when POSTGRES_URL may be unavailable — building static here would
@@ -7,8 +8,6 @@ import { query } from './api/v1/lib/db';
 // crawlers; the per-crawler DB cost is bounded (sitemap is fetched rarely).
 export const dynamic = 'force-dynamic';
 export const revalidate = 3600;
-
-const BASE_URL = 'https://mitre-explorer.org';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticPages = [

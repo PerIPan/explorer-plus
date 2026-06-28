@@ -2,6 +2,7 @@ import './globals.css';
 import { headers } from 'next/headers';
 import type { Metadata } from 'next';
 import { Providers } from './providers';
+import { SITE_URL } from '../src/lib/site';
 
 const THEME_SCRIPT = `(function(){
   try {
@@ -12,7 +13,6 @@ const THEME_SCRIPT = `(function(){
   } catch(e) {}
 })();`;
 
-const SITE_URL = 'https://mitre-explorer.org';
 const SITE_DESC =
   'Multi-domain threat intelligence platform built on MITRE ATT&CK — bridging techniques, threat groups, malware and campaigns to CVEs, advisories, detections and compliance frameworks.';
 

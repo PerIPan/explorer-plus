@@ -12,6 +12,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
+    "check:thresholds": "node scripts/check-catchall-threshold.mjs",
     "seed": "./venv/bin/python seed/seed.py",
     "seed:prod": "DATABASE_URL=$POSTGRES_URL ./venv/bin/python seed/seed.py --confirm-destructive",
     "seed:update": "./venv/bin/python seed/seed.py --update",
