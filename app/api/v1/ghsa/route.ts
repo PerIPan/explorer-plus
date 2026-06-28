@@ -4,7 +4,7 @@ import { jsonResponse, errorResponse } from '../../lib/handler';
 import { withCors, corsOptions as OPTIONS } from '../../lib/cors';
 import { paginationSchema } from '../lib/validate';
 import { escapeLikePattern } from '../lib/queries';
-import { notCatchallCwe } from '../lib/inference';
+import { notCatchallCwe, liveTechnique } from '../lib/inference';
 import { z } from 'zod';
 
 export { OPTIONS };
@@ -128,6 +128,7 @@ export async function GET(req: NextRequest) {
        SELECT w.ghsa_id, COUNT(DISTINCT cm.technique_id) AS technique_count
        FROM ghsa_weaknesses w
        JOIN capec_mappings cm ON cm.cwe_id = w.cwe_id AND cm.technique_id IS NOT NULL AND ${notCatchallCwe('cm.cwe_id')}
+       JOIN techniques t ON t.id = cm.technique_id AND ${liveTechnique('t')}
        WHERE w.ghsa_id IN (SELECT ghsa_id FROM page)
        GROUP BY w.ghsa_id
      )

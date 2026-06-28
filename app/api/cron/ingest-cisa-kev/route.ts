@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '../../v1/lib/db';
+import { query, withTransaction } from '../../v1/lib/db';
 import { verifyCronAuth } from '../lib/auth';
 import { linkCveTechniquesViaCwe } from '../lib/capec-bridge';
 import { withSoftTimeout, DEFAULT_SOFT_TIMEOUT_MS } from '../lib/softTimeout';
@@ -99,16 +99,20 @@ export async function GET(req: NextRequest) {
     try {
       const kevCveIds = vulns.map((v) => v.cveID).filter(Boolean);
       if (kevCveIds.length > 500) {
-        await query(
-          `UPDATE cve_details SET is_kev = true
-           WHERE cve_id = ANY($1::text[]) AND is_kev = false`,
-          [kevCveIds],
-        );
-        await query(
-          `UPDATE cve_details SET is_kev = false
-           WHERE is_kev = true AND NOT (cve_id = ANY($1::text[]))`,
-          [kevCveIds],
-        );
+        // Both UPDATEs in one transaction: a partial apply would leave the
+        // flag inconsistent (de-listed CVEs still flagged) until the next run.
+        await withTransaction(async (client) => {
+          await client.query(
+            `UPDATE cve_details SET is_kev = true
+             WHERE cve_id = ANY($1::text[]) AND is_kev = false`,
+            [kevCveIds],
+          );
+          await client.query(
+            `UPDATE cve_details SET is_kev = false
+             WHERE is_kev = true AND NOT (cve_id = ANY($1::text[]))`,
+            [kevCveIds],
+          );
+        });
       }
     } catch { /* cve_details may not exist yet */ }
 

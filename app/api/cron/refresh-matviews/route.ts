@@ -10,9 +10,9 @@ export const maxDuration = 300;
  *
  * Individual ingest crons do NOT refresh matviews — that would couple the
  * ingest lifecycle to view maintenance and force every new cron author to
- * remember to add a refresh call. Instead, this cron runs every 8h (00:00,
- * 08:00, 16:00 UTC) and refreshes every matview in the list below. To add
- * a new matview, extend MATVIEWS.
+ * remember to add a refresh call. Instead, this cron runs twice daily (06:00,
+ * 18:00 UTC, after the CVE syncs) and refreshes every matview in the list
+ * below. To add a new matview, extend MATVIEWS.
  *
  * REFRESH MATERIALIZED VIEW CONCURRENTLY is non-blocking for readers and
  * requires a unique index on the matview — already present on all entries

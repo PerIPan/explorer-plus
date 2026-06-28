@@ -10,7 +10,7 @@ import { TechniqueDetail } from '../../../src/views/TechniqueDetail';
 // path (T1059.001 -> /techniques/T1059/001).
 function upstreamTechniqueUrl(attackId: string): string {
   if (attackId.startsWith('AML.')) return `https://atlas.mitre.org/techniques/${attackId}`;
-  return `https://attack.mitre.org/techniques/${attackId.replace('.', '/')}`;
+  return `https://attack.mitre.org/techniques/${attackId.replaceAll('.', '/')}`;
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ attackId: string }> }) {
@@ -64,7 +64,8 @@ export default async function Page({ params }: { params: Promise<{ attackId: str
       <script
         type="application/ld+json"
         nonce={nonce}
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        // Escape `<` so a description containing "</script>" can't break out of the tag.
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
       />
       <Suspense fallback={<DiamondLoader text="Loading..." />}>
         <TechniqueDetail />

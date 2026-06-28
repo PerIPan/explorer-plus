@@ -4,13 +4,13 @@
     { "path": "/api/cron/ingest-otx", "schedule": "0 */6 * * *" },
     { "path": "/api/cron/ingest-abuse-ch", "schedule": "0 2 * * *" },
     { "path": "/api/cron/ingest-cisa-kev", "schedule": "0 3 * * *" },
-    { "path": "/api/cron/ingest-rss", "schedule": "0 6 * * *" },
+    { "path": "/api/cron/ingest-rss", "schedule": "15 6 * * *" },
     { "path": "/api/cron/sync-d3fend", "schedule": "0 6 1 * *" },
     { "path": "/api/cron/enrich-nvd", "schedule": "0 */4 * * *" },
     { "path": "/api/cron/enrich-vt", "schedule": "30 */8 * * *" },
     { "path": "/api/cron/scan-site-health", "schedule": "0 12 * * 1" },
     { "path": "/api/cron/sync-csf", "schedule": "0 5 * * 1" },
-    { "path": "/api/cron/refresh-matviews", "schedule": "0 6,18 * * *" },
+    { "path": "/api/cron/refresh-matviews", "schedule": "30 6,18 * * *" },
     { "path": "/api/cron/sync-epss", "schedule": "10 3 * * *" }
   ],
   "headers": [

@@ -36,3 +36,14 @@ export function notCatchallCwe(col: string): string {
     GROUP BY cwe_id HAVING COUNT(DISTINCT technique_id) > ${CATCHALL_CWE_THRESHOLD}
   )`;
 }
+
+/**
+ * SQL predicate fragment: the technique row aliased `alias` is live (not
+ * revoked or deprecated in ATT&CK). The dashboard already filters this; every
+ * path that COUNTS or LISTS mapping-derived techniques must use it too, or a
+ * list's count diverges from the detail page's rendered set. Composes into any
+ * JOIN ON / WHERE clause.
+ */
+export function liveTechnique(alias: string): string {
+  return `${alias}.is_revoked = false AND ${alias}.is_deprecated = false`;
+}

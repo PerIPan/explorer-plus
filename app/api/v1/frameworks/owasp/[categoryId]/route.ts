@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { query } from '../../../lib/db';
 import { jsonResponse, errorResponse } from '../../../../lib/handler';
 import { withCors, corsOptions as OPTIONS } from '../../../../lib/cors';
-import { notCatchallCwe } from '../../../lib/inference';
+import { notCatchallCwe, liveTechnique } from '../../../lib/inference';
 
 export { OPTIONS };
 
@@ -44,7 +44,7 @@ export async function GET(
     query<{ attackId: string; name: string; cweId: string }>(
       `SELECT DISTINCT cm.attack_technique_id AS "attackId", t.name, cm.cwe_id AS "cweId"
        FROM capec_mappings cm
-       JOIN techniques t ON t.id = cm.technique_id
+       JOIN techniques t ON t.id = cm.technique_id AND ${liveTechnique('t')}
        WHERE cm.technique_id IS NOT NULL AND cm.cwe_id = ANY($1::text[]) AND ${notCatchallCwe('cm.cwe_id')}
        ORDER BY cm.attack_technique_id`,
       [cat.cwe_ids],
