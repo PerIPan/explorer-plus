@@ -91,13 +91,25 @@ export async function GET(req: NextRequest) {
       [recordsInserted, recordsSkipped, logId],
     );
 
-    // Mark CVEs as KEV in cve_details (if table exists)
+    // Reconcile is_kev in cve_details against the CURRENT feed snapshot.
+    // KEV is a full catalog fetched whole each run, so we both set the flag on
+    // current entries AND clear it on any CVE CISA has de-listed (the flag was
+    // previously monotonic — never reset). Guarded by a sanity floor so a
+    // partial/failed fetch can't wipe every flag.
     try {
-      await query(
-        `UPDATE cve_details SET is_kev = true
-         WHERE cve_id IN (SELECT value FROM ioc_entries WHERE source = 'cisa_kev' AND type = 'cve')
-           AND is_kev = false`,
-      );
+      const kevCveIds = vulns.map((v) => v.cveID).filter(Boolean);
+      if (kevCveIds.length > 500) {
+        await query(
+          `UPDATE cve_details SET is_kev = true
+           WHERE cve_id = ANY($1::text[]) AND is_kev = false`,
+          [kevCveIds],
+        );
+        await query(
+          `UPDATE cve_details SET is_kev = false
+           WHERE is_kev = true AND NOT (cve_id = ANY($1::text[]))`,
+          [kevCveIds],
+        );
+      }
     } catch { /* cve_details may not exist yet */ }
 
     // Link new CVEs to techniques via CWE->CAPEC->ATT&CK bridge

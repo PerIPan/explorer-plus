@@ -99,7 +99,7 @@ export async function GET(
              WHERE technique_id IS NOT NULL
              GROUP BY cwe_id HAVING COUNT(DISTINCT technique_id) > 10
            )
-         JOIN techniques t ON t.id = cm.technique_id
+         JOIN techniques t ON t.id = cm.technique_id AND t.is_revoked = false AND t.is_deprecated = false
          WHERE cw.cve_id = $1`,
         [id],
       ),

@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
     conditions.push(`cd.cve_id IN (
       SELECT cw.cve_id FROM cve_weaknesses cw
       JOIN capec_mappings cm ON cm.cwe_id = cw.cwe_id AND ${notCatchallCwe('cm.cwe_id')}
-      JOIN techniques t ON t.id = cm.technique_id AND t.attack_id = $${params.length}
+      JOIN techniques t ON t.id = cm.technique_id AND t.attack_id = $${params.length} AND t.is_revoked = false AND t.is_deprecated = false
       UNION
       SELECT i.value FROM ioc_entries i
       JOIN technique_iocs ti ON ti.ioc_id = i.id
@@ -148,7 +148,7 @@ export async function GET(req: NextRequest) {
          UNION
          SELECT cw.cve_id, cm.technique_id, t.attack_id
          FROM cve_weaknesses cw JOIN capec_mappings cm ON cm.cwe_id = cw.cwe_id AND cm.technique_id IS NOT NULL AND ${notCatchallCwe('cm.cwe_id')}
-         JOIN techniques t ON t.id = cm.technique_id
+         JOIN techniques t ON t.id = cm.technique_id AND t.is_revoked = false AND t.is_deprecated = false
          WHERE cw.cve_id IN (SELECT cve_id FROM page)
        ) sub GROUP BY cve_id
      ),

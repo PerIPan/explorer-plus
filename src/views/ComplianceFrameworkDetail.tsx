@@ -19,8 +19,6 @@ interface TechniqueRef {
   scf_id: string;
   cve_count: number;
   has_kev: boolean;
-  max_epss: number | null;
-  ghsa_count: number;
   group_count: number;
 }
 

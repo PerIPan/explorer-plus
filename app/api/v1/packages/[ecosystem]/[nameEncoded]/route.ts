@@ -97,7 +97,7 @@ export async function GET(
          AND ($2::text IS NULL OR g.withdrawn_at IS NULL)
        JOIN ghsa_weaknesses w ON w.ghsa_id = g.ghsa_id
        JOIN capec_mappings cm ON cm.cwe_id = w.cwe_id AND cm.technique_id IS NOT NULL AND ${notCatchallCwe('cm.cwe_id')}
-       JOIN techniques t ON t.id = cm.technique_id
+       JOIN techniques t ON t.id = cm.technique_id AND t.is_revoked = false AND t.is_deprecated = false
        WHERE gp.package_id = $1
        ORDER BY t.attack_id`,
       [pkg.id, excludeWithdrawn],

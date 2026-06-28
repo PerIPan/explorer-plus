@@ -117,9 +117,17 @@ async function fetchEcosystems() {
     .filter(Boolean);
 }
 
+// Identifiers already covered by the GHSA dataset — both the GHSA IDs
+// themselves AND the CVE IDs they alias. OSV records whose alias list
+// intersects this set are skipped as duplicates. Previously this loaded only
+// ghsa_id, so the CVE-based alias overlap (the common case) never matched.
 async function loadGhsaAliasSet(client) {
-  const result = await client.query(`SELECT ghsa_id FROM ghsa_advisories`);
-  return new Set(result.rows.map((r) => r.ghsa_id));
+  const result = await client.query(
+    `SELECT ghsa_id AS id FROM ghsa_advisories
+     UNION
+     SELECT cve_id AS id FROM ghsa_advisories WHERE cve_id IS NOT NULL`,
+  );
+  return new Set(result.rows.map((r) => r.id));
 }
 
 /**
