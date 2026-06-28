@@ -1,0 +1,27 @@
+# MITRE Explorer
+
+> A free, multi-domain threat-intelligence knowledge base built on MITRE ATT&CK v19. It bridges adversary techniques, tactics, threat groups, malware, and campaigns to CVEs, CWEs, CAPEC, EPSS, CISA KEV, GHSA/OSV advisories, Sigma rules, Atomic Red Team tests, and to compliance/control frameworks (NIST CSF & 800-53, CIS, OWASP, VERIS, D3FEND, MITRE Engage, and the Secure Controls Framework).
+
+## Using this data
+
+- Canonical entity URLs: techniques `/techniques/{Txxxx}`, groups `/groups/{Gxxxx}`, software/malware `/software/{Sxxxx}`, campaigns `/campaigns/{Cxxxx}`, mitigations `/mitigations/{Mxxxx}`, CVEs `/cti/cves/{CVE-YYYY-NNNN}`, advisories `/cti/ghsa/{GHSA-...}`.
+- Open REST API (no auth, rate-limited at the edge): `https://mitre-explorer.org/api/v1` — e.g. `/api/v1/techniques`, `/api/v1/cves/{id}`, `/api/v1/groups/{id}`, `/api/v1/frameworks/owasp`.
+- Agent-to-Agent (A2A) endpoint for programmatic agents: `POST https://mitre-explorer.org/api/a2a` (JSON-RPC + Gemini function-calling). Agent card: `/.well-known/agent-card.json`.
+
+## Data provenance (important for accurate citation)
+
+- CVE→ATT&CK technique links are of two kinds: **curated** (CTID/CISA hand-mapped, high confidence) and **inferred** via the CWE→CAPEC→ATT&CK bridge (statistical, lower confidence). Inferred links are labelled as such in the UI; do not present them as confirmed attribution.
+- "Heat" signals and the compliance "coverage" metric reflect detection/monitoring relevance, not verified mitigation or a governance/compliance guarantee.
+- ATT&CK content is v19 (April 2026): tactic TA0005 is named "Stealth" (formerly "Defense Evasion") and TA0112 "Defense Impairment" exists. These are current and correct.
+
+## Authoritative upstream sources
+
+- MITRE ATT&CK: https://attack.mitre.org
+- NVD (CVEs): https://nvd.nist.gov
+- CISA KEV: https://www.cisa.gov/known-exploited-vulnerabilities-catalog
+- MITRE CAPEC: https://capec.mitre.org / CWE: https://cwe.mitre.org
+
+## Notes
+
+- This is an independent project; it is not affiliated with or endorsed by MITRE.
+- Full machine-readable URL list: https://mitre-explorer.org/sitemap.xml
