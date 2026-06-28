@@ -564,6 +564,10 @@ async function syncCloudControls(techniqueMap) {
       provider: 'gcp',
       url: 'https://raw.githubusercontent.com/center-for-threat-informed-defense/mappings-explorer/main/mappings/gcp/attack-16.1/gcp-03.06.2025/enterprise/gcp-03.06.2025_attack-16.1-enterprise.json',
     },
+    {
+      provider: 'aws',
+      url: 'https://raw.githubusercontent.com/center-for-threat-informed-defense/mappings-explorer/main/mappings/aws/attack-16.1/aws-12.12.2024/enterprise/aws-12.12.2024_attack-16.1-enterprise.json',
+    },
   ];
 
   for (const { provider, url } of providers) {

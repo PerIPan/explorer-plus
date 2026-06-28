@@ -25,11 +25,13 @@ interface CloudControlsResponse {
 const PROVIDER_COLORS: Record<string, { bg: string; text: string; border: string }> = {
   azure: { bg: 'var(--blue-faint)', text: 'var(--accent-blue)', border: 'var(--blue-dim)' },
   gcp: { bg: 'var(--teal-faint)', text: 'var(--accent-teal)', border: 'var(--teal-dim)' },
+  aws: { bg: 'var(--orange-faint)', text: 'var(--accent-orange)', border: 'var(--orange-dim)' },
 };
 
 const PROVIDER_LABELS: Record<string, string> = {
   azure: 'Azure',
   gcp: 'GCP',
+  aws: 'AWS',
 };
 
 const TYPE_COLORS: Record<string, string> = {
@@ -67,7 +69,7 @@ export function CloudControls() {
     <div className="space-y-6">
       <PageHeader
         title="Cloud Security Controls"
-        subtitle="Azure and GCP security controls mapped to ATT&CK techniques — from MITRE CTID Mappings Explorer"
+        subtitle="AWS, Azure, and GCP security controls mapped to ATT&CK techniques — from MITRE CTID Mappings Explorer"
         actions={
           <span className="text-sm text-[var(--text-secondary)]">
             {data?.total ?? '...'} controls

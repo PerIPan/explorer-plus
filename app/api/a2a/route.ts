@@ -214,7 +214,7 @@ const TOOL_DECLARATIONS = [
   },
   {
     name: 'get_framework_mappings',
-    description: 'Get direct per-technique framework mappings: NIST 800-53 controls, MITRE Engage activities, VERIS categories, Azure/GCP cloud controls. Use THIS tool for 800-53/Engage/VERIS/cloud questions. For regulatory frameworks (NIS2, DORA, PCI DSS, ISO 27002, HIPAA, GDPR, CMMC, ...) use get_technique_compliance instead — those come from the SCF crosswalk, not this tool.',
+    description: 'Get direct per-technique framework mappings: NIST 800-53 controls, MITRE Engage activities, VERIS categories, AWS/Azure/GCP cloud controls. Use THIS tool for 800-53/Engage/VERIS/cloud questions. For regulatory frameworks (NIS2, DORA, PCI DSS, ISO 27002, HIPAA, GDPR, CMMC, ...) use get_technique_compliance instead — those come from the SCF crosswalk, not this tool.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -567,7 +567,7 @@ Tool selection rules:
 - For OWASP categories: use get_owasp_top10 (optionally filtered by framework: web-2021, ml-2023, llm-2025), then get_owasp_category for details
 - OWASP links: [A01 Broken Access Control](https://mitre-explorer.org/frameworks/owasp/A01)
 - For COMPLIANCE / regulatory questions (NIS2, DORA, PCI DSS, ISO 27002, HIPAA, GDPR, CMMC, FedRAMP, EU CRA, EU AI Act, OWASP Top 10, etc.): use list_compliance_frameworks to discover, get_compliance_framework for a single framework's techniques and articles, get_technique_compliance to find which frameworks reference a given T-ID. These are bridged to ATT&CK via the Secure Controls Framework (SCF, CC BY 4.0). Curated default = 21 Tier 1+2 frameworks; pass include_all=true for the ~250 long-tail. Coverage is FINITE — if a framework or framework/technique pair returns no data, state explicitly that the SCF crosswalk does not cover it; never infer a mapping. Compliance link example: [EU NIS2](https://mitre-explorer.org/compliance/eu-nis2).
-- EXCEPTION: for a technique's NIST 800-53 controls, MITRE Engage activities, VERIS categories, or Azure/GCP cloud controls, use get_framework_mappings (direct per-technique mappings) — NOT the SCF compliance tools, which cover 800-53 only as one regulatory cross-reference among ~250.
+- EXCEPTION: for a technique's NIST 800-53 controls, MITRE Engage activities, VERIS categories, or AWS/Azure/GCP cloud controls, use get_framework_mappings (direct per-technique mappings) — NOT the SCF compliance tools, which cover 800-53 only as one regulatory cross-reference among ~250.
 - You MUST generate a human-readable summary from the tool results -- never return empty or "No response generated"
 
 When responding:

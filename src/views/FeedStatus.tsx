@@ -245,7 +245,7 @@ const REFERENCE_TABLES: FrameworkTable[] = [
   { key: 'engage_mappings', label: 'MITRE Engage', description: 'Adversary engagement activities — deception and engagement mappings' },
   { key: 'react_actions', label: 'RE&CT', description: 'ATC incident-response playbook actions — Identification, Containment, …' },
   { key: 'veris_mappings', label: 'VERIS', description: 'Verizon DBIR incident classification (Actor/Action/Asset/Attribute)' },
-  { key: 'cloud_control_mappings', label: 'Cloud Controls (Azure + GCP)', description: 'Cloud provider security controls mapped to ATT&CK techniques' },
+  { key: 'cloud_control_mappings', label: 'Cloud Controls (AWS + Azure + GCP)', description: 'Cloud provider security controls mapped to ATT&CK techniques' },
   { key: 'capec_mappings', label: 'CAPEC → ATT&CK Bridge', description: 'CWE → CAPEC → ATT&CK pivot, powers CVE→technique chain' },
   { key: 'capec_patterns', label: 'CAPEC Patterns (full taxonomy)', description: '615 attack patterns with prerequisites, skills, consequences, related patterns' },
   { key: 'capec_mitigations', label: 'CAPEC Mitigations', description: 'Per-pattern mitigation guidance from the CAPEC taxonomy' },

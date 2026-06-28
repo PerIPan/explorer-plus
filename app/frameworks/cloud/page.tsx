@@ -6,7 +6,7 @@ import { CloudControls } from '../../../src/views/CloudControls';
 export const metadata: Metadata = {
   title: 'Cloud Controls',
   description:
-    'Azure and GCP security controls mapped to ATT&CK techniques',
+    'AWS, Azure, and GCP security controls mapped to ATT&CK techniques',
 };
 
 export default function Page() {
