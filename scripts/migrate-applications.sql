@@ -86,6 +86,19 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_capec_no_technique
 CREATE INDEX IF NOT EXISTS idx_capec_cwe ON capec_mappings(cwe_id);
 CREATE INDEX IF NOT EXISTS idx_capec_technique ON capec_mappings(technique_id);
 
+-- ── catch-all CWE lookup (perf) ──────────────────────────────────────────────
+-- "Catch-all" CWEs map to >10 distinct techniques (CWE-200/284/285/…) and would
+-- fan a CVE out across unrelated techniques. The inference hot paths exclude
+-- them via app/api/v1/lib/inference.ts notCatchallCwe(), which reads this ~10-row
+-- materialized view instead of recomputing the GROUP BY/HAVING per request.
+-- Threshold mirrors CATCHALL_CWE_THRESHOLD. Refreshed by the refresh-matviews
+-- cron (CONCURRENTLY needs the unique index below).
+CREATE MATERIALIZED VIEW IF NOT EXISTS catchall_cwes AS
+  SELECT cwe_id FROM capec_mappings
+  WHERE technique_id IS NOT NULL
+  GROUP BY cwe_id HAVING COUNT(DISTINCT technique_id) > 10;
+CREATE UNIQUE INDEX IF NOT EXISTS catchall_cwes_cwe_id_idx ON catchall_cwes (cwe_id);
+
 -- ── cve_count trigger ────────────────────────────────────────────────────────
 CREATE OR REPLACE FUNCTION refresh_app_cve_count() RETURNS TRIGGER LANGUAGE plpgsql AS $$
 BEGIN

@@ -19,6 +19,9 @@ export const maxDuration = 300;
  * below.
  */
 const MATVIEWS = [
+  // Refreshed first: the ~10-row catch-all CWE lookup that the inference hot
+  // paths (app/api/v1/lib/inference.ts notCatchallCwe) read on every request.
+  'catchall_cwes',
   'app_technique_groups',
   'package_summary',
 ];

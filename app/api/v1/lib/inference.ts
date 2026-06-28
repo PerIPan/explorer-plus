@@ -26,15 +26,16 @@ export const CATCHALL_CWE_THRESHOLD = 10;
 /**
  * SQL predicate fragment: true when `col` (a CWE id column, e.g. `cm.cwe_id`)
  * is NOT a catch-all CWE. Inline-safe — no bound params, no user input — so it
- * composes into any ON/WHERE clause. The subquery is the exact, prod-proven
- * clause; it only ever REMOVES fan-out rows, never adds any.
+ * composes into any ON/WHERE clause. It only ever REMOVES fan-out rows.
+ *
+ * Reads the `catchall_cwes` materialized view (a ~10-row lookup refreshed by
+ * the refresh-matviews cron) instead of recomputing the GROUP BY/HAVING over
+ * capec_mappings on every request — far cheaper, NULL-safe (the view's cwe_id
+ * is never NULL), and a single source of truth. The view's definition mirrors
+ * CATCHALL_CWE_THRESHOLD (see scripts/migrate-applications.sql).
  */
 export function notCatchallCwe(col: string): string {
-  return `${col} NOT IN (
-    SELECT cwe_id FROM capec_mappings
-    WHERE technique_id IS NOT NULL
-    GROUP BY cwe_id HAVING COUNT(DISTINCT technique_id) > ${CATCHALL_CWE_THRESHOLD}
-  )`;
+  return `${col} NOT IN (SELECT cwe_id FROM catchall_cwes)`;
 }
 
 /**
