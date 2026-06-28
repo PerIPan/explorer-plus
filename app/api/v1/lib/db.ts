@@ -30,6 +30,11 @@ export function getPool(): Pool {
       statement_timeout: 5000,
       connectionTimeoutMillis: isProduction ? 20000 : 3000,
       idle_in_transaction_session_timeout: 10000,
+      // Drop idle pooled connections quickly so Neon's compute autosuspend
+      // timer (which only starts once all connections close) begins sooner —
+      // less awake time = lower compute bill. Cold-start reconnect is retried
+      // in query() below.
+      idleTimeoutMillis: 3000,
       max: isProduction ? 3 : 10,
       ssl: isProduction ? { rejectUnauthorized: true } : undefined,
     });

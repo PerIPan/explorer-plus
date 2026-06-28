@@ -7,7 +7,7 @@ import { z } from 'zod';
 
 export { OPTIONS };
 
-const CACHE_TTL = 1800;
+const CACHE_TTL = 3600;
 
 const querySchema = z.object({
   sector: z.string().max(50).optional(),

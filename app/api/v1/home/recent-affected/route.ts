@@ -82,5 +82,5 @@ export async function GET(req: NextRequest) {
       advisoryCount: parseInt(r.advisoryCount, 10),
       latestPublished: r.latestPublished,
     })),
-  }, 300));
+  }, 1800));
 }

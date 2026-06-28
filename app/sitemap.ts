@@ -1,8 +1,10 @@
 import type { MetadataRoute } from 'next';
 import { query } from './api/v1/lib/db';
 
-// Force dynamic rendering so the sitemap hits the DB at request time,
-// not at build time (when POSTGRES_URL may be unavailable).
+// Force dynamic rendering so the sitemap hits the DB at request time, not at
+// build time (when POSTGRES_URL may be unavailable — building static here would
+// drop every dynamic URL until revalidation). Keeps the sitemap complete for
+// crawlers; the per-crawler DB cost is bounded (sitemap is fetched rarely).
 export const dynamic = 'force-dynamic';
 export const revalidate = 3600;
 
