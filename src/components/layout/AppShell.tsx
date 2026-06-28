@@ -109,6 +109,7 @@ const API_GROUPS: { label: string; routes: { path: string; desc: string }[] }[] 
       { path: '/frameworks/owasp', desc: 'OWASP Top 10 (web / ML / LLM)' },
       { path: '/frameworks/csf', desc: 'NIST CSF v2 subcategories' },
       { path: '/frameworks/nist', desc: 'NIST 800-53 controls' },
+      { path: '/frameworks/iso27001', desc: 'ISO/IEC 27001:2022 (via CSF crosswalk)' },
       { path: '/compliance/frameworks', desc: 'SCF-bridged frameworks (NIS2, DORA, PCI, ...)' },
       { path: '/compliance/frameworks/{key}', desc: 'framework → ATT&CK technique detail' },
     ],
