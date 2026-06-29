@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { query } from '../lib/db';
 import { jsonResponse, errorResponse } from '../../lib/handler';
 import { withCors, corsOptions as OPTIONS } from '../../lib/cors';
+import { escapeLikePattern } from '../lib/queries';
 import { z } from 'zod';
 
 export { OPTIONS };
@@ -9,6 +10,9 @@ export { OPTIONS };
 const querySchema = z.object({
   search: z.string().max(200).optional(),
   vendor: z.string().max(200).optional(),
+  // Substring/text match against affected_products.version_start/version_end.
+  // Requires search or vendor (product context) — see check below.
+  version: z.string().min(1).max(100).optional(),
   page: z.coerce.number().int().positive().max(1000).default(1),
   limit: z.coerce.number().int().positive().max(200).default(50),
   // Default to latest_cve DESC so users scanning /applications see the
@@ -26,7 +30,13 @@ export async function GET(req: NextRequest) {
     return withCors(errorResponse(400, 'Invalid query params', 'VALIDATION_ERROR'));
   }
 
-  const { search, vendor, page, limit, sort, order } = parsed.data;
+  const { search, vendor, page, limit, sort, order, version } = parsed.data;
+
+  // version filtering only makes sense scoped to a product set.
+  if (version && !search && !vendor) {
+    return withCors(errorResponse(400, 'The `version` filter requires `search` or `vendor` (product context), e.g. ?search=nginx&version=1.20', 'VALIDATION_ERROR'));
+  }
+
   const offset = (page - 1) * limit;
   const params: unknown[] = [];
   const conditions: string[] = [];
@@ -38,6 +48,10 @@ export async function GET(req: NextRequest) {
   if (vendor) {
     params.push(vendor);
     conditions.push(`a.vendor = $${params.length}`);
+  }
+  if (version) {
+    params.push(`%${escapeLikePattern(version)}%`);
+    conditions.push(`EXISTS (SELECT 1 FROM affected_products ap WHERE ap.application_id = a.id AND (ap.version_start ILIKE $${params.length} OR ap.version_end ILIKE $${params.length}))`);
   }
 
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';

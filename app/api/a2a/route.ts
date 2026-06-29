@@ -88,13 +88,15 @@ function sanitizeSearch(q: unknown): string {
 const TOOL_DECLARATIONS = [
   {
     name: 'search_cves',
-    description: 'Search CVE vulnerabilities by keyword, severity, or date range. Returns CVE ID, CVSS score, severity, description, linked ATT&CK technique IDs, and affected applications. Use get_cve_detail for EPSS exploit-probability score and CAPEC attack patterns.',
+    description: 'Search CVE vulnerabilities by keyword, severity, or date range. Returns CVE ID, CVSS score, severity, description, linked ATT&CK technique IDs, and affected applications. Use `app` to scope to a vendor/product and `version` (substring/text match, requires `app`) to a product version. Use get_cve_detail for EPSS exploit-probability score and CAPEC attack patterns.',
     parameters: {
       type: "OBJECT",
       properties: {
         q: { type: "STRING", description: 'Search query (CVE ID, keyword, CWE)' },
         severity: { type: "STRING", enum: ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'], description: 'Filter by severity' },
         since: { type: "STRING", description: 'ISO date string -- only CVEs published after this date' },
+        app: { type: "STRING", description: 'Filter to CVEs affecting a vendor/product (substring match), e.g. nginx, apache' },
+        version: { type: "STRING", description: 'Filter to a product version (substring/text match, e.g. 1.20.1). REQUIRES `app`. Surfaces CVEs whose affected version range MENTIONS this string — not a guaranteed "this version is vulnerable" verdict.' },
         limit: { type: "NUMBER", description: 'Max results (default 10, max 50)' },
       },
     },
@@ -106,6 +108,7 @@ const TOOL_DECLARATIONS = [
       type: "OBJECT",
       properties: {
         cve_id: { type: "STRING", description: 'CVE identifier, e.g. CVE-2024-3400' },
+        version: { type: "STRING", description: 'Optional. Narrows the `affectedApps` list to entries whose version range (substring/text) mentions this value, e.g. 1.20.' },
       },
       required: ['cve_id'],
     },
@@ -164,17 +167,19 @@ const TOOL_DECLARATIONS = [
       properties: {
         vendor: { type: "STRING", description: 'Vendor name, e.g. microsoft, apache, litellm' },
         product: { type: "STRING", description: 'Product name, e.g. windows_server_2022, http_server, litellm' },
+        version: { type: "STRING", description: 'Optional. Narrows the returned CVE list to entries whose affected version range (substring/text) mentions this value, e.g. 1.20.' },
       },
       required: ['vendor', 'product'],
     },
   },
   {
     name: 'search_applications',
-    description: 'Search applications by name. Returns vendor, product, CVE count.',
+    description: 'Search applications by name. Returns vendor, product, CVE count. Pass `version` (requires `search`) to keep only products that have an advisory mentioning that version.',
     parameters: {
       type: "OBJECT",
       properties: {
         search: { type: "STRING", description: 'Search keyword' },
+        version: { type: "STRING", description: 'Optional product version (substring/text match, e.g. 1.20). REQUIRES `search`.' },
         limit: { type: "NUMBER", description: 'Max results (default 10)' },
       },
     },
@@ -630,13 +635,16 @@ async function executeTool(name: string, args: Record<string, unknown>): Promise
         const d = new Date(String(args.since));
         if (!isNaN(d.getTime())) params.set('since', d.toISOString());
       }
+      if (args.app) params.set('app', sanitizeSearch(args.app));
+      if (args.version) params.set('version', sanitizeSearch(args.version));
       params.set('limit', clampLimit(args.limit, 10, 50));
       return callInternalApi(`/cves?${params}`);
     }
     case 'get_cve_detail': {
       const id = validateCveId(args.cve_id);
       if (!id) return { error: 'Invalid CVE ID format' };
-      return callInternalApi(`/cves/${id}`);
+      const qp = args.version ? `?version=${encodeURIComponent(sanitizeSearch(args.version))}` : '';
+      return callInternalApi(`/cves/${id}${qp}`);
     }
     case 'get_technique_intelligence': {
       const id = validateAttackId(args.attack_id);
@@ -669,11 +677,13 @@ async function executeTool(name: string, args: Record<string, unknown>): Promise
       const v = String(args.vendor ?? '').toLowerCase().replace(/[^a-z0-9_-]/g, '');
       const p = String(args.product ?? '').toLowerCase().replace(/[^a-z0-9_-]/g, '');
       if (!v || !p) return { error: 'Vendor and product are required' };
-      return callInternalApi(`/applications/${v}/${p}`);
+      const qp = args.version ? `?version=${encodeURIComponent(sanitizeSearch(args.version))}` : '';
+      return callInternalApi(`/applications/${v}/${p}${qp}`);
     }
     case 'search_applications': {
       const params = new URLSearchParams();
       if (args.search) params.set('search', sanitizeSearch(args.search));
+      if (args.version) params.set('version', sanitizeSearch(args.version));
       params.set('limit', clampLimit(args.limit, 10, 50));
       return callInternalApi(`/applications?${params}`);
     }

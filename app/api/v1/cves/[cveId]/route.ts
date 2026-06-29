@@ -1,13 +1,14 @@
 import { NextRequest } from 'next/server';
 import { query } from '../../lib/db';
 import { notCatchallCwe } from '../../lib/inference';
+import { escapeLikePattern } from '../../lib/queries';
 import { jsonResponse, errorResponse } from '../../../lib/handler';
 import { withCors, corsOptions as OPTIONS } from '../../../lib/cors';
 
 export { OPTIONS };
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ cveId: string }> }
 ) {
   const { cveId } = await params;
@@ -16,6 +17,16 @@ export async function GET(
   if (!id || !/^CVE-\d{4}-\d{4,}$/.test(id)) {
     return withCors(errorResponse(400, 'Invalid CVE ID', 'VALIDATION_ERROR'));
   }
+
+  // Optional version filter — substring/text match against the affected
+  // applications' version_start/version_end. The CVE is the product context,
+  // so it's standalone here. Only narrows `affectedApps`.
+  const versionRaw = req.nextUrl.searchParams.get('version')?.trim();
+  const version = versionRaw ? versionRaw.slice(0, 100) : null;
+  const appsWhere = version
+    ? 'WHERE ap.cve_id = $1 AND (ap.version_start ILIKE $2 OR ap.version_end ILIKE $2)'
+    : 'WHERE ap.cve_id = $1';
+  const appsParams = version ? [id, `%${escapeLikePattern(version)}%`] : [id];
 
   const [detailResult, sourcesResult, cwesResult, appsResult, techIocResult, techCapecResult, reportsResult, owaspResult, ghsaResult, osvRes] =
     await Promise.all([
@@ -63,9 +74,9 @@ export async function GET(
                 ap.version_start, ap.version_end, a.cve_count::text
          FROM affected_products ap
          JOIN applications a ON a.id = ap.application_id
-         WHERE ap.cve_id = $1
+         ${appsWhere}
          ORDER BY a.cve_count DESC, a.vendor, a.product`,
-        [id],
+        appsParams,
       ),
 
       query<{ attack_id: string; name: string; tactics: string; source: string }>(
@@ -215,6 +226,7 @@ export async function GET(
 
   return withCors(jsonResponse({
     cveId: id,
+    versionFilter: version,
     description: detail?.description ?? null,
     cvssScore: detail?.cvss_score ? parseFloat(detail.cvss_score) : null,
     cvssSeverity: detail?.cvss_severity ?? null,

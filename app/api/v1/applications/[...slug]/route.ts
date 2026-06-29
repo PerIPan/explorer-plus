@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { query } from '../../lib/db';
 import { jsonResponse, errorResponse } from '../../../lib/handler';
 import { withCors, corsOptions as OPTIONS } from '../../../lib/cors';
+import { escapeLikePattern } from '../../lib/queries';
 import { z } from 'zod';
 
 export { OPTIONS };
@@ -11,6 +12,9 @@ const slugSchema = z.string().min(1).max(200).regex(/^[a-z0-9/]+$/);
 const querySchema = z.object({
   page: z.coerce.number().int().positive().max(1000).default(1),
   limit: z.coerce.number().int().positive().max(100).default(20),
+  // Substring/text match against affected_products version_start/version_end.
+  // The product is the context; narrows the returned CVE list + count only.
+  version: z.string().min(1).max(100).optional(),
 });
 
 export async function GET(
@@ -33,8 +37,9 @@ export async function GET(
   if (!parsed.success) {
     return withCors(errorResponse(400, 'Invalid query params', 'VALIDATION_ERROR'));
   }
-  const { page, limit } = parsed.data;
+  const { page, limit, version } = parsed.data;
   const offset = (page - 1) * limit;
+  const versionLike = version ? `%${escapeLikePattern(version)}%` : null;
 
   // Find application
   const appResult = await query<{
@@ -51,6 +56,13 @@ export async function GET(
   }
   const app = appResult.rows[0];
 
+  // version filter (optional) narrows only the CVE list + its count — the
+  // technique/group/weakness aggregates are product-level (no version axis).
+  const cvesVersionClause = version ? 'AND (ap.version_start ILIKE $4 OR ap.version_end ILIKE $4)' : '';
+  const cvesParams = version ? [app.id, limit, offset, versionLike] : [app.id, limit, offset];
+  const countVersionClause = version ? 'AND (ap.version_start ILIKE $2 OR ap.version_end ILIKE $2)' : '';
+  const countParams = version ? [app.id, versionLike] : [app.id];
+
   // Parallel queries for the 360 view
   const [cvesResult, techniquesResult, groupsResult, weaknessesResult, cveCountResult] = await Promise.all([
     query<{
@@ -63,10 +75,10 @@ export async function GET(
               cd.published_at AS "publishedAt", cd.is_kev AS "isKev"
        FROM affected_products ap
        JOIN cve_details cd ON cd.cve_id = ap.cve_id
-       WHERE ap.application_id = $1
+       WHERE ap.application_id = $1 ${cvesVersionClause}
        ORDER BY cd.published_at DESC NULLS LAST, cd.cvss_score DESC NULLS LAST
        LIMIT $2 OFFSET $3`,
-      [app.id, limit, offset],
+      cvesParams,
     ),
 
     query<{ attackId: string; name: string; groupCount: string }>(
@@ -107,13 +119,14 @@ export async function GET(
 
     query<{ total: string }>(
       `SELECT COUNT(DISTINCT ap.cve_id)::text AS total
-       FROM affected_products ap WHERE ap.application_id = $1`,
-      [app.id],
+       FROM affected_products ap WHERE ap.application_id = $1 ${countVersionClause}`,
+      countParams,
     ),
   ]);
 
   return withCors(jsonResponse({
     ...app,
+    versionFilter: version ?? null,
     cves: cvesResult.rows,
     cvePagination: {
       page, limit,

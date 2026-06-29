@@ -17,6 +17,10 @@ const querySchema = paginationSchema.extend({
   since: z.string().optional(),
   technique: z.string().regex(/^(AML\.)?(T|TA)\d{4}(\.\d{3})?$/).optional(),
   app: z.string().min(1).max(200).optional(),
+  // Substring/text match against affected_products.version_start/version_end.
+  // Only meaningful with `app` (product context) — versions aren't globally
+  // comparable. NOT a semantic "is this version vulnerable" verdict.
+  version: z.string().min(1).max(100).optional(),
 });
 
 export async function GET(req: NextRequest) {
@@ -28,8 +32,14 @@ export async function GET(req: NextRequest) {
     return withCors(errorResponse(400, 'Invalid query parameters', 'VALIDATION_ERROR'));
   }
 
-  const { page, limit, severity, source, q, order, sector, since, technique, app } = parsed.data;
+  const { page, limit, severity, source, q, order, sector, since, technique, app, version } = parsed.data;
   const offset = (page - 1) * limit;
+
+  // version filtering only makes sense scoped to a product (versions aren't
+  // globally comparable). Reject a bare ?version= with a clear message.
+  if (version && !app) {
+    return withCors(errorResponse(400, 'The `version` filter requires `app` (product context), e.g. ?app=nginx&version=1.20', 'VALIDATION_ERROR'));
+  }
 
   const params: unknown[] = [];
   const conditions: string[] = [];
@@ -75,10 +85,16 @@ export async function GET(req: NextRequest) {
 
   if (app) {
     params.push(`%${escapeLikePattern(app)}%`);
+    const appIdx = params.length;
+    let versionClause = '';
+    if (version) {
+      params.push(`%${escapeLikePattern(version)}%`);
+      versionClause = ` AND (ap.version_start ILIKE $${params.length} OR ap.version_end ILIKE $${params.length})`;
+    }
     conditions.push(`cd.cve_id IN (
       SELECT ap.cve_id FROM affected_products ap
       JOIN applications a ON a.id = ap.application_id
-      WHERE a.vendor ILIKE $${params.length} OR a.product ILIKE $${params.length}
+      WHERE (a.vendor ILIKE $${appIdx} OR a.product ILIKE $${appIdx})${versionClause}
     )`);
   }
 
