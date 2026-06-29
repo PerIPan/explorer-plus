@@ -226,7 +226,7 @@ export async function GET(
 
   return withCors(jsonResponse({
     cveId: id,
-    versionFilter: version,
+    versionFilter: version ?? null,
     description: detail?.description ?? null,
     cvssScore: detail?.cvss_score ? parseFloat(detail.cvss_score) : null,
     cvssSeverity: detail?.cvss_severity ?? null,

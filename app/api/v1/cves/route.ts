@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { query } from '../lib/db';
 import { jsonResponse, errorResponse } from '../../lib/handler';
 import { withCors, corsOptions as OPTIONS } from '../../lib/cors';
-import { paginationSchema } from '../lib/validate';
+import { paginationSchema, versionParam } from '../lib/validate';
 import { escapeLikePattern } from '../lib/queries';
 import { notCatchallCwe } from '../lib/inference';
 import { z } from 'zod';
@@ -20,8 +20,7 @@ const querySchema = paginationSchema.extend({
   // Substring/text match against affected_products.version_start/version_end.
   // Only meaningful with `app` (product context) — versions aren't globally
   // comparable. NOT a semantic "is this version vulnerable" verdict.
-  // Empty string -> treated as absent (no filter), not a validation error.
-  version: z.preprocess((v) => (v === '' ? undefined : v), z.string().min(1).max(100).optional()),
+  version: versionParam,
 });
 
 export async function GET(req: NextRequest) {

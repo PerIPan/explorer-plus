@@ -96,7 +96,7 @@ const TOOL_DECLARATIONS = [
         severity: { type: "STRING", enum: ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'], description: 'Filter by severity' },
         since: { type: "STRING", description: 'ISO date string -- only CVEs published after this date' },
         app: { type: "STRING", description: 'Filter to CVEs affecting a vendor/product (substring match), e.g. nginx, apache' },
-        version: { type: "STRING", description: 'Filter to a product version (substring/text match, e.g. 1.20.1). REQUIRES `app`. Surfaces CVEs whose affected version range MENTIONS this string — not a guaranteed "this version is vulnerable" verdict.' },
+        version: { type: "STRING", description: 'Filter to a product version (substring/text match, e.g. 1.20.1). REQUIRES `app`. Surfaces CVEs whose affected version range MENTIONS this string — NOT a "this version is vulnerable" verdict; say so.' },
         limit: { type: "NUMBER", description: 'Max results (default 10, max 50)' },
       },
     },
@@ -179,7 +179,7 @@ const TOOL_DECLARATIONS = [
       type: "OBJECT",
       properties: {
         search: { type: "STRING", description: 'Search keyword' },
-        version: { type: "STRING", description: 'Optional product version (substring/text match, e.g. 1.20). REQUIRES `search`.' },
+        version: { type: "STRING", description: 'Optional product version (substring/text match, e.g. 1.20). REQUIRES `search`. Surfaces matches — NOT a "this version is vulnerable" verdict; say so.' },
         limit: { type: "NUMBER", description: 'Max results (default 10)' },
       },
     },
@@ -442,7 +442,7 @@ const TOOL_DECLARATIONS = [
   },
   {
     name: 'search_ghsa',
-    description: 'Search GitHub Security Advisories ONLY (OSS packages: npm/PyPI/Maven/Go/etc.) by keyword, severity, ecosystem, or publication date. Returns GHSA ID, CVE alias (if any), severity, summary, affected ecosystems, published date. For OS/distro/kernel advisories or a unified GHSA+OSV view, use search_advisories instead.',
+    description: 'Search GitHub Security Advisories ONLY (OSS packages: npm/PyPI/Maven/Go/etc.) by keyword, severity, ecosystem, or publication date. Returns GHSA ID, CVE alias (if any), severity, summary, affected ecosystems, published date. For OS/distro/kernel advisories or a unified GHSA+OSV view, use search_advisories instead. To filter by affected package VERSION, use get_package_vulnerabilities (ecosystem+package_name+version) or get_ghsa_detail (ghsa_id+version) — version is not a list-level filter here.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -570,7 +570,7 @@ Tool selection rules:
 - When asked about a SPECIFIC OSV / distro / kernel advisory (DSA-*, USN-*, ALAS-*, RLSA-*, LBSEC-*, etc.): use get_osv_detail
 - When asked about advisories broadly ("show me recent Debian advisories", "which Alpine CVEs this week", "OSS package vulnerabilities for npm"): use search_advisories with the ecosystem / source filter. This unifies GHSA (OSS packages) + OSV (OS/distros/kernels) into one list.
 - For GHSA-specific advisory detail (e.g. "GHSA-jfh8-c2jp-5v3q"): use get_ghsa_detail. For Debian/Ubuntu/Alpine/kernel advisories: use get_osv_detail.
-- For "what CVEs affect product X version Y" / "is X version Y affected": use search_cves with app=X and version=Y, or get_application_security with vendor/product/version. The version filter is a SUBSTRING/TEXT match against the advisory's affected-version range (the data is free-text) — it surfaces CVEs that MENTION that version string, NOT a definitive "this exact version is vulnerable" verdict. State this caveat; never claim a version is confirmed vulnerable or safe based solely on it.
+- For "what CVEs affect product X version Y" / "is X version Y affected": use search_cves with app=X and version=Y, or get_application_security with vendor/product/version. For the same question about an OSS PACKAGE or a GHSA advisory, use get_package_vulnerabilities (ecosystem + package_name + version) or get_ghsa_detail (ghsa_id + version). The version filter is a SUBSTRING/TEXT match against the affected-version range (the data is free-text) — it surfaces entries that MENTION that version string, NOT a definitive "this exact version is vulnerable" verdict. State this caveat; never claim a version is confirmed vulnerable or safe based solely on it.
 - "search_" tools return summaries/lists; "get_" tools return full profiles -- always prefer the full profile for specific entities
 - For OWASP categories: use get_owasp_top10 (optionally filtered by framework: web-2021, ml-2023, llm-2025), then get_owasp_category for details
 - OWASP links: [A01 Broken Access Control](https://mitre-explorer.org/frameworks/owasp/A01)

@@ -36,6 +36,13 @@ export async function GET(
 
   const includeWithdrawn = req.nextUrl.searchParams.get('include_withdrawn') === '1';
 
+  // Optional version filter — substring/text match on the GHSA package's
+  // vulnerable_range / fixed_version. The package is the context (standalone).
+  // Parsed before the OSV-fallback branch so that path can echo versionFilter
+  // too (OSV-tracked packages have no version axis modelled here → no-op).
+  const versionRaw = req.nextUrl.searchParams.get('version')?.trim();
+  const version = versionRaw ? versionRaw.slice(0, 100) : null;
+
   const pkgResult = await query<{
     id: string;
     ecosystem: string;
@@ -53,7 +60,7 @@ export async function GET(
   // Alpine/Android/Rocky/Alma/SUSE/etc.). osv_affected stores ecosystem with
   // case preserved as the user provided in the URL.
   if (pkgResult.rows.length === 0) {
-    return handleOsvPackage(rawEco, packageName);
+    return handleOsvPackage(rawEco, packageName, version);
   }
 
   const pkg = pkgResult.rows[0];
@@ -62,12 +69,6 @@ export async function GET(
   // The SQL below short-circuits to no-op when $2 is null.
   const excludeWithdrawn = includeWithdrawn ? null : 'excluded';
 
-  // Optional version filter — substring/text match on the GHSA package's
-  // vulnerable_range / fixed_version. The package is the context (standalone).
-  // Narrows the advisory list only. (OSV-tracked packages have no version axis
-  // modelled here, so the filter is a no-op on that fallback path.)
-  const versionRaw = req.nextUrl.searchParams.get('version')?.trim();
-  const version = versionRaw ? versionRaw.slice(0, 100) : null;
   const advVersionClause = version ? 'AND (gp.vulnerable_range ILIKE $3 OR gp.fixed_version ILIKE $3)' : '';
   const advParams = version ? [pkg.id, excludeWithdrawn, `%${escapeLikePattern(version)}%`] : [pkg.id, excludeWithdrawn];
 
@@ -146,10 +147,12 @@ export async function GET(
         packageName: pkg.packageName,
         purl: pkg.purl,
         source: 'GHSA',
-        versionFilter: version,
+        versionFilter: version ?? null,
         advisoryCount: advisories.length,
         severityCounts,
         advisories,
+        // Package-level (not version-scoped): technique associations are per
+        // package, so this stays full even when versionFilter narrows advisories.
         linkedTechniques: techResult.rows,
       },
       3600,
@@ -161,7 +164,7 @@ export async function GET(
  *  Shape kept compatible with the GHSA path so PackageDetail.tsx renders
  *  the same component — distinguished by source='OSV'. ghsaId carries the
  *  OSV native id (DSA-/USN-/ALAS-/etc.). */
-async function handleOsvPackage(rawEco: string, packageName: string) {
+async function handleOsvPackage(rawEco: string, packageName: string, version: string | null = null) {
   // Single case-insensitive lookup — no N+1 loop. Returns the stored
   // ecosystem value (case preserved) so subsequent queries use the same form.
   const resolve = await query<{ ecosystem: string }>(
@@ -233,6 +236,9 @@ async function handleOsvPackage(rawEco: string, packageName: string) {
         packageName,
         purl: null,
         source: 'OSV',
+        // Echoed for a uniform contract; OSV packages have no version axis here,
+        // so the filter is received-and-ignored (no narrowing applied).
+        versionFilter: version ?? null,
         advisoryCount: advisories.length,
         severityCounts,
         advisories,

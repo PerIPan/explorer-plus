@@ -7,6 +7,18 @@ export const attackIdSchema = z.string().regex(/^(AML\.)?(TA|T|G|S|M|C|DS)\d{4}(
 export const slugSchema = z.string().regex(/^[a-z0-9-]+$/);
 export const searchSchema = z.string().min(3).max(200);
 
+// Shared `version` filter param (substring/text match on free-text version
+// ranges). Trims, then treats an empty string as absent (no filter) rather
+// than a validation error — so `?version=` never 400s the whole request and
+// all surfaces normalize identically.
+export const versionParam = z.preprocess(
+  (v) => {
+    const s = typeof v === 'string' ? v.trim() : v;
+    return s === '' ? undefined : s;
+  },
+  z.string().min(1).max(100).optional(),
+);
+
 // Public list endpoints. `limit` stays at 5000 because existing views
 // (GroupsList, TechniquesList, CampaignsList, etc.) depend on loading the
 // full collection for client-side Fuse.js filtering. `page` is tightened to

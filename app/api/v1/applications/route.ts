@@ -3,6 +3,7 @@ import { query } from '../lib/db';
 import { jsonResponse, errorResponse } from '../../lib/handler';
 import { withCors, corsOptions as OPTIONS } from '../../lib/cors';
 import { escapeLikePattern } from '../lib/queries';
+import { versionParam } from '../lib/validate';
 import { z } from 'zod';
 
 export { OPTIONS };
@@ -12,8 +13,7 @@ const querySchema = z.object({
   vendor: z.string().max(200).optional(),
   // Substring/text match against affected_products.version_start/version_end.
   // Requires search or vendor (product context) — see check below.
-  // Empty string -> treated as absent (no filter), not a validation error.
-  version: z.preprocess((v) => (v === '' ? undefined : v), z.string().min(1).max(100).optional()),
+  version: versionParam,
   page: z.coerce.number().int().positive().max(1000).default(1),
   limit: z.coerce.number().int().positive().max(200).default(50),
   // Default to latest_cve DESC so users scanning /applications see the

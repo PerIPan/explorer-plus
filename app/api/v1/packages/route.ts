@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { query } from '../lib/db';
 import { jsonResponse, errorResponse } from '../../lib/handler';
 import { withCors, corsOptions as OPTIONS } from '../../lib/cors';
-import { paginationSchema } from '../lib/validate';
+import { paginationSchema, versionParam } from '../lib/validate';
 import { escapeLikePattern } from '../lib/queries';
 import { z } from 'zod';
 
@@ -15,8 +15,8 @@ const querySchema = paginationSchema.extend({
   q: z.string().min(3).max(200).optional(),  // min 3 so trigram ILIKE is plannable
   // Substring/text match on a package's advisory version ranges
   // (ghsa_packages.vulnerable_range / fixed_version). Requires ecosystem or q
-  // (product context). Empty string -> treated as absent (no filter).
-  version: z.preprocess((v) => (v === '' ? undefined : v), z.string().min(1).max(100).optional()),
+  // (product context).
+  version: versionParam,
 });
 
 export async function GET(req: NextRequest) {

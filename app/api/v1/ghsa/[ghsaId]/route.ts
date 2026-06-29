@@ -123,7 +123,7 @@ export async function GET(
     jsonResponse(
       {
         ghsaId: adv.ghsaId,
-        versionFilter: version,
+        versionFilter: version ?? null,
         cveId: adv.cveId,
         summary: adv.summary,
         description: adv.description,
