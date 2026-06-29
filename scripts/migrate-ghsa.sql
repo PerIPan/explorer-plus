@@ -98,6 +98,11 @@ CREATE UNIQUE INDEX IF NOT EXISTS uq_ghsa_packages
   ON ghsa_packages (ghsa_id, package_id, vulnerable_range_key);
 CREATE INDEX IF NOT EXISTS idx_ghsa_packages_pkg  ON ghsa_packages(package_id);
 CREATE INDEX IF NOT EXISTS idx_ghsa_packages_ghsa ON ghsa_packages(ghsa_id);
+-- Trigram indexes for the API `version` substring filter (ILIKE '%x%') on the
+-- package/GHSA endpoints. Partial since lookups run inside an already
+-- package/advisory-scoped query.
+CREATE INDEX IF NOT EXISTS idx_ghsa_packages_vrange_trgm ON ghsa_packages USING gin (vulnerable_range gin_trgm_ops) WHERE vulnerable_range IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_ghsa_packages_fixed_trgm  ON ghsa_packages USING gin (fixed_version gin_trgm_ops) WHERE fixed_version IS NOT NULL;
 
 -- 7. Unified weaknesses — regular VIEW (trivial UNION, always fresh)
 CREATE OR REPLACE VIEW unified_weaknesses AS

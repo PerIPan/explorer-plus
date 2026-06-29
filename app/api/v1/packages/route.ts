@@ -13,6 +13,10 @@ const ECOSYSTEM_RE = /^[a-z][a-z0-9-]{1,49}$/;
 const querySchema = paginationSchema.extend({
   ecosystem: z.string().regex(ECOSYSTEM_RE).optional(),
   q: z.string().min(3).max(200).optional(),  // min 3 so trigram ILIKE is plannable
+  // Substring/text match on a package's advisory version ranges
+  // (ghsa_packages.vulnerable_range / fixed_version). Requires ecosystem or q
+  // (product context). Empty string -> treated as absent (no filter).
+  version: z.preprocess((v) => (v === '' ? undefined : v), z.string().min(1).max(100).optional()),
 });
 
 export async function GET(req: NextRequest) {
@@ -24,7 +28,13 @@ export async function GET(req: NextRequest) {
     return withCors(errorResponse(400, 'Invalid query parameters', 'VALIDATION_ERROR'));
   }
 
-  const { page, limit, ecosystem, q } = parsed.data;
+  const { page, limit, ecosystem, q, version } = parsed.data;
+
+  // version is meaningful only scoped to a product set.
+  if (version && !ecosystem && !q) {
+    return withCors(errorResponse(400, 'The `version` filter requires `ecosystem` or `q` (product context), e.g. ?ecosystem=npm&version=14.10', 'MISSING_CONTEXT'));
+  }
+
   const offset = (page - 1) * limit;
 
   const conditions: string[] = [];
@@ -37,6 +47,10 @@ export async function GET(req: NextRequest) {
   if (q) {
     params.push(`%${escapeLikePattern(q)}%`);
     conditions.push(`package_name ILIKE $${params.length}`);
+  }
+  if (version) {
+    params.push(`%${escapeLikePattern(version)}%`);
+    conditions.push(`EXISTS (SELECT 1 FROM ghsa_packages gp WHERE gp.package_id = package_summary.package_id AND (gp.vulnerable_range ILIKE $${params.length} OR gp.fixed_version ILIKE $${params.length}))`);
   }
 
   const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
@@ -89,6 +103,7 @@ export async function GET(req: NextRequest) {
 
     return withCors(jsonResponse({
       data,
+      versionFilter: version ?? null,
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
     }, 300));
   } catch (err) {
@@ -96,6 +111,7 @@ export async function GET(req: NextRequest) {
     console.error('package_summary query failed:', err);
     return withCors(jsonResponse({
       data: [],
+      versionFilter: version ?? null,
       pagination: { page, limit, total: 0, totalPages: 0 },
     }, 60));
   }

@@ -3,13 +3,14 @@ import { query } from '../../lib/db';
 import { jsonResponse, errorResponse } from '../../../lib/handler';
 import { withCors, corsOptions as OPTIONS } from '../../../lib/cors';
 import { notCatchallCwe } from '../../lib/inference';
+import { escapeLikePattern } from '../../lib/queries';
 
 export { OPTIONS };
 
 const GHSA_ID_RE = /^GHSA(?:-[0-9a-z]{4}){3}$/i;
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ ghsaId: string }> },
 ) {
   const { ghsaId: raw } = await params;
@@ -59,6 +60,13 @@ export async function GET(
 
   const adv = advResult.rows[0];
 
+  // Optional version filter — substring/text match on the affected packages'
+  // vulnerable_range / fixed_version. The advisory is the context (standalone).
+  const versionRaw = req.nextUrl.searchParams.get('version')?.trim();
+  const version = versionRaw ? versionRaw.slice(0, 100) : null;
+  const pkgVersionClause = version ? 'AND (gp.vulnerable_range ILIKE $2 OR gp.fixed_version ILIKE $2)' : '';
+  const pkgParams = version ? [ghsaId, `%${escapeLikePattern(version)}%`] : [ghsaId];
+
   const [cweResult, pkgResult, techResult, capecResult] = await Promise.all([
     query<{ cweId: string }>(
       `SELECT cwe_id AS "cweId" FROM ghsa_weaknesses WHERE ghsa_id = $1 ORDER BY cwe_id`,
@@ -79,9 +87,9 @@ export async function GET(
          gp.fixed_version  AS "fixedVersion"
        FROM ghsa_packages gp
        JOIN packages p ON p.id = gp.package_id
-       WHERE gp.ghsa_id = $1
+       WHERE gp.ghsa_id = $1 ${pkgVersionClause}
        ORDER BY p.ecosystem, p.package_name, gp.vulnerable_range NULLS FIRST`,
-      [ghsaId],
+      pkgParams,
     ),
     query<{ attackId: string; name: string }>(
       `SELECT DISTINCT t.attack_id AS "attackId", t.name
@@ -115,6 +123,7 @@ export async function GET(
     jsonResponse(
       {
         ghsaId: adv.ghsaId,
+        versionFilter: version,
         cveId: adv.cveId,
         summary: adv.summary,
         description: adv.description,

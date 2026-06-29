@@ -3,6 +3,7 @@ import { query } from '../../../lib/db';
 import { jsonResponse, errorResponse } from '../../../../lib/handler';
 import { withCors, corsOptions as OPTIONS } from '../../../../lib/cors';
 import { notCatchallCwe } from '../../../lib/inference';
+import { escapeLikePattern } from '../../../lib/queries';
 
 export { OPTIONS };
 
@@ -61,6 +62,15 @@ export async function GET(
   // The SQL below short-circuits to no-op when $2 is null.
   const excludeWithdrawn = includeWithdrawn ? null : 'excluded';
 
+  // Optional version filter — substring/text match on the GHSA package's
+  // vulnerable_range / fixed_version. The package is the context (standalone).
+  // Narrows the advisory list only. (OSV-tracked packages have no version axis
+  // modelled here, so the filter is a no-op on that fallback path.)
+  const versionRaw = req.nextUrl.searchParams.get('version')?.trim();
+  const version = versionRaw ? versionRaw.slice(0, 100) : null;
+  const advVersionClause = version ? 'AND (gp.vulnerable_range ILIKE $3 OR gp.fixed_version ILIKE $3)' : '';
+  const advParams = version ? [pkg.id, excludeWithdrawn, `%${escapeLikePattern(version)}%`] : [pkg.id, excludeWithdrawn];
+
   const [advResult, techResult] = await Promise.all([
     query<{
       ghsaId: string;
@@ -87,8 +97,9 @@ export async function GET(
        JOIN ghsa_advisories g ON g.ghsa_id = gp.ghsa_id
        WHERE gp.package_id = $1
          AND ($2::text IS NULL OR g.withdrawn_at IS NULL)
+         ${advVersionClause}
        ORDER BY g.published_at DESC NULLS LAST, g.ghsa_id DESC`,
-      [pkg.id, excludeWithdrawn],
+      advParams,
     ),
     query<{ attackId: string; name: string }>(
       `SELECT DISTINCT t.attack_id AS "attackId", t.name
@@ -135,6 +146,7 @@ export async function GET(
         packageName: pkg.packageName,
         purl: pkg.purl,
         source: 'GHSA',
+        versionFilter: version,
         advisoryCount: advisories.length,
         severityCounts,
         advisories,

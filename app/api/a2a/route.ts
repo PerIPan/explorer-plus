@@ -422,6 +422,7 @@ const TOOL_DECLARATIONS = [
       type: "OBJECT",
       properties: {
         ghsa_id: { type: "STRING", description: 'GHSA identifier, e.g. GHSA-jfh8-c2jp-5v3q' },
+        version: { type: "STRING", description: 'Optional. Narrows the affected-packages list to entries whose vulnerable/fixed range (substring/text) mentions this value, e.g. 14.10. Surfaces matches — NOT a "this version is vulnerable" verdict; say so.' },
       },
       required: ['ghsa_id'],
     },
@@ -434,6 +435,7 @@ const TOOL_DECLARATIONS = [
       properties: {
         ecosystem: { type: "STRING", description: 'Package ecosystem: npm, pypi, go, maven, rubygems, nuget, composer, rust, erlang, pub, swift, actions' },
         package_name: { type: "STRING", description: 'Package name, e.g. log4js-node, django, @angular/core' },
+        version: { type: "STRING", description: 'Optional. Narrows the advisory list to entries whose vulnerable/fixed range (substring/text) mentions this value, e.g. 14.10. Surfaces matches — NOT a "this version is vulnerable" verdict; say so.' },
       },
       required: ['ecosystem', 'package_name'],
     },
@@ -846,14 +848,16 @@ async function executeTool(name: string, args: Record<string, unknown>): Promise
       // Preserve case of the random segments — GHSA stores them lowercase.
       const id = String(args.ghsa_id ?? '').replace(/^ghsa-/i, 'GHSA-');
       if (!/^GHSA(-[0-9a-z]{4}){3}$/.test(id)) return { error: 'Invalid GHSA ID format' };
-      return callInternalApi(`/ghsa/${id}`);
+      const qp = args.version ? `?version=${encodeURIComponent(sanitizeSearch(args.version).slice(0, 100))}` : '';
+      return callInternalApi(`/ghsa/${id}${qp}`);
     }
     case 'get_package_vulnerabilities': {
       const eco = String(args.ecosystem ?? '').toLowerCase();
       const name = String(args.package_name ?? '');
       if (!/^[a-z][a-z0-9-]{1,49}$/.test(eco)) return { error: 'Invalid ecosystem' };
       if (!name || name.length > 500) return { error: 'Invalid package name' };
-      return callInternalApi(`/packages/${eco}/${encodeURIComponent(name)}`);
+      const qp = args.version ? `?version=${encodeURIComponent(sanitizeSearch(args.version).slice(0, 100))}` : '';
+      return callInternalApi(`/packages/${eco}/${encodeURIComponent(name)}${qp}`);
     }
     case 'search_ghsa': {
       const params = new URLSearchParams();
