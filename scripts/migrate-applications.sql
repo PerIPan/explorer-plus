@@ -68,6 +68,11 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_affected_products_unique
   ON affected_products (cve_id, application_id, COALESCE(version_start,''), COALESCE(version_end,''));
 CREATE INDEX IF NOT EXISTS idx_affected_products_app ON affected_products(application_id);
 CREATE INDEX IF NOT EXISTS idx_affected_products_cve ON affected_products(cve_id);
+-- Trigram indexes for the API `version` substring filter (ILIKE '%x%'). Partial
+-- (WHERE NOT NULL) since most lookups run inside an already app/cve-scoped
+-- subquery; these accelerate the version ILIKE on top of that.
+CREATE INDEX IF NOT EXISTS idx_affected_products_vstart_trgm ON affected_products USING GIN (version_start gin_trgm_ops) WHERE version_start IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_affected_products_vend_trgm ON affected_products USING GIN (version_end gin_trgm_ops) WHERE version_end IS NOT NULL;
 
 -- ── capec_mappings (CWE → CAPEC → ATT&CK technique) ─────────────────────────
 CREATE TABLE IF NOT EXISTS capec_mappings (

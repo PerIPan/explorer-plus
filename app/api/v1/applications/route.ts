@@ -12,7 +12,8 @@ const querySchema = z.object({
   vendor: z.string().max(200).optional(),
   // Substring/text match against affected_products.version_start/version_end.
   // Requires search or vendor (product context) — see check below.
-  version: z.string().min(1).max(100).optional(),
+  // Empty string -> treated as absent (no filter), not a validation error.
+  version: z.preprocess((v) => (v === '' ? undefined : v), z.string().min(1).max(100).optional()),
   page: z.coerce.number().int().positive().max(1000).default(1),
   limit: z.coerce.number().int().positive().max(200).default(50),
   // Default to latest_cve DESC so users scanning /applications see the
@@ -34,7 +35,7 @@ export async function GET(req: NextRequest) {
 
   // version filtering only makes sense scoped to a product set.
   if (version && !search && !vendor) {
-    return withCors(errorResponse(400, 'The `version` filter requires `search` or `vendor` (product context), e.g. ?search=nginx&version=1.20', 'VALIDATION_ERROR'));
+    return withCors(errorResponse(400, 'The `version` filter requires `search` or `vendor` (product context), e.g. ?search=nginx&version=1.20', 'MISSING_CONTEXT'));
   }
 
   const offset = (page - 1) * limit;
@@ -110,6 +111,7 @@ export async function GET(req: NextRequest) {
       techniqueCount: parseInt(r.techniqueCount, 10),
       groupCount: parseInt(r.groupCount, 10),
     })),
+    versionFilter: version ?? null,
     pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
   }, 3600));
 }

@@ -108,7 +108,7 @@ const TOOL_DECLARATIONS = [
       type: "OBJECT",
       properties: {
         cve_id: { type: "STRING", description: 'CVE identifier, e.g. CVE-2024-3400' },
-        version: { type: "STRING", description: 'Optional. Narrows the `affectedApps` list to entries whose version range (substring/text) mentions this value, e.g. 1.20.' },
+        version: { type: "STRING", description: 'Optional. Narrows the `affectedApps` list to entries whose version range (substring/text) mentions this value, e.g. 1.20. Surfaces matches — NOT a "this version is vulnerable" verdict; say so.' },
       },
       required: ['cve_id'],
     },
@@ -167,7 +167,7 @@ const TOOL_DECLARATIONS = [
       properties: {
         vendor: { type: "STRING", description: 'Vendor name, e.g. microsoft, apache, litellm' },
         product: { type: "STRING", description: 'Product name, e.g. windows_server_2022, http_server, litellm' },
-        version: { type: "STRING", description: 'Optional. Narrows the returned CVE list to entries whose affected version range (substring/text) mentions this value, e.g. 1.20.' },
+        version: { type: "STRING", description: 'Optional. Narrows the returned CVE list to entries whose affected version range (substring/text) mentions this value, e.g. 1.20. Surfaces matches — NOT a "this version is vulnerable" verdict; say so.' },
       },
       required: ['vendor', 'product'],
     },
@@ -568,6 +568,7 @@ Tool selection rules:
 - When asked about a SPECIFIC OSV / distro / kernel advisory (DSA-*, USN-*, ALAS-*, RLSA-*, LBSEC-*, etc.): use get_osv_detail
 - When asked about advisories broadly ("show me recent Debian advisories", "which Alpine CVEs this week", "OSS package vulnerabilities for npm"): use search_advisories with the ecosystem / source filter. This unifies GHSA (OSS packages) + OSV (OS/distros/kernels) into one list.
 - For GHSA-specific advisory detail (e.g. "GHSA-jfh8-c2jp-5v3q"): use get_ghsa_detail. For Debian/Ubuntu/Alpine/kernel advisories: use get_osv_detail.
+- For "what CVEs affect product X version Y" / "is X version Y affected": use search_cves with app=X and version=Y, or get_application_security with vendor/product/version. The version filter is a SUBSTRING/TEXT match against the advisory's affected-version range (the data is free-text) — it surfaces CVEs that MENTION that version string, NOT a definitive "this exact version is vulnerable" verdict. State this caveat; never claim a version is confirmed vulnerable or safe based solely on it.
 - "search_" tools return summaries/lists; "get_" tools return full profiles -- always prefer the full profile for specific entities
 - For OWASP categories: use get_owasp_top10 (optionally filtered by framework: web-2021, ml-2023, llm-2025), then get_owasp_category for details
 - OWASP links: [A01 Broken Access Control](https://mitre-explorer.org/frameworks/owasp/A01)
@@ -636,14 +637,14 @@ async function executeTool(name: string, args: Record<string, unknown>): Promise
         if (!isNaN(d.getTime())) params.set('since', d.toISOString());
       }
       if (args.app) params.set('app', sanitizeSearch(args.app));
-      if (args.version) params.set('version', sanitizeSearch(args.version));
+      if (args.version) params.set('version', sanitizeSearch(args.version).slice(0, 100));
       params.set('limit', clampLimit(args.limit, 10, 50));
       return callInternalApi(`/cves?${params}`);
     }
     case 'get_cve_detail': {
       const id = validateCveId(args.cve_id);
       if (!id) return { error: 'Invalid CVE ID format' };
-      const qp = args.version ? `?version=${encodeURIComponent(sanitizeSearch(args.version))}` : '';
+      const qp = args.version ? `?version=${encodeURIComponent(sanitizeSearch(args.version).slice(0, 100))}` : '';
       return callInternalApi(`/cves/${id}${qp}`);
     }
     case 'get_technique_intelligence': {
@@ -677,13 +678,13 @@ async function executeTool(name: string, args: Record<string, unknown>): Promise
       const v = String(args.vendor ?? '').toLowerCase().replace(/[^a-z0-9_-]/g, '');
       const p = String(args.product ?? '').toLowerCase().replace(/[^a-z0-9_-]/g, '');
       if (!v || !p) return { error: 'Vendor and product are required' };
-      const qp = args.version ? `?version=${encodeURIComponent(sanitizeSearch(args.version))}` : '';
+      const qp = args.version ? `?version=${encodeURIComponent(sanitizeSearch(args.version).slice(0, 100))}` : '';
       return callInternalApi(`/applications/${v}/${p}${qp}`);
     }
     case 'search_applications': {
       const params = new URLSearchParams();
       if (args.search) params.set('search', sanitizeSearch(args.search));
-      if (args.version) params.set('version', sanitizeSearch(args.version));
+      if (args.version) params.set('version', sanitizeSearch(args.version).slice(0, 100));
       params.set('limit', clampLimit(args.limit, 10, 50));
       return callInternalApi(`/applications?${params}`);
     }

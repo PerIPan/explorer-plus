@@ -20,7 +20,8 @@ const querySchema = paginationSchema.extend({
   // Substring/text match against affected_products.version_start/version_end.
   // Only meaningful with `app` (product context) — versions aren't globally
   // comparable. NOT a semantic "is this version vulnerable" verdict.
-  version: z.string().min(1).max(100).optional(),
+  // Empty string -> treated as absent (no filter), not a validation error.
+  version: z.preprocess((v) => (v === '' ? undefined : v), z.string().min(1).max(100).optional()),
 });
 
 export async function GET(req: NextRequest) {
@@ -38,7 +39,7 @@ export async function GET(req: NextRequest) {
   // version filtering only makes sense scoped to a product (versions aren't
   // globally comparable). Reject a bare ?version= with a clear message.
   if (version && !app) {
-    return withCors(errorResponse(400, 'The `version` filter requires `app` (product context), e.g. ?app=nginx&version=1.20', 'VALIDATION_ERROR'));
+    return withCors(errorResponse(400, 'The `version` filter requires `app` (product context), e.g. ?app=nginx&version=1.20', 'MISSING_CONTEXT'));
   }
 
   const params: unknown[] = [];
@@ -203,6 +204,7 @@ export async function GET(req: NextRequest) {
 
   return withCors(jsonResponse({
     data,
+    versionFilter: version ?? null,
     pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
   }, 3600));
 }

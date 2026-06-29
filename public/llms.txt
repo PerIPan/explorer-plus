@@ -6,6 +6,7 @@
 
 - Canonical entity URLs: techniques `/techniques/{Txxxx}`, groups `/groups/{Gxxxx}`, software/malware `/software/{Sxxxx}`, campaigns `/campaigns/{Cxxxx}`, mitigations `/mitigations/{Mxxxx}`, CVEs `/cti/cves/{CVE-YYYY-NNNN}`, advisories `/cti/ghsa/{GHSA-...}`.
 - Open REST API (no auth, rate-limited at the edge): `https://mitre-explorer.org/api/v1` — e.g. `/api/v1/techniques`, `/api/v1/cves/{id}`, `/api/v1/groups/{id}`, `/api/v1/frameworks/owasp`.
+- Product version filter: add `?version=` to `/api/v1/cves`, `/api/v1/cves/{id}`, `/api/v1/applications`, `/api/v1/applications/{vendor}/{product}`. It is a SUBSTRING/TEXT match on the advisory's affected-version range (not a semantic "is this version vulnerable" verdict). On the list endpoints it REQUIRES product context (`app` for /cves, `search`/`vendor` for /applications), else HTTP 400.
 - Agent-to-Agent (A2A) endpoint for programmatic agents: `POST https://mitre-explorer.org/api/a2a` (JSON-RPC + Gemini function-calling). Agent card: `/.well-known/agent-card.json`.
 
 ## Data provenance (important for accurate citation)

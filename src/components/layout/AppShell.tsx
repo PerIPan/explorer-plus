@@ -94,8 +94,10 @@ const API_GROUPS: { label: string; routes: { path: string; desc: string }[] }[] 
   {
     label: 'Vulnerabilities & advisories',
     routes: [
-      { path: '/cves', desc: 'CVEs — CVSS, EPSS, KEV, CWE (filter by severity, date)' },
-      { path: '/cves/{cveId}', desc: 'CVE detail + linked techniques + advisories' },
+      { path: '/cves', desc: 'CVEs — CVSS, EPSS, KEV, CWE (filter by severity, date, app + version)' },
+      { path: '/cves/{cveId}', desc: 'CVE detail + linked techniques + advisories (?version= narrows affected apps)' },
+      { path: '/applications', desc: 'affected products (filter by search/vendor; + version requires search/vendor)' },
+      { path: '/applications/{vendor}/{product}', desc: 'product 360 — CVEs, techniques, groups (?version= narrows CVEs)' },
       { path: '/advisories', desc: 'unified GHSA + OSV advisory list' },
       { path: '/ghsa/{ghsaId}', desc: 'GitHub Security Advisory detail' },
       { path: '/packages', desc: 'OSS / distro packages' },
@@ -118,6 +120,7 @@ const API_GROUPS: { label: string; routes: { path: string; desc: string }[] }[] 
     label: 'CTI feeds & search',
     routes: [
       { path: '/cves?severity=CRITICAL', desc: '— example: filtered query' },
+      { path: '/cves?app=nginx&version=1.20', desc: '— example: CVEs affecting a product version (text match; version needs app)' },
       { path: '/feed/reports', desc: 'CTI reports (OTX, DFIR, Unit42, ...)' },
       { path: '/feed/iocs', desc: 'IOCs — IPs, domains, hashes, URLs' },
       { path: '/feed/sigma', desc: 'Sigma detection rules' },
