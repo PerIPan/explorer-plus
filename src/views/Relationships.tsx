@@ -135,11 +135,6 @@ function inferEntityType(
 
 // ── Page component ─────────────────────────────────────────────────────────────
 
-// The desktop diamond hero is kept (it took effort) but hidden for now — there
-// isn't enough empty space above the landing tables to place it without pushing
-// content down. Flip to true to re-enable, or swap in a static image later.
-const SHOW_DESKTOP_DIAMOND = false;
-
 export function Relationships() {
 
   const router = useRouter();
@@ -467,7 +462,7 @@ export function Relationships() {
   }, [selectEntity]);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 relative">
       <PageHeader
         title="Diamond Entities"
         subtitle="Map 360 Views for every entity type — select an entity to start, domain filtered search"
@@ -594,7 +589,7 @@ export function Relationships() {
       {/* Instructions when nothing selected */}
       {!selectedId && (
         <div className="mt-8 md:mt-12">
-          <p className="text-sm md:text-base text-[var(--text-secondary)] leading-relaxed mb-12 md:mb-16">
+          <p className="text-sm md:text-base text-[var(--text-secondary)] leading-relaxed mb-12 md:mb-16 max-w-2xl md:max-w-3xl">
             Search for any{' '}
             <span className="font-medium text-[var(--text-primary)]">Technique</span>,{' '}
             <span className="font-medium text-[var(--text-primary)]">Actor</span>,{' '}
@@ -614,31 +609,34 @@ export function Relationships() {
           {/* Recently affected Applications + Packages — last 10 days */}
           <RecentAffectedCard />
 
-          {/* Diamond — desktop with labels. Kept but hidden (SHOW_DESKTOP_DIAMOND). */}
-          {SHOW_DESKTOP_DIAMOND && (
-          <div className="hidden md:flex justify-center pt-24 pb-16 pointer-events-none select-none">
-            <div className="relative" style={{ width: 210, height: 210 }}>
-              <img src="/diamond-favicon.svg" alt="" width={210} height={210} className="opacity-[0.55]" />
+          {/* Diamond hero — desktop only, floated into the empty right-side
+              space next to the search/instructions (xl+, where there's room).
+              Absolute + pointer-events-none so it never shifts the left content
+              or the tables below. Boxed to sit as a self-contained panel. */}
+          <div className="hidden xl:block absolute top-24 right-4 2xl:right-16 z-0 pointer-events-none select-none">
+            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--surface-card)] px-24 py-14">
+              <div className="relative" style={{ width: 210, height: 210 }}>
+                <img src="/diamond-favicon.svg" alt="" width={210} height={210} className="opacity-[0.55]" />
 
-              <div className="absolute -top-10 left-1/2 -translate-x-1/2 text-center">
-                <div className="text-xs font-medium text-[var(--accent-orange)] opacity-50">actor</div>
-                <div className="text-xs font-medium text-[var(--accent-orange)] opacity-50">adversary</div>
-              </div>
-              <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 text-center">
-                <div className="text-xs font-medium text-[var(--text-secondary)] opacity-50">sector</div>
-                <div className="text-xs font-medium text-[var(--text-secondary)] opacity-50">victim</div>
-              </div>
-              <div className="absolute top-1/2 -left-20 -translate-y-1/2 text-right">
-                <div className="text-xs font-medium text-[var(--accent-teal)] opacity-50">technique</div>
-                <div className="text-xs font-medium text-[var(--accent-teal)] opacity-50">capability</div>
-              </div>
-              <div className="absolute top-1/2 -right-24 -translate-y-1/2 text-center">
-                <div className="text-xs font-medium text-[var(--accent-blue)] opacity-50">application</div>
-                <div className="text-xs font-medium text-[var(--accent-blue)] opacity-50">infrastructure</div>
+                <div className="absolute -top-10 left-1/2 -translate-x-1/2 text-center">
+                  <div className="text-xs font-medium text-[var(--accent-orange)] opacity-50">actor</div>
+                  <div className="text-xs font-medium text-[var(--accent-orange)] opacity-50">adversary</div>
+                </div>
+                <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 text-center">
+                  <div className="text-xs font-medium text-[var(--text-secondary)] opacity-50">sector</div>
+                  <div className="text-xs font-medium text-[var(--text-secondary)] opacity-50">victim</div>
+                </div>
+                <div className="absolute top-1/2 -left-20 -translate-y-1/2 text-right">
+                  <div className="text-xs font-medium text-[var(--accent-teal)] opacity-50">technique</div>
+                  <div className="text-xs font-medium text-[var(--accent-teal)] opacity-50">capability</div>
+                </div>
+                <div className="absolute top-1/2 -right-24 -translate-y-1/2 text-center">
+                  <div className="text-xs font-medium text-[var(--accent-blue)] opacity-50">application</div>
+                  <div className="text-xs font-medium text-[var(--accent-blue)] opacity-50">infrastructure</div>
+                </div>
               </div>
             </div>
           </div>
-          )}
 
           {/* Mobile diamond — with labels */}
           <div className="flex md:hidden justify-center mt-10 pb-10 pointer-events-none select-none">

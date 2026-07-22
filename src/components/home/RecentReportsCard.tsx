@@ -4,6 +4,7 @@ import { apiFetch } from '../../lib/api';
 import { formatDate } from '../../lib/formatDate';
 import { Badge } from '../shared/Badge';
 import { TechniquePopover } from '../shared/TechniquePopover';
+import { isSafeUrl } from '../../lib/urlSafety';
 
 interface Report {
   id: string;
@@ -59,18 +60,19 @@ export function RecentReportsCard() {
               )}
             </>
           );
+          const safeUrl = r.url && isSafeUrl(r.url) ? r.url : null;
           return (
             <div
               key={r.id}
-              className="flex items-center gap-3 px-4 py-2.5 hover:bg-[var(--hover-subtle)] transition-colors min-w-0"
+              className="group flex items-center gap-3 px-4 py-2.5 hover:bg-[var(--hover-subtle)] transition-colors min-w-0"
             >
               <Badge label={sourceLabel(r.source)} variant="neutral" />
-              {r.url ? (
+              {safeUrl ? (
                 <a
-                  href={r.url}
+                  href={safeUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 min-w-0 truncate text-xs hover:underline"
+                  className="flex-1 min-w-0 truncate text-xs group-hover:underline"
                   title={r.summary ?? r.title}
                 >
                   {titleContent}

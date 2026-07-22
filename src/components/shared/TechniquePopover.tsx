@@ -1,5 +1,5 @@
 'use client';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '../../lib/api';
@@ -22,6 +22,25 @@ export function TechniquePopover({ reportId, count }: { reportId: string; count:
   });
 
   const btnRef = useRef<HTMLButtonElement>(null);
+  const [, forceReposition] = useState(0);
+
+  // While open: keep the fixed-position panel anchored to the button on
+  // scroll/resize (rect is captured at render, so it would otherwise drift),
+  // and close on Escape (the overlay's onKeyDown never fires — it isn't focused).
+  useEffect(() => {
+    if (!open) return;
+    const reposition = () => forceReposition((n) => n + 1);
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
+    window.addEventListener('scroll', reposition, true); // capture: ancestor scroll too
+    window.addEventListener('resize', reposition);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('scroll', reposition, true);
+      window.removeEventListener('resize', reposition);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
   const rect = open && btnRef.current ? btnRef.current.getBoundingClientRect() : null;
 
   return (
