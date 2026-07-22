@@ -641,7 +641,7 @@ export function Relationships() {
               Absolute + pointer-events-none so it never shifts the left content
               or the tables below. Boxed to sit as a self-contained panel. */}
           <div className="hidden lg:block absolute top-24 right-4 xl:right-8 2xl:right-16 z-0 pointer-events-none select-none">
-            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--surface-card)] px-16 py-12">
+            <div className="px-16 py-12">
               <div className="relative" style={{ width: 210, height: 210 }}>
                 <img src="/diamond-favicon.svg" alt="" width={210} height={210} className="opacity-[0.55]" />
 
