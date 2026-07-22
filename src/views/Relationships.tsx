@@ -135,6 +135,11 @@ function inferEntityType(
 
 // ── Page component ─────────────────────────────────────────────────────────────
 
+// The desktop diamond hero is kept (it took effort) but hidden for now — there
+// isn't enough empty space above the landing tables to place it without pushing
+// content down. Flip to true to re-enable, or swap in a static image later.
+const SHOW_DESKTOP_DIAMOND = false;
+
 export function Relationships() {
 
   const router = useRouter();
@@ -609,7 +614,8 @@ export function Relationships() {
           {/* Recently affected Applications + Packages — last 10 days */}
           <RecentAffectedCard />
 
-          {/* Diamond — desktop with labels */}
+          {/* Diamond — desktop with labels. Kept but hidden (SHOW_DESKTOP_DIAMOND). */}
+          {SHOW_DESKTOP_DIAMOND && (
           <div className="hidden md:flex justify-center pt-24 pb-16 pointer-events-none select-none">
             <div className="relative" style={{ width: 210, height: 210 }}>
               <img src="/diamond-favicon.svg" alt="" width={210} height={210} className="opacity-[0.55]" />
@@ -632,6 +638,7 @@ export function Relationships() {
               </div>
             </div>
           </div>
+          )}
 
           {/* Mobile diamond — with labels */}
           <div className="flex md:hidden justify-center mt-10 pb-10 pointer-events-none select-none">
