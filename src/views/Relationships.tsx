@@ -599,9 +599,36 @@ export function Relationships() {
             <span className="font-medium text-[var(--text-primary)]">Tactic</span>,{' '}
             <span className="font-medium text-[var(--text-primary)]">Sector</span>,{' '}
             <span className="font-medium text-[var(--text-primary)]">Application</span>, or{' '}
+            <br className="hidden lg:block" />
             <span className="font-medium text-[var(--text-primary)]">OWASP category</span>{' '}
             to explore its relationships.
           </p>
+
+          {/* Compact centered diamond — shown on every width below xl (where the
+              boxed corner version takes over). Placed here, right under the intro,
+              so it's always visible without scrolling past the tables. */}
+          <div className="flex lg:hidden justify-center mt-2 mb-12 pointer-events-none select-none">
+            <div className="relative" style={{ width: 140, height: 140 }}>
+              <img src="/diamond-favicon.svg" alt="" width={140} height={140} className="opacity-[0.55]" />
+
+              <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-center">
+                <div className="text-[10px] font-medium text-[var(--accent-orange)] opacity-60 leading-tight">actor</div>
+                <div className="text-[10px] font-medium text-[var(--accent-orange)] opacity-60 leading-tight">adversary</div>
+              </div>
+              <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-center">
+                <div className="text-[10px] font-medium text-[var(--text-secondary)] opacity-60 leading-tight">sector</div>
+                <div className="text-[10px] font-medium text-[var(--text-secondary)] opacity-60 leading-tight">victim</div>
+              </div>
+              <div className="absolute top-1/2 -left-16 -translate-y-1/2 text-right">
+                <div className="text-[10px] font-medium text-[var(--accent-teal)] opacity-60 leading-tight">technique</div>
+                <div className="text-[10px] font-medium text-[var(--accent-teal)] opacity-60 leading-tight">capability</div>
+              </div>
+              <div className="absolute top-1/2 -right-[72px] -translate-y-1/2 text-left">
+                <div className="text-[10px] font-medium text-[var(--accent-blue)] opacity-60 leading-tight">application</div>
+                <div className="text-[10px] font-medium text-[var(--accent-blue)] opacity-60 leading-tight">infra</div>
+              </div>
+            </div>
+          </div>
 
           {/* Latest CTI reports — full width above the affected tables */}
           <RecentReportsCard />
@@ -613,8 +640,8 @@ export function Relationships() {
               space next to the search/instructions (xl+, where there's room).
               Absolute + pointer-events-none so it never shifts the left content
               or the tables below. Boxed to sit as a self-contained panel. */}
-          <div className="hidden xl:block absolute top-24 right-4 2xl:right-16 z-0 pointer-events-none select-none">
-            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--surface-card)] px-24 py-14">
+          <div className="hidden lg:block absolute top-24 right-4 xl:right-8 2xl:right-16 z-0 pointer-events-none select-none">
+            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--surface-card)] px-16 py-12">
               <div className="relative" style={{ width: 210, height: 210 }}>
                 <img src="/diamond-favicon.svg" alt="" width={210} height={210} className="opacity-[0.55]" />
 
@@ -638,8 +665,9 @@ export function Relationships() {
             </div>
           </div>
 
-          {/* Mobile diamond — with labels */}
-          <div className="flex md:hidden justify-center mt-10 pb-10 pointer-events-none select-none">
+          {/* Compact centered diamond — shown on every width below xl (where the
+              boxed corner version takes over). Guarantees the diamond is always visible. */}
+          <div className="flex xl:hidden justify-center mt-10 pb-10 pointer-events-none select-none">
             <div className="relative" style={{ width: 140, height: 140 }}>
               <img src="/diamond-favicon.svg" alt="" width={140} height={140} className="opacity-[0.55]" />
 
