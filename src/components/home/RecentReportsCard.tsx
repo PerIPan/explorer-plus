@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '../../lib/api';
 import { formatDate } from '../../lib/formatDate';
 import { Badge } from '../shared/Badge';
+import { TechniquePopover } from '../shared/TechniquePopover';
 
 interface Report {
   id: string;
@@ -50,36 +51,42 @@ export function RecentReportsCard() {
       </div>
       <div className="rounded-lg border border-[var(--border-color)] bg-[var(--surface-card)] divide-y divide-[var(--border-color)]">
         {reports.map((r) => {
-          const row = (
+          const titleContent = (
             <>
+              <span className="font-medium text-[var(--text-primary)]">{r.title}</span>
+              {r.summary && (
+                <span className="text-[var(--text-secondary)]"> — {r.summary}</span>
+              )}
+            </>
+          );
+          return (
+            <div
+              key={r.id}
+              className="flex items-center gap-3 px-4 py-2.5 hover:bg-[var(--hover-subtle)] transition-colors min-w-0"
+            >
               <Badge label={sourceLabel(r.source)} variant="neutral" />
-              <span className="flex-1 min-w-0 truncate text-xs">
-                <span className="font-medium text-[var(--text-primary)]">{r.title}</span>
-                {r.summary && (
-                  <span className="text-[var(--text-secondary)]"> — {r.summary}</span>
-                )}
-              </span>
+              {r.url ? (
+                <a
+                  href={r.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 min-w-0 truncate text-xs hover:underline"
+                  title={r.summary ?? r.title}
+                >
+                  {titleContent}
+                </a>
+              ) : (
+                <span className="flex-1 min-w-0 truncate text-xs" title={r.summary ?? r.title}>
+                  {titleContent}
+                </span>
+              )}
+              {/* technique-count bubble — before the date; click for the linked techniques */}
+              {r.technique_count > 0 && (
+                <TechniquePopover reportId={r.id} count={r.technique_count} />
+              )}
               <span className="text-[10px] text-[var(--text-secondary)] shrink-0 tabular-nums">
                 {formatDate(r.published_at)}
               </span>
-            </>
-          );
-          const cls =
-            'flex items-center gap-3 px-4 py-2.5 hover:bg-[var(--hover-subtle)] transition-colors min-w-0';
-          return r.url ? (
-            <a
-              key={r.id}
-              href={r.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={cls}
-              title={r.summary ?? r.title}
-            >
-              {row}
-            </a>
-          ) : (
-            <div key={r.id} className={cls} title={r.summary ?? r.title}>
-              {row}
             </div>
           );
         })}

@@ -113,8 +113,10 @@ export function RecentAffectedCard() {
                 href={`/packages/${p.ecosystem}/${encodeURIComponent(p.packageName)}`}
                 className="flex items-center gap-3 px-4 py-2.5 hover:bg-[var(--hover-subtle)] transition-colors min-w-0"
               >
-                <Badge label={p.ecosystem} variant="blue" />
-                <span className="flex-1 min-w-0 text-xs text-[var(--text-primary)] font-mono truncate">
+                <span className="text-xs font-medium text-[var(--text-primary)] shrink-0">
+                  {p.ecosystem}
+                </span>
+                <span className="flex-1 min-w-0 text-xs text-[var(--text-secondary)] font-mono truncate">
                   {p.packageName}
                 </span>
                 <Badge
