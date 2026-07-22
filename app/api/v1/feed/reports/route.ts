@@ -89,6 +89,7 @@ export async function GET(req: NextRequest) {
   const dataResult = await query<{
     id: string;
     title: string;
+    summary: string | null;
     url: string | null;
     source: string | null;
     published_at: string | null;
@@ -98,6 +99,7 @@ export async function GET(req: NextRequest) {
     `SELECT
        r.id,
        r.title,
+       r.summary,
        r.url,
        r.source,
        r.published_at,

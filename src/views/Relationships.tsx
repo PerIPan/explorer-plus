@@ -26,6 +26,7 @@ import { SectorMapView } from '../components/relationships/SectorMapView';
 import { ApplicationMapView } from '../components/relationships/ApplicationMapView';
 import { OwaspMapView } from '../components/relationships/OwaspMapView';
 import { RecentAffectedCard } from '../components/home/RecentAffectedCard';
+import { RecentReportsCard } from '../components/home/RecentReportsCard';
 import type { GraphNode, GraphData } from '../lib/types';
 import { DiamondLoader } from '../components/shared/FoldingDiamond';
 
@@ -601,6 +602,9 @@ export function Relationships() {
             <span className="font-medium text-[var(--text-primary)]">OWASP category</span>{' '}
             to explore its relationships.
           </p>
+
+          {/* Latest CTI reports — full width above the affected tables */}
+          <RecentReportsCard />
 
           {/* Recently affected Applications + Packages — last 10 days */}
           <RecentAffectedCard />
