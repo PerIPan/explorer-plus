@@ -484,7 +484,7 @@ export function Relationships() {
       {/* Entity search — combobox with autocomplete dropdown.
           When nothing is selected (landing state), the bar is sized up on
           desktop and gets a subtle teal glow to signal it's the entry point. */}
-      <div className={`relative w-full max-w-2xl ${!selectedId ? 'md:max-w-3xl lg:max-w-xl 2xl:max-w-2xl' : ''}`} ref={containerRef}>
+      <div className={`relative w-full max-w-2xl ${!selectedId ? 'md:max-w-3xl xl:max-w-2xl 2xl:max-w-3xl' : ''}`} ref={containerRef}>
         <div className={`flex items-center gap-2 px-4 py-2.5 ${!selectedId ? 'md:px-5 md:py-3' : ''} rounded-lg bg-[var(--surface-card)] border transition-all ${showSuggestions && suggestions.length > 0 ? 'border-[var(--accent-teal)] rounded-b-none' : 'border-[var(--border-color)]'} focus-within:border-[var(--accent-teal)] focus-within:md:shadow-[0_0_0_3px_var(--teal-ghost)]`}>
           <svg className={`${!selectedId ? 'w-4 h-4 md:w-[18px] md:h-[18px]' : 'w-4 h-4'} text-[var(--text-secondary)] flex-shrink-0`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -604,10 +604,9 @@ export function Relationships() {
             to explore its relationships.
           </p>
 
-          {/* Corner diamond — desktop only (lg+), inline at the top-right of the
-              intro row so it never overlaps the tables below. Outer padding leaves
-              room for the labels; slight negative margin nudges it up. */}
-          <div className="hidden lg:block flex-shrink-0 pl-20 pr-24 lg:-mt-32 pointer-events-none select-none">
+          {/* Corner diamond — beside the intro on xl+ (where the field can stay wide
+              without colliding). Inline flex item so it never overlaps the tables. */}
+          <div className="hidden xl:block flex-shrink-0 pl-20 pr-24 -mt-32 pointer-events-none select-none">
             <div className="relative" style={{ width: 210, height: 210 }}>
               <img src="/diamond-favicon.svg" alt="" width={210} height={210} className="opacity-[0.55]" />
 
@@ -651,6 +650,31 @@ export function Relationships() {
               <div className="absolute top-1/2 -right-[72px] -translate-y-1/2 text-left">
                 <div className="text-[10px] font-medium text-[var(--accent-blue)] opacity-60 leading-tight">application</div>
                 <div className="text-[10px] font-medium text-[var(--accent-blue)] opacity-60 leading-tight">infra</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Mid-size centered diamond — lg only (1024–1279), a step up from the
+              compact one before the beside layout kicks in at xl. */}
+          <div className="hidden lg:flex xl:hidden justify-center mt-2 mb-12 pointer-events-none select-none">
+            <div className="relative" style={{ width: 190, height: 190 }}>
+              <img src="/diamond-favicon.svg" alt="" width={190} height={190} className="opacity-[0.55]" />
+
+              <div className="absolute -top-9 left-1/2 -translate-x-1/2 text-center">
+                <div className="text-xs font-medium text-[var(--accent-orange)] opacity-50 leading-tight">actor</div>
+                <div className="text-xs font-medium text-[var(--accent-orange)] opacity-50 leading-tight">adversary</div>
+              </div>
+              <div className="absolute -bottom-9 left-1/2 -translate-x-1/2 text-center">
+                <div className="text-xs font-medium text-[var(--text-secondary)] opacity-50 leading-tight">sector</div>
+                <div className="text-xs font-medium text-[var(--text-secondary)] opacity-50 leading-tight">victim</div>
+              </div>
+              <div className="absolute top-1/2 -left-20 -translate-y-1/2 text-right">
+                <div className="text-xs font-medium text-[var(--accent-teal)] opacity-50 leading-tight">technique</div>
+                <div className="text-xs font-medium text-[var(--accent-teal)] opacity-50 leading-tight">capability</div>
+              </div>
+              <div className="absolute top-1/2 -right-24 -translate-y-1/2 text-left">
+                <div className="text-xs font-medium text-[var(--accent-blue)] opacity-50 leading-tight">application</div>
+                <div className="text-xs font-medium text-[var(--accent-blue)] opacity-50 leading-tight">infrastructure</div>
               </div>
             </div>
           </div>
