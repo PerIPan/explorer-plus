@@ -484,7 +484,7 @@ export function Relationships() {
       {/* Entity search — combobox with autocomplete dropdown.
           When nothing is selected (landing state), the bar is sized up on
           desktop and gets a subtle teal glow to signal it's the entry point. */}
-      <div className={`relative w-full max-w-2xl ${!selectedId ? 'md:max-w-3xl' : ''}`} ref={containerRef}>
+      <div className={`relative w-full max-w-2xl ${!selectedId ? 'md:max-w-3xl lg:max-w-xl 2xl:max-w-2xl' : ''}`} ref={containerRef}>
         <div className={`flex items-center gap-2 px-4 py-2.5 ${!selectedId ? 'md:px-5 md:py-3' : ''} rounded-lg bg-[var(--surface-card)] border transition-all ${showSuggestions && suggestions.length > 0 ? 'border-[var(--accent-teal)] rounded-b-none' : 'border-[var(--border-color)]'} focus-within:border-[var(--accent-teal)] focus-within:md:shadow-[0_0_0_3px_var(--teal-ghost)]`}>
           <svg className={`${!selectedId ? 'w-4 h-4 md:w-[18px] md:h-[18px]' : 'w-4 h-4'} text-[var(--text-secondary)] flex-shrink-0`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
