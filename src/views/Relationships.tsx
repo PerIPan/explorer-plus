@@ -607,7 +607,7 @@ export function Relationships() {
           {/* Corner diamond — desktop only (lg+), inline at the top-right of the
               intro row so it never overlaps the tables below. Outer padding leaves
               room for the labels; slight negative margin nudges it up. */}
-          <div className="hidden lg:block flex-shrink-0 pl-20 pr-24 lg:-mt-6 pointer-events-none select-none">
+          <div className="hidden lg:block flex-shrink-0 pl-20 pr-24 lg:-mt-20 pointer-events-none select-none">
             <div className="relative" style={{ width: 210, height: 210 }}>
               <img src="/diamond-favicon.svg" alt="" width={210} height={210} className="opacity-[0.55]" />
 
