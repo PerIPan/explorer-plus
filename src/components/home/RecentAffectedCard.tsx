@@ -77,7 +77,7 @@ export function RecentAffectedCard() {
                 <span className="flex-1 min-w-0 text-xs text-[var(--text-primary)] truncate">
                   <span className="font-medium text-[var(--text-primary)]">{a.vendor}</span>
                   <span className="mx-1 text-[var(--text-secondary)] opacity-60">/</span>
-                  <span>{a.product}</span>
+                  <span className="font-normal text-[var(--text-secondary)]">{a.product}</span>
                 </span>
                 <Badge label={`${a.cveCount} CVE${a.cveCount === 1 ? '' : 's'}`} variant="pink" />
                 <span className="text-[10px] text-[var(--text-secondary)] shrink-0 hidden sm:inline">

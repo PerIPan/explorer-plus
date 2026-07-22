@@ -7,10 +7,15 @@ import { SITE_URL } from '../src/lib/site';
 const THEME_SCRIPT = `(function(){
   try {
     var t = localStorage.getItem('theme');
-    if (t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme:dark)').matches)) {
+    // Dark is the default — only light when the user explicitly picked it.
+    if (t === 'light') {
+      document.documentElement.classList.add('light');
+    } else {
       document.documentElement.classList.add('dark');
     }
-  } catch(e) {}
+  } catch(e) {
+    document.documentElement.classList.add('dark');
+  }
 })();`;
 
 const SITE_DESC =
