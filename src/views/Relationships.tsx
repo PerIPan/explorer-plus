@@ -465,7 +465,7 @@ export function Relationships() {
     <div className="space-y-4 relative">
       <PageHeader
         title="Diamond Entities"
-        subtitle="Map 360 Views for every entity type — select an entity to start, domain filtered search"
+        subtitle={<>360 View for every entity type — select an entity, <span className="underline">domain</span> filtered search</>}
         actions={
           selectedId ? (
             <button

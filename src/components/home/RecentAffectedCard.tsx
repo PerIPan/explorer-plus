@@ -75,7 +75,7 @@ export function RecentAffectedCard() {
                 className="flex items-center gap-3 px-4 py-2.5 hover:bg-[var(--hover-subtle)] transition-colors min-w-0"
               >
                 <span className="flex-1 min-w-0 text-xs text-[var(--text-primary)] truncate">
-                  <span className="text-[var(--text-secondary)]">{a.vendor}</span>
+                  <span className="font-medium text-[var(--text-primary)]">{a.vendor}</span>
                   <span className="mx-1 text-[var(--text-secondary)] opacity-60">/</span>
                   <span>{a.product}</span>
                 </span>
