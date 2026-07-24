@@ -1,5 +1,7 @@
 -- API usage counters — one row per normalized endpoint per (UTC) day.
--- Written by edge middleware (see middleware.ts) via a non-blocking daily UPSERT.
+-- Written at the origin in jsonResponse() (app/api/lib/handler.ts) via Next
+-- after(), so only cache MISSES are counted (CDN hits never reach origin).
+-- middleware.ts just tags the request with the normalized x-usage-endpoint.
 -- Query examples:
 --   SELECT endpoint, SUM(count) AS hits FROM api_usage
 --     WHERE day >= CURRENT_DATE - 7 GROUP BY endpoint ORDER BY hits DESC;
