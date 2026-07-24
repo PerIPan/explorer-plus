@@ -26,6 +26,9 @@ const STATIC_CHILDREN: Record<string, Set<string>> = {
   home: new Set(['recent-affected']),
 };
 
+/** Normalized endpoints to NOT count — internal/UI-noise, not real API usage. */
+const EXCLUDED_ENDPOINTS = new Set(['/api/v1/site-health']);
+
 /**
  * Collapse a request path to a stable, low-cardinality endpoint key.
  *   /api/v1/cves/CVE-2024-1234/packages -> /api/v1/cves/:id
@@ -57,7 +60,7 @@ export function middleware(request: NextRequest) {
       method === 'OPTIONS' || method === 'HEAD'
         ? null
         : normalizeEndpoint(request.nextUrl.pathname);
-    if (endpoint) {
+    if (endpoint && !EXCLUDED_ENDPOINTS.has(endpoint)) {
       const headers = new Headers(request.headers);
       headers.set('x-usage-endpoint', endpoint);
       return NextResponse.next({ request: { headers } });
