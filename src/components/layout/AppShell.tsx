@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { track } from '@vercel/analytics';
 import { useQuery } from '@tanstack/react-query';
 import { useTheme } from '../../contexts/ThemeContext';
 import { Sidebar } from './Sidebar';
@@ -70,14 +71,51 @@ function ThemeToggle() {
  *  Documents the open, keyless /api/v1 surface that already powers the site. */
 const API_GROUPS: { label: string; routes: { path: string; desc: string }[] }[] = [
   {
+    label: 'CTI feeds & search  ·  the gems',
+    routes: [
+      { path: '/feed/reports', desc: 'CTI reports (OTX, DFIR, Unit42, ...)' },
+      { path: '/feed/reports/{reportId}/techniques', desc: 'ATT&CK techniques extracted from a report' },
+      { path: '/feed/iocs', desc: 'IOCs — IPs, domains, hashes, URLs' },
+      { path: '/feed/iocs/{iocId}/techniques', desc: 'techniques associated with an IOC' },
+      { path: '/feed/sigma', desc: 'Sigma detection rules' },
+      { path: '/feed/atomic', desc: 'Atomic Red Team tests' },
+      { path: '/feed/intelligence/{attackId}', desc: 'per-technique CTI rollup — reports, IOCs, detections' },
+      { path: '/feed/vt-lookup', desc: 'VirusTotal verdict lookup for a hash/IOC' },
+      { path: '/search?q=', desc: 'cross-domain entity search' },
+      { path: '/dashboard', desc: 'aggregate stats' },
+    ],
+  },
+  {
+    label: 'Vulnerabilities & advisories  ·  the gems',
+    routes: [
+      { path: '/cves', desc: 'CVEs — CVSS, EPSS, KEV, CWE (filter by severity, date, app + version)' },
+      { path: '/cves/{cveId}', desc: 'CVE detail + linked techniques + advisories (?version= narrows affected apps)' },
+      { path: '/cves/{cveId}/packages', desc: 'OSS / distro packages affected by a CVE' },
+      { path: '/cves?severity=CRITICAL', desc: '— example: filtered query, newest first' },
+      { path: '/cves?app=nginx&version=1.20', desc: '— example: CVEs affecting a product version (text match; version needs app)' },
+      { path: '/applications', desc: 'affected products (filter by search/vendor; + version requires search/vendor)' },
+      { path: '/applications/{vendor}/{product}', desc: 'product 360 — CVEs, techniques, groups (?version= narrows CVEs)' },
+      { path: '/advisories', desc: 'unified GHSA + OSV advisory list' },
+      { path: '/ghsa/{ghsaId}', desc: 'GitHub Security Advisory detail (?version= narrows affected packages)' },
+      { path: '/osv/{osvId}', desc: 'OSV advisory detail (Debian, Ubuntu, Alpine, RH, SUSE, ...)' },
+      { path: '/packages', desc: 'OSS / distro packages (filter ecosystem/q; + version requires ecosystem/q)' },
+      { path: '/packages/{ecosystem}/{name}', desc: 'package detail — advisories, techniques (?version= narrows advisories)' },
+      { path: '/ecosystems', desc: 'per-ecosystem advisory dashboards' },
+      { path: '/home/recent-affected', desc: 'recently affected applications + packages (refreshed daily)' },
+      { path: '/capec', desc: 'CAPEC attack patterns' },
+    ],
+  },
+  {
     label: 'ATT&CK core',
     routes: [
       { path: '/techniques', desc: 'list + filter techniques (domain, tactic, platform, search)' },
       { path: '/techniques/{attackId}', desc: 'full technique detail' },
+      { path: '/techniques/{attackId}/packages', desc: 'packages linked to a technique via CWE→CAPEC' },
       { path: '/tactics', desc: 'kill-chain tactics' },
       { path: '/software', desc: 'malware + tools' },
       { path: '/mitigations', desc: 'countermeasures' },
       { path: '/data-sources', desc: 'detection data sources' },
+      { path: '/relationships/{attackId}', desc: 'graph relationships for any ATT&CK entity' },
       { path: '/matrix', desc: 'tactic × technique matrix' },
     ],
   },
@@ -92,42 +130,16 @@ const API_GROUPS: { label: string; routes: { path: string; desc: string }[] }[] 
     ],
   },
   {
-    label: 'Vulnerabilities & advisories',
-    routes: [
-      { path: '/cves', desc: 'CVEs — CVSS, EPSS, KEV, CWE (filter by severity, date, app + version)' },
-      { path: '/cves/{cveId}', desc: 'CVE detail + linked techniques + advisories (?version= narrows affected apps)' },
-      { path: '/applications', desc: 'affected products (filter by search/vendor; + version requires search/vendor)' },
-      { path: '/applications/{vendor}/{product}', desc: 'product 360 — CVEs, techniques, groups (?version= narrows CVEs)' },
-      { path: '/advisories', desc: 'unified GHSA + OSV advisory list' },
-      { path: '/ghsa/{ghsaId}', desc: 'GitHub Security Advisory detail (?version= narrows affected packages)' },
-      { path: '/packages', desc: 'OSS / distro packages (filter ecosystem/q; + version requires ecosystem/q)' },
-      { path: '/packages/{ecosystem}/{name}', desc: 'package detail — advisories, techniques (?version= narrows advisories)' },
-      { path: '/ecosystems', desc: 'per-ecosystem advisory dashboards' },
-      { path: '/capec', desc: 'CAPEC attack patterns' },
-    ],
-  },
-  {
     label: 'Frameworks & compliance',
     routes: [
       { path: '/frameworks/owasp', desc: 'OWASP Top 10 (web / ML / LLM)' },
       { path: '/frameworks/csf', desc: 'NIST CSF v2 subcategories' },
       { path: '/frameworks/nist', desc: 'NIST 800-53 controls' },
       { path: '/frameworks/iso27001', desc: 'ISO/IEC 27001:2022 (via CSF crosswalk)' },
+      { path: '/frameworks/engage', desc: 'MITRE Engage adversary-engagement activities' },
+      { path: '/frameworks/detection', desc: 'Detection Strategies + Analytics (ATT&CK v19)' },
       { path: '/compliance/frameworks', desc: 'SCF-bridged frameworks (NIS2, DORA, PCI, ...)' },
       { path: '/compliance/frameworks/{key}', desc: 'framework → ATT&CK technique detail' },
-    ],
-  },
-  {
-    label: 'CTI feeds & search',
-    routes: [
-      { path: '/cves?severity=CRITICAL', desc: '— example: filtered query' },
-      { path: '/cves?app=nginx&version=1.20', desc: '— example: CVEs affecting a product version (text match; version needs app)' },
-      { path: '/feed/reports', desc: 'CTI reports (OTX, DFIR, Unit42, ...)' },
-      { path: '/feed/iocs', desc: 'IOCs — IPs, domains, hashes, URLs' },
-      { path: '/feed/sigma', desc: 'Sigma detection rules' },
-      { path: '/feed/atomic', desc: 'Atomic Red Team tests' },
-      { path: '/search?q=', desc: 'cross-domain entity search' },
-      { path: '/dashboard', desc: 'aggregate stats' },
     ],
   },
 ];
@@ -170,6 +182,39 @@ function AgentToAgent() {
       <p className="text-[11px] text-[var(--text-secondary)]">
         Build agent-facing apps with the latest Claude or Gemini models. The Agent Card is the
         machine-readable contract — point any A2A-capable agent at it.
+      </p>
+    </div>
+  );
+}
+
+/** Info-modal API tab — short summary: available categories + the keyless/auth-free fact.
+    The comprehensive endpoint catalog lives behind the "APIs" top-bar button (<ApiReference/>). */
+function ApiSummary() {
+  return (
+    <div className="px-6 py-5 space-y-4 text-sm text-[var(--text-primary)] leading-relaxed">
+      <p>
+        <strong>Open REST API.</strong> Every page here is backed by a public JSON API —
+        <span className="text-[var(--accent-teal)]"> no auth, no sign-up, open CORS</span>. Query the same data directly.
+      </p>
+      <div className="rounded-md border border-[var(--border-color)] bg-[var(--surface-card)] px-4 py-3 font-mono text-xs space-y-1">
+        <div><span className="text-[var(--text-secondary)]">Base URL</span>{'  '}<span className="text-[var(--accent-teal)]">https://mitre-explorer.org/api/v1</span></div>
+        <div><span className="text-[var(--text-secondary)]">Auth{'     '}</span>{'  '}none — keyless · open CORS</div>
+      </div>
+      <div>
+        <div className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)] mb-2">Categories</div>
+        <ul className="space-y-1">
+          {API_GROUPS.map((g) => (
+            <li key={g.label} className="flex items-baseline gap-2 text-xs">
+              <span className="text-[var(--accent-teal)]">▸</span>
+              <span className="text-[var(--text-primary)]">{g.label.replace(/\s*·.*$/, '')}</span>
+              <span className="text-[var(--text-secondary)]">· {g.routes.length} endpoints</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <p className="text-xs text-[var(--text-secondary)] pt-2 border-t border-[var(--border-color)]">
+        Full endpoint list, descriptions &amp; usage → the{' '}
+        <strong className="text-[var(--text-primary)]">APIs</strong> button in the top bar.
       </p>
     </div>
   );
@@ -236,6 +281,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [modelOpen, setModelOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [helpTab, setHelpTab] = useState<'about' | 'api' | 'a2a'>('about');
+  const [apisOpen, setApisOpen] = useState(false);
 
   return (
     <div className="flex min-h-screen bg-[var(--surface-deep)]">
@@ -284,6 +330,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="flex-1" />
           <div className="hidden md:block"><VtBadge /></div>
           <ThemeToggle />
+          <button
+            type="button"
+            onClick={() => {
+              track('apis_open');
+              setApisOpen(true);
+            }}
+            data-print-hide
+            className="flex-shrink-0 px-3 h-8 inline-flex items-center justify-center rounded-md border border-[var(--border-color)] text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--accent-teal)] hover:border-[var(--teal-dim)] transition-colors"
+            title="Open REST API — full endpoint catalog"
+          >
+            APIs
+          </button>
           <button
             type="button"
             onClick={() => setHelpOpen(true)}
@@ -355,7 +413,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 </svg>
               </button>
             </div>
-            {helpTab === 'api' && <ApiReference />}
+            {helpTab === 'api' && <ApiSummary />}
             {helpTab === 'a2a' && <AgentToAgent />}
             <div className={`px-6 py-5 space-y-4 text-sm text-[var(--text-primary)] leading-relaxed ${helpTab === 'about' ? '' : 'hidden'}`}>
               <div className="flex justify-center pb-2">
@@ -388,6 +446,26 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 {' — '}Not affiliated with or endorsed by MITRE Corporation.
               </p>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* APIs — comprehensive endpoint catalog (opened from the top-bar "APIs" button) */}
+      {apisOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setApisOpen(false)}>
+          <div
+            className="bg-[var(--surface-deep)] border border-[var(--border-color)] rounded-xl shadow-2xl w-[95vw] max-w-[720px] max-h-[85vh] overflow-y-auto"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border-color)]">
+              <h2 className="text-sm font-semibold text-[var(--text-primary)]">REST API — full endpoint catalog</h2>
+              <button onClick={() => setApisOpen(false)} className="p-2 rounded-md text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--hover-overlay)]">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <ApiReference />
           </div>
         </div>
       )}
