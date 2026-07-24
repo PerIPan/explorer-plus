@@ -321,17 +321,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <SearchBar />
           <button
             type="button"
-            onClick={() => setModelOpen(true)}
-            className="hidden flex-shrink-0 px-3 py-1.5 text-xs rounded-md border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--accent-teal)] hover:border-[var(--teal-dim)] transition-colors"
-            title="ATT&CK data model — entity relationships"
-          >
-            Data Model
-          </button>
-          <div className="flex-1" />
-          <div className="hidden md:block"><VtBadge /></div>
-          <ThemeToggle />
-          <button
-            type="button"
             onClick={() => {
               track('apis_open');
               setApisOpen(true);
@@ -342,6 +331,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           >
             APIs
           </button>
+          <button
+            type="button"
+            onClick={() => setModelOpen(true)}
+            className="hidden flex-shrink-0 px-3 py-1.5 text-xs rounded-md border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--accent-teal)] hover:border-[var(--teal-dim)] transition-colors"
+            title="ATT&CK data model — entity relationships"
+          >
+            Data Model
+          </button>
+          <div className="flex-1" />
+          <div className="hidden md:block"><VtBadge /></div>
+          <ThemeToggle />
           <button
             type="button"
             onClick={() => setHelpOpen(true)}
