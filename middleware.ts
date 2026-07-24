@@ -18,18 +18,33 @@ const conn = process.env.DATABASE_URL || process.env.POSTGRES_URL || '';
 // The neon() HTTP driver only talks to Neon hosts — skip locally (localhost PG).
 const usageEnabled = /neon\.tech/.test(conn);
 const sql = usageEnabled ? neon(conn) : null;
-
-/** A path segment is "dynamic" (an id/name) rather than a fixed sub-resource. */
-function isDynamic(seg: string): boolean {
-  return /\d/.test(seg) || /[A-Z]/.test(seg) || seg.includes('%') || seg.length > 24;
+if (conn && !usageEnabled) {
+  // Make an accidental disable (e.g. host rotation to a non-Neon provider) visible.
+  console.warn('[api_usage] connection host is not a Neon endpoint — API usage counting is disabled.');
 }
 
 /**
+ * Known *static* second path segments per top-level resource, derived from the
+ * app/api/v1 route tree (the literal sub-folders, not the [param] ones). Any
+ * second segment NOT listed here is treated as a dynamic id and collapsed to
+ * ":id". This keeps row cardinality bounded by the route shape rather than by a
+ * string-shape guess — critical because e.g. /applications/<vendor> slugs are
+ * lowercase and would otherwise each spawn a permanent row.
+ * NOTE: keep in sync when adding static sub-routes under these resources.
+ */
+const STATIC_CHILDREN: Record<string, Set<string>> = {
+  feed: new Set(['atomic', 'intelligence', 'iocs', 'reports', 'sigma', 'status', 'vt-lookup']),
+  frameworks: new Set(['by-techniques', 'cloud-controls', 'csf', 'detection', 'engage', 'iso27001', 'nist', 'owasp', 'react', 'status', 'technique', 'veris']),
+  compliance: new Set(['frameworks', 'groups', 'sectors', 'software', 'tactics', 'techniques']),
+  home: new Set(['recent-affected']),
+};
+
+/**
  * Collapse a request path to a stable, low-cardinality endpoint key.
- * Only /api/v1/* is counted; keep at most two segments, with dynamic ids → :id.
+ * Only /api/v1/* is counted; keep at most two segments, dynamic ids → :id.
  *   /api/v1/cves/CVE-2024-1234/packages -> /api/v1/cves/:id
+ *   /api/v1/applications/microsoft/...  -> /api/v1/applications/:id
  *   /api/v1/feed/reports                -> /api/v1/feed/reports
- *   /api/v1/packages/npm/left-pad       -> /api/v1/packages/npm
  */
 function normalizeEndpoint(pathname: string): string | null {
   if (!pathname.startsWith('/api/v1/') && pathname !== '/api/v1') return null;
@@ -37,7 +52,10 @@ function normalizeEndpoint(pathname: string): string | null {
   if (!rest) return '/api/v1';
   const segs = rest.split('/');
   let key = '/api/v1/' + segs[0];
-  if (segs[1]) key += '/' + (isDynamic(segs[1]) ? ':id' : segs[1]);
+  if (segs[1]) {
+    const staticSet = STATIC_CHILDREN[segs[0]];
+    key += '/' + (staticSet?.has(segs[1]) ? segs[1] : ':id');
+  }
   return key;
 }
 
@@ -50,7 +68,7 @@ function countUsage(request: NextRequest, event: NextFetchEvent) {
   event.waitUntil(
     sql`
       INSERT INTO api_usage (endpoint, day, count)
-      VALUES (${endpoint}, CURRENT_DATE, 1)
+      VALUES (${endpoint}, (now() AT TIME ZONE 'utc')::date, 1)
       ON CONFLICT (endpoint, day)
       DO UPDATE SET count = api_usage.count + 1, updated_at = now()
     `.catch((err) => {
