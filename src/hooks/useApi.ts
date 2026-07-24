@@ -235,7 +235,9 @@ export function useFeedStatus() {
   return useQuery({
     queryKey: ['feed-status'],
     queryFn: () => apiFetch<{ data: FeedSyncStatus[] }>('/feed/status'),
-    refetchInterval: 30_000,
+    // Low-priority status page — refresh every 4h (was 30s) to avoid keeping
+    // Neon awake. Default refetchIntervalInBackground=false pauses when hidden.
+    refetchInterval: 4 * 60 * 60 * 1000,
   });
 }
 

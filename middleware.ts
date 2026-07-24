@@ -1,35 +1,22 @@
 import { NextResponse } from 'next/server';
-import type { NextRequest, NextFetchEvent } from 'next/server';
-import { neon } from '@neondatabase/serverless';
+import type { NextRequest } from 'next/server';
 
 // ---------------------------------------------------------------------------
-// API usage counting
+// API usage counting (part 1 of 2)
 // ---------------------------------------------------------------------------
-// Every /api/v1/* request is counted once here (the routes share no path-aware
-// wrapper, so middleware is the single choke point). We write a daily, per-
-// normalized-endpoint counter to the `api_usage` table via a non-blocking
-// UPSERT (event.waitUntil), so it adds no latency to the response.
-//
-// Cost note: this is one tiny UPSERT against the same Neon DB the request is
-// already querying — a marginal add, not a new wake-up. IDs are collapsed to
-// ':id' so the row count stays bounded.
-
-const conn = process.env.DATABASE_URL || process.env.POSTGRES_URL || '';
-// The neon() HTTP driver only talks to Neon hosts — skip locally (localhost PG).
-const usageEnabled = /neon\.tech/.test(conn);
-const sql = usageEnabled ? neon(conn) : null;
-if (conn && !usageEnabled) {
-  // Make an accidental disable (e.g. host rotation to a non-Neon provider) visible.
-  console.warn('[api_usage] connection host is not a Neon endpoint — API usage counting is disabled.');
-}
+// We count every /api/v1/* request that actually reaches the origin (a cache
+// MISS). Middleware runs *before* the CDN cache and can't tell a hit from a
+// miss, so it does NOT write anything here — it only tags the request with a
+// normalized endpoint header. The counting write happens at the origin, in
+// jsonResponse() (see app/api/lib/handler.ts, part 2), which only runs on a
+// miss. Net effect: CDN hits are free (no Neon wake), and every counted
+// request is one that already hit the server.
 
 /**
  * Known *static* second path segments per top-level resource, derived from the
- * app/api/v1 route tree (the literal sub-folders, not the [param] ones). Any
- * second segment NOT listed here is treated as a dynamic id and collapsed to
- * ":id". This keeps row cardinality bounded by the route shape rather than by a
- * string-shape guess — critical because e.g. /applications/<vendor> slugs are
- * lowercase and would otherwise each spawn a permanent row.
+ * app/api/v1 route tree (literal sub-folders, not [param] ones). Any second
+ * segment NOT listed here is a dynamic id and collapses to ":id", so row
+ * cardinality is bounded by route shape (e.g. /applications/<vendor> -> :id).
  * NOTE: keep in sync when adding static sub-routes under these resources.
  */
 const STATIC_CHILDREN: Record<string, Set<string>> = {
@@ -41,7 +28,6 @@ const STATIC_CHILDREN: Record<string, Set<string>> = {
 
 /**
  * Collapse a request path to a stable, low-cardinality endpoint key.
- * Only /api/v1/* is counted; keep at most two segments, dynamic ids → :id.
  *   /api/v1/cves/CVE-2024-1234/packages -> /api/v1/cves/:id
  *   /api/v1/applications/microsoft/...  -> /api/v1/applications/:id
  *   /api/v1/feed/reports                -> /api/v1/feed/reports
@@ -59,31 +45,23 @@ function normalizeEndpoint(pathname: string): string | null {
   return key;
 }
 
-function countUsage(request: NextRequest, event: NextFetchEvent) {
-  if (!sql) return;
-  // Don't count CORS preflights / HEAD probes — they aren't real data reads.
-  if (request.method === 'OPTIONS' || request.method === 'HEAD') return;
-  const endpoint = normalizeEndpoint(request.nextUrl.pathname);
-  if (!endpoint) return;
-  event.waitUntil(
-    sql`
-      INSERT INTO api_usage (endpoint, day, count)
-      VALUES (${endpoint}, (now() AT TIME ZONE 'utc')::date, 1)
-      ON CONFLICT (endpoint, day)
-      DO UPDATE SET count = api_usage.count + 1, updated_at = now()
-    `.catch((err) => {
-      // Never let counting failures affect the API response.
-      console.error('api_usage upsert failed:', err);
-    }),
-  );
-}
-
 // ---------------------------------------------------------------------------
 
-export function middleware(request: NextRequest, event: NextFetchEvent) {
-  // API routes: count usage, pass through untouched (no CSP needed on JSON).
+export function middleware(request: NextRequest) {
+  // API routes (only /api/v1/* reaches here per the matcher): tag with the
+  // normalized endpoint so the origin can count it. No DB work here.
   if (request.nextUrl.pathname.startsWith('/api/')) {
-    countUsage(request, event);
+    const method = request.method;
+    // Skip CORS preflights / HEAD probes — not real data reads.
+    const endpoint =
+      method === 'OPTIONS' || method === 'HEAD'
+        ? null
+        : normalizeEndpoint(request.nextUrl.pathname);
+    if (endpoint) {
+      const headers = new Headers(request.headers);
+      headers.set('x-usage-endpoint', endpoint);
+      return NextResponse.next({ request: { headers } });
+    }
     return NextResponse.next();
   }
 
@@ -110,6 +88,6 @@ export function middleware(request: NextRequest, event: NextFetchEvent) {
 }
 
 export const config = {
-  // Page routes (for CSP) + the public v1 API (for usage counting).
+  // Page routes (for CSP) + the public v1 API (to tag usage for origin counting).
   matcher: ['/((?!api|_next/static|_next/image|favicon|.*\\..*).*)', '/api/v1/:path*'],
 };

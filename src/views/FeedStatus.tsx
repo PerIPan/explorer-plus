@@ -179,11 +179,12 @@ export function FeedStatus() {
     (data?.data ?? []).map((f) => [f.source, f]),
   );
 
-  /** Poll every 5s while any source is in running state */
+  /** Poll every 30s while a sync is running (was 5s) — enough for progress,
+      and bounded so a stuck "running" state can't pin Neon awake. */
   const hasRunning = (data?.data ?? []).some((f) => f.status === 'running');
   useEffect(() => {
     if (!hasRunning) return;
-    const interval = setInterval(() => { void refetch(); }, 5000);
+    const interval = setInterval(() => { void refetch(); }, 30_000);
     return () => clearInterval(interval);
   }, [hasRunning, refetch]);
 
@@ -265,7 +266,8 @@ function FrameworkStatus() {
   const { data } = useQuery({
     queryKey: ['framework-counts'],
     queryFn: () => apiFetch<FrameworkStatusResponse>('/frameworks/status'),
-    refetchInterval: 60_000,
+    // Low-priority status page — 4h (was 60s) to avoid keeping Neon awake.
+    refetchInterval: 4 * 60 * 60 * 1000,
   });
 
   const counts = data?.counts ?? {};
