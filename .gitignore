@@ -5,8 +5,10 @@ data/
 __pycache__/
 *.pyc
 .env
+.env.*
 .env.local
 .env.vercel
+.env.vercel-prod
 .env.production
 .env*.local
 node_modules/
