@@ -147,7 +147,7 @@ AI agents can query this knowledge base programmatically via the [Agent Card](ht
 - **24 skills**: CVEs, techniques, groups, software, campaigns, mitigations, IOCs, Sigma rules, Atomic tests, sectors, applications, GHSA/OSV advisories, packages, CAPEC patterns, OWASP Top 10, external actors
 - **Dual artifacts**: Human-readable summary + structured JSON data
 - **Multi-round**: Agentic tool chaining (search → profile, up to 3 rounds)
-- **Rate limit**: 50 req / day / IP, no auth required
+- **Rate limit**: 50 req / day / IP, no auth required — bypassed by `Authorization: Bearer <A2A_API_KEY>` for trusted callers
 
 Example: *"ask mitre-explorer.org, using the A2A Google GenAI protocol, which Applications have been affected by new CVEs published in the previous week — show me the relevant techniques and any known OSV advisories on the same packages."*
 
@@ -175,6 +175,7 @@ DATABASE_URL=postgresql://postgres@localhost:5432/mitre npm run seed
 | `VT_API_KEY` | VirusTotal API key (IOC enrichment) |
 | `NVD_API_KEY` | NVD API key — lifts rate limit from 5 to 50 req / 30 s |
 | `CRON_SECRET` | Auth token for cron endpoints |
+| `A2A_API_KEY` | Optional — bearer key that bypasses the A2A 50 req/day limit (unset = no bypass) |
 
 ## Codebase
 

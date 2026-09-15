@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createHash } from 'node:crypto';
+import { createHash, timingSafeEqual } from 'node:crypto';
 import { GoogleGenAI } from '@google/genai';
 import { query } from '../v1/lib/db';
 import { withCorsRestricted, corsOptionsRestricted } from '../lib/cors';
@@ -13,7 +13,8 @@ export async function OPTIONS(req: NextRequest) { return corsOptionsRestricted(r
  * Accepts natural language queries, uses Gemini 3.1 Flash-Lite to interpret,
  * calls internal APIs, returns structured results.
  *
- * Rate limit: 50 req/day per IP, no auth required.
+ * Rate limit: 50 req/day per IP, no auth required. Callers presenting a
+ * valid A2A_API_KEY (`Authorization: Bearer <key>`) bypass the limit.
  */
 
 const DAILY_LIMIT = 50;
@@ -1020,6 +1021,22 @@ function getClientIpHash(req: NextRequest): string {
   return createHash('sha256').update(IP_SALT).update(':').update(raw).digest('hex');
 }
 
+/**
+ * Optional rate-limit bypass for trusted callers (own side-projects,
+ * server-to-server integrations). Set A2A_API_KEY in the Vercel environment
+ * and send `Authorization: Bearer <key>`. Unset → no bypass possible (never
+ * fail-open). Bypassed requests are still logged to a2a_requests.
+ */
+const API_KEY = process.env.A2A_API_KEY || null;
+
+function hasValidApiKey(req: NextRequest): boolean {
+  if (!API_KEY) return false;
+  const provided = String(req.headers.get('authorization') ?? '');
+  const expected = `Bearer ${API_KEY}`;
+  if (provided.length !== expected.length) return false;
+  return timingSafeEqual(Buffer.from(provided), Buffer.from(expected));
+}
+
 async function checkRateLimit(ipHash: string): Promise<{ allowed: boolean; remaining: number }> {
   const result = await query<{ count: string }>(
     `SELECT COUNT(*) FROM a2a_requests WHERE ip = $1 AND requested_at > NOW() - INTERVAL '24 hours'`,
@@ -1088,27 +1105,31 @@ export async function POST(req: NextRequest) {
   }
 
   const ipHash = getClientIpHash(req);
+  const bypassRateLimit = hasValidApiKey(req);
 
-  // Rate limit -- fail-closed on DB errors
+  // Rate limit -- fail-closed on DB errors. Skipped for callers presenting a
+  // valid A2A_API_KEY (see hasValidApiKey); their requests are still logged.
   let remaining = DAILY_LIMIT;
-  try {
-    const rl = await checkRateLimit(ipHash);
-    remaining = rl.remaining;
-    if (!rl.allowed) {
-      const resp = NextResponse.json(
-        jsonRpcError(reqId, -32000, `Rate limit exceeded. ${DAILY_LIMIT} requests/day per IP.`),
-        { status: 429 },
-      );
-      resp.headers.set('Retry-After', '86400');
-      resp.headers.set('X-RateLimit-Limit', String(DAILY_LIMIT));
-      resp.headers.set('X-RateLimit-Remaining', '0');
-      return withCors(resp);
+  if (!bypassRateLimit) {
+    try {
+      const rl = await checkRateLimit(ipHash);
+      remaining = rl.remaining;
+      if (!rl.allowed) {
+        const resp = NextResponse.json(
+          jsonRpcError(reqId, -32000, `Rate limit exceeded. ${DAILY_LIMIT} requests/day per IP.`),
+          { status: 429 },
+        );
+        resp.headers.set('Retry-After', '86400');
+        resp.headers.set('X-RateLimit-Limit', String(DAILY_LIMIT));
+        resp.headers.set('X-RateLimit-Remaining', '0');
+        return withCors(resp);
+      }
+    } catch {
+      return withCors(NextResponse.json(
+        jsonRpcError(reqId, -32603, 'Service temporarily unavailable'),
+        { status: 503 },
+      ));
     }
-  } catch {
-    return withCors(NextResponse.json(
-      jsonRpcError(reqId, -32603, 'Service temporarily unavailable'),
-      { status: 503 },
-    ));
   }
 
   // Accept both v1.0 (PascalCase) and v0.x (slash) method names
