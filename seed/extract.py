@@ -68,9 +68,22 @@ _DC_NAME_TO_DS_NAME: dict[str, str] = {
 # Helpers
 # ---------------------------------------------------------------------------
 
+def _external_refs(obj: Any) -> list[Any]:
+    """external_references from either a STIX object or a raw dict.
+
+    The mitreattack-python objects expose it as an attribute; objects read
+    straight out of the bundle (x-mitre-asset has no library getter) are plain
+    dicts, where getattr would silently return the default.
+    """
+    refs = getattr(obj, 'external_references', None)
+    if refs is None and isinstance(obj, dict):
+        refs = obj.get('external_references')
+    return refs or []
+
+
 def _get_attack_id(obj: Any) -> str:
     """Return the first mitre-attack external_id, or empty string."""
-    for ref in getattr(obj, 'external_references', []):
+    for ref in _external_refs(obj):
         src = getattr(ref, 'source_name', None) or ref.get('source_name', '')
         if src == 'mitre-attack':
             return getattr(ref, 'external_id', None) or ref.get('external_id', '') or ''
@@ -79,7 +92,7 @@ def _get_attack_id(obj: Any) -> str:
 
 def _get_url(obj: Any) -> str:
     """Return the mitre-attack URL from external_references, or empty string."""
-    for ref in getattr(obj, 'external_references', []):
+    for ref in _external_refs(obj):
         src = getattr(ref, 'source_name', None) or ref.get('source_name', '')
         if src == 'mitre-attack':
             return getattr(ref, 'url', None) or ref.get('url', '') or ''
@@ -526,6 +539,91 @@ def _extract_group_campaigns(attack: MitreAttackData) -> list[dict[str, Any]]:
 # Public API
 # ---------------------------------------------------------------------------
 
+def _extract_assets(raw_objects: list[dict[str, Any]], domain: str = 'ics-attack') -> list[dict[str, Any]]:
+    """Extract x-mitre-asset objects (the ATT&CK for ICS asset catalogue).
+
+    MitreAttackData exposes no getter for assets, so this walks the raw bundle
+    directly, the same way _build_technique_dc_pairs does. Only ics-attack
+    ships assets; on other domains this returns [].
+    """
+    rows: list[dict[str, Any]] = []
+    for obj in raw_objects:
+        if obj.get('type') != 'x-mitre-asset':
+            continue
+        domains = obj.get('x_mitre_domains') or []
+        rows.append({
+            'stix_id': obj.get('id'),
+            'attack_id': _get_attack_id(obj),
+            'name': obj.get('name') or '',
+            'description': obj.get('description') or '',
+            'url': _get_url(obj),
+            'sectors': list(obj.get('x_mitre_sectors') or []),
+            'platforms': list(obj.get('x_mitre_platforms') or []),
+            'is_revoked': bool(obj.get('revoked', False)),
+            'is_deprecated': bool(obj.get('x_mitre_deprecated', False)),
+            'domain': domains[0] if domains else domain,
+            'stix_created': _ts(obj.get('created')),
+            'stix_modified': _ts(obj.get('modified')),
+        })
+    return rows
+
+
+def _extract_asset_techniques(raw_objects: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Extract attack-pattern --targets--> x-mitre-asset edges.
+
+    ATT&CK publishes these directly; they are the whole reason an asset
+    dimension is worth having. Edges pointing at a revoked relationship are
+    skipped, matching how the other relationship extractors behave.
+    """
+    asset_ids = {
+        obj['id'] for obj in raw_objects
+        if obj.get('type') == 'x-mitre-asset' and obj.get('id')
+    }
+    rows: list[dict[str, Any]] = []
+    for rel in raw_objects:
+        if rel.get('type') != 'relationship':
+            continue
+        if rel.get('relationship_type') != 'targets':
+            continue
+        if rel.get('revoked'):
+            continue
+        src = rel.get('source_ref', '')
+        tgt = rel.get('target_ref', '')
+        if tgt not in asset_ids or not src.startswith('attack-pattern--'):
+            continue
+        rows.append({
+            'technique_stix_id': src,
+            'asset_stix_id': tgt,
+        })
+    return rows
+
+
+def _extract_asset_related_assets(raw_objects: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Extract x_mitre_related_assets entries.
+
+    These are free text ({name, related_asset_sectors, description}), not STIX
+    references, so they are stored as an attribute of the asset rather than a
+    self-join.
+    """
+    rows: list[dict[str, Any]] = []
+    for obj in raw_objects:
+        if obj.get('type') != 'x-mitre-asset':
+            continue
+        seen: set[str] = set()
+        for rel in obj.get('x_mitre_related_assets') or []:
+            name = (rel.get('name') or '').strip()
+            if not name or name in seen:
+                continue
+            seen.add(name)
+            rows.append({
+                'asset_stix_id': obj.get('id'),
+                'related_name': name,
+                'related_sectors': list(rel.get('related_asset_sectors') or []),
+                'description': rel.get('description') or '',
+            })
+    return rows
+
+
 def extract_all(stix_path: str = 'data/enterprise-attack.json', domain: str = 'enterprise-attack') -> dict[str, list[dict[str, Any]]]:
     """Load a STIX bundle and return normalised dicts for all ATT&CK entity types.
 
@@ -538,7 +636,11 @@ def extract_all(stix_path: str = 'data/enterprise-attack.json', domain: str = 'e
         mitigations, campaigns, data_sources, data_components,
         group_techniques, group_software, software_techniques,
         mitigation_techniques, technique_tactics, technique_data_components,
-        campaign_techniques, campaign_software, group_campaigns.
+        campaign_techniques, campaign_software, group_campaigns,
+        attack_assets, asset_techniques, asset_related_assets.
+
+        The three asset keys are populated only for ics-attack; ATT&CK ships
+        x-mitre-asset objects for no other domain.
     """
     attack = MitreAttackData(stix_path)
 
@@ -566,6 +668,9 @@ def extract_all(stix_path: str = 'data/enterprise-attack.json', domain: str = 'e
         'campaign_techniques': _extract_campaign_techniques(attack),
         'campaign_software': _extract_campaign_software(attack),
         'group_campaigns': _extract_group_campaigns(attack),
+        'attack_assets': _extract_assets(raw_objects, domain),
+        'asset_techniques': _extract_asset_techniques(raw_objects),
+        'asset_related_assets': _extract_asset_related_assets(raw_objects),
     }
 
 

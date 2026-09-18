@@ -35,21 +35,43 @@ const ADVISORY_LOCK_KEY = 0x617474; // ASCII 'att'
 const FETCH_TIMEOUT_MS = 60_000;
 const EXTRACT_BUFFER = 256 * 1024 * 1024; // STIX bundles can be ~10MB; output dict bigger
 
+const DEFAULT_DOMAINS = ['enterprise-attack', 'mobile-attack', 'ics-attack'];
+
 function parseArgs() {
   const args = {
-    domains: ['enterprise-attack', 'mobile-attack', 'ics-attack'],
+    domains: [...DEFAULT_DOMAINS],
     dryRun: false,
     force: false,
+    allowPartialDomains: false,
   };
   for (const arg of process.argv.slice(2)) {
     if (arg === '--dry-run') args.dryRun = true;
     else if (arg === '--force') args.force = true;
+    else if (arg === '--allow-partial-domains') args.allowPartialDomains = true;
     else if (arg.startsWith('--domains=')) {
       args.domains = arg.slice('--domains='.length).split(',').map((d) => d.trim()).filter(Boolean);
     }
   }
   if (args.domains.some((d) => d === 'atlas-attack' || d === 'atlas')) {
     console.error('atlas-attack is out of scope; use scripts/sync-atlas.mjs');
+    process.exit(1);
+  }
+  // A partial-domain run is destructive. reconcileBulk deletes (parent, child)
+  // pairs whose parent is present in THIS run but whose pair is absent from the
+  // new set. Groups such as Sandworm and APT38 appear in both the ICS and
+  // Enterprise bundles, so `--domains=ics-attack` would delete every Enterprise
+  // group_techniques / software_techniques edge belonging to them. The snapshot
+  // guard does not catch it — RELATION_DROP_THRESHOLD is table-wide (50%) and
+  // dual-domain groups are a minority of the rows.
+  //
+  // To ingest a single domain's *entities* without touching shared relations,
+  // use a purpose-built script (e.g. scripts/backfill-ics-assets.mjs).
+  if (args.domains.length < DEFAULT_DOMAINS.length && !args.allowPartialDomains) {
+    console.error(
+      `refusing a partial-domain run (${args.domains.join(',')}): reconcileBulk would delete\n` +
+      'cross-domain relation edges for entities shared with the omitted bundles.\n' +
+      'Pass --allow-partial-domains if you have confirmed that is what you want.',
+    );
     process.exit(1);
   }
   return args;
