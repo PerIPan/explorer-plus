@@ -758,6 +758,44 @@ export function TechniqueDetail() {
             </div>
           </div>
         )}
+        {data.assets && data.assets.length > 0 && (
+          <div className="flex items-start gap-2 flex-wrap">
+            <span className="text-[var(--text-secondary)] shrink-0">Targets assets:</span>
+            <div className="flex flex-wrap gap-1.5">
+              {data.assets.map((a) => (
+                <Link
+                  key={a.attackId}
+                  href={`/assets/${a.attackId}`}
+                  title={
+                    a.primaryLevelLabel
+                      ? `${a.name} — Purdue ${String(a.primaryLevel).replace('_', '.').toUpperCase()} ${a.primaryLevelLabel}${a.isBoundary ? ' (IT/OT boundary)' : ''}`
+                      : a.name
+                  }
+                  // Boundary wins over primary zone. A Data Historian is primarily
+                  // at L3 (OT) but is also in the DMZ, and that is the more
+                  // security-relevant fact — colouring it like a PLC would bury the
+                  // one property that makes it an IT/OT crossing point.
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] border hover:underline ${
+                    a.isBoundary || a.zone === 'dmz'
+                      ? 'bg-[var(--yellow-faint)] text-[var(--accent-yellow)] border-[var(--yellow-dim)]'
+                      : a.zone === 'it'
+                        ? 'bg-[var(--blue-faint)] text-[var(--accent-blue)] border-[var(--blue-dim)]'
+                        : 'bg-[var(--orange-faint)] text-[var(--accent-orange)] border-[var(--orange-dim)]'
+                  }`}
+                >
+                  <span className="font-mono">{a.attackId}</span>
+                  <span>{a.name}</span>
+                  {a.primaryLevel && (
+                    <span className="opacity-70">{String(a.primaryLevel).replace('_', '.').toUpperCase()}</span>
+                  )}
+                </Link>
+              ))}
+            </div>
+            <Link href="/frameworks/purdue" className="text-[11px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:underline self-center">
+              Purdue model
+            </Link>
+          </div>
+        )}
         {data.url && isSafeUrl(data.url) && (
           <a
             href={data.url}

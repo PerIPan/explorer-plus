@@ -10,6 +10,16 @@ export interface CapecRef {
   abstraction: string | null;
 }
 
+/** An ATT&CK for ICS asset a technique targets, with its curated Purdue placement. */
+export interface TechniqueTargetAsset {
+  attackId: string;
+  name: string;
+  primaryLevel: string | null;
+  primaryLevelLabel: string | null;
+  zone: 'ot' | 'dmz' | 'it' | null;
+  isBoundary: boolean;
+}
+
 export interface CapecListEntry extends CapecRef {
   cweIds: string[] | null;
   techniqueCount: number;
@@ -92,6 +102,9 @@ export interface Technique extends BaseEntity {
   atlasXrefs?: Array<{ attackId: string; name: string; domain: string | null }>;
   /** Only populated by /api/v1/techniques/[attackId] detail endpoint; undefined in list contexts. */
   capecPatterns?: CapecRef[];
+  /** ICS assets this technique targets. Empty for every non-ICS technique —
+   *  MITRE publishes the asset catalogue for ics-attack only. */
+  assets?: TechniqueTargetAsset[];
   sub_techniques: SubTechnique[];
   /** Relationship data returned by the detail endpoint */
   groups?: TechniqueRelatedGroup[];

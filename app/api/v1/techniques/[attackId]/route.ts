@@ -52,7 +52,7 @@ export async function GET(
   const techId = tech.id;
 
   // Run all relationship queries in parallel
-  const [groupsResult, softwareResult, mitigationsResult, dataComponentsResult, subTechResult, campaignsResult, tacticsResult, xrefsResult, capecResult] =
+  const [groupsResult, softwareResult, mitigationsResult, dataComponentsResult, subTechResult, campaignsResult, tacticsResult, xrefsResult, capecResult, assetsResult] =
     await Promise.all([
       query<{ attackId: string; name: string; procedure: string | null }>(
         `SELECT DISTINCT ON (tg.name) tg.attack_id AS "attackId", tg.name, gt.description AS procedure
@@ -148,6 +148,29 @@ export async function GET(
            "capecId"`,
         [attackId],
       ).catch(() => ({ rows: [] as Array<{ capecId: string; name: string; severity: string | null; likelihood: string | null; abstraction: string | null }> })),
+      // ICS assets this technique targets, with their curated Purdue placement.
+      // Returns nothing for non-ICS techniques: MITRE publishes an asset
+      // catalogue for ics-attack only, so this is an honest empty rather than
+      // missing data. Tolerates the tables being absent (.catch) so a database
+      // that has not run migrate-ics-assets.sql still serves technique detail.
+      query<{ attackId: string; name: string; primaryLevel: string | null; primaryLevelLabel: string | null; zone: string | null; isBoundary: boolean }>(
+        `SELECT
+           a.attack_id                   AS "attackId",
+           a.name,
+           p.primary_level               AS "primaryLevel",
+           l.label                       AS "primaryLevelLabel",
+           l.zone,
+           COALESCE(p.is_boundary,false) AS "isBoundary"
+         FROM asset_techniques at
+         JOIN attack_assets a ON a.id = at.asset_id
+         JOIN techniques k    ON k.id = at.technique_id
+         LEFT JOIN asset_purdue_placement p ON p.asset_id = a.id
+         LEFT JOIN purdue_levels l          ON l.level_key = p.primary_level
+         WHERE k.attack_id = $1
+           AND NOT a.is_revoked AND NOT a.is_deprecated
+         ORDER BY l.sort_order NULLS LAST, a.attack_id`,
+        [attackId],
+      ).catch(() => ({ rows: [] as Array<{ attackId: string; name: string; primaryLevel: string | null; primaryLevelLabel: string | null; zone: string | null; isBoundary: boolean }> })),
     ]);
 
   return withCors(jsonResponse({
@@ -161,5 +184,6 @@ export async function GET(
     campaigns: campaignsResult.rows,
     atlasXrefs: xrefsResult.rows,
     capecPatterns: capecResult.rows,
+    assets: assetsResult.rows,
   }, 3600));
 }
