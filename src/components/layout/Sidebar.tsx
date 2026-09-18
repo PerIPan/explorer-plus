@@ -46,6 +46,7 @@ const attackNav: NavItem[] = [
 
 const assetsNav: NavItem[] = [
   { path: '/applications', label: 'Applications', tooltip: 'defender view — vendor products that get exploited (vs Malware which is attacker tools)' },
+  { path: '/assets', label: 'ICS Assets', tooltip: 'ATT&CK for ICS equipment — PLCs, RTUs, HMIs, historians, gateways — with the techniques targeting each and its Purdue level' },
   { path: '/ecosystems', label: 'Ecosystems', tooltip: 'per-ecosystem advisory dashboards — npm, PyPI, Debian, Ubuntu, Alpine, Android, Linux kernel, Chainguard, OSS-Fuzz, and more. Severity breakdowns + top affected packages' },
   { path: '/packages', label: 'Packages', tooltip: 'library/dependency packages with GHSA advisories (npm, PyPI, Go, Maven, RubyGems, NuGet, Composer, Rust)' },
 ];
@@ -65,6 +66,7 @@ const frameworksNav: NavItem[] = [
   { path: '/frameworks/react', label: 'RE&CT', tooltip: 'incident response actions and playbooks' },
   { path: '/frameworks/veris', label: 'VERIS', tooltip: 'incident classification categories (Verizon DBIR standard)' },
   { path: '/frameworks/cloud', label: 'Cloud Controls', tooltip: 'AWS, Azure, and GCP security controls mapped to techniques' },
+  { path: '/frameworks/purdue', label: 'Purdue Model', tooltip: 'OT network segmentation — seven levels from physical process to enterprise IT, which ICS assets sit at each, and which levels may communicate' },
   { path: '/cti/sigma', label: 'Sigma Rules', tooltip: 'detection signatures mapped to techniques (SigmaHQ)' },
   { path: '/frameworks/atomic', label: 'Atomic Tests', tooltip: 'red team validation tests from Atomic Red Team' },
   { path: '/cti/capec', label: 'CAPEC', tooltip: 'MITRE Common Attack Pattern Enumeration — 615 attack patterns with severity, likelihood, prerequisites, mitigations' },
