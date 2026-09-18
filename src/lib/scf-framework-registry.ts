@@ -46,6 +46,14 @@ export interface ScfFrameworkEntry {
   effective?: string;
   scope?: string;
   enforcer?: string;
+  /**
+   * True when the framework's SUBJECT MATTER is OT/ICS but its SCF ATT&CK
+   * cross-references resolve to Enterprise techniques only. SCF ships no
+   * ics-attack mappings at all, so these frameworks' technique counts must
+   * NOT be read as ICS/OT coverage. Surfaced as an explicit caveat on both
+   * the /compliance hub row and the /compliance/<key> detail header.
+   */
+  ot_subject_enterprise_mappings?: boolean;
 }
 
 export const SCF_FRAMEWORK_REGISTRY: ScfFrameworkEntry[] = [
@@ -299,6 +307,7 @@ export const SCF_FRAMEWORK_REGISTRY: ScfFrameworkEntry[] = [
     license_class: 'permissive',
     short_blurb: 'Critical Infrastructure Protection standards for the Bulk Electric System.',
     aliases: ['NERC CIP', 'NERC CIP-002 through CIP-014', 'NERC CIP 2024'],
+    ot_subject_enterprise_mappings: true,
   },
   {
     framework_key: 'iec-62443',
@@ -312,6 +321,7 @@ export const SCF_FRAMEWORK_REGISTRY: ScfFrameworkEntry[] = [
     license_class: 'commercial',
     short_blurb: 'Industrial automation & control systems (IACS) security.',
     aliases: ['IEC 62443-2-1', 'IEC 62443-3-3', 'IEC 62443-4-2', 'IEC 62443'],
+    ot_subject_enterprise_mappings: true,
   },
   {
     framework_key: 'uk-cyber-essentials',

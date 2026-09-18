@@ -335,6 +335,15 @@ export function ComplianceFrameworkDetail({ frameworkKey }: { frameworkKey: stri
               <dd className="text-[var(--text-primary)]">{curated.enforcer}</dd>
             </>
           )}
+          {curated?.ot_subject_enterprise_mappings && (
+            <>
+              <dt className="text-[var(--text-secondary)] text-xs uppercase tracking-wider">ATT&amp;CK scope</dt>
+              <dd className="text-[var(--accent-yellow)] text-xs">
+                Enterprise techniques only — SCF carries no ics-attack cross-references,
+                so these counts are not ICS/OT coverage.
+              </dd>
+            </>
+          )}
           {f.license && (
             <>
               <dt className="text-[var(--text-secondary)] text-xs uppercase tracking-wider">License</dt>
