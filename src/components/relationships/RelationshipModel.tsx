@@ -63,6 +63,9 @@ function makeNodes(c: ReturnType<typeof useThemeColors>): ModelNode[] {
     // Domain variants
     { id: 'ics', label: 'ICS', x: 460, y: 220, color: '#f97316', bg: '#f9731618', path: '/matrix?domain=ics-attack', description: 'Industrial Control Systems ATT&CK domain — OT-specific techniques', category: 'core', scale: 0.85 },
     { id: 'mobile', label: 'Mobile', x: 830, y: 170, color: '#8b5cf6', bg: '#8b5cf618', path: '/matrix?domain=mobile-attack', description: 'Mobile ATT&CK domain — Android and iOS specific techniques', category: 'core', scale: 0.85 },
+    // OT / ICS asset layer
+    { id: 'asset', label: 'ICS Assets', x: 930, y: 660, color: '#f97316', bg: '#f9731618', path: '/assets', description: 'ATT&CK for ICS equipment — PLCs, RTUs, HMIs, historians, gateways, safety controllers — with the techniques MITRE publishes as targeting each', category: 'core', scale: 0.85 },
+    { id: 'purdue', label: 'Purdue Model', x: 1130, y: 660, color: '#fbbf24', bg: '#fbbf2418', path: '/frameworks/purdue', description: 'OT network segmentation — seven levels from the physical process to enterprise IT, with the industrial DMZ between them. Level placement is curated from NIST SP 800-82r3 and ISA-95.', category: 'compliance', scale: 0.85 },
   ];
 }
 
@@ -108,6 +111,9 @@ const EDGES: ModelEdge[] = [
   { from: 'package', to: 'ghsa', label: 'affected by' },
   { from: 'ghsa', to: 'cve', label: 'alias', style: 'dashed' },
   { from: 'ghsa', to: 'technique', label: 'exploits via CWE', style: 'dashed' },
+  { from: 'technique', to: 'asset', label: 'targets', style: 'dashed' },
+  { from: 'ics', to: 'asset', label: 'catalogues' },
+  { from: 'purdue', to: 'asset', label: 'places', style: 'dashed' },
 ];
 
 function getEdgePath(from: ModelNode, to: ModelNode): { path: string; midX: number; midY: number; angle: number } {
