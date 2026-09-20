@@ -87,7 +87,7 @@ const handler = createMcpHandler((server) => {
         const started = performance.now();
         const client = clientStore.getStore() ?? 'unknown';
         try {
-          const result = await executeTool(decl.name, args ?? {});
+          const result = await withSlot(() => executeTool(decl.name, args ?? {}));
           // executeTool reports failure in-band as { error: string } (bad
           // argument, or a non-2xx from the internal API) rather than throwing.
           const isError = typeof result?.error === 'string';
@@ -161,10 +161,43 @@ function withOpenCors(res: Response): Response {
  * would cost one request per ~40,000 units. Capping the batch removes the
  * amplification without adding auth or a rate limit.
  *
- * 20 is well above what real clients batch (most send one request at a time)
- * and far below a useful attack multiplier.
+ * 100 is well above what real clients batch (most send one request at a time)
+ * and far below a useful attack multiplier. Note the cap alone does not bound
+ * pressure: the transport dispatches a batch CONCURRENTLY, so 100 entries means
+ * 100 simultaneous internal fetches unless the gate below throttles them.
  */
-const MAX_BATCH = 20;
+const MAX_BATCH = 100;
+
+/**
+ * Maximum internal API calls in flight at once, per instance.
+ *
+ * The batch cap bounds how much work one request can ask for; this bounds how
+ * much of it happens at the same moment. Without it a 100-entry batch opens 100
+ * concurrent fetches into /api/v1, each of which may want one of the `pg` pool's
+ * 3 connections (20s connection timeout) -- so a single batched caller could
+ * queue out the site's own page queries while doing nothing individually abusive.
+ *
+ * 6 keeps a full batch draining in well under maxDuration while leaving the pool
+ * usable. Single tool calls -- the overwhelmingly common case -- never wait.
+ */
+const MAX_INFLIGHT = 6;
+
+let inFlight = 0;
+const waiting: Array<() => void> = [];
+
+/** Minimal semaphore: acquire a slot, run, always release. */
+async function withSlot<T>(fn: () => Promise<T>): Promise<T> {
+  if (inFlight >= MAX_INFLIGHT) {
+    await new Promise<void>((resolve) => waiting.push(resolve));
+  }
+  inFlight++;
+  try {
+    return await fn();
+  } finally {
+    inFlight--;
+    waiting.shift()?.();
+  }
+}
 
 /** Reject oversized batches before the transport can fan them out. */
 function batchTooLarge(body: string): number | null {
