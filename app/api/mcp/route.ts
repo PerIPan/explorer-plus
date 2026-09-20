@@ -1,7 +1,7 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { createMcpHandler } from 'mcp-handler';
 import { z } from 'zod';
-import { TOOL_DECLARATIONS, executeTool, type ToolDeclaration } from '../../../src/lib/tools';
+import { TOOL_DECLARATIONS, executeTool, USAGE_GUIDE, type ToolDeclaration } from '../../../src/lib/tools';
 import { normalizeClient, recordMcpUsage } from '../lib/mcp-usage';
 
 /**
@@ -79,6 +79,22 @@ function toZodObject(decl: ToolDeclaration) {
 }
 
 const handler = createMcpHandler((server) => {
+  // Also exposed as a resource, not just the get_usage_guide tool: a resource
+  // costs nothing in the default tool context, but some clients surface
+  // resources only on explicit user action -- hence both.
+  server.registerResource(
+    'usage-guide',
+    'mitre://guide',
+    {
+      title: 'MITRE Explorer usage guide',
+      description: 'Tool selection, data provenance, pagination, vocabularies and ICS Purdue semantics.',
+      mimeType: 'text/markdown',
+    },
+    async (uri) => ({
+      contents: [{ uri: uri.href, mimeType: 'text/markdown', text: USAGE_GUIDE }],
+    }),
+  );
+
   for (const decl of TOOL_DECLARATIONS) {
     server.registerTool(
       decl.name,

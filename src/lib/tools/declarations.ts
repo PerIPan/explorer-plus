@@ -32,7 +32,7 @@ export interface ToolDeclaration {
 export const TOOL_DECLARATIONS: ToolDeclaration[] = [
   {
     name: 'search_cves',
-    description: 'Search CVE vulnerabilities by keyword, severity, or date range. Returns CVE ID, CVSS score, severity, description, linked ATT&CK technique IDs, and affected applications. Use `app` to scope to a vendor/product and `version` (substring/text match, requires `app`) to a product version. Use get_cve_detail for EPSS exploit-probability score and CAPEC attack patterns.',
+    description: 'CVE summary rows by keyword, severity, date or product: CVSS, EPSS, CWE, linked ATT&CK IDs and affected apps, ordered newest first, not worst first. get_cve_detail has the full record. version matches text in an affected range, not a verdict that the version is vulnerable; say so.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -48,7 +48,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
   },
   {
     name: 'get_cve_detail',
-    description: 'Get full details for a specific CVE including all CWEs, CVSS breakdown, EPSS score + percentile (First.org exploit-probability, 0..1), CAPEC attack patterns (via CWE overlap), affected applications, linked ATT&CK techniques (via CAPEC + CTID), OWASP Top 10 categories, GHSA alias, threat reports, CISA KEV status, and `osvAdvisories` — OS / distro / kernel advisories (Debian DSA, Ubuntu USN, Linux, Alpine, Android, Rocky, Alma, SUSE, OSS-Fuzz) that alias this CVE. The `epssScore` field is the probability a CVE will be exploited in the next 30 days; `epssPercentile` is its rank vs all scored CVEs. The `capecPatterns` array contains mapped attack patterns with severity/likelihood/abstraction. The `osvAdvisories` array carries distro/kernel advisory IDs with their ecosystem and CVSS — surface these to users asking "which distros are affected".',
+    description: 'Full record for one CVE: CWEs, CVSS, EPSS, affected apps, OWASP categories, KEV status, GHSA alias, and osvAdvisories -- the distro and kernel advisories aliasing it, which answer which distros are affected. CAPEC patterns and ATT&CK techniques are inferred from shared CWEs, not published per-CVE; attribute them that way. version matches text in an affected range, not a verdict that the version is vulnerable; say so.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -60,7 +60,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
   },
   {
     name: 'get_technique_intelligence',
-    description: 'Get intelligence for an ATT&CK or ATLAS technique: threat groups, Sigma rules, Atomic tests, D3FEND countermeasures, affected applications, detection strategies. For regulatory/compliance frameworks (NIS2, DORA, PCI DSS, ISO 27002, HIPAA, GDPR, NIST 800-53, CMMC, EU CRA, EU AI Act) referencing this technique, use get_technique_compliance instead — they are NOT returned by this tool.',
+    description: 'Detection and threat-intel layer for an ATT&CK or ATLAS technique: Sigma rules, Atomic Red Team tests, D3FEND countermeasures, detection strategies, plus top-N samples of threat reports, linked CVEs, IOCs and affected apps. Groups, mitigations and sub-techniques are in get_technique_detail; regulatory frameworks are not returned here -- call get_technique_compliance.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -71,7 +71,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
   },
   {
     name: 'get_technique_detail',
-    description: 'Get detailed technique information: description, tactics, platforms, sub-techniques, procedures, mitigations, data sources, ATLAS cross-references, and CAPEC attack patterns mapped to this technique (via capec_mappings). The `capecPatterns` array contains CAPEC ID, name, severity, likelihood, and abstraction. This tool does NOT return threat groups, Sigma rules, Atomic tests or D3FEND countermeasures -- for those call get_technique_intelligence as well; neither tool is a superset of the other. For regulatory frameworks (NIS2, DORA, PCI DSS, ...) call get_technique_compliance.',
+    description: 'The technique record for an ATT&CK or ATLAS ID: description, tactics, platforms, sub-techniques, plus linked groups, software, campaigns, mitigations, data components, CAPEC patterns and ICS assets whose Purdue fields are curated from NIST SP 800-82r3 / ISA-95, not MITRE-published. Detection content is not returned here -- call get_technique_intelligence; regulatory frameworks, get_technique_compliance.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -82,7 +82,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
   },
   {
     name: 'get_group_profile',
-    description: 'Get FULL threat group profile by ATT&CK ID -- returns ALL techniques, ALL software/malware, campaigns, targeted sectors, applications. Use when asked about a specific group. If you only have the name, call search_groups first to get the ID, then call this.',
+    description: 'Full threat group profile: every technique, software and campaign, plus targeted sectors and a capped list of affected applications. If you have only a name, call search_groups for the ID first.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -93,7 +93,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
   },
   {
     name: 'search_groups',
-    description: 'Search/list threat groups by name. Returns summary only (ID, name, technique count) -- NOT the full profile. Use to find a group ID, then call get_group_profile for details.',
+    description: 'Threat group summaries matching a name or description search, filterable by sector and domain -- no technique counts. Use get_group_profile for the full record.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -107,7 +107,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
   },
   {
     name: 'get_application_security',
-    description: 'Get security posture for a vendor/product: CVEs, CWE weakness profile, reachable techniques, associated threat groups.',
+    description: 'Security posture for one vendor and product: CVEs, CWE profile, reachable ATT&CK techniques and threat groups; search_applications finds the exact vendor and product pair. version narrows the CVE list by text in an affected range, not a verdict that the version is vulnerable; say so.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -120,7 +120,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
   },
   {
     name: 'search_applications',
-    description: 'Search applications by name. Returns vendor, product, CVE count. Pass `version` (requires `search`) to keep only products that have an advisory mentioning that version.',
+    description: 'Application summary rows by name: vendor, product, CVE count; get_application_security has the full posture. version (requires search) keeps only products with an advisory whose range text mentions it -- not a verdict that the version is vulnerable; say so.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -133,7 +133,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
   },
   {
     name: 'get_sector_threats',
-    description: 'Get threat landscape for an industry sector: groups, techniques, campaigns, vulnerable applications.',
+    description: 'Threat landscape for one industry sector: the groups targeting it plus their campaigns, software, top techniques and vulnerable applications. The cves field is a 4-row recent sample, not the full sector CVE set.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -144,7 +144,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
   },
   {
     name: 'search_entities',
-    description: 'Cross-domain search returning techniques, groups, software, campaigns, mitigations, data sources, OWASP categories and NIST CSF subcategories. It does NOT search applications, advisories, CAPEC, Sigma, Atomic tests, external actors or ICS assets — an empty result here says nothing about those, so use search_applications, search_advisories, search_capec, search_sigma_rules, search_atomic_tests, search_external_actors or search_assets for them. Minimum 3 characters. Use ONLY when the entity type is unknown or ambiguous — when you know the type, the dedicated search tool returns richer results.',
+    description: 'Cross-domain keyword search over ATT&CK techniques, groups, software, campaigns, mitigations and data sources plus OWASP categories and NIST CSF subcategories -- summaries only, up to 20 rows per type. Nothing else is searched, so an empty result says nothing about applications, advisories, CAPEC, Sigma, Atomic tests, external actors or ICS assets; use their own search_ tools. Prefer a dedicated search_ tool whenever the entity type is known.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -155,7 +155,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
   },
   {
     name: 'get_dashboard_stats',
-    description: 'Get knowledge base overview: entity counts, top groups, most targeted techniques, sector breakdown.',
+    description: 'ATT&CK corpus overview: entity counts, top groups, most-targeted techniques, sector breakdown and the ingested ATT&CK version. ATT&CK entities only -- no CVE, advisory or CAPEC totals.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -166,7 +166,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
   },
   {
     name: 'get_framework_mappings',
-    description: 'Get direct per-technique framework mappings: NIST 800-53 controls, MITRE Engage activities, VERIS categories, AWS/Azure/GCP cloud controls. Use THIS tool for 800-53/Engage/VERIS/cloud questions. For regulatory frameworks (NIS2, DORA, PCI DSS, ISO 27002, HIPAA, GDPR, CMMC, ...) use get_technique_compliance instead — those come from the SCF crosswalk, not this tool.',
+    description: 'Direct per-technique control mappings for one ATT&CK technique: NIST 800-53, NIST CSF v2 subcategories, MITRE Engage, VERIS, AWS/Azure/GCP cloud controls and OWASP categories. For regulatory regimes (NIS2, DORA, PCI DSS, ISO 27002, HIPAA, GDPR, CMMC, ...) use get_technique_compliance instead -- those come from the SCF crosswalk, not from here.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -177,7 +177,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
   },
   {
     name: 'get_threat_reports',
-    description: 'Get the latest N threat intelligence reports from AlienVault OTX, DFIR Report, Unit42, Microsoft Security, Talos. Returns most-recent only — NOT filterable by technique, keyword, or actor. For technique-specific report links use get_technique_intelligence; for group context use get_group_profile.',
+    description: 'The most recently published threat-intelligence reports, newest first; no keyword, technique, actor or source filter exists here. For reports on one technique use get_technique_intelligence, for a group use get_group_profile.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -188,7 +188,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
   // -- New tools --------------------------------------------------------------
   {
     name: 'get_software_detail',
-    description: 'Get malware or tool profile: techniques it uses, groups that use it, campaigns, platforms. Covers 914 ATT&CK software entries.',
+    description: 'Malware or tool profile: type, platforms, aliases, techniques used, groups using it, campaigns. Find the ID with search_software.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -199,7 +199,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
   },
   {
     name: 'search_software',
-    description: 'Search malware and tools by name. Returns software ID, name, type (malware/tool), and technique count.',
+    description: 'Malware and tool summaries (with the malware/tool type) matching a name or description search, filterable by sector. Use get_software_detail for the full record.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -212,7 +212,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
   },
   {
     name: 'get_campaign_detail',
-    description: 'Get campaign details: techniques used, software deployed, groups involved, timeline.',
+    description: 'Campaign profile: first/last seen dates, techniques used, software deployed, groups involved. Find the ID with search_campaigns.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -223,7 +223,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
   },
   {
     name: 'search_campaigns',
-    description: 'Search named campaigns. Returns campaign ID, name, dates, and linked groups.',
+    description: 'Campaign summaries matching a name or description search, filterable by sector, with first/last seen dates. Use get_campaign_detail for techniques, software and groups.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -236,7 +236,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
   },
   {
     name: 'get_mitigation_detail',
-    description: 'Get mitigation details: description, techniques it addresses, domain coverage.',
+    description: 'Mitigation profile: description, domain and every technique it addresses.  Find the ID with search_mitigations.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -247,7 +247,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
   },
   {
     name: 'search_mitigations',
-    description: 'Search mitigations by name or description. Returns mitigation ID, name, and technique count.',
+    description: 'Mitigation summaries matching a name or description search -- no technique list. Use get_mitigation_detail for the techniques one addresses.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -259,7 +259,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
   },
   {
     name: 'search_iocs',
-    description: 'Search Indicators of Compromise: IPs, domains, hashes, URLs, CVEs. Includes VirusTotal verdicts and malware families. Sources: OTX, ThreatFox, MalwareBazaar, CISA KEV.',
+    description: 'Search indicators of compromise (IPs, domains, URLs, file hashes) from OTX, ThreatFox, MalwareBazaar and CISA KEV, newest first, with malware family and a count of linked ATT&CK techniques -- the technique IDs themselves are not returned. CVE rows are excluded unless type is cve or source is cisa_kev; use search_cves for vulnerabilities.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -274,7 +274,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
   },
   {
     name: 'search_sigma_rules',
-    description: 'Search Sigma detection rules by keyword, technique, or severity level. 3,100+ rules from SigmaHQ.',
+    description: 'Search SigmaHQ detection rules: rule ID, title, severity level, log source and mapped ATT&CK technique. Keyword matches titles and rule IDs only, not rule logic, so a miss is not proof no rule covers it.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -287,7 +287,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
   },
   {
     name: 'search_atomic_tests',
-    description: 'Search Atomic Red Team tests by keyword, technique, or platform. 1,770+ tests for adversary emulation.',
+    description: 'Search Atomic Red Team emulation tests: test name, platforms, executor type, the run and cleanup commands, and the ATT&CK technique covered. Keyword matches test names and technique IDs only.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -300,7 +300,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
   },
   {
     name: 'get_external_actor',
-    description: 'Get an external threat actor profile from ETDA/ThaiCERT: country, motivation, state sponsor, suspected victims, MITRE group mapping. This is REFERENCE METADATA ONLY -- it returns no techniques, software or campaigns. For TTPs use get_group_profile with the ATT&CK ID (call search_groups first if you only have a name). The lookup is an EXACT name match, so a miss means this ETDA dataset has no entry under that exact spelling -- it does NOT mean the actor is absent from the knowledge base: search_groups(\'lazarus\') still finds G0032. Always fall back to search_groups before telling a user an actor is unknown.',
+    description: 'ETDA/ThaiCERT reference metadata for one external actor: country, motivation, state sponsor, suspected victims, MITRE group mapping. No techniques, software or campaigns -- use get_group_profile for TTPs. The lookup is an exact name match, so a miss means only that this dataset has no entry under that spelling; always try search_groups before calling an actor unknown.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -311,7 +311,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
   },
   {
     name: 'search_external_actors',
-    description: 'Search 514 external threat actors by name, country, or category. Includes state sponsors, motivation, and MITRE ATT&CK group mappings.',
+    description: 'ETDA/ThaiCERT external actors by keyword, country or category, with motivation and MITRE group mapping. Keyword is whole-word full text over name and description, not substring, so a partial stem like lazar does not match Lazarus; country and category are exact equality. These rows are already near-complete -- get_external_actor adds only the first-seen date for one actor; for ATT&CK TTPs use search_groups.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -324,7 +324,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
   },
   {
     name: 'get_tactic_detail',
-    description: 'Get tactic details: description, all techniques under this tactic, domain.',
+    description: 'Tactic profile: description, domain and every technique under the tactic.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -335,7 +335,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
   },
   {
     name: 'get_data_source_detail',
-    description: 'Get data source details: description, data components, techniques it can detect.',
+    description: 'Data source profile: description, its data components and the techniques it can detect.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -346,7 +346,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
   },
   {
     name: 'get_owasp_top10',
-    description: 'Get OWASP Top 10 categories for Web (2021), ML (2023), and LLM (2025) with CWE counts, technique counts, ATLAS counts, and CVE counts.',
+    description: 'Lists the OWASP Top 10 categories for Web 2021, ML 2023 and LLM 2025 with per-category CWE, ATT&CK technique, ATLAS and CVE counts. Use get_owasp_category for one category in full.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -356,7 +356,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
   },
   {
     name: 'get_owasp_category',
-    description: 'Get details for a specific OWASP category: CWEs, ATT&CK techniques, ATLAS techniques, top CVEs, affected applications, and related categories across frameworks.',
+    description: 'Full record for one OWASP category: CWEs, mapped ATT&CK and ATLAS techniques, top CVEs, affected applications, and related categories in the other OWASP frameworks. get_owasp_top10 lists the categories.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -367,7 +367,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
   },
   {
     name: 'get_ghsa_detail',
-    description: 'Get full details for a GitHub Security Advisory: summary, description, CVSS v3/v4, CWEs, CAPEC attack patterns (via CWE overlap — `capecPatterns` array with ID/name/severity/likelihood/abstraction), affected open-source packages with vulnerable/fixed version ranges, linked ATT&CK techniques.',
+    description: 'Full record for one GitHub Security Advisory: summary, CVSS v3 and v4, CWEs, affected packages with vulnerable and fixed ranges. CAPEC patterns and ATT&CK techniques are inferred from shared CWEs, not published by GitHub; attribute them that way. version matches text in an affected range, not a verdict that the version is vulnerable; say so.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -379,7 +379,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
   },
   {
     name: 'get_package_vulnerabilities',
-    description: 'List vulnerabilities affecting a specific open-source package in an ecosystem (npm, pypi, go, maven, rubygems, nuget, composer, rust). Returns all GHSAs with vulnerable/fixed version ranges and linked ATT&CK techniques.',
+    description: 'Every advisory affecting one package in one ecosystem (exact name match). GHSA ecosystems (npm, pypi, go, maven...) carry vulnerable and fixed ranges and linked ATT&CK techniques; OSV distro ones (Debian, Ubuntu, Alpine...) carry neither, and their null ranges mean not modelled, never no fix. version applies to GHSA only, is ignored for OSV, and matches text in an affected range, not a verdict that the version is vulnerable; say so.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -392,7 +392,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
   },
   {
     name: 'search_ghsa',
-    description: 'Search GitHub Security Advisories ONLY (OSS packages: npm/PyPI/Maven/Go/etc.) by keyword, severity, ecosystem, or publication date. Returns GHSA ID, CVE alias (if any), severity, summary, affected ecosystems, published date. For OS/distro/kernel advisories or a unified GHSA+OSV view, use search_advisories instead. To filter by affected package VERSION, use get_package_vulnerabilities (ecosystem+package_name+version) or get_ghsa_detail (ghsa_id+version) — version is not a list-level filter here.',
+    description: 'GHSA-only summary rows (OSS packages) by keyword, severity, ecosystem or date, newest first; get_ghsa_detail has the full record. For OS, distro and kernel advisories or a combined view use search_advisories; to narrow by package version use get_package_vulnerabilities.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -408,7 +408,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
   },
   {
     name: 'get_cve_packages',
-    description: 'Given a CVE ID, return the open-source packages affected via its GitHub Security Advisory alias. Returns empty list if no GHSA is linked to the CVE.',
+    description: 'Open-source packages affected by one CVE via its GHSA alias, with vulnerable and fixed ranges. An empty list means no GHSA alias or a failed lookup, never proof that no package is affected -- check osvAdvisories in get_cve_detail.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -419,7 +419,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
   },
   {
     name: 'get_capec_detail',
-    description: 'Get full detail for a MITRE CAPEC attack pattern: description, abstraction (Meta/Standard/Detailed), severity (Very Low..Very High), likelihood (Low/Medium/High), prerequisites, skills required, resources required, consequences, example instances, linked CWEs, mapped ATT&CK techniques, mitigations, and related patterns (ChildOf/ParentOf/CanPrecede/CanFollow).',
+    description: 'Full record for one CAPEC attack pattern: prerequisites, skills and resources needed, consequences, linked CWEs, mapped ATT&CK techniques, mitigations and related patterns. search_capec finds an ID.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -430,7 +430,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
   },
   {
     name: 'search_capec',
-    description: 'Search/filter 615 CAPEC attack patterns by keyword, abstraction, severity, or likelihood. Returns CAPEC ID, name, abstraction, severity, likelihood, CWE refs, and counts of mapped ATT&CK techniques and mitigations.',
+    description: 'Summary rows for the 615 CAPEC attack patterns by keyword, abstraction, severity or likelihood, with CWE refs and mapped technique and mitigation counts; get_capec_detail has the full record. The keyword matches name and ID only, never description text.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -445,7 +445,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
   },
   {
     name: 'search_advisories',
-    description: 'Unified search across GHSA (OSS packages: npm/PyPI/Maven/Go/NuGet/RubyGems/Composer/crates.io/Pub/Hex) AND OSV (OS + distro + kernel: Linux kernel, Debian, Ubuntu, Alpine, Android, Red Hat, Rocky, Alma, SUSE, openSUSE, OSS-Fuzz, Bitnami, Chainguard, Wolfi, Hackage, CRAN, Julia). Each row carries a `source: GHSA|OSV` badge; the two sources are disjoint by ingest (no duplicate advisories). Filter by source, severity, ecosystem, date, or CVE-alias presence. Returns advisoryId, source, cveId, summary, severity, cvssScore, publishedAt, ecosystems, packageCount.',
+    description: 'Unified summary rows over GHSA (OSS packages) and OSV (OS, distro, kernel), each tagged with its source; the two sets are disjoint, so no duplicates. Filter by source, severity, ecosystem, date or CVE-alias presence; rows are severity-ranked, then newest. Full record: get_ghsa_detail or get_osv_detail.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -462,7 +462,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
   },
   {
     name: 'get_osv_detail',
-    description: 'Get full details for an OSV advisory by its native ID — distro / kernel / OS advisories from osv.dev (DSA-xxxx, USN-xxxx, LBSEC-xxxx, ALAS-xxxx, RLSA-xxxx, etc.). Returns summary, description, aliases (CVE/GHSA IDs), CVSS score + vector, and affected packages grouped by ecosystem with vulnerable version ranges. Covers only non-GHSA ecosystems (Linux, Debian, Ubuntu, Alpine, Android, Red Hat, Rocky, Alma, SUSE, OSS-Fuzz, Bitnami, etc.) — GHSA-covered ecosystems use get_ghsa_detail instead.',
+    description: 'Full record for one OSV advisory by native ID (DSA-, USN-, RLSA-, ALAS-): summary, aliases (CVE and GHSA), CVSS, affected packages by ecosystem with vulnerable ranges. Distro, kernel and OS ecosystems only -- use get_ghsa_detail for OSS packages, search_advisories to find an ID.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -473,7 +473,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
   },
   {
     name: 'list_compliance_frameworks',
-    description: 'List compliance and regulatory frameworks bridged to MITRE ATT&CK via the Secure Controls Framework (SCF). Curated default set is 21 Tier 1+2 frameworks (NIS2, DORA, PCI DSS, NIST 800-53 r5, NIST CSF v2, ISO 27002, HIPAA, GDPR, CMMC 2, EU AI Act, EU CRA, OWASP Top 10, EU DORA, CIS Controls v8.1, NIST 800-171 r3, FedRAMP r5, NERC CIP, IEC 62443, UK Cyber Essentials, AU Essential Eight, NIST AI RMF). Returns framework_key (stable URL slug for /compliance/<key>), name, version, source_org, upstream_url, region, tier, license, scf_controls (count of SCF controls mapped to this framework), techniques_total (distinct ATT&CK techniques referenced), techniques_filtered (techniques referenced by ≥2 SCF controls — the depth-of-coverage metric). Use this to answer "what compliance frameworks does X cover?" or "which framework has the deepest ATT&CK coverage?".',
+    description: 'Lists the compliance and regulatory frameworks bridged to ATT&CK through the Secure Controls Framework (SCF), each with its framework_key slug and coverage counts (SCF controls, techniques referenced, techniques referenced by 2 or more controls). Default is the curated 21 Tier 1+2 set; include_all adds the Tier 3 long tail. Call this first to confirm a slug, then get_compliance_framework for one framework in full.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -483,7 +483,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
   },
   {
     name: 'get_compliance_framework',
-    description: 'Get full detail for a single compliance framework: metadata, all ATT&CK techniques it references (with the article/section ID that cites each), grouped by article/section. Also returns related frameworks ranked by technique overlap. Use this to answer "what techniques does NIS2 cover?" or "which DORA articles map to T1059?". Returns a 404 when the framework_key is unknown — never invent slugs; if uncertain, call list_compliance_frameworks first to confirm the slug.',
+    description: 'Full record for one framework by framework_key: every ATT&CK technique it references, grouped by article or section with the ref_id that cites each, plus the frameworks it overlaps most. Returns 404 for an unknown key -- never invent a slug; call list_compliance_frameworks to confirm it.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -494,7 +494,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
   },
   {
     name: 'get_technique_compliance',
-    description: 'Get the compliance-framework chip list for a single ATT&CK technique: which Tier 1+2 frameworks (NIS2, DORA, PCI DSS, ISO, HIPAA, ...) reference this technique, the SCF control count per framework, and the specific framework article/section IDs (ref_ids) that cite it. Use this to answer "if I mitigate T1059, which compliance regimes do I satisfy?". Returns empty `frameworks` array when no SCF mapping exists for the technique — treat that as authoritative "not covered", do NOT infer or hallucinate a mapping.',
+    description: 'Which compliance frameworks reference a single ATT&CK technique, with the SCF control count per framework and up to 8 of the article or section ref_ids that cite it -- a sample, not the full citation list. Takes T-IDs only -- ATLAS AML IDs are rejected. An empty frameworks array is authoritative not-covered for the tiers queried (Tier 1+2 unless include_all): do not infer or invent a mapping.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -505,8 +505,16 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
     },
   },
   {
+    name: 'get_usage_guide',
+    description: 'Loads the usage guide for this server: how to choose between similar tools, data provenance and how to report it honestly, pagination, controlled vocabularies (sectors, framework keys, OWASP frameworks) and the ICS Purdue model semantics. Call it once when you need detail that individual tool descriptions do not carry. Takes no arguments.',
+    parameters: {
+      type: "OBJECT",
+      properties: {},
+    },
+  },
+  {
     name: 'search_assets',
-    description: 'Search the ATT&CK for ICS asset catalogue -- the operational-technology equipment MITRE names: PLCs, RTUs, safety controllers (SIS), historians, HMIs, engineering workstations, jump hosts, field I/O and the network kit between them. Filter by Purdue level, Purdue zone, industrial sector, or whether the asset sits on the IT/OT boundary. Returns ATT&CK ID (A0001-A0018), the Purdue levels each asset spans, and how many ICS techniques target it. Use get_asset_detail for one asset\'s full technique list, and get_purdue_model for the level definitions and the flow rules between levels. IMPORTANT: the asset itself (name, sectors, techniques) is MITRE-published, but every Purdue field returned here -- primaryLevel, zone, spansLevels, isBoundary and rationale -- is CURATED from NIST SP 800-82r3 and ISA-95, not published by MITRE. Attribute it that way; do not say \'per MITRE ATT&CK, this asset sits at Level 3\'. NOTE: MITRE publishes an asset catalogue for the ICS domain ONLY -- there is no enterprise, mobile or ATLAS equivalent, so an empty result for a non-ICS question is expected rather than missing data.',
+    description: 'Search the ATT&CK for ICS asset catalogue -- A0001-A0018: PLCs, RTUs, safety controllers, historians, HMIs, engineering workstations, field I/O -- by name, Purdue level, zone, sector or IT/OT boundary; returns summary rows, while get_asset_detail returns one full record and get_purdue_model the level and flow definitions. Every Purdue field (primaryLevel, zone, spansLevels, isBoundary, rationale) is CURATED from NIST SP 800-82r3 and ISA-95, not published by MITRE -- attribute it that way. MITRE publishes assets for the ICS domain only, so an empty result for a non-ICS question is expected, not missing data.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -522,7 +530,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
   },
   {
     name: 'get_asset_detail',
-    description: 'Get one ATT&CK for ICS asset by ID (A0001-A0018): description, industrial sectors, platforms, related asset names, every ICS technique that targets it, and its Purdue placement -- primary level, all levels it spans, whether it is an IT/OT boundary asset, and the curated rationale for that placement. Use search_assets to find an asset ID first. Purdue placement is curated from NIST SP 800-82r3 and ISA-95, NOT published by MITRE -- say so when citing it.',
+    description: 'Full record for one ATT&CK for ICS asset (A0001-A0018): description, sectors, platforms, related assets, every ICS technique that targets it, and its Purdue placement. Use search_assets to find the ID. The Purdue placement (primary level, spans, boundary flag, rationale) is CURATED from NIST SP 800-82r3 and ISA-95, not MITRE-published -- say so when citing it.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -533,7 +541,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
   },
   {
     name: 'get_purdue_model',
-    description: 'Get the Purdue model (ISA-95 / PERA) as data: the seven levels (L0 Physical through L5 Enterprise, including L3.5 the industrial DMZ) with zone, description and per-level asset and technique counts; every ICS asset placed on those levels; and the full 42-pair flow matrix saying which levels may communicate. In the flow matrix, directAllowed means the two levels are topologically adjacent -- it does NOT mean either side may initiate a session. Always read the accompanying `note`, which carries the directionality constraint: l3_5 -> l3 is directAllowed yet the note says the OT side initiates and a DMZ host must not open sessions inward. A pair carrying brokerLevel is reachable ONLY by terminating a session at that level first -- never read a brokered pair as adjacency. Use this to answer "what may talk to what", to reason about lateral movement across the IT/OT boundary, or to explain why an ICS technique needs a pivot. Level placement is curated from NIST SP 800-82r3 and ISA-95, not MITRE-published; technique counts are ICS-domain only, so L4/L5 carry no assets by design.',
+    description: 'The Purdue model (ISA-95 / PERA) as data: the seven levels L0 to L5 including L3.5 the industrial DMZ with per-level asset and technique counts, every ICS asset placed on them, and the full 42-pair flow matrix -- use it for lateral-movement and IT/OT pivot questions. directAllowed means the two levels are topologically ADJACENT, not that either side may initiate: read the note field for directionality (l3_5 to l3 is directAllowed, yet the OT side initiates and a DMZ host must not open sessions inward), and a pair carrying brokerLevel is reachable only by terminating a session at that level, never adjacency. Placement is curated from NIST SP 800-82r3 and ISA-95, not MITRE-published; MITRE publishes assets and techniques for the ICS domain only, so L4/L5 carrying no assets is by design, not missing data.',
     parameters: {
       type: "OBJECT",
       properties: {},

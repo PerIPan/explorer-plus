@@ -1,3 +1,4 @@
+import { USAGE_GUIDE } from './guide';
 /**
  * Argument validation and tool execution for the shared tool catalogue.
  *
@@ -384,8 +385,19 @@ export async function executeTool(name: string, args: Record<string, unknown>): 
       return callInternalApi(`/data-sources/${id}`);
     }
     case 'get_owasp_top10': {
-      const fw = args.framework ? String(args.framework) : '';
-      const qs = fw ? `?framework=${encodeURIComponent(fw)}` : '';
+      // An unrecognised framework was passed straight through and the endpoint
+      // ignored it, returning all 30 rows with a 200 -- verified against prod.
+      // Same silent-drop class as the sector/since filters: the model asks for
+      // one framework, gets three, and reports them as that one.
+      const OWASP_FRAMEWORKS = new Set(['web-2021', 'ml-2023', 'llm-2025']);
+      let qs = '';
+      if (args.framework !== undefined && args.framework !== null && args.framework !== '') {
+        const fw = String(args.framework).toLowerCase();
+        if (!OWASP_FRAMEWORKS.has(fw)) {
+          return badFilter('framework', args.framework, 'Use web-2021, ml-2023 or llm-2025, or omit it to get all three.');
+        }
+        qs = `?framework=${encodeURIComponent(fw)}`;
+      }
       return callInternalApi(`/frameworks/owasp${qs}`);
     }
     case 'get_owasp_category': {
@@ -545,6 +557,9 @@ export async function executeTool(name: string, args: Record<string, unknown>): 
     }
     case 'get_purdue_model':
       return callInternalApi('/frameworks/purdue');
+    // Served from memory: no HTTP hop, no DB, no Neon wake.
+    case 'get_usage_guide':
+      return { guide: USAGE_GUIDE };
     default:
       return { error: `Unknown tool: ${name}` };
   }
