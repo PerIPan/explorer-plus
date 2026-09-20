@@ -13,6 +13,13 @@ import { query } from '../v1/lib/db';
 // through callInternalApi(), which fetches the public /api/v1 URL, so on a CDN
 // miss they land in api_usage under the underlying REST endpoint and are
 // indistinguishable from browser traffic.
+//
+// ACCEPTED COST, decided deliberately: no tool touches the pg pool directly, so
+// on a CDN hit this counter is the ONLY thing that wakes Neon -- unlike
+// api_usage, which piggybacks on a request that already queried the DB. Exact
+// per-call counts were judged worth that; do not "optimise" it into sampling or
+// in-memory coalescing without revisiting that call, because both trade away
+// the exactness this table exists to provide.
 
 /**
  * Known MCP clients. `client` comes from a caller-supplied User-Agent on an

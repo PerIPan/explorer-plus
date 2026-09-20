@@ -97,6 +97,32 @@ const PLATFORMS = new Set(['windows', 'linux', 'macos']);
 const PURDUE_LEVELS = new Set(['l0', 'l1', 'l2', 'l3', 'l3_5', 'l4', 'l5']);
 const PURDUE_ZONES = new Set(['ot', 'dmz', 'it']);
 
+/**
+ * Guard for optional filters that are validated then applied.
+ *
+ * A filter the caller supplied but we could not use must NOT be silently
+ * dropped: the query still runs, returns unfiltered rows, and the model
+ * reports them as though the filter applied -- e.g. sector:'Financial
+ * Services' (not a slug) yields the top groups overall, described back to the
+ * user as "these groups target the financial sector". Failing loudly costs one
+ * retry; failing silently produces a confident falsehood.
+ */
+function badFilter(name: string, value: unknown, hint: string): Record<string, string> {
+  return { error: `Invalid ${name}: ${JSON.stringify(String(value)).slice(0, 60)}. ${hint}` };
+}
+
+/**
+ * Page number for the paginated list endpoints.
+ *
+ * Without this a model can see `pagination.total: 340` next to 50 rows and has
+ * no way to reach row 51 -- observed behaviour is either reporting the page as
+ * the whole answer, or re-issuing the same call with a bigger limit (silently
+ * clamped, identical rows back) until it gives up.
+ */
+function clampPage(val: unknown): string {
+  return String(Math.min(Math.max(Math.trunc(Number(val) || 1), 1), 1000));
+}
+
 function clampLimit(val: unknown, def: number, max: number): string {
   return String(Math.min(Math.max(Number(val) || def, 1), max));
 }
@@ -137,10 +163,12 @@ export async function executeTool(name: string, args: Record<string, unknown>): 
       }
       if (args.since) {
         const d = new Date(String(args.since));
-        if (!isNaN(d.getTime())) params.set('since', d.toISOString());
+        if (isNaN(d.getTime())) return badFilter('since', args.since, 'Pass a full ISO-8601 date such as 2026-09-01 or 2026-09-01T00:00:00Z, computed from the current date.');
+        params.set('since', d.toISOString());
       }
       if (args.app) params.set('app', sanitizeSearch(args.app));
       if (args.version) params.set('version', sanitizeSearch(args.version).slice(0, 100));
+      if (args.page !== undefined) params.set('page', clampPage(args.page));
       params.set('limit', clampLimit(args.limit, 10, 50));
       return callInternalApi(`/cves?${params}`);
     }
@@ -170,10 +198,14 @@ export async function executeTool(name: string, args: Record<string, unknown>): 
       if (s.length > 0 && s.length < 3) return { error: 'Search query must be at least 3 characters' };
       const params = new URLSearchParams();
       if (s.length >= 3) params.set('search', s);
-      const sec = validateSector(args.sector);
-      if (sec) params.set('sector', sec);
+      if (args.sector !== undefined && args.sector !== null && args.sector !== '') {
+        const sec = validateSector(args.sector);
+        if (!sec) return badFilter('sector', args.sector, 'Use a lowercase sector slug such as financial, healthcare, government, energy. Call get_sector_threats or omit the filter if unsure.');
+        params.set('sector', sec);
+      }
       const dom = validateDomain(args.domain);
       if (dom) params.set('domain', dom);
+      if (args.page !== undefined) params.set('page', clampPage(args.page));
       params.set('limit', clampLimit(args.limit, 10, 50));
       return callInternalApi(`/groups?${params}`);
     }
@@ -188,6 +220,7 @@ export async function executeTool(name: string, args: Record<string, unknown>): 
       const params = new URLSearchParams();
       if (args.search) params.set('search', sanitizeSearch(args.search));
       if (args.version) params.set('version', sanitizeSearch(args.version).slice(0, 100));
+      if (args.page !== undefined) params.set('page', clampPage(args.page));
       params.set('limit', clampLimit(args.limit, 10, 50));
       return callInternalApi(`/applications?${params}`);
     }
@@ -205,8 +238,11 @@ export async function executeTool(name: string, args: Record<string, unknown>): 
       const params = new URLSearchParams();
       const dom = validateDomain(args.domain);
       if (dom) params.set('domain', dom);
-      const sec = validateSector(args.sector);
-      if (sec) params.set('sector', sec);
+      if (args.sector !== undefined && args.sector !== null && args.sector !== '') {
+        const sec = validateSector(args.sector);
+        if (!sec) return badFilter('sector', args.sector, 'Use a lowercase sector slug such as financial, healthcare, government, energy. Call get_sector_threats or omit the filter if unsure.');
+        params.set('sector', sec);
+      }
       return callInternalApi(`/dashboard?${params}`);
     }
     case 'get_framework_mappings': {
@@ -230,8 +266,12 @@ export async function executeTool(name: string, args: Record<string, unknown>): 
       if (s.length > 0 && s.length < 3) return { error: 'Search query must be at least 3 characters' };
       const params = new URLSearchParams();
       if (s.length >= 3) params.set('search', s);
-      const sec = validateSector(args.sector);
-      if (sec) params.set('sector', sec);
+      if (args.sector !== undefined && args.sector !== null && args.sector !== '') {
+        const sec = validateSector(args.sector);
+        if (!sec) return badFilter('sector', args.sector, 'Use a lowercase sector slug such as financial, healthcare, government, energy. Call get_sector_threats or omit the filter if unsure.');
+        params.set('sector', sec);
+      }
+      if (args.page !== undefined) params.set('page', clampPage(args.page));
       params.set('limit', clampLimit(args.limit, 10, 50));
       return callInternalApi(`/software?${params}`);
     }
@@ -245,8 +285,12 @@ export async function executeTool(name: string, args: Record<string, unknown>): 
       if (s.length > 0 && s.length < 3) return { error: 'Search query must be at least 3 characters' };
       const params = new URLSearchParams();
       if (s.length >= 3) params.set('search', s);
-      const sec = validateSector(args.sector);
-      if (sec) params.set('sector', sec);
+      if (args.sector !== undefined && args.sector !== null && args.sector !== '') {
+        const sec = validateSector(args.sector);
+        if (!sec) return badFilter('sector', args.sector, 'Use a lowercase sector slug such as financial, healthcare, government, energy. Call get_sector_threats or omit the filter if unsure.');
+        params.set('sector', sec);
+      }
+      if (args.page !== undefined) params.set('page', clampPage(args.page));
       params.set('limit', clampLimit(args.limit, 10, 50));
       return callInternalApi(`/campaigns?${params}`);
     }
@@ -260,6 +304,7 @@ export async function executeTool(name: string, args: Record<string, unknown>): 
       if (s.length > 0 && s.length < 3) return { error: 'Search query must be at least 3 characters' };
       const params = new URLSearchParams();
       if (s.length >= 3) params.set('search', s);
+      if (args.page !== undefined) params.set('page', clampPage(args.page));
       params.set('limit', clampLimit(args.limit, 10, 50));
       return callInternalApi(`/mitigations?${params}`);
     }
@@ -277,7 +322,8 @@ export async function executeTool(name: string, args: Record<string, unknown>): 
       if (args.malware) params.set('malware', sanitizeSearch(args.malware));
       if (args.since) {
         const d = new Date(String(args.since));
-        if (!isNaN(d.getTime())) params.set('since', d.toISOString());
+        if (isNaN(d.getTime())) return badFilter('since', args.since, 'Pass a full ISO-8601 date such as 2026-09-01 or 2026-09-01T00:00:00Z, computed from the current date.');
+        params.set('since', d.toISOString());
       }
       params.set('limit', clampLimit(args.limit, 20, 50));
       return callInternalApi(`/feed/iocs?${params}`);
@@ -287,7 +333,8 @@ export async function executeTool(name: string, args: Record<string, unknown>): 
       if (args.q) params.set('q', sanitizeSearch(args.q));
       if (args.technique) {
         const tid = validateAttackId(args.technique);
-        if (tid) params.set('technique', tid);
+        if (!tid) return badFilter('technique', args.technique, 'Use a full ATT&CK ID such as T1059 or T1059.001, not a bare number.');
+        params.set('technique', tid);
       }
       if (args.level) {
         const lvl = String(args.level).toLowerCase();
@@ -301,7 +348,8 @@ export async function executeTool(name: string, args: Record<string, unknown>): 
       if (args.q) params.set('q', sanitizeSearch(args.q));
       if (args.technique) {
         const tid = validateAttackId(args.technique);
-        if (tid) params.set('technique', tid);
+        if (!tid) return badFilter('technique', args.technique, 'Use a full ATT&CK ID such as T1059 or T1059.001, not a bare number.');
+        params.set('technique', tid);
       }
       if (args.platform) {
         const plat = String(args.platform).toLowerCase();
@@ -373,11 +421,15 @@ export async function executeTool(name: string, args: Record<string, unknown>): 
       }
       if (args.since) {
         const d = new Date(String(args.since));
-        if (!isNaN(d.getTime())) params.set('since', d.toISOString());
+        if (isNaN(d.getTime())) return badFilter('since', args.since, 'Pass a full ISO-8601 date such as 2026-09-01 or 2026-09-01T00:00:00Z, computed from the current date.');
+        params.set('since', d.toISOString());
       }
-      if (args.has_cve === 'true' || args.has_cve === 'false') {
-        params.set('has_cve', String(args.has_cve));
+      if (args.has_cve !== undefined && args.has_cve !== null && args.has_cve !== '') {
+        const hc = String(args.has_cve).toLowerCase();
+        if (hc !== 'true' && hc !== 'false') return badFilter('has_cve', args.has_cve, 'Use true or false.');
+        params.set('has_cve', hc);
       }
+      if (args.page !== undefined) params.set('page', clampPage(args.page));
       params.set('limit', clampLimit(args.limit, 10, 50));
       return callInternalApi(`/ghsa?${params}`);
     }
@@ -409,6 +461,7 @@ export async function executeTool(name: string, args: Record<string, unknown>): 
         const l = String(args.likelihood);
         if (CAPEC_LIKELIHOOD_VALUES.has(l)) params.set('likelihood', l);
       }
+      if (args.page !== undefined) params.set('page', clampPage(args.page));
       params.set('limit', clampLimit(args.limit, 20, 50));
       return callInternalApi(`/capec?${params}`);
     }
@@ -431,11 +484,15 @@ export async function executeTool(name: string, args: Record<string, unknown>): 
       }
       if (args.since) {
         const d = new Date(String(args.since));
-        if (!isNaN(d.getTime())) params.set('since', d.toISOString());
+        if (isNaN(d.getTime())) return badFilter('since', args.since, 'Pass a full ISO-8601 date such as 2026-09-01 or 2026-09-01T00:00:00Z, computed from the current date.');
+        params.set('since', d.toISOString());
       }
-      if (args.has_cve === 'true' || args.has_cve === 'false') {
-        params.set('has_cve', String(args.has_cve));
+      if (args.has_cve !== undefined && args.has_cve !== null && args.has_cve !== '') {
+        const hc = String(args.has_cve).toLowerCase();
+        if (hc !== 'true' && hc !== 'false') return badFilter('has_cve', args.has_cve, 'Use true or false.');
+        params.set('has_cve', hc);
       }
+      if (args.page !== undefined) params.set('page', clampPage(args.page));
       params.set('limit', clampLimit(args.limit, 50, 100));
       return callInternalApi(`/advisories?${params}`);
     }
@@ -471,9 +528,13 @@ export async function executeTool(name: string, args: Record<string, unknown>): 
       if (PURDUE_LEVELS.has(level)) params.set('level', level);
       const zone = String(args.zone ?? '').toLowerCase();
       if (PURDUE_ZONES.has(zone)) params.set('zone', zone);
-      const sector = validateSector(args.sector);
-      if (sector) params.set('sector', sector);
+      if (args.sector !== undefined && args.sector !== null && args.sector !== '') {
+        const sector = validateSector(args.sector);
+        if (!sector) return badFilter('sector', args.sector, 'Use a lowercase sector slug such as financial, healthcare, government, energy. Call get_sector_threats or omit the filter if unsure.');
+        params.set('sector', sector);
+      }
       if (typeof args.boundary === 'boolean') params.set('boundary', String(args.boundary));
+      if (args.page !== undefined) params.set('page', clampPage(args.page));
       params.set('limit', clampLimit(args.limit, 50, 200));
       return callInternalApi(`/assets?${params}`);
     }

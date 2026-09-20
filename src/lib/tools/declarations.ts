@@ -42,6 +42,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
         app: { type: "STRING", description: 'Filter to CVEs affecting a vendor/product (substring match), e.g. nginx, apache' },
         version: { type: "STRING", description: 'Filter to a product version (substring/text match, e.g. 1.20.1). REQUIRES `app`. Surfaces CVEs whose affected version range MENTIONS this string — NOT a "this version is vulnerable" verdict; say so.' },
         limit: { type: "NUMBER", description: 'Max results (default 10, max 50)' },
+        page: { type: "NUMBER", description: 'Page number (default 1). The response carries pagination.total — if it exceeds the rows returned, either fetch further pages or say explicitly how many of the total you are showing.' },
       },
     },
   },
@@ -70,7 +71,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
   },
   {
     name: 'get_technique_detail',
-    description: 'Get detailed technique information: description, tactics, platforms, sub-techniques, procedures, mitigations, data sources, ATLAS cross-references, and CAPEC attack patterns mapped to this technique (via capec_mappings). The `capecPatterns` array contains CAPEC ID, name, severity, likelihood, and abstraction.',
+    description: 'Get detailed technique information: description, tactics, platforms, sub-techniques, procedures, mitigations, data sources, ATLAS cross-references, and CAPEC attack patterns mapped to this technique (via capec_mappings). The `capecPatterns` array contains CAPEC ID, name, severity, likelihood, and abstraction. This tool does NOT return threat groups, Sigma rules, Atomic tests or D3FEND countermeasures -- for those call get_technique_intelligence as well; neither tool is a superset of the other. For regulatory frameworks (NIS2, DORA, PCI DSS, ...) call get_technique_compliance.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -97,9 +98,10 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
       type: "OBJECT",
       properties: {
         search: { type: "STRING", description: 'Search keyword (minimum 3 characters)' },
-        sector: { type: "STRING", description: 'Filter by sector slug (e.g. financial, healthcare, government)' },
+        sector: { type: "STRING", enum: ['defense', 'education', 'energy', 'financial', 'government', 'healthcare', 'manufacturing', 'media', 'retail', 'technology', 'telecommunications', 'transportation'], description: 'Filter to groups targeting this sector.' },
         domain: { type: "STRING", enum: ['enterprise-attack', 'ics-attack', 'mobile-attack', 'atlas-attack'], description: 'ATT&CK domain' },
         limit: { type: "NUMBER", description: 'Max results (default 10)' },
+        page: { type: "NUMBER", description: 'Page number (default 1). The response carries pagination.total — if it exceeds the rows returned, either fetch further pages or say explicitly how many of the total you are showing.' },
       },
     },
   },
@@ -125,6 +127,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
         search: { type: "STRING", description: 'Search keyword' },
         version: { type: "STRING", description: 'Optional product version (substring/text match, e.g. 1.20). REQUIRES `search`. Surfaces matches — NOT a "this version is vulnerable" verdict; say so.' },
         limit: { type: "NUMBER", description: 'Max results (default 10)' },
+        page: { type: "NUMBER", description: 'Page number (default 1). The response carries pagination.total — if it exceeds the rows returned, either fetch further pages or say explicitly how many of the total you are showing.' },
       },
     },
   },
@@ -134,7 +137,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
     parameters: {
       type: "OBJECT",
       properties: {
-        sector: { type: "STRING", description: 'Sector slug: financial, healthcare, government, energy, telecom, defense, technology, education, media, retail, transportation, manufacturing' },
+        sector: { type: "STRING", enum: ['defense', 'education', 'energy', 'financial', 'government', 'healthcare', 'manufacturing', 'media', 'retail', 'technology', 'telecommunications', 'transportation'], description: 'Sector to profile.' },
       },
       required: ['sector'],
     },
@@ -157,7 +160,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
       type: "OBJECT",
       properties: {
         domain: { type: "STRING", enum: ['enterprise-attack', 'ics-attack', 'mobile-attack', 'atlas-attack'], description: 'Optional ATT&CK domain filter' },
-        sector: { type: "STRING", description: 'Optional sector filter' },
+        sector: { type: "STRING", enum: ['defense', 'education', 'energy', 'financial', 'government', 'healthcare', 'manufacturing', 'media', 'retail', 'technology', 'telecommunications', 'transportation'], description: 'Optional: scope the stats to one sector.' },
       },
     },
   },
@@ -201,8 +204,9 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
       type: "OBJECT",
       properties: {
         search: { type: "STRING", description: 'Search keyword (minimum 3 characters)' },
-        sector: { type: "STRING", description: 'Filter by sector slug' },
+        sector: { type: "STRING", enum: ['defense', 'education', 'energy', 'financial', 'government', 'healthcare', 'manufacturing', 'media', 'retail', 'technology', 'telecommunications', 'transportation'], description: 'Filter by sector.' },
         limit: { type: "NUMBER", description: 'Max results (default 10)' },
+        page: { type: "NUMBER", description: 'Page number (default 1). The response carries pagination.total — if it exceeds the rows returned, either fetch further pages or say explicitly how many of the total you are showing.' },
       },
     },
   },
@@ -224,8 +228,9 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
       type: "OBJECT",
       properties: {
         search: { type: "STRING", description: 'Search keyword (minimum 3 characters)' },
-        sector: { type: "STRING", description: 'Filter by sector slug' },
+        sector: { type: "STRING", enum: ['defense', 'education', 'energy', 'financial', 'government', 'healthcare', 'manufacturing', 'media', 'retail', 'technology', 'telecommunications', 'transportation'], description: 'Filter by sector.' },
         limit: { type: "NUMBER", description: 'Max results (default 10)' },
+        page: { type: "NUMBER", description: 'Page number (default 1). The response carries pagination.total — if it exceeds the rows returned, either fetch further pages or say explicitly how many of the total you are showing.' },
       },
     },
   },
@@ -248,6 +253,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
       properties: {
         search: { type: "STRING", description: 'Search keyword (minimum 3 characters)' },
         limit: { type: "NUMBER", description: 'Max results (default 10)' },
+        page: { type: "NUMBER", description: 'Page number (default 1). The response carries pagination.total — if it exceeds the rows returned, either fetch further pages or say explicitly how many of the total you are showing.' },
       },
     },
   },
@@ -294,7 +300,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
   },
   {
     name: 'get_external_actor',
-    description: 'Get external threat actor profile from ETDA/ThaiCERT: country, motivation, state sponsor, suspected victims, MITRE group mapping.',
+    description: 'Get an external threat actor profile from ETDA/ThaiCERT: country, motivation, state sponsor, suspected victims, MITRE group mapping. This is REFERENCE METADATA ONLY -- it returns no techniques, software or campaigns. For TTPs use get_group_profile with the ATT&CK ID (call search_groups first if you only have a name). The lookup is an EXACT name match, so a miss means this ETDA dataset has no entry under that exact spelling -- it does NOT mean the actor is absent from the knowledge base: search_groups(\'lazarus\') still finds G0032. Always fall back to search_groups before telling a user an actor is unknown.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -396,6 +402,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
         since: { type: "STRING", description: 'ISO date string — only advisories published after this date' },
         has_cve: { type: "STRING", description: 'Filter by CVE alias presence: "true" (CVE-linked) or "false" (GHSA-only)' },
         limit: { type: "NUMBER", description: 'Max results (default 10, max 50)' },
+        page: { type: "NUMBER", description: 'Page number (default 1). The response carries pagination.total — if it exceeds the rows returned, either fetch further pages or say explicitly how many of the total you are showing.' },
       },
     },
   },
@@ -432,6 +439,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
         severity: { type: "STRING", enum: ['Very Low', 'Low', 'Medium', 'High', 'Very High'], description: 'Severity' },
         likelihood: { type: "STRING", enum: ['Low', 'Medium', 'High'], description: 'Likelihood of attack' },
         limit: { type: "NUMBER", description: 'Max results (default 20, max 50)' },
+        page: { type: "NUMBER", description: 'Page number (default 1). The response carries pagination.total — if it exceeds the rows returned, either fetch further pages or say explicitly how many of the total you are showing.' },
       },
     },
   },
@@ -448,6 +456,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
         since: { type: "STRING", description: 'ISO date — only advisories published after this date' },
         has_cve: { type: "STRING", description: 'Filter by CVE alias presence: "true" or "false"' },
         limit: { type: "NUMBER", description: 'Max results (default 50, max 100)' },
+        page: { type: "NUMBER", description: 'Page number (default 1). The response carries pagination.total — if it exceeds the rows returned, either fetch further pages or say explicitly how many of the total you are showing.' },
       },
     },
   },
@@ -507,6 +516,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
         sector: { type: "STRING", description: 'Industrial sector the asset is used in, e.g. electric, manufacturing, water.' },
         boundary: { type: "BOOLEAN", description: 'True returns only assets present in the industrial DMZ (L3.5) -- the IT/OT crossing points an attacker pivots through. Six of the eighteen assets qualify.' },
         limit: { type: "NUMBER", description: 'Max results (default 50, max 200)' },
+        page: { type: "NUMBER", description: 'Page number (default 1). The response carries pagination.total — if it exceeds the rows returned, either fetch further pages or say explicitly how many of the total you are showing.' },
       },
     },
   },

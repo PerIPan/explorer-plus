@@ -10,6 +10,9 @@ import { SectorDropdown } from './SectorDropdown';
 interface SidebarProps {
   open: boolean;
   onClose: () => void;
+  /** Opens the info modal on its MCP tab. Optional so the sidebar still
+   *  renders standalone (e.g. in isolation) without the modal wired up. */
+  onOpenMcp?: () => void;
 }
 
 interface NavItem {
@@ -145,7 +148,7 @@ function CollapsibleNavSection({ label, items, defaultOpen = false, title }: { l
   );
 }
 
-export function Sidebar({ open, onClose }: SidebarProps) {
+export function Sidebar({ open, onClose, onOpenMcp }: SidebarProps) {
   return (
     <aside
       className={[
@@ -266,12 +269,14 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           <span>A2A Agent Protocol</span>
           <span className="ml-auto text-[9px] opacity-50">v1.0</span>
         </a>
-        {/* Not a link: /api/mcp is POST-only (the transport answers GET with a
-            405 JSON-RPC blob), so a click would show the user a raw error. The
-            endpoint is shown as text; setup lives behind the APIs / MCP button. */}
-        <div
-          className="flex items-center gap-2 px-2 py-1.5 rounded-md text-[10px] font-medium text-[var(--text-secondary)]"
-          title="MCP server — point Claude, Cursor or any MCP client at /api/mcp. No key, no rate limit. Setup instructions: the APIs / MCP button in the top bar."
+        {/* Deliberately NOT a link to /api/mcp: that endpoint is POST-only and
+            answers GET with a raw 405 JSON-RPC blob. Clicking opens the info
+            modal's MCP tab instead, which is what a reader actually wants. */}
+        <button
+          type="button"
+          onClick={onOpenMcp}
+          className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[10px] font-medium text-[var(--text-secondary)] hover:text-[var(--accent-teal)] hover:bg-[var(--hover-overlay)] transition-colors text-left"
+          title="MCP server — connect Claude, Cursor or any MCP client. Click for setup instructions."
         >
           <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M2 11.5 7 6.5a2 2 0 0 1 2.8 0L11 7.7" />
@@ -279,8 +284,12 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             <path d="M8 14l5.5-5.5" />
           </svg>
           <span>MCP Server</span>
-          <span className="ml-auto text-[9px] opacity-50 font-mono">/api/mcp</span>
-        </div>
+          <svg viewBox="0 0 16 16" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="1.5" className="ml-auto opacity-60" aria-hidden="true">
+            <circle cx="8" cy="8" r="6.5" />
+            <path d="M8 7.2v4" />
+            <circle cx="8" cy="4.9" r="0.6" fill="currentColor" stroke="none" />
+          </svg>
+        </button>
       </div>
     </aside>
   );

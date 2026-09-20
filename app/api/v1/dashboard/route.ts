@@ -22,6 +22,22 @@ export async function GET(req: NextRequest) {
   const sector = parsed.success ? parsed.data.sector ?? null : null;
   const domain = parsed.success ? parsed.data.domain ?? null : null;
 
+  // Reject an unknown sector before doing any work. `sector` is free text
+  // bounded only by length, so every distinct value is a distinct URL and
+  // therefore a guaranteed CDN miss -- without this guard a caller can replay
+  // the six aggregate queries below indefinitely with throwaway slugs and never
+  // touch cache. Mirrors what /sectors/[slug]/relationships already does: one
+  // cheap PK-ish lookup, then 404, instead of the heavy joins.
+  if (sector) {
+    const known = await query<{ one: number }>(
+      'SELECT 1 AS one FROM sectors WHERE slug = $1 LIMIT 1',
+      [sector],
+    );
+    if (known.rows.length === 0) {
+      return withCors(errorResponse(404, `Unknown sector: ${sector}`, 'SECTOR_NOT_FOUND'));
+    }
+  }
+
   // Build reusable domain filter snippets (parameterised index depends on call site)
   // Each query helper below receives its own params array and builds conditions in order.
 

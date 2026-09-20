@@ -354,7 +354,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         />
       )}
 
-      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <Sidebar
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        onOpenMcp={() => { setHelpTab('mcp'); setHelpOpen(true); setSidebarOpen(false); }}
+      />
 
       {/* Main area pushed right of the fixed sidebar on lg+ */}
       <div className="flex-1 flex flex-col lg:ml-52 min-h-screen min-w-0">
@@ -378,7 +382,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <SearchBar />
+          {/* min-w-0 lets the search input shrink instead of forcing the row
+              wider than the viewport — the header has no flex-wrap and the
+              APIs / MCP button next to it must stay reachable. */}
+          <div className="flex-1 min-w-0">
+            <SearchBar />
+          </div>
           <button
             type="button"
             onClick={() => {
