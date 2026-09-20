@@ -57,7 +57,7 @@ export function recordMcpUsage(
           `INSERT INTO mcp_usage (tool, day, client, count, error_count, total_latency_ms)
            VALUES ($1, (now() AT TIME ZONE 'utc')::date, $2, 1, $3, $4)
            ON CONFLICT (tool, day, client) DO UPDATE SET
-             count            = mcp_usage.count + 1,
+             count            = mcp_usage.count + EXCLUDED.count,
              error_count      = mcp_usage.error_count + EXCLUDED.error_count,
              total_latency_ms = mcp_usage.total_latency_ms + EXCLUDED.total_latency_ms,
              updated_at       = now()`,

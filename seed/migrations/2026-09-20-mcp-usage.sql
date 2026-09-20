@@ -58,10 +58,6 @@ CREATE TABLE IF NOT EXISTS mcp_usage (
   CONSTRAINT mcp_usage_counts_sane CHECK (error_count <= count)
 );
 
--- Added idempotently for pre-existing installs (repo convention).
-ALTER TABLE mcp_usage ADD COLUMN IF NOT EXISTS error_count      bigint NOT NULL DEFAULT 0;
-ALTER TABLE mcp_usage ADD COLUMN IF NOT EXISTS total_latency_ms bigint NOT NULL DEFAULT 0;
-
 -- Fast "last N days" scans (the PK leads with tool, so a day-only index is needed).
 CREATE INDEX IF NOT EXISTS idx_mcp_usage_day ON mcp_usage (day);
 

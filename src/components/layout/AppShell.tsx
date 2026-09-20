@@ -159,7 +159,7 @@ function AgentToAgent() {
           <a href="/.well-known/agent-card.json" target="_blank" rel="noopener noreferrer" className="text-[var(--accent-teal)] hover:underline">/.well-known/agent-card.json</a>
         </div>
         <div><span className="text-[var(--text-secondary)]">Endpoint{'  '}</span>{'  '}POST /api/a2a</div>
-        <div><span className="text-[var(--text-secondary)]">Skills{'    '}</span>{'  '}25 skills · 39 tools</div>
+        <div><span className="text-[var(--text-secondary)]">Skills{'    '}</span>{'  '}25 skills · 42 tools</div>
         <div><span className="text-[var(--text-secondary)]">Limit{'     '}</span>{'  '}50 requests/day per IP · no auth</div>
         <div><span className="text-[var(--text-secondary)]">Protocol{'  '}</span>{'  '}A2A (JSON-RPC) · Gemini function-calling</div>
       </div>
@@ -181,7 +181,10 @@ function AgentToAgent() {
 
       <p className="text-[11px] text-[var(--text-secondary)]">
         Build agent-facing apps with the latest Claude or Gemini models. The Agent Card is the
-        machine-readable contract — point any A2A-capable agent at it.
+        machine-readable contract — point any A2A-capable agent at it. For interactive clients
+        (Claude, Cursor) the same 42 tools are also served over{' '}
+        <strong className="text-[var(--text-primary)]">MCP</strong> — see the{' '}
+        <strong className="text-[var(--text-primary)]">APIs / MCP</strong> button in the top bar.
       </p>
     </div>
   );
@@ -214,7 +217,64 @@ function ApiSummary() {
       </div>
       <p className="text-xs text-[var(--text-secondary)] pt-2 border-t border-[var(--border-color)]">
         Full endpoint list, descriptions &amp; usage → the{' '}
-        <strong className="text-[var(--text-primary)]">APIs</strong> button in the top bar.
+        <strong className="text-[var(--text-primary)]">APIs / MCP</strong> button in the top bar.
+        The same data is also served to AI clients over{' '}
+        <strong className="text-[var(--text-primary)]">MCP</strong> at <code className="text-[var(--accent-teal)]">/api/mcp</code>{' '}
+        — 42 tools, no key, no rate limit.
+      </p>
+    </div>
+  );
+}
+
+/** MCP tab — how to point an MCP client at this knowledge base. */
+function McpReference() {
+  return (
+    <div className="px-6 py-5 space-y-4 text-sm text-[var(--text-primary)] leading-relaxed">
+      <p>
+        <strong>Model Context Protocol (MCP).</strong> Connect Claude, Cursor or any MCP client
+        straight to this knowledge base — the same 42 tools the A2A endpoint uses, exposed over
+        Streamable HTTP. <span className="text-[var(--accent-teal)]">No key, no sign-up, no rate limit.</span>
+      </p>
+
+      <div className="rounded-md border border-[var(--border-color)] bg-[var(--surface-card)] px-4 py-3 font-mono text-xs space-y-1">
+        <div><span className="text-[var(--text-secondary)]">Endpoint</span>{'  '}<span className="text-[var(--accent-teal)]">https://mitre-explorer.org/api/mcp</span></div>
+        <div><span className="text-[var(--text-secondary)]">Transport</span>{' '}{'  '}Streamable HTTP · stateless</div>
+        <div><span className="text-[var(--text-secondary)]">Tools{'    '}</span>{'  '}42 · ATT&amp;CK, CVE, CAPEC, advisories, ICS/Purdue</div>
+        <div><span className="text-[var(--text-secondary)]">Auth{'     '}</span>{'  '}none — anonymous, unmetered</div>
+      </div>
+
+      <div>
+        <div className="text-[11px] font-bold uppercase tracking-wider text-[var(--accent-teal)] mb-1">Add it to Claude Code</div>
+        <div className="rounded-md border border-[var(--border-color)] bg-[var(--surface-card)] px-4 py-3 font-mono text-[11px] overflow-x-auto">
+          claude mcp add --transport http mitre https://mitre-explorer.org/api/mcp
+        </div>
+      </div>
+
+      <div>
+        <div className="text-[11px] font-bold uppercase tracking-wider text-[var(--accent-teal)] mb-1">Or any client that takes a config file</div>
+        <pre className="rounded-md border border-[var(--border-color)] bg-[var(--surface-card)] px-4 py-3 font-mono text-[11px] overflow-x-auto whitespace-pre">{`{
+  "mcpServers": {
+    "mitre": {
+      "type": "http",
+      "url": "https://mitre-explorer.org/api/mcp"
+    }
+  }
+}`}</pre>
+      </div>
+
+      <div>
+        <div className="text-[11px] font-bold uppercase tracking-wider text-[var(--accent-teal)] mb-1">What you can ask once connected</div>
+        <ul className="space-y-1 text-xs text-[var(--text-secondary)]">
+          <li>&ldquo;Which ATT&amp;CK techniques target a safety instrumented system, and where does it sit in the Purdue model?&rdquo;</li>
+          <li>&ldquo;Show critical CVEs affecting nginx published this month, with their EPSS scores.&rdquo;</li>
+          <li>&ldquo;Which assets sit on the IT/OT boundary, and what reaches them?&rdquo;</li>
+        </ul>
+      </div>
+
+      <p className="text-[11px] text-[var(--text-secondary)] pt-2 border-t border-[var(--border-color)]">
+        MCP and <strong className="text-[var(--text-primary)]">A2A</strong> serve the same tool catalogue — MCP for
+        interactive clients, A2A for agent-to-agent calls (50 req/day). Everything bottoms out in the
+        REST API on the other tab, so results are identical whichever door you use.
       </p>
     </div>
   );
@@ -269,7 +329,8 @@ function ApiReference() {
         <strong className="text-[var(--text-primary)]">Fair use.</strong> Open and unmetered for normal use; heavy automated
         traffic is rate-limited per IP at the edge. For programmatic AI-agent access use the{' '}
         <a href="/.well-known/agent-card.json" target="_blank" rel="noopener noreferrer" className="text-[var(--accent-teal)] hover:underline">A2A Agent Card</a>{' '}
-        (50 req/day). Bulk users: contact us for a static data dump rather than crawling.
+        (50 req/day) or the <strong className="text-[var(--text-primary)]">MCP</strong> endpoint on the next tab
+        (unmetered). Bulk users: contact us for a static data dump rather than crawling.
       </p>
     </div>
   );
@@ -282,6 +343,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [helpOpen, setHelpOpen] = useState(false);
   const [helpTab, setHelpTab] = useState<'about' | 'api' | 'a2a'>('about');
   const [apisOpen, setApisOpen] = useState(false);
+  const [apisTab, setApisTab] = useState<'rest' | 'mcp'>('rest');
 
   return (
     <div className="flex min-h-screen bg-[var(--surface-deep)]">
@@ -327,9 +389,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             }}
             data-print-hide
             className="flex-shrink-0 px-3 h-8 inline-flex items-center justify-center rounded-md border border-[var(--border-color)] text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--accent-teal)] hover:border-[var(--teal-dim)] transition-colors"
-            title="Open REST API — full endpoint catalog"
+            title="Open REST API and MCP server — full endpoint catalog"
           >
-            APIs
+            APIs / MCP
           </button>
           <button
             type="button"
@@ -427,6 +489,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <li><strong>Multi-domain ATT&CK + ATLAS</strong> — Enterprise, ICS, Mobile, ATLAS (AI/ML threats) with domain switcher + "All Domains" cross-domain view</li>
                 <li><strong>ICS / OT</strong> — 18 ATT&CK for ICS assets (PLCs, RTUs, HMIs, historians, safety controllers, jump hosts) with the techniques that target each, placed on the <strong>Purdue model</strong>: seven levels from the physical process to enterprise IT, the industrial DMZ between them, and which levels are allowed to communicate</li>
 <li><strong>Agent2Agent (A2A) protocol</strong> — AI agents can query this knowledge base programmatically. See the <strong>Agent2Agent</strong> tab.</li>
+                <li><strong>MCP server</strong> — point Claude, Cursor or any MCP client at <code>/api/mcp</code> and query all of the above in conversation: 42 tools over Streamable HTTP, anonymous and unmetered. See the <strong>APIs / MCP</strong> button in the top bar.</li>
                 <li><strong>Actor comparison</strong> — select up to 3 threat actors on the Matrix, see technique overlap color-coded, export as HTML</li>
                 <li><strong>360 Views</strong> — search any entity, explore via Technique Map, Actor Profile, Malware Map, Application Map, Sector Map, or D3 force graph</li>
                 <li><strong>Applications</strong> — 11K+ vendor products linked to CVEs → CWE → CAPEC → ATT&CK techniques → threat groups. See which apps your adversaries target</li>
@@ -459,14 +522,29 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             onClick={e => e.stopPropagation()}
           >
             <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border-color)]">
-              <h2 className="text-sm font-semibold text-[var(--text-primary)]">REST API — full endpoint catalog</h2>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setApisTab('rest')}
+                  className={`px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${apisTab === 'rest' ? 'text-[var(--accent-teal)] bg-[var(--teal-faint)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
+                >
+                  REST API
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setApisTab('mcp')}
+                  className={`px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${apisTab === 'mcp' ? 'text-[var(--accent-teal)] bg-[var(--teal-faint)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
+                >
+                  MCP
+                </button>
+              </div>
               <button onClick={() => setApisOpen(false)} className="p-2 rounded-md text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--hover-overlay)]">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
-            <ApiReference />
+            {apisTab === 'rest' ? <ApiReference /> : <McpReference />}
           </div>
         </div>
       )}

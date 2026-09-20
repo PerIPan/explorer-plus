@@ -249,8 +249,8 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         <CollapsibleNavSection label="Extended Intel" items={extendedIntelNav} defaultOpen={false} />
       </div>
 
-      {/* A2A Agent Discovery */}
-      <div className="mt-auto px-4 py-3 border-t border-[var(--border-color)]">
+      {/* Agent access — A2A + MCP both serve the same tool catalogue */}
+      <div className="mt-auto px-4 py-3 border-t border-[var(--border-color)] space-y-0.5">
         <a
           href="/.well-known/agent-card.json"
           target="_blank"
@@ -265,6 +265,21 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           </svg>
           <span>A2A Agent Protocol</span>
           <span className="ml-auto text-[9px] opacity-50">v1.0</span>
+        </a>
+        <a
+          href="/api/mcp"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 px-2 py-1.5 rounded-md text-[10px] font-medium text-[var(--text-secondary)] hover:text-[var(--accent-teal)] hover:bg-[var(--hover-overlay)] transition-colors"
+          title="MCP server — point Claude, Cursor or any MCP client at /api/mcp. 42 tools, no key, no rate limit."
+        >
+          <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path d="M2 11.5 7 6.5a2 2 0 0 1 2.8 0L11 7.7" />
+            <path d="M5 11.5 9.2 7.3a2 2 0 0 1 2.8 0l2 2" />
+            <path d="M8 14l5.5-5.5" />
+          </svg>
+          <span>MCP Server</span>
+          <span className="ml-auto text-[9px] opacity-50">42 tools</span>
         </a>
       </div>
     </aside>
