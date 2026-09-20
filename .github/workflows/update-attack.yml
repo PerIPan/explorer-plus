@@ -38,7 +38,11 @@ jobs:
           python-version: '3.11'
 
       - name: Install Python STIX deps
-        run: pip install mitreattack-python==4.0.0
+        # Install from the manifest, not an inline pin: this job spawns
+        # seed/extract.py (scripts/update-attack.mjs), so it must run the same
+        # mitreattack-python that seed/ is written against. An inline pin drifted
+        # to 4.0.0 while seed/requirements.txt moved to 5.4.3.
+        run: pip install -r seed/requirements.txt
 
       - name: Install pg
         run: npm install pg

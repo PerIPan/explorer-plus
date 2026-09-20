@@ -1,0 +1,47 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", ":dependencyDashboard"],
+  "schedule": ["before 6am on monday"],
+  "prConcurrentLimit": 3,
+  "labels": ["dependencies"],
+
+  "vulnerabilityAlerts": {
+    "labels": ["security"],
+    "schedule": ["at any time"]
+  },
+
+  "packageRules": [
+    {
+      "description": "React and its types move together; split PRs would not build.",
+      "groupName": "react",
+      "matchPackageNames": ["react", "react-dom", "@types/react", "@types/react-dom"]
+    },
+    {
+      "description": "Tailwind 4 ships the engine and the PostCSS plugin in lockstep.",
+      "groupName": "tailwind",
+      "matchPackageNames": ["tailwindcss", "@tailwindcss/postcss", "postcss"]
+    },
+    {
+      "description": "Type-only packages cannot change runtime behaviour; next build type-checks them.",
+      "groupName": "types",
+      "matchPackageNames": ["@types/**"],
+      "automerge": true
+    },
+    {
+      "description": "Action bumps are verified by the workflows themselves.",
+      "matchManagers": ["github-actions"],
+      "groupName": "github-actions",
+      "automerge": true
+    },
+    {
+      "description": "Majors need a human: this repo has no test suite, so the only gate is the Vercel preview build.",
+      "matchUpdateTypes": ["major"],
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "SheetJS left the npm registry; the advisories have no fix there and never will. Build-time only (scripts/sync-scf.mjs, scripts/seed-csf-informative-refs.mjs), never shipped to a browser, and fed by files we choose. Revisit only as a migration to cdn.sheetjs.com.",
+      "matchPackageNames": ["xlsx"],
+      "enabled": false
+    }
+  ]
+}
