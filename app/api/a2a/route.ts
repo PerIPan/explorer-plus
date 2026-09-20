@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createHash, timingSafeEqual } from 'node:crypto';
-import { GoogleGenAI } from '@google/genai';
 import { query } from '../v1/lib/db';
 import { withCorsRestricted, corsOptionsRestricted } from '../lib/cors';
 
@@ -23,6 +22,71 @@ const MAX_INPUT_LENGTH = 2000;
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL
   || (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : null)
   || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
+
+// -- Gemini REST client ------------------------------------------------------
+// Called directly rather than through @google/genai. That SDK was the only
+// thing pulling protobufjs and ws into the tree (critical / high advisories
+// respectively, neither reachable from our one endpoint but both permanently
+// red in `npm audit`), and we use exactly one method of it. The shapes below
+// are the REST wire format -- which is what the SDK handed back anyway, minus
+// its `.text` convenience getter (reimplemented as geminiText).
+
+const GEMINI_API = 'https://generativelanguage.googleapis.com/v1beta/models';
+/** Per-call ceiling. Raw fetch has no default timeout; the SDK did. */
+const GEMINI_TIMEOUT_MS = 30_000;
+
+interface GeminiFunctionCall {
+  name?: string;
+  id?: string;
+  args?: Record<string, unknown>;
+}
+
+interface GeminiPart {
+  text?: string;
+  functionCall?: GeminiFunctionCall;
+}
+
+interface GeminiResponse {
+  candidates?: Array<{ content?: { parts?: GeminiPart[] } }>;
+  usageMetadata?: { totalTokenCount?: number };
+}
+
+/**
+ * One `models.generateContent` call.
+ *
+ * Note the reshaping: the SDK accepted `systemInstruction` as a bare string
+ * nested under `config`, while REST wants a Content object at the top level.
+ */
+async function generateContent(opts: {
+  apiKey: string;
+  contents: unknown;
+  systemInstruction: string;
+  tools: unknown;
+}): Promise<GeminiResponse> {
+  const res = await fetch(`${GEMINI_API}/${MODEL}:generateContent`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': opts.apiKey },
+    body: JSON.stringify({
+      contents: opts.contents,
+      systemInstruction: { parts: [{ text: opts.systemInstruction }] },
+      tools: opts.tools,
+    }),
+    signal: AbortSignal.timeout(GEMINI_TIMEOUT_MS),
+  });
+
+  if (!res.ok) {
+    // Body may carry the reason (bad key, quota, safety block). Truncate it:
+    // this string reaches recordRequest() and the JSON-RPC error path.
+    const detail = await res.text().catch(() => '');
+    throw new Error(`Gemini ${res.status}: ${detail.slice(0, 200)}`);
+  }
+  return (await res.json()) as GeminiResponse;
+}
+
+/** Parity with the SDK's `.text`: concatenate every text part of candidate 0. */
+function geminiText(r: GeminiResponse): string {
+  return (r.candidates?.[0]?.content?.parts ?? []).map((p) => p.text ?? '').join('');
+}
 
 // -- Input validation --------------------------------------------------------
 
@@ -1159,17 +1223,17 @@ export async function POST(req: NextRequest) {
         ));
       }
 
-      const ai = new GoogleGenAI({ apiKey });
       const toolsConfig = [{ functionDeclarations: TOOL_DECLARATIONS as any }];
       // Hoist once per request — the function is pure modulo today's date,
       // which doesn't change across the agentic loop (max 4 calls / request).
       const systemInstruction = buildSystemInstruction();
 
       // Initial Gemini call with function declarations
-      const response = await ai.models.generateContent({
-        model: MODEL,
+      const response = await generateContent({
+        apiKey,
         contents: [{ role: 'user', parts: [{ text: userText }] }],
-        config: { systemInstruction, tools: toolsConfig },
+        systemInstruction,
+        tools: toolsConfig,
       });
 
       const candidate = response.candidates?.[0];
@@ -1229,10 +1293,11 @@ export async function POST(req: NextRequest) {
         ];
 
         for (let round = 0; round < 3; round++) {
-          const followUp = await ai.models.generateContent({
-            model: MODEL,
-            contents: conversationParts as any,
-            config: { systemInstruction, tools: toolsConfig },
+          const followUp = await generateContent({
+            apiKey,
+            contents: conversationParts,
+            systemInstruction,
+            tools: toolsConfig,
           });
 
           totalTokens += followUp.usageMetadata?.totalTokenCount ?? 0;
@@ -1242,7 +1307,7 @@ export async function POST(req: NextRequest) {
           if (moreCalls.length === 0) {
             // No more tool calls -- extract text
             const followText = followParts.find((p) => p.text)?.text;
-            finalText = followText ?? followUp.text ?? '';
+            finalText = followText ?? geminiText(followUp);
             break;
           }
 
@@ -1292,7 +1357,7 @@ export async function POST(req: NextRequest) {
           finalText = `Tools called: ${skillsUsed.join(', ')}. See the structured_data artifact for full results.`;
         }
       } else {
-        finalText = response.text ?? 'No response generated.';
+        finalText = geminiText(response) || 'No response generated.';
       }
 
       await recordRequest({
