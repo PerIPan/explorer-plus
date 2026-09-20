@@ -261,7 +261,18 @@ export async function POST(req: NextRequest) {
   // Origin-restricted CORS closure — stays in scope for all response returns below.
   const withCors = (resp: NextResponse) => withCorsRestricted(resp, req);
 
-  const body = (await req.json()) as JsonRpcRequest;
+  // Parse defensively: an unparseable body threw out of the handler and surfaced
+  // as a 500, which reads as "the server is broken" to a caller that simply sent
+  // bad JSON. JSON-RPC has a code for exactly this.
+  let body: JsonRpcRequest;
+  try {
+    body = (await req.json()) as JsonRpcRequest;
+  } catch {
+    return withCors(NextResponse.json(jsonRpcError(null, -32700, 'Parse error'), { status: 400 }));
+  }
+
+  // Note: an array body (a JSON-RPC batch) fails the check below and is
+  // rejected. That is deliberate -- unlike MCP, this endpoint never fans out.
   if (!body?.jsonrpc || body.jsonrpc !== '2.0' || !body.method) {
     return withCors(NextResponse.json(
       jsonRpcError(body?.id ?? null, -32600, 'Invalid JSON-RPC request'),
