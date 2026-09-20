@@ -339,7 +339,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [modelOpen, setModelOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
-  const [helpTab, setHelpTab] = useState<'about' | 'api' | 'a2a'>('about');
+  const [helpTab, setHelpTab] = useState<'about' | 'api' | 'a2a' | 'mcp'>('about');
   const [apisOpen, setApisOpen] = useState(false);
   const [apisTab, setApisTab] = useState<'rest' | 'mcp'>('rest');
 
@@ -466,6 +466,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 >
                   Agent2Agent
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setHelpTab('mcp')}
+                  className={`px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${helpTab === 'mcp' ? 'text-[var(--accent-teal)] bg-[var(--teal-faint)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
+                >
+                  MCP
+                </button>
               </div>
               <button onClick={() => setHelpOpen(false)} className="p-2 rounded-md text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--hover-overlay)]">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -475,6 +482,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
             {helpTab === 'api' && <ApiSummary />}
             {helpTab === 'a2a' && <AgentToAgent />}
+            {/* Same component the APIs / MCP modal uses — one source of truth. */}
+            {helpTab === 'mcp' && <McpReference />}
             <div className={`px-6 py-5 space-y-4 text-sm text-[var(--text-primary)] leading-relaxed ${helpTab === 'about' ? '' : 'hidden'}`}>
               <div className="flex justify-center pb-2">
                 <img src="/diamond-favicon.svg" alt="MITRE Explorer Plus" className="w-12 h-12" />
