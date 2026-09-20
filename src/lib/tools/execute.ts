@@ -109,7 +109,20 @@ async function callInternalApi(path: string): Promise<Record<string, unknown>> {
     headers: { 'Accept': 'application/json' },
     signal: AbortSignal.timeout(8000),
   });
-  if (!resp.ok) return { error: `API returned ${resp.status}`, path };
+  if (!resp.ok) {
+    // Surface the API's own message. Routes return { error, code } via
+    // errorResponse(), and "Asset A0099 not found" tells a model what to do
+    // next, whereas a bare "API returned 404" reads as "the service is broken"
+    // and tends to end with the model declaring the entity absent entirely.
+    let detail: string | undefined;
+    try {
+      const body = (await resp.json()) as { error?: unknown };
+      if (typeof body?.error === 'string') detail = body.error;
+    } catch {
+      // Non-JSON error body — fall through to the status-only message.
+    }
+    return { error: detail ?? `API returned ${resp.status}`, status: resp.status, path };
+  }
   return resp.json() as Promise<Record<string, unknown>>;
 }
 

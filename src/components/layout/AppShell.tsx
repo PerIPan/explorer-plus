@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { AGENT_TOOL_COUNT } from '../../lib/site';
 import { track } from '@vercel/analytics';
 import { useQuery } from '@tanstack/react-query';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -159,7 +160,7 @@ function AgentToAgent() {
           <a href="/.well-known/agent-card.json" target="_blank" rel="noopener noreferrer" className="text-[var(--accent-teal)] hover:underline">/.well-known/agent-card.json</a>
         </div>
         <div><span className="text-[var(--text-secondary)]">Endpoint{'  '}</span>{'  '}POST /api/a2a</div>
-        <div><span className="text-[var(--text-secondary)]">Skills{'    '}</span>{'  '}25 skills · 42 tools</div>
+        <div><span className="text-[var(--text-secondary)]">Skills{'    '}</span>{'  '}25 skills · {AGENT_TOOL_COUNT} tools</div>
         <div><span className="text-[var(--text-secondary)]">Limit{'     '}</span>{'  '}50 requests/day per IP · no auth</div>
         <div><span className="text-[var(--text-secondary)]">Protocol{'  '}</span>{'  '}A2A (JSON-RPC) · Gemini function-calling</div>
       </div>
@@ -181,10 +182,7 @@ function AgentToAgent() {
 
       <p className="text-[11px] text-[var(--text-secondary)]">
         Build agent-facing apps with the latest Claude or Gemini models. The Agent Card is the
-        machine-readable contract — point any A2A-capable agent at it. For interactive clients
-        (Claude, Cursor) the same 42 tools are also served over{' '}
-        <strong className="text-[var(--text-primary)]">MCP</strong> — see the{' '}
-        <strong className="text-[var(--text-primary)]">APIs / MCP</strong> button in the top bar.
+        machine-readable contract — point any A2A-capable agent at it.
       </p>
     </div>
   );
@@ -220,7 +218,7 @@ function ApiSummary() {
         <strong className="text-[var(--text-primary)]">APIs / MCP</strong> button in the top bar.
         The same data is also served to AI clients over{' '}
         <strong className="text-[var(--text-primary)]">MCP</strong> at <code className="text-[var(--accent-teal)]">/api/mcp</code>{' '}
-        — 42 tools, no key, no rate limit.
+        — {AGENT_TOOL_COUNT} tools, no key, no rate limit.
       </p>
     </div>
   );
@@ -232,20 +230,20 @@ function McpReference() {
     <div className="px-6 py-5 space-y-4 text-sm text-[var(--text-primary)] leading-relaxed">
       <p>
         <strong>Model Context Protocol (MCP).</strong> Connect Claude, Cursor or any MCP client
-        straight to this knowledge base — the same 42 tools the A2A endpoint uses, exposed over
+        straight to this knowledge base — the same {AGENT_TOOL_COUNT} tools the A2A endpoint uses, exposed over
         Streamable HTTP. <span className="text-[var(--accent-teal)]">No key, no sign-up, no rate limit.</span>
       </p>
 
       <div className="rounded-md border border-[var(--border-color)] bg-[var(--surface-card)] px-4 py-3 font-mono text-xs space-y-1">
-        <div><span className="text-[var(--text-secondary)]">Endpoint</span>{'  '}<span className="text-[var(--accent-teal)]">https://mitre-explorer.org/api/mcp</span></div>
-        <div><span className="text-[var(--text-secondary)]">Transport</span>{' '}{'  '}Streamable HTTP · stateless</div>
-        <div><span className="text-[var(--text-secondary)]">Tools{'    '}</span>{'  '}42 · ATT&amp;CK, CVE, CAPEC, advisories, ICS/Purdue</div>
+        <div><span className="text-[var(--text-secondary)]">Endpoint{' '}</span>{'  '}<span className="text-[var(--accent-teal)]">https://mitre-explorer.org/api/mcp</span></div>
+        <div><span className="text-[var(--text-secondary)]">Transport</span>{'  '}Streamable HTTP · stateless</div>
+        <div><span className="text-[var(--text-secondary)]">Tools{'    '}</span>{'  '}{AGENT_TOOL_COUNT} · ATT&amp;CK, CVE, CAPEC, advisories, ICS/Purdue</div>
         <div><span className="text-[var(--text-secondary)]">Auth{'     '}</span>{'  '}none — anonymous, unmetered</div>
       </div>
 
       <div>
         <div className="text-[11px] font-bold uppercase tracking-wider text-[var(--accent-teal)] mb-1">Add it to Claude Code</div>
-        <div className="rounded-md border border-[var(--border-color)] bg-[var(--surface-card)] px-4 py-3 font-mono text-[11px] overflow-x-auto">
+        <div className="rounded-md border border-[var(--border-color)] bg-[var(--surface-card)] px-4 py-3 font-mono text-[11px] overflow-x-auto whitespace-nowrap">
           claude mcp add --transport http mitre https://mitre-explorer.org/api/mcp
         </div>
       </div>
@@ -264,10 +262,10 @@ function McpReference() {
 
       <div>
         <div className="text-[11px] font-bold uppercase tracking-wider text-[var(--accent-teal)] mb-1">What you can ask once connected</div>
-        <ul className="space-y-1 text-xs text-[var(--text-secondary)]">
-          <li>&ldquo;Which ATT&amp;CK techniques target a safety instrumented system, and where does it sit in the Purdue model?&rdquo;</li>
-          <li>&ldquo;Show critical CVEs affecting nginx published this month, with their EPSS scores.&rdquo;</li>
-          <li>&ldquo;Which assets sit on the IT/OT boundary, and what reaches them?&rdquo;</li>
+        <ul className="rounded-md border border-[var(--border-color)] bg-[var(--surface-card)] divide-y divide-[var(--border-color)] text-xs italic text-[var(--text-secondary)]">
+          <li className="px-4 py-2">&ldquo;Which ATT&amp;CK techniques target a safety instrumented system, and where does it sit in the Purdue model?&rdquo;</li>
+          <li className="px-4 py-2">&ldquo;Show critical CVEs affecting nginx published this month, with their EPSS scores.&rdquo;</li>
+          <li className="px-4 py-2">&ldquo;Which assets sit on the IT/OT boundary, and what reaches them?&rdquo;</li>
         </ul>
       </div>
 
@@ -489,7 +487,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <li><strong>Multi-domain ATT&CK + ATLAS</strong> — Enterprise, ICS, Mobile, ATLAS (AI/ML threats) with domain switcher + "All Domains" cross-domain view</li>
                 <li><strong>ICS / OT</strong> — 18 ATT&CK for ICS assets (PLCs, RTUs, HMIs, historians, safety controllers, jump hosts) with the techniques that target each, placed on the <strong>Purdue model</strong>: seven levels from the physical process to enterprise IT, the industrial DMZ between them, and which levels are allowed to communicate</li>
 <li><strong>Agent2Agent (A2A) protocol</strong> — AI agents can query this knowledge base programmatically. See the <strong>Agent2Agent</strong> tab.</li>
-                <li><strong>MCP server</strong> — point Claude, Cursor or any MCP client at <code>/api/mcp</code> and query all of the above in conversation: 42 tools over Streamable HTTP, anonymous and unmetered. See the <strong>APIs / MCP</strong> button in the top bar.</li>
+                <li><strong>MCP server</strong> — point Claude, Cursor or any MCP client at <code>/api/mcp</code> and query all of the above in conversation: {AGENT_TOOL_COUNT} tools over Streamable HTTP, anonymous and unmetered. See the <strong>APIs / MCP</strong> button in the top bar.</li>
                 <li><strong>Actor comparison</strong> — select up to 3 threat actors on the Matrix, see technique overlap color-coded, export as HTML</li>
                 <li><strong>360 Views</strong> — search any entity, explore via Technique Map, Actor Profile, Malware Map, Application Map, Sector Map, or D3 force graph</li>
                 <li><strong>Applications</strong> — 11K+ vendor products linked to CVEs → CWE → CAPEC → ATT&CK techniques → threat groups. See which apps your adversaries target</li>

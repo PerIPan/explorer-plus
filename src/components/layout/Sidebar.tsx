@@ -266,12 +266,12 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           <span>A2A Agent Protocol</span>
           <span className="ml-auto text-[9px] opacity-50">v1.0</span>
         </a>
-        <a
-          href="/api/mcp"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-2 px-2 py-1.5 rounded-md text-[10px] font-medium text-[var(--text-secondary)] hover:text-[var(--accent-teal)] hover:bg-[var(--hover-overlay)] transition-colors"
-          title="MCP server — point Claude, Cursor or any MCP client at /api/mcp. 42 tools, no key, no rate limit."
+        {/* Not a link: /api/mcp is POST-only (the transport answers GET with a
+            405 JSON-RPC blob), so a click would show the user a raw error. The
+            endpoint is shown as text; setup lives behind the APIs / MCP button. */}
+        <div
+          className="flex items-center gap-2 px-2 py-1.5 rounded-md text-[10px] font-medium text-[var(--text-secondary)]"
+          title="MCP server — point Claude, Cursor or any MCP client at /api/mcp. No key, no rate limit. Setup instructions: the APIs / MCP button in the top bar."
         >
           <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M2 11.5 7 6.5a2 2 0 0 1 2.8 0L11 7.7" />
@@ -279,8 +279,8 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             <path d="M8 14l5.5-5.5" />
           </svg>
           <span>MCP Server</span>
-          <span className="ml-auto text-[9px] opacity-50">42 tools</span>
-        </a>
+          <span className="ml-auto text-[9px] opacity-50 font-mono">/api/mcp</span>
+        </div>
       </div>
     </aside>
   );

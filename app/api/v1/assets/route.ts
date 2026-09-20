@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { query } from '../lib/db';
 import { jsonResponse, errorResponse } from '../../lib/handler';
 import { withCors, corsOptions as OPTIONS } from '../../lib/cors';
+import { escapeLikePattern } from '../lib/queries';
 import { z } from 'zod';
 
 export { OPTIONS };
@@ -34,7 +35,9 @@ export async function GET(req: NextRequest) {
   const conditions: string[] = ['NOT a.is_revoked', 'NOT a.is_deprecated'];
 
   if (search) {
-    params.push(`%${search}%`);
+    // Escape % and _ so a caller-supplied wildcard cannot turn this filter
+    // into a match-everything scan (as 17 other v1 routes already do).
+    params.push(`%${escapeLikePattern(search)}%`);
     conditions.push(`(a.name ILIKE $${params.length} OR a.attack_id ILIKE $${params.length})`);
   }
   if (level) {
