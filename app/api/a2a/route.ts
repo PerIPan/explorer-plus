@@ -32,7 +32,12 @@ const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL
 // its `.text` convenience getter (reimplemented as geminiText).
 
 const GEMINI_API = 'https://generativelanguage.googleapis.com/v1beta/models';
-/** Per-call ceiling. Raw fetch has no default timeout; the SDK did. */
+/**
+ * Per-call ceiling. Raw fetch has no timeout of its own, and the SDK's
+ * models.generateContent path never had one either (httpOptions.timeout and
+ * retryOptions are opt-in and were never set), so nothing bounded these calls
+ * before. Net-new behaviour, not a restoration.
+ */
 const GEMINI_TIMEOUT_MS = 30_000;
 
 interface GeminiFunctionCall {
