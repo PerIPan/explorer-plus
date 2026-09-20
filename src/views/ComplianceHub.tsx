@@ -220,8 +220,9 @@ export function ComplianceHub() {
         {' '}These mappings express <em>detection / monitoring intent</em> — &ldquo;a control in this framework would observe this technique&rdquo; — not verified mitigation or legal scope. Broad controls (e.g. continuous monitoring) map to many techniques, so coverage counts cluster high and are best read as relative depth, not a governance guarantee.
       </p>
 
-      {/* Sections — closed by default; the hub is dense, let users open what matters. */}
-      <Section title="Global — Tier 1" rows={sections.tier1Global} defaultOpen={false} />
+      {/* Global Tier 1 opens by default so the page lands on content; the rest
+          stay closed — the hub is dense, let users open what matters. */}
+      <Section title="Global — Tier 1" rows={sections.tier1Global} defaultOpen />
       <Section title="EU regulatory — Tier 1" rows={sections.tier1Eu} defaultOpen={false} />
       <Section title="US regulatory — Tier 1" rows={sections.tier1Us} defaultOpen={false} />
       <Section title="Sectoral & regional — Tier 2" rows={sections.tier2} defaultOpen={false} />
