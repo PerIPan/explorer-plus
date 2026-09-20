@@ -495,4 +495,38 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
       required: ['attack_id'],
     },
   },
+  {
+    name: 'search_assets',
+    description: 'Search the ATT&CK for ICS asset catalogue -- the operational-technology equipment MITRE names: PLCs, RTUs, safety controllers (SIS), historians, HMIs, engineering workstations, jump hosts, field I/O and the network kit between them. Filter by Purdue level, Purdue zone, industrial sector, or whether the asset sits on the IT/OT boundary. Returns ATT&CK ID (A0001-A0018), the Purdue levels each asset spans, and how many ICS techniques target it. Use get_asset_detail for one asset\'s full technique list, and get_purdue_model for the level definitions and the flow rules between levels. NOTE: MITRE publishes an asset catalogue for the ICS domain ONLY -- there is no enterprise, mobile or ATLAS equivalent, so an empty result for a non-ICS question is expected rather than missing data.',
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        search: { type: "STRING", description: 'Name or ATT&CK ID substring, e.g. "historian", "PLC", "A0001". Minimum 2 characters or it is ignored.' },
+        level: { type: "STRING", enum: ['l0', 'l1', 'l2', 'l3', 'l3_5', 'l4', 'l5'], description: 'Purdue level the asset is PRESENT at, not merely primary at -- a historian primarily at L3 but replicated into the DMZ matches both l3 and l3_5. l3_5 is the industrial DMZ.' },
+        zone: { type: "STRING", enum: ['ot', 'dmz', 'it'], description: 'Purdue zone. ot = levels 0-3 (plant floor, where a breach moves physical things), dmz = level 3.5, it = levels 4-5 (corporate network).' },
+        sector: { type: "STRING", description: 'Industrial sector the asset is used in, e.g. electric, manufacturing, water.' },
+        boundary: { type: "BOOLEAN", description: 'True returns only assets present in the industrial DMZ (L3.5) -- the IT/OT crossing points an attacker pivots through. Six of the eighteen assets qualify.' },
+        limit: { type: "NUMBER", description: 'Max results (default 50, max 200)' },
+      },
+    },
+  },
+  {
+    name: 'get_asset_detail',
+    description: 'Get one ATT&CK for ICS asset by ID (A0001-A0018): description, industrial sectors, platforms, related asset names, every ICS technique that targets it, and its Purdue placement -- primary level, all levels it spans, whether it is an IT/OT boundary asset, and the curated rationale for that placement. Use search_assets to find an asset ID first. Purdue placement is curated from NIST SP 800-82r3 and ISA-95, NOT published by MITRE -- say so when citing it.',
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        asset_id: { type: "STRING", description: 'ICS asset ID, e.g. A0001 (Engineering Workstation), A0013 (Field I/O). Range is A0001-A0018.' },
+      },
+      required: ['asset_id'],
+    },
+  },
+  {
+    name: 'get_purdue_model',
+    description: 'Get the Purdue model (ISA-95 / PERA) as data: the seven levels (L0 Physical through L5 Enterprise, including L3.5 the industrial DMZ) with zone, description and per-level asset and technique counts; every ICS asset placed on those levels; and the full 42-pair flow matrix saying which levels may communicate. In the flow matrix, directAllowed means a single network hop is permitted, while a pair carrying brokerLevel is reachable ONLY by terminating a session at that level first -- never read a brokered pair as adjacency. Use this to answer "what may talk to what", to reason about lateral movement across the IT/OT boundary, or to explain why an ICS technique needs a pivot. Level placement is curated from NIST SP 800-82r3 and ISA-95, not MITRE-published; technique counts are ICS-domain only, so L4/L5 carry no assets by design.',
+    parameters: {
+      type: "OBJECT",
+      properties: {},
+    },
+  },
 ];

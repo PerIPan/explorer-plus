@@ -23,6 +23,10 @@ const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL
 
 const CVE_RE = /^CVE-\d{4}-\d{4,}$/;
 const ATTACK_ID_RE = /^(AML\.)?(TA|T|G|S|M|C|CS|DS)\d{4}(\.\d{3})?$/;
+// ICS assets use a bare A#### ID (A0001-A0018), which ATTACK_ID_RE above does
+// NOT match -- its prefix group has no 'A' arm. Separate pattern, not a widened
+// one: loosening ATTACK_ID_RE would let A0001 through on every technique tool.
+const ASSET_ID_RE = /^A\d{4}$/;
 const CAPEC_ID_RE = /^CAPEC-\d+$/;
 // OSV IDs are highly heterogeneous — DSA-5678-1, USN-6543-1, LBSEC-2024-0001,
 // ALAS-2024-0017, RLSA-2024-1234, SUSE-SU-2024:0123-1, KERN-*, etc. Accept
@@ -65,6 +69,11 @@ function validateAdvisoryEcosystem(eco: unknown): string | null {
   return ADVISORY_ECOSYSTEM_RE.test(s) ? s : null;
 }
 
+function validateAssetId(id: unknown): string | null {
+  const s = String(id ?? '').trim().toUpperCase();
+  return ASSET_ID_RE.test(s) ? s : null;
+}
+
 function validateSector(slug: unknown): string | null {
   const s = String(slug ?? '').trim().toLowerCase();
   return SECTOR_RE.test(s) ? s : null;
@@ -85,6 +94,8 @@ const IOC_TYPES = new Set(['ip', 'domain', 'url', 'hash', 'cve', 'email']);
 const IOC_SOURCES = new Set(['otx', 'threatfox', 'malwarebazaar', 'cisa_kev']);
 const SIGMA_LEVELS = new Set(['critical', 'high', 'medium', 'low', 'informational']);
 const PLATFORMS = new Set(['windows', 'linux', 'macos']);
+const PURDUE_LEVELS = new Set(['l0', 'l1', 'l2', 'l3', 'l3_5', 'l4', 'l5']);
+const PURDUE_ZONES = new Set(['ot', 'dmz', 'it']);
 
 function clampLimit(val: unknown, def: number, max: number): string {
   return String(Math.min(Math.max(Number(val) || def, 1), max));
@@ -437,6 +448,29 @@ export async function executeTool(name: string, args: Record<string, unknown>): 
       if (args.include_all === true || args.include_all === 'true') params.set('include_all', '1');
       return callInternalApi(`/compliance/techniques/${encodeURIComponent(id)}?${params}`);
     }
+    case 'search_assets': {
+      const params = new URLSearchParams();
+      // /api/v1/assets rejects search terms under 2 chars (zod .min(2)), so a
+      // 1-char term is dropped rather than sent and 400'd.
+      const q = sanitizeSearch(args.search);
+      if (q.length >= 2) params.set('search', q);
+      const level = String(args.level ?? '').toLowerCase();
+      if (PURDUE_LEVELS.has(level)) params.set('level', level);
+      const zone = String(args.zone ?? '').toLowerCase();
+      if (PURDUE_ZONES.has(zone)) params.set('zone', zone);
+      const sector = validateSector(args.sector);
+      if (sector) params.set('sector', sector);
+      if (typeof args.boundary === 'boolean') params.set('boundary', String(args.boundary));
+      params.set('limit', clampLimit(args.limit, 50, 200));
+      return callInternalApi(`/assets?${params}`);
+    }
+    case 'get_asset_detail': {
+      const id = validateAssetId(args.asset_id);
+      if (!id) return { error: 'Invalid asset ID format -- expected A0001 through A0018' };
+      return callInternalApi(`/assets/${id}`);
+    }
+    case 'get_purdue_model':
+      return callInternalApi('/frameworks/purdue');
     default:
       return { error: `Unknown tool: ${name}` };
   }

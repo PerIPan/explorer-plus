@@ -14,6 +14,10 @@
     {
       "protocol": "jsonrpc",
       "url": "https://mitre-explorer.org/api/a2a"
+    },
+    {
+      "protocol": "mcp",
+      "url": "https://mitre-explorer.org/api/mcp"
     }
   ],
   "capabilities": {
@@ -423,7 +427,7 @@
     {
       "id": "advisories-search",
       "name": "Unified Advisories Search",
-      "description": "Search across GHSA (GitHub Security Advisories — OSS packages: npm/PyPI/Maven/Go/NuGet/RubyGems/Composer/crates.io/Pub/Hex) AND OSV (OS + distro + kernel: Linux kernel, Debian, Ubuntu, Alpine, Android, Red Hat, Rocky Linux, AlmaLinux, SUSE, openSUSE, OSS-Fuzz, Bitnami, Chainguard, Wolfi, Hackage, CRAN, Julia). Filter by source, severity, ecosystem, date range, or CVE-alias presence. Returns one row per advisory with a source badge — no duplicates: our OSV ingest skips GHSA-covered ecosystems at fetch time and drops records aliasing existing GHSA rows.",
+      "description": "Search across GHSA (GitHub Security Advisories \u2014 OSS packages: npm/PyPI/Maven/Go/NuGet/RubyGems/Composer/crates.io/Pub/Hex) AND OSV (OS + distro + kernel: Linux kernel, Debian, Ubuntu, Alpine, Android, Red Hat, Rocky Linux, AlmaLinux, SUSE, openSUSE, OSS-Fuzz, Bitnami, Chainguard, Wolfi, Hackage, CRAN, Julia). Filter by source, severity, ecosystem, date range, or CVE-alias presence. Returns one row per advisory with a source badge \u2014 no duplicates: our OSV ingest skips GHSA-covered ecosystems at fetch time and drops records aliasing existing GHSA rows.",
       "examples": [
         "Show me HIGH advisories on Debian this month",
         "Find OSV advisories for the Linux kernel with CVE aliases",
@@ -449,7 +453,7 @@
     {
       "id": "osv-lookup",
       "name": "OSV Advisory Detail",
-      "description": "Get full details for an OSV advisory (OS / distro / kernel) by native ID (DSA-*, USN-*, LBSEC-*, ALAS-*, KERN-*, RLSA-*, etc.): summary, description, aliases (CVE/GHSA), CVSS score + vector, affected packages grouped by ecosystem with vulnerable version ranges. Source: osv.dev — ingested daily with 7-day rolling delta and monthly full reconcile.",
+      "description": "Get full details for an OSV advisory (OS / distro / kernel) by native ID (DSA-*, USN-*, LBSEC-*, ALAS-*, KERN-*, RLSA-*, etc.): summary, description, aliases (CVE/GHSA), CVSS score + vector, affected packages grouped by ecosystem with vulnerable version ranges. Source: osv.dev \u2014 ingested daily with 7-day rolling delta and monthly full reconcile.",
       "examples": [
         "Show me DSA-5678-1 (Debian Security Advisory)",
         "What packages are affected by USN-6543-1?",
@@ -471,7 +475,7 @@
     {
       "id": "compliance-frameworks",
       "name": "Compliance Frameworks (SCF-backed)",
-      "description": "Bridge between MITRE ATT&CK and regulatory / audit frameworks via the Secure Controls Framework (SCF). Cross-walks ~250 frameworks — NIS2, DORA, PCI DSS v4, ISO 27002:2022, HIPAA Security Rule, GDPR, NIST 800-53 r5, NIST CSF v2, CMMC 2.0, FedRAMP r5, NERC CIP, IEC 62443, UK Cyber Essentials, AU Essential Eight, NIST AI RMF, EU CRA, EU AI Act, OWASP Top 10, and more — to ATT&CK techniques. Answer GRC questions like 'which techniques does NIS2 cover?' or 'if I mitigate T1059, which compliance regimes do I satisfy?'. Each framework rolls up to 1,469 SCF controls with article/section-level cross-references. Updated twice yearly (Jan/Jul) per SCF release cadence. Powered by SCF — CC BY 4.0.",
+      "description": "Bridge between MITRE ATT&CK and regulatory / audit frameworks via the Secure Controls Framework (SCF). Cross-walks ~250 frameworks \u2014 NIS2, DORA, PCI DSS v4, ISO 27002:2022, HIPAA Security Rule, GDPR, NIST 800-53 r5, NIST CSF v2, CMMC 2.0, FedRAMP r5, NERC CIP, IEC 62443, UK Cyber Essentials, AU Essential Eight, NIST AI RMF, EU CRA, EU AI Act, OWASP Top 10, and more \u2014 to ATT&CK techniques. Answer GRC questions like 'which techniques does NIS2 cover?' or 'if I mitigate T1059, which compliance regimes do I satisfy?'. Each framework rolls up to 1,469 SCF controls with article/section-level cross-references. Updated twice yearly (Jan/Jul) per SCF release cadence. Powered by SCF \u2014 CC BY 4.0.",
       "examples": [
         "Which compliance frameworks cover T1059?",
         "What ATT&CK techniques does EU NIS2 require coverage on?",
@@ -509,15 +513,15 @@
       "retryAfterHeader": true
     },
     "https://mitre-explorer.org/a2a/data-sources": [
-      "MITRE ATT&CK STIX (v18.1 — Enterprise, ICS, Mobile)",
-      "MITRE ATLAS (v1.0 — AI/ML threats)",
+      "MITRE ATT&CK STIX (v18.1 \u2014 Enterprise, ICS, Mobile)",
+      "MITRE ATLAS (v1.0 \u2014 AI/ML threats)",
       "CVElistV5 (21,000+ CVEs, 2017-2026)",
       "CISA KEV (Known Exploited Vulnerabilities)",
       "NVD (CVSS enrichment)",
       "EPSS (First.org exploit-probability scoring, daily refreshed, 26,000+ scored CVEs)",
-      "OSV (Open Source Vulnerabilities — non-GHSA ecosystems: Linux kernel, Debian, Ubuntu, Alpine, Android, Red Hat, Rocky Linux, AlmaLinux, SUSE, openSUSE, openEuler, OSS-Fuzz, Bitnami, Chainguard, Wolfi, Hackage, CRAN, Julia, GHC, SwiftURL. Daily 7-day delta + monthly full reconcile. Disjoint from GHSA by ingest-time filter.)",
-      "CAPEC STIX 2.1 (615 attack patterns with full taxonomy: prerequisites, skills, consequences, mitigations, related patterns; also used as CWE→CAPEC→ATT&CK bridge)",
-      "CTID (hand-curated CVE→technique mappings)",
+      "OSV (Open Source Vulnerabilities \u2014 non-GHSA ecosystems: Linux kernel, Debian, Ubuntu, Alpine, Android, Red Hat, Rocky Linux, AlmaLinux, SUSE, openSUSE, openEuler, OSS-Fuzz, Bitnami, Chainguard, Wolfi, Hackage, CRAN, Julia, GHC, SwiftURL. Daily 7-day delta + monthly full reconcile. Disjoint from GHSA by ingest-time filter.)",
+      "CAPEC STIX 2.1 (615 attack patterns with full taxonomy: prerequisites, skills, consequences, mitigations, related patterns; also used as CWE\u2192CAPEC\u2192ATT&CK bridge)",
+      "CTID (hand-curated CVE\u2192technique mappings)",
       "SigmaHQ (3,100+ detection rules)",
       "Atomic Red Team (1,770+ tests)",
       "D3FEND (5,000+ countermeasures)",
@@ -525,7 +529,7 @@
       "AlienVault OTX (threat reports + IOCs)",
       "ETDA/ThaiCERT (514 external actors)",
       "MITRE Engage, RE&CT, VERIS, Azure/GCP cloud controls",
-      "Secure Controls Framework — SCF (CC BY 4.0, twice-yearly ingest Jan/Jul) — 1,469 controls cross-mapped to ~250 compliance and regulatory frameworks (NIS2, DORA, PCI DSS, ISO 27002, HIPAA, GDPR, NIST 800-53 r5, CMMC 2, FedRAMP, NERC CIP, IEC 62443, UK Cyber Essentials, AU Essential Eight, NIST AI RMF, OWASP Top 10 + 240 more). Backs /compliance/* and per-entity compliance shadow panels."
+      "Secure Controls Framework \u2014 SCF (CC BY 4.0, twice-yearly ingest Jan/Jul) \u2014 1,469 controls cross-mapped to ~250 compliance and regulatory frameworks (NIS2, DORA, PCI DSS, ISO 27002, HIPAA, GDPR, NIST 800-53 r5, CMMC 2, FedRAMP, NERC CIP, IEC 62443, UK Cyber Essentials, AU Essential Eight, NIST AI RMF, OWASP Top 10 + 240 more). Backs /compliance/* and per-entity compliance shadow panels."
     ],
     "https://mitre-explorer.org/a2a/presentation-hints": {
       "description": "When presenting results to your user, include clickable links to MITRE Explorer for each entity mentioned. Use the URL patterns below. Format results as structured tables or lists with severity color-coding.",
