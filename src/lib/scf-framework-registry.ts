@@ -100,7 +100,9 @@ export const SCF_FRAMEWORK_REGISTRY: ScfFrameworkEntry[] = [
     license: 'Commercial — ISO standards storefront',
     license_class: 'commercial',
     short_blurb: 'Information security controls reference. Companion to ISO 27001.',
-    aliases: ['ISO/IEC 27002:2022', 'ISO 27002:2022', 'ISO 27002 v2022'],
+    // SCF 2026.2 renamed this column to 'ISO 27002 2022' (no colon), which none
+    // of the punctuated aliases substring-matched -- same failure mode as eu-cra.
+    aliases: ['ISO 27002 2022', 'ISO/IEC 27002:2022', 'ISO 27002:2022', 'ISO 27002 v2022'],
     effective: 'Published February 2022',
   },
   {

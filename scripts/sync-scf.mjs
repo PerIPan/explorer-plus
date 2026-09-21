@@ -784,9 +784,24 @@ async function main() {
     const mainSheet = findMainSheetName(wb);
     console.log(`[sync-scf] main sheet: ${mainSheet}`);
 
-    const authRows = xlsx.utils.sheet_to_json(wb.Sheets['Authoritative Sources'], { header: 1, defval: '' });
+    // SCF renamed this sheet from 'Authoritative Sources' to 'Focal Documents'
+    // in 2026.2. The old lookup silently resolved to undefined, parsed to zero
+    // frameworks, and the run CONTINUED -- which dropped every non-curated
+    // framework's refs in one pass. Resolve by name with a fallback, and treat
+    // zero as fatal: an empty auth source is never a legitimate outcome.
+    const AUTH_SHEETS = ['Focal Documents', 'Authoritative Sources'];
+    const authSheetName = AUTH_SHEETS.find((n) => wb.Sheets[n]);
+    if (!authSheetName) {
+      throw new Error(
+        `no authoritative-source sheet found; looked for ${AUTH_SHEETS.join(' / ')}. Sheets present: ${wb.SheetNames.join(', ')}`,
+      );
+    }
+    const authRows = xlsx.utils.sheet_to_json(wb.Sheets[authSheetName], { header: 1, defval: '' });
     const frameworkRows = parseAuthSources(authRows);
-    console.log(`[sync-scf] auth sources: ${frameworkRows.length} frameworks`);
+    console.log(`[sync-scf] auth sources: ${frameworkRows.length} frameworks (sheet: ${authSheetName})`);
+    if (frameworkRows.length === 0) {
+      throw new Error(`sheet '${authSheetName}' parsed to 0 frameworks — refusing to rebuild with no mappings`);
+    }
 
     const headerToFdi = new Map();
     for (const f of frameworkRows) headerToFdi.set(f.column_header, f.fdi);
