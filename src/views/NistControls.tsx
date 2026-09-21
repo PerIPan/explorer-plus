@@ -10,6 +10,7 @@ import { DataTable, type ColumnDef } from '../components/shared/DataTable';
 import { Badge } from '../components/shared/Badge';
 import { EntityLink } from '../components/shared/EntityLink';
 import type { NistControlSummary } from '../lib/types';
+import { ComplianceLink } from '../components/shared/ComplianceLink';
 
 const NIST_FAMILIES = [
   'Access Control',
@@ -159,6 +160,7 @@ export function NistControls() {
       <PageHeader
         title="NIST 800-53 Controls"
         subtitle={`${data?.pagination?.total ?? 0} unique controls mapped to ATT&CK techniques`}
+        actions={<ComplianceLink frameworkKey="nist-800-53-r5" />}
       />
 
       {/* Filters */}

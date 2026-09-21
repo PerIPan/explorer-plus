@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { query } from '../../../lib/db';
 import { jsonResponse, errorResponse } from '../../../../lib/handler';
 import { withCors, corsOptions as OPTIONS } from '../../../../lib/cors';
+import { FRAMEWORK_SECTION_TEXT } from '../../../../../../src/lib/framework-section-text';
 
 export { OPTIONS };
 
@@ -28,19 +29,41 @@ interface RawRow {
   is_unresolved: boolean;
 }
 
-/** Extract a stable "section" / "article" prefix from an SCF ref_id. */
-function extractSection(refId: string): string {
+/**
+ * Extract a stable "section" / "article" prefix from an SCF ref_id.
+ *
+ * Two frameworks number their refs in a way the generic rules below get wrong,
+ * so they are handled first rather than by widening a shared regex (widening
+ * the CFR rule to two digits would have re-cut PCI DSS "12.10.1" from section
+ * 12 into section 12.10).
+ */
+function extractSection(refId: string, frameworkKey?: string): string {
   if (!refId) return '(unspecified)';
-  // "Article N[.something]" → "Article N"
+
+  // HIPAA: "\u00a7 164.306(a)(1)". The section mark is a separate token, so the
+  // generic rules missed it and the final split() collapsed all 576 refs into
+  // one section literally named "\u00a7".
+  if (frameworkKey === 'hipaa-security-rule') {
+    const cfr = refId.match(/^\s*\u00a7?\s*(\d{2,3}\.\d+)/);
+    if (cfr) return `\u00a7 ${cfr[1]}`;
+  }
+
+  // SP 800-171: "03.01.01.a" belongs to family "03.01", not "03".
+  if (frameworkKey === 'nist-800-171-r3') {
+    const fam = refId.match(/^(\d{2}\.\d{2})\./);
+    if (fam) return fam[1];
+  }
+
+  // "Article N[.something]" -> "Article N"
   const art = refId.match(/^(Article\s+\d+)/i);
   if (art) return art[1];
-  // CFR-style "164.NNN(a)..." → "164.NNN"
+  // CFR-style "164.NNN(a)..." -> "164.NNN"
   const cfr = refId.match(/^(\d{3}\.\d+)/);
   if (cfr) return cfr[1];
-  // Family-prefix "XX-NN.YY" → "XX"
+  // Family-prefix "XX-NN.YY" -> "XX"
   const family = refId.match(/^([A-Z]{2,4})-/);
   if (family) return family[1];
-  // Numeric "1.2.3" → "1"
+  // Numeric "1.2.3" -> "1"
   const num = refId.match(/^(\d+)\./);
   if (num) return num[1];
   return refId.split(/[\s(]/)[0];
@@ -61,6 +84,14 @@ type RefTitle = { title: string; description: string | null };
  */
 async function loadRefTitles(frameworkKey: string): Promise<Map<string, RefTitle>> {
   const map = new Map<string, RefTitle>();
+
+  // Generated, public-domain text (NIST SP 800-53 / 800-171, and FedRAMP which
+  // cites the same control IDs). See scripts/gen-framework-section-text.mjs.
+  const stat = FRAMEWORK_SECTION_TEXT[frameworkKey];
+  if (stat) {
+    for (const [id, title] of Object.entries(stat)) map.set(id, { title, description: null });
+  }
+
   if (frameworkKey !== 'nist-csf-v2') return map;
 
   // The CSF tables are provisioned separately (seed/migrate-csf.sql); a
@@ -166,7 +197,7 @@ export async function GET(req: NextRequest, ctx: RouteCtx) {
   const articleSet = new Set<string>();
 
   for (const row of mappingsRes.rows) {
-    const section = extractSection(row.ref_id);
+    const section = extractSection(row.ref_id, key);
     articleSet.add(section);
 
     if (!bySection.has(section)) bySection.set(section, new Map());

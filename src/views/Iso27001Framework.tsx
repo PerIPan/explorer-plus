@@ -7,6 +7,7 @@ import { PageHeader } from '../components/layout/PageHeader';
 import { Badge } from '../components/shared/Badge';
 import { EntityLink } from '../components/shared/EntityLink';
 import { DiamondLoader } from '../components/shared/FoldingDiamond';
+import { ComplianceLink } from '../components/shared/ComplianceLink';
 
 interface IsoTechnique { attackId: string; name: string }
 interface IsoControl { control: string; techniques: IsoTechnique[] }
@@ -48,9 +49,12 @@ export function Iso27001Framework() {
         title="ISO/IEC 27001:2022"
         subtitle="ISO 27001:2022 Annex A controls and mandatory clauses mapped to ATT&CK techniques via the NIST CSF v2 crosswalk (ISO ↔ CSF ↔ ATT&CK)"
         actions={
-          <span className="text-[var(--text-secondary)] text-sm">
-            {visibleControls} of {data?.totalControls ?? 0} controls · {data?.totalTechniques ?? 0} techniques
-          </span>
+          <>
+            <span className="text-[var(--text-secondary)] text-sm">
+              {visibleControls} of {data?.totalControls ?? 0} controls · {data?.totalTechniques ?? 0} techniques
+            </span>
+            <ComplianceLink frameworkKey="iso-27002-2022" label="ATT&CK mapping (27002)" />
+          </>
         }
       />
 

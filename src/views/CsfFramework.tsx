@@ -10,6 +10,7 @@ import { Badge } from '../components/shared/Badge';
 import { EntityLink } from '../components/shared/EntityLink';
 import { DiamondLoader } from '../components/shared/FoldingDiamond';
 import type { CsfFunctionGroup, CsfDetail } from '../lib/types';
+import { ComplianceLink } from '../components/shared/ComplianceLink';
 
 const FUNCTIONS = [
   { id: 'GV', name: 'Govern',   description: 'Establish and monitor the cybersecurity risk management strategy, expectations, and policy.' },
@@ -82,9 +83,12 @@ export function CsfFramework() {
         title="NIST CSF v2"
         subtitle="NIST Cybersecurity Framework v2 subcategories mapped to ATT&CK techniques via CTID's CRI Profile direct mappings"
         actions={
-          <span className="text-[var(--text-secondary)] text-sm">
-            {visibleCount} of {total} subcategories
-          </span>
+          <>
+            <span className="text-[var(--text-secondary)] text-sm">
+              {visibleCount} of {total} subcategories
+            </span>
+            <ComplianceLink frameworkKey="nist-csf-v2" />
+          </>
         }
       />
 

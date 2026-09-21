@@ -1,5 +1,6 @@
 import { PageHeader } from '../components/layout/PageHeader';
 import { Badge } from '../components/shared/Badge';
+import { ComplianceLink } from '../components/shared/ComplianceLink';
 
 interface AnnexRequirement {
   id: string;
@@ -83,6 +84,7 @@ export function CraReference() {
         title="EU Cyber Resilience Act (CRA)"
         subtitle="Regulation (EU) 2024/2847 — cybersecurity requirements for products with digital elements"
         titleAction={<Badge label="Work in progress" variant="yellow" />}
+        actions={<ComplianceLink frameworkKey="eu-cra" />}
       />
 
       {/* WIP notice */}
