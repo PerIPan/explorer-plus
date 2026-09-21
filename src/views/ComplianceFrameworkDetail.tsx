@@ -203,9 +203,13 @@ const tacticColors = sharedTacticColors;
 
 interface SectionData {
   section: string;
+  /** Short text for the section ID (e.g. "Detect" for CSF "DE"); null when
+   *  the framework has no in-house title source. */
+  title: string | null;
+  description: string | null;
   ref_count: number;
   technique_count: number;
-  refs: { ref_id: string; techniques: TechniqueRef[] }[];
+  refs: { ref_id: string; title: string | null; techniques: TechniqueRef[] }[];
 }
 
 interface TechRow {
@@ -424,15 +428,23 @@ export function ComplianceFrameworkDetail({ frameworkKey }: { frameworkKey: stri
                   <svg className={`w-3 h-3 transition-transform ${isOpen ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                   </svg>
-                  <span className="text-sm font-medium text-[var(--text-primary)]">{s.section}</span>
-                  <span className="ml-auto text-xs text-[var(--text-secondary)]">
+                  <span className="text-sm font-medium text-[var(--text-primary)] shrink-0">{s.section}</span>
+                  {s.title && (
+                    <span
+                      className="text-xs text-[var(--text-secondary)] truncate min-w-0 text-left"
+                      title={s.description ?? s.title}
+                    >
+                      {s.title}
+                    </span>
+                  )}
+                  <span className="ml-auto shrink-0 text-xs text-[var(--text-secondary)]">
                     {s.technique_count} techniques · {s.ref_count} refs
                   </span>
                 </button>
                 {isOpen && (
                   <ul className="border-t border-[var(--border-color)] divide-y divide-[var(--border-color)]">
                     {s.refs.map((r) => (
-                      <RefItem key={r.ref_id} refData={r} />
+                      <RefItem key={r.ref_id} refData={r} section={s.section} />
                     ))}
                   </ul>
                 )}
@@ -506,7 +518,10 @@ export function ComplianceFrameworkDetail({ frameworkKey }: { frameworkKey: stri
 
 /** Render the techniques under a ref_id, grouped by tactic (kill-chain order)
  *  with sub-techniques nested under their parent. */
-function RefItem({ refData }: { refData: { ref_id: string; techniques: TechniqueRef[] } }) {
+function RefItem({ refData, section }: {
+  refData: { ref_id: string; title: string | null; techniques: TechniqueRef[] };
+  section: string;
+}) {
   // Dedup by attack_id first.
   const uniqTechs = new Map<string, TechniqueRef>();
   for (const t of refData.techniques) if (!uniqTechs.has(t.attack_id)) uniqTechs.set(t.attack_id, t);
@@ -525,9 +540,16 @@ function RefItem({ refData }: { refData: { ref_id: string; techniques: Technique
 
   return (
     <li className="px-3 py-2">
-      <div className="flex items-baseline gap-2 mb-1.5">
-        <span className="text-[11px] font-mono text-[var(--text-secondary)]">{refData.ref_id}</span>
-        <span className="text-[10px] text-[var(--text-secondary)]">{techs.length} techniques</span>
+      <div className="flex items-baseline gap-2 mb-1.5 min-w-0">
+        <span className="text-[11px] font-mono text-[var(--text-secondary)] shrink-0">{refData.ref_id}</span>
+        {/* When the ref IS the section (CSF: every ID is its own section) the
+            header already shows this text — don't repeat it. */}
+        {refData.title && refData.ref_id !== section && (
+          <span className="text-[11px] text-[var(--text-secondary)] truncate min-w-0" title={refData.title}>
+            {refData.title}
+          </span>
+        )}
+        <span className="text-[10px] text-[var(--text-secondary)] shrink-0">{techs.length} techniques</span>
       </div>
       <div className="space-y-2">
         {tacticEntries.map(([tactic, techsInTactic], idx) => (

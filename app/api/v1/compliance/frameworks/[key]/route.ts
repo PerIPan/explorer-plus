@@ -46,6 +46,52 @@ function extractSection(refId: string): string {
   return refId.split(/[\s(]/)[0];
 }
 
+type RefTitle = { title: string; description: string | null };
+
+/**
+ * Short text for section / ref IDs, from data the database already holds.
+ * Only frameworks with a known in-house source get titles; everything else
+ * returns an empty map and the UI shows bare IDs as before.
+ *
+ *   nist-csf-v2 — csf_subcategories (seeded for /frameworks/csf): function
+ *                 name, category name (+ description), subcategory statement.
+ *
+ * NIST also publishes SP 800-53 r5 and SP 800-171 r3 titles in the same
+ * machine-readable form (CPRT); those need an ingest and are not wired yet.
+ */
+async function loadRefTitles(frameworkKey: string): Promise<Map<string, RefTitle>> {
+  const map = new Map<string, RefTitle>();
+  if (frameworkKey !== 'nist-csf-v2') return map;
+
+  // The CSF tables are provisioned separately (seed/migrate-csf.sql); a
+  // database without them must still serve the page, just without titles.
+  const exists = await query<{ r: string | null }>(`SELECT to_regclass('csf_subcategories') AS r`);
+  if (!exists.rows[0]?.r) return map;
+
+  const res = await query<{
+    subcategory_id: string; function: string; function_name: string;
+    category_id: string; category_name: string; category_description: string | null;
+    name: string; description: string | null;
+  }>(
+    `SELECT subcategory_id, function, function_name, category_id, category_name,
+            category_description, name, description
+     FROM csf_subcategories
+     WHERE version = '2.0'`,
+  );
+  for (const r of res.rows) {
+    if (!map.has(r.function)) map.set(r.function, { title: r.function_name, description: null });
+    if (!map.has(r.category_id)) {
+      map.set(r.category_id, { title: r.category_name, description: r.category_description });
+    }
+    // The subcategory "name" is its statement; description usually repeats it.
+    map.set(r.subcategory_id, {
+      title: r.name,
+      description: r.description && r.description !== r.name ? r.description : null,
+    });
+  }
+  return map;
+}
+
 export async function GET(req: NextRequest, ctx: RouteCtx) {
   const { key } = await ctx.params;
 
@@ -66,6 +112,7 @@ export async function GET(req: NextRequest, ctx: RouteCtx) {
   );
   if (fwRes.rowCount === 0) return errorResponse(404, 'Framework not found', 'NOT_FOUND');
   const fw = fwRes.rows[0];
+  const titles = await loadRefTitles(key);
 
   // DISTINCT ON the (ref_id, attack_id, scf_id) tuple avoids Cartesian fan-out
   // when a control × technique pair appears via multiple framework refs. We
@@ -144,13 +191,22 @@ export async function GET(req: NextRequest, ctx: RouteCtx) {
     techToRefs.get(row.attack_id)!.refs.add(row.ref_id);
   }
 
-  // Section view: { section, technique_count, refs: [{ ref_id, techniques: [...] }] }
+  // Section view: { section, title, description, technique_count,
+  //                 refs: [{ ref_id, title, techniques: [...] }] }
+  // title/description are null when no in-house source covers the framework.
   const sections = [...bySection.entries()].map(([section, refMap]) => {
-    const refsArray = [...refMap.entries()].map(([ref_id, techs]) => ({ ref_id, techniques: techs }));
+    const refsArray = [...refMap.entries()].map(([ref_id, techs]) => ({
+      ref_id,
+      title: titles.get(ref_id)?.title ?? null,
+      techniques: techs,
+    }));
     const allTechIds = new Set<string>();
     for (const r of refsArray) for (const t of r.techniques) allTechIds.add(t.attack_id);
+    const sectionTitle = titles.get(section);
     return {
       section,
+      title: sectionTitle?.title ?? null,
+      description: sectionTitle?.description ?? null,
       ref_count: refsArray.length,
       technique_count: allTechIds.size,
       refs: refsArray.sort((a, b) => a.ref_id.localeCompare(b.ref_id, undefined, { numeric: true })),
