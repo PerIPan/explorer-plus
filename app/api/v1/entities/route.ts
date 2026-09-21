@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
   const domainWhere = domain ? ` AND domain = $1` : '';
   const domainParams = domain ? [domain] : [];
 
-  const [techniques, groups, software, campaigns, mitigations, tactics, externalActors, sectors, applications, owaspCategories, csfSubcategories] = await Promise.all([
+  const [techniques, groups, software, campaigns, mitigations, tactics, externalActors, sectors, applications, owaspCategories, csfSubcategories, assets] = await Promise.all([
     query<{ attackId: string; name: string; domain: string | null }>(
       `SELECT attack_id AS "attackId", name, domain FROM techniques
        WHERE is_revoked = false AND is_deprecated = false AND is_subtechnique = false${domainWhere}
@@ -84,6 +84,14 @@ export async function GET(req: NextRequest) {
       SELECT subcategory_id AS "attackId", subcategory_id || ' ' || name AS name, NULL as domain
       FROM csf_subcategories WHERE version = '2.0' ORDER BY function, subcategory_id
     `),
+    // ATT&CK for ICS assets (A0001-A0018). Carries the ics-attack domain so the
+    // domain filter treats them like any other ICS entity.
+    query<{ attackId: string; name: string; domain: string | null }>(`
+      SELECT attack_id AS "attackId", name, 'ics-attack' AS domain
+      FROM attack_assets
+      WHERE is_revoked = false AND is_deprecated = false
+      ORDER BY name
+    `),
   ]);
 
   const entities = [
@@ -98,6 +106,7 @@ export async function GET(req: NextRequest) {
     ...applications.rows.map(r => ({ ...r, type: 'application' })),
     ...owaspCategories.rows.map(r => ({ ...r, type: 'owasp' })),
     ...csfSubcategories.rows.map(r => ({ ...r, type: 'csf' })),
+    ...assets.rows.map(r => ({ ...r, type: 'asset' })),
   ];
 
   return withCors(jsonResponse({ data: entities, total: entities.length }, 86400));

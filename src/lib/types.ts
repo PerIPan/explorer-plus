@@ -386,6 +386,44 @@ export interface CsfDetail extends CsfSubcategory {
   informativeReferences: Array<{ framework: string; id: string; text: string | null; relationship: string | null }>;
 }
 
+/** One D3FEND countermeasure in the grouped /frameworks/d3fend listing. */
+export interface D3fendCountermeasureListItem {
+  d3fendId: string;
+  d3fendName: string | null;
+  d3fendUrl: string | null;
+  techniqueCount: number;
+  /** ATT&CK domains this countermeasure reaches, e.g. ['enterprise-attack', 'ics-attack']. */
+  domains: string[];
+}
+
+/** D3FEND countermeasures grouped by defensive tactic. */
+export interface D3fendTacticGroup {
+  tactic: string;
+  countermeasureCount: number;
+  techniqueCount: number;
+  countermeasures: D3fendCountermeasureListItem[];
+}
+
+/** D3FEND countermeasure detail -- used by /frameworks/d3fend/[d3fendId]. */
+export interface D3fendDetail {
+  countermeasure: {
+    d3fendId: string;
+    d3fendName: string | null;
+    d3fendTactic: string | null;
+    d3fendUrl: string | null;
+  };
+  techniqueCount: number;
+  techniquesByDomain: Record<string, number>;
+  techniques: Array<{
+    attackId: string;
+    name: string | null;
+    domain: string | null;
+    tacticName: string | null;
+    isSubtechnique: boolean | null;
+  }>;
+  related: Array<{ d3fendId: string; d3fendName: string | null; d3fendTactic: string | null; sharedCount: number }>;
+}
+
 export interface OwaspCategory {
   categoryId: string;
   name: string;

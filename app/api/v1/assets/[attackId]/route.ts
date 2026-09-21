@@ -53,7 +53,7 @@ export async function GET(
   const assetUuid = asset.id;
   delete asset.id; // internal surrogate; attackId is the public identity
 
-  const [techniques, related, spans] = await Promise.all([
+  const [techniques, related, spans, countermeasures] = await Promise.all([
     query(
       `SELECT
          k.attack_id   AS "attackId",
@@ -84,7 +84,33 @@ export async function GET(
         ORDER BY l.sort_order ASC`,
       [assetUuid],
     ),
+    // D3FEND countermeasures reaching this asset through the techniques that
+    // target it. Rolled up here rather than fetched per technique: an asset
+    // carries 39-61 techniques, so the client would otherwise make dozens of
+    // round trips to answer one question. defensive_mappings joins on the
+    // technique UUID, not the text attack id.
+    query(
+      `SELECT
+         d.d3fend_id          AS "d3fendId",
+         MIN(d.d3fend_name)   AS "d3fendName",
+         MIN(d.d3fend_tactic) AS "d3fendTactic",
+         COUNT(DISTINCT at.technique_id)::int AS "techniqueCount"
+       FROM asset_techniques at
+       JOIN defensive_mappings d ON d.technique_id = at.technique_id
+      WHERE at.asset_id = $1
+      GROUP BY d.d3fend_id
+      ORDER BY COUNT(DISTINCT at.technique_id) DESC, d.d3fend_id ASC`,
+      [assetUuid],
+    ),
   ]);
+
+  // Countermeasures grouped by D3FEND tactic, so the view can show "how this
+  // asset is defended" the same way the technique pages do.
+  const byTactic: Record<string, number> = {};
+  for (const c of countermeasures.rows as Array<{ d3fendTactic: string | null }>) {
+    const t = c.d3fendTactic ?? 'Unknown';
+    byTactic[t] = (byTactic[t] ?? 0) + 1;
+  }
 
   return withCors(jsonResponse({
     data: {
@@ -93,6 +119,9 @@ export async function GET(
       techniques: techniques.rows,
       techniqueCount: techniques.rowCount,
       relatedAssets: related.rows,
+      countermeasures: countermeasures.rows,
+      countermeasureCount: countermeasures.rowCount,
+      countermeasuresByTactic: byTactic,
     },
   }, 3600));
 }

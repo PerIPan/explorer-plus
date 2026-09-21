@@ -32,6 +32,7 @@ const TYPE_VARIANT: Record<string, 'teal' | 'orange' | 'purple' | 'blue' | 'gree
   tactic: 'yellow',
   sector: 'neutral',
   application: 'blue',
+  asset: 'purple',
 };
 
 export function SearchBar() {
@@ -105,6 +106,12 @@ export function SearchBar() {
       }
       if (entity.type === 'application') {
         router.push(`/?entity=${encodeURIComponent(entity.attackId)}&tab=application-map`);
+        return;
+      }
+      // ICS assets navigate to their 360 map; without this they would fall
+      // through to typeRoutes and land on /techniques/A0004.
+      if (entity.type === 'asset') {
+        router.push(`/?entity=${encodeURIComponent(entity.attackId)}&tab=asset-map`);
         return;
       }
       // OWASP navigates to the 360 framework map view

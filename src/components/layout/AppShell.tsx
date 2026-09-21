@@ -137,6 +137,7 @@ const API_GROUPS: { label: string; routes: { path: string; desc: string }[] }[] 
       { path: '/frameworks/csf', desc: 'NIST CSF v2 subcategories' },
       { path: '/frameworks/nist', desc: 'NIST 800-53 controls' },
       { path: '/frameworks/iso27001', desc: 'ISO/IEC 27001:2022 (via CSF crosswalk)' },
+      { path: '/frameworks/d3fend', desc: 'MITRE D3FEND countermeasures by defensive tactic' },
       { path: '/frameworks/engage', desc: 'MITRE Engage adversary-engagement activities' },
       { path: '/frameworks/detection', desc: 'Detection Strategies + Analytics (ATT&CK v19)' },
       { path: '/compliance/frameworks', desc: 'SCF-bridged frameworks (NIS2, DORA, PCI, ...)' },

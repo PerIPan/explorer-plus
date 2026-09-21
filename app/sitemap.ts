@@ -16,7 +16,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     '/search', '/cti/cves', '/cti/reports', '/cti/iocs', '/cti/sigma',
     '/cti/feed-status', '/frameworks/owasp', '/frameworks/csf', '/frameworks/nist',
     '/frameworks/iso27001', '/frameworks/engage', '/frameworks/react', '/frameworks/veris',
-    '/frameworks/cloud', '/frameworks/atomic', '/frameworks/detection',
+    '/frameworks/cloud', '/frameworks/atomic', '/frameworks/detection', '/frameworks/d3fend',
     '/compliance', '/external-actors', '/data-sources',
   ].map((path) => ({ url: `${BASE_URL}${path}`, changeFrequency: 'weekly' as const }));
 

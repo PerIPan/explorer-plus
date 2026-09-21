@@ -63,6 +63,7 @@ export const ForceGraph = forwardRef<ForceGraphHandle, ForceGraphProps>(
         sector: colors.accentNeutral,
         owasp: colors.accentGreen,
         cwe: colors.accentBlue,
+        asset: colors.accentPurple,
       }),
       [colors],
     );

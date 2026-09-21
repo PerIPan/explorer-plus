@@ -25,6 +25,7 @@ import { TacticMapView } from '../components/relationships/TacticMapView';
 import { SectorMapView } from '../components/relationships/SectorMapView';
 import { ApplicationMapView } from '../components/relationships/ApplicationMapView';
 import { OwaspMapView } from '../components/relationships/OwaspMapView';
+import { AssetMapView } from '../components/relationships/AssetMapView';
 import { RecentAffectedCard } from '../components/home/RecentAffectedCard';
 import { RecentReportsCard } from '../components/home/RecentReportsCard';
 import type { GraphNode, GraphData } from '../lib/types';
@@ -52,6 +53,7 @@ const TYPE_VARIANT: Record<string, 'teal' | 'orange' | 'purple' | 'blue' | 'gree
   application: 'blue',
   owasp: 'green',
   cwe: 'blue',
+  asset: 'purple',
 };
 
 /** Human-readable label for entity types */
@@ -67,7 +69,7 @@ function typeLabel(type: string): string {
 
 // ── Tab definitions ────────────────────────────────────────────────────────────
 
-type TabId = 'graph' | 'actor' | 'technique-map' | 'software-map' | 'mitigation-map' | 'data-source-map' | 'tactic-map' | 'sector-map' | 'application-map' | 'owasp-map';
+type TabId = 'graph' | 'actor' | 'technique-map' | 'software-map' | 'mitigation-map' | 'data-source-map' | 'tactic-map' | 'sector-map' | 'application-map' | 'owasp-map' | 'asset-map';
 
 interface TabDef {
   id: TabId;
@@ -85,6 +87,7 @@ const TABS: TabDef[] = [
   { id: 'tactic-map', label: 'Tactic Map', forTypes: ['tactic'] },
   { id: 'sector-map', label: 'Sector Map', forTypes: ['sector'] },
   { id: 'application-map', label: 'Application Map', forTypes: ['application'] },
+  { id: 'asset-map', label: 'Asset Map', forTypes: ['asset'] },
   { id: 'owasp-map', label: 'OWASP Map', forTypes: ['owasp'] },
   { id: 'graph', label: 'Graph' },
 ];
@@ -100,14 +103,23 @@ const TAB_FOR_TYPE: Record<string, TabId> = {
   sector: 'sector-map',
   application: 'application-map',
   owasp: 'owasp-map',
+  asset: 'asset-map',
 };
 
-const TAB_TYPE_HINT: Record<string, string> = { 'sector-map': 'sector', 'application-map': 'application', 'owasp-map': 'owasp' };
+const TAB_TYPE_HINT: Record<string, string> = { 'sector-map': 'sector', 'application-map': 'application', 'owasp-map': 'owasp', 'asset-map': 'asset' };
 
 /** OWASP category ID pattern — A01, ML01, LLM01, etc. */
 const OWASP_ID_RE = /^(A|ML|LLM)\d{2}$/i;
 function isOwaspId(id: string): boolean {
   return OWASP_ID_RE.test(id);
+}
+
+/** ICS asset ID pattern — A0001-style, four digits. Distinct from OWASP's A01
+ *  (two digits), so the two never collide. Mirrors the server-side check in
+ *  app/api/v1/assets/[attackId]/route.ts. */
+const ASSET_ID_RE = /^A\d{4}$/i;
+function isAssetId(id: string): boolean {
+  return ASSET_ID_RE.test(id);
 }
 
 /** Application slug pattern — `<vendor>/<product>`. Matches the URL shape used
@@ -126,6 +138,9 @@ function inferEntityType(
 ): string | null {
   if (graphCenter?.type) return graphCenter.type;
   if (isOwaspId(selectedId)) return 'owasp';
+  // Asset ids resolve by pattern so a pasted /?entity=A0004 URL works before
+  // (or without) the entity list loading.
+  if (isAssetId(selectedId)) return 'asset';
   // Application slugs may not appear in /entities (capped at ~500 for Fuse),
   // so we need a direct pattern check for direct-URL loads to work.
   if (isApplicationSlug(selectedId)) return 'application';
@@ -197,7 +212,7 @@ export function Relationships() {
   }, []);
 
   const { data: graphData, isLoading, error } = useRelationships(
-    (tabParam === 'sector-map' || tabParam === 'application-map' || tabParam === 'owasp-map' || isOwaspId(selectedId) || isApplicationSlug(selectedId) || !selectedId) ? '' : selectedId,
+    (tabParam === 'sector-map' || tabParam === 'application-map' || tabParam === 'owasp-map' || tabParam === 'asset-map' || isOwaspId(selectedId) || isApplicationSlug(selectedId) || isAssetId(selectedId) || !selectedId) ? '' : selectedId,
   );
 
   /** Load ALL entity names cross-domain for Fuse.js — shared cache with SearchBar */
@@ -239,7 +254,7 @@ export function Relationships() {
     ?? null;
 
   const isSector = entityType === 'sector';
-  const isNonGraphEntity = isSector || entityType === 'application' || entityType === 'owasp';
+  const isNonGraphEntity = isSector || entityType === 'application' || entityType === 'owasp' || entityType === 'asset';
 
   /** Sector relationships — fetch only for sectors, build graph from it */
   const { data: sectorRel } = useQuery({
@@ -286,6 +301,42 @@ export function Relationships() {
     enabled: isApp && Boolean(selectedId),
     staleTime: 2 * 60 * 1000,
   });
+
+  /** Asset graph — built from the asset detail API, which is the only source
+   *  for assets: /relationships/[id] has no attack_assets branch. */
+  const isAsset = entityType === 'asset';
+  const { data: assetDetail } = useQuery({
+    queryKey: ['asset-detail-graph', selectedId],
+    queryFn: () => apiFetch<{ data: {
+      name: string;
+      techniques: Array<{ attackId: string; name: string }>;
+      countermeasures: Array<{ d3fendId: string; d3fendName: string | null }>;
+    } }>(`/assets/${selectedId}`).then((r) => r.data),
+    enabled: isAsset && Boolean(selectedId),
+    staleTime: 2 * 60 * 1000,
+  });
+
+  const assetGraphData = useMemo<GraphData | null>(() => {
+    if (!isAsset || !assetDetail) return null;
+    const center: GraphNode = { id: selectedId, label: assetDetail.name, type: 'asset', attackId: selectedId };
+    const nodes: GraphNode[] = [];
+    const edges: GraphData['edges'] = [];
+    // Techniques only: countermeasures are not graph entities anywhere else in
+    // the app, and mixing them in would give the node a type the renderer has
+    // no colour for.
+    for (const t of assetDetail.techniques.slice(0, 40)) {
+      nodes.push({ id: t.attackId, label: t.name, type: 'technique', attackId: t.attackId });
+      edges.push({ source: selectedId, target: t.attackId, relationship: 'targeted by' });
+    }
+    return { center, nodes, edges, truncated: assetDetail.techniques.length > 40 };
+  }, [isAsset, assetDetail, selectedId]);
+
+  useEffect(() => {
+    if (isAsset && assetDetail) {
+      setSelectedName(assetDetail.name);
+      setSearchInput(assetDetail.name);
+    }
+  }, [isAsset, assetDetail]);
 
   // Resolve display name for non-graph entities when API data arrives
   useEffect(() => {
@@ -405,12 +456,16 @@ export function Relationships() {
       ? appGraphData
       : isOwasp
         ? owaspGraphData
-        : graphData;
+        : isAsset
+          ? assetGraphData
+          : graphData;
   const graphReady = isOwasp
     ? Boolean(owaspGraphData)
-    : isNonGraphEntity
-      ? Boolean(isSector ? sectorGraphData : appGraphData)
-      : (!isLoading && !error && Boolean(graphData));
+    : isAsset
+      ? Boolean(assetGraphData)
+      : isNonGraphEntity
+        ? Boolean(isSector ? sectorGraphData : appGraphData)
+        : (!isLoading && !error && Boolean(graphData));
 
   /** Determine which tabs are visible for the current entity */
   const visibleTabs = useMemo(
@@ -840,6 +895,11 @@ export function Relationships() {
           {/* OWASP Map tab */}
           {activeTab === 'owasp-map' && entityType === 'owasp' && (
             <OwaspMapView categoryId={selectedId} />
+          )}
+
+          {/* Asset Map tab */}
+          {activeTab === 'asset-map' && entityType === 'asset' && (
+            <AssetMapView attackId={selectedId} />
           )}
         </div>
       )}
