@@ -1,9 +1,7 @@
 // scripts/lib/scf-parse.mjs
 //
 // Pure parsing helpers for the SCF workbook. No DB calls — keeps sync-scf.mjs
-// testable and lets us unit-test column classification later if needed.
-
-import { Buffer } from 'node:buffer';
+// testable. Unit tests: `node --test scripts/lib/`.
 
 /** Collapse \r\n and runs of whitespace, lowercase. */
 export function normHeader(s) {
@@ -71,31 +69,87 @@ export function classifyColumn({ header, colIndex, headerToFdi, aliasLookup, att
   return { kind: 'metadata' };
 }
 
-/** Parse Authoritative Sources sheet into framework rows.
- *  Filters out 'Deleted' / blank rows. */
+// ----- Authoritative-source sheet ('Focal Documents' since SCF 2026.2) --------
+
+export const SCF_FALLBACK_URL = 'https://www.securecontrolsframework.com/';
+
+/**
+ * Column matchers for the auth-source sheet, applied to normHeader() of the
+ * header row so line breaks and case do not matter.
+ *
+ * Columns are located by NAME, never by position. SCF 2026.2 removed the
+ * 'Focal Document Title (FDT)' column; a positional reader (rows[i][5],
+ * rows[i][6]) then silently took the source URL as the title and the STRM
+ * PDF link as the upstream URL for every non-curated framework.
+ *
+ *   2026.1: Geography | SCF Column Header | FDI | Source | FDN | FDT | FDS | STRM
+ *   2026.2: Geography | SCF Column Header | FDI | Source | FDN |       FDS | STRM URL
+ */
+export const AUTH_COLUMN_MATCHERS = Object.freeze({
+  geography:     { re: /^geography$/,                        required: true },
+  column_header: { re: /^scf column header$/,                required: true },
+  fdi:           { re: /focal document identifier|\(fdi\)/,  required: true },
+  source:        { re: /^source$/,                           required: false },
+  doc_name:      { re: /focal document name|\(fdn\)/,        required: false },
+  doc_title:     { re: /focal document title|\(fdt\)/,       required: false }, // gone since 2026.2
+  doc_url:       { re: /focal document source|\(fds\)/,      required: false },
+});
+
+/**
+ * Resolve the header row to { field: columnIndex }.
+ * Throws when a required column is missing or any matcher hits more than one
+ * header — both mean the sheet changed shape and positional assumptions are
+ * exactly what must not fill the gap.
+ */
+export function locateAuthColumns(headerRow) {
+  const raw = Array.isArray(headerRow) ? headerRow : [];
+  const headers = raw.map((h) => normHeader(h));
+  const out = {};
+  const problems = [];
+  for (const [field, { re, required }] of Object.entries(AUTH_COLUMN_MATCHERS)) {
+    const hits = [];
+    headers.forEach((h, i) => { if (re.test(h)) hits.push(i); });
+    if (hits.length === 1) out[field] = hits[0];
+    else if (hits.length > 1) problems.push(`${field}: ${hits.length} headers match (${hits.map((i) => JSON.stringify(String(raw[i]))).join(', ')})`);
+    else if (required) problems.push(`${field}: no header matches ${re}`);
+  }
+  if (problems.length > 0) {
+    throw new Error(
+      `auth-source sheet header mismatch — ${problems.join('; ')}. ` +
+      `Headers present: ${raw.map((h) => JSON.stringify(String(h))).join(', ')}`,
+    );
+  }
+  return out;
+}
+
+/** Parse the auth-source sheet (header row + data rows) into framework rows.
+ *  Filters out 'Deleted' / 'Not Complete' / blank rows. */
 export function parseAuthSources(rows) {
-  if (!rows || rows.length < 2) return [];
+  if (!rows || rows.length === 0) return [];
+  const col = locateAuthColumns(rows[0]);
+  const cell = (row, field) => (col[field] == null ? '' : String(row[col[field]] ?? '').trim());
+
   const out = [];
   for (let i = 1; i < rows.length; i++) {
-    const geography = String(rows[i][0] ?? '').trim();
-    const colHeader = String(rows[i][1] ?? '').trim();
-    const fdi = String(rows[i][2] ?? '').trim();
-    const source = String(rows[i][3] ?? '').trim();
-    const docName = String(rows[i][4] ?? '').trim();
-    const docTitle = String(rows[i][5] ?? '').trim();
-    const docUrl = String(rows[i][6] ?? '').trim();
+    const row = rows[i] ?? [];
+    const geography = cell(row, 'geography');
+    const colHeader = cell(row, 'column_header');
+    const fdi = cell(row, 'fdi');
 
     if (!fdi || !colHeader) continue;
     if (geography === 'Deleted' || geography === 'Not Complete') continue;
 
+    const docUrl = cell(row, 'doc_url');
     out.push({
       fdi,
       column_header: colHeader,
       geography,
-      source_org: source || 'Unknown',
-      doc_name: docName,
-      doc_title: docTitle,
-      doc_url: docUrl || 'https://www.securecontrolsframework.com/',
+      source_org: cell(row, 'source') || 'Unknown',
+      doc_name: cell(row, 'doc_name'),
+      doc_title: cell(row, 'doc_title'),
+      // Only ever store something a browser can open; anything else falls back
+      // to the SCF site rather than becoming a dead "Source" link.
+      doc_url: /^https?:\/\//i.test(docUrl) ? docUrl : SCF_FALLBACK_URL,
     });
   }
   return out;

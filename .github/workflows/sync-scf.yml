@@ -20,6 +20,11 @@ on:
         required: false
         default: false
         type: boolean
+      allow_shrink:
+        description: 'Proceed even if rebuilt tables are >30% smaller than live (see SHRINK_GATE)'
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -34,6 +39,9 @@ jobs:
     timeout-minutes: 60
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      # Release/asset lookup goes through the GitHub API; unauthenticated calls
+      # share a 60/hour budget per runner IP.
+      GITHUB_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v5
 
@@ -56,6 +64,9 @@ jobs:
           fi
           if [ "${{ github.event.inputs.force }}" = "true" ]; then
             ARGS="$ARGS --force"
+          fi
+          if [ "${{ github.event.inputs.allow_shrink }}" = "true" ]; then
+            ARGS="$ARGS --allow-shrink"
           fi
           echo "Args: $ARGS"
           node --experimental-strip-types scripts/sync-scf.mjs $ARGS
