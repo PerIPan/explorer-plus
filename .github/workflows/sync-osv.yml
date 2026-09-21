@@ -32,11 +32,11 @@ jobs:
     # Wall-clock ceiling. Full ingest has observed ~90 min; 2h is safe.
     timeout-minutes: 120
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
-          node-version: '22'
+          node-version: '24'
 
       - name: Install deps
         run: npm install pg jszip cvss
