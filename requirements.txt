@@ -1,2 +1,2 @@
-mitreattack-python==5.4.3
+mitreattack-python==5.7.0
 requests==2.34.2
