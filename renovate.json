@@ -12,11 +12,6 @@
 
   "packageRules": [
     {
-      "description": "React and its types move together; split PRs would not build.",
-      "groupName": "react",
-      "matchPackageNames": ["react", "react-dom", "@types/react", "@types/react-dom"]
-    },
-    {
       "description": "Tailwind 4 ships the engine and the PostCSS plugin in lockstep.",
       "groupName": "tailwind",
       "matchPackageNames": ["tailwindcss", "@tailwindcss/postcss", "postcss"]
@@ -26,6 +21,12 @@
       "groupName": "types",
       "matchPackageNames": ["@types/**"],
       "automerge": true
+    },
+    {
+      "description": "React and its types move together; split PRs would not build. MUST stay after the @types/** rule above: both rules match @types/react, later rules win, and when this one sat first the types rule pulled @types/react into its own automerging PR -- so the types half could merge without the React bump, which is exactly what this rule exists to prevent. automerge is restated because a later rule overrides only the fields it sets.",
+      "groupName": "react",
+      "matchPackageNames": ["react", "react-dom", "@types/react", "@types/react-dom"],
+      "automerge": false
     },
     {
       "description": "Action bumps are verified by the workflows themselves.",
