@@ -6,15 +6,15 @@ import { SITE_URL } from '../src/lib/site';
 
 const THEME_SCRIPT = `(function(){
   try {
-    var t = localStorage.getItem('theme');
-    // Dark is the default — only light when the user explicitly picked it.
-    if (t === 'light') {
-      document.documentElement.classList.add('light');
-    } else {
+    var t = localStorage.getItem('mx-theme');
+    // Light is the default — only dark when the user explicitly picked it.
+    if (t === 'dark') {
       document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.add('light');
     }
   } catch(e) {
-    document.documentElement.classList.add('dark');
+    document.documentElement.classList.add('light');
   }
 })();`;
 
