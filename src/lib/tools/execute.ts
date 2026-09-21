@@ -75,9 +75,67 @@ function validateAssetId(id: unknown): string | null {
   return ASSET_ID_RE.test(s) ? s : null;
 }
 
+/**
+ * GHSA ecosystem names as the corpus stores them, with the aliases the upstream
+ * registries use. sync-ghsa-bulk.mjs folds 'crates.io' -> 'rust',
+ * 'packagist' -> 'composer' and 'hex' -> 'erlang' at ingest, so a caller who
+ * passes the registry's own name must be mapped the same way rather than
+ * queried literally (which matched nothing).
+ */
+const GHSA_ECOSYSTEMS = [
+  'npm', 'pypi', 'go', 'maven', 'rubygems', 'nuget', 'composer',
+  'rust', 'erlang', 'pub', 'swift', 'actions',
+] as const;
+
+const GHSA_ECOSYSTEM_ALIASES: Record<string, string> = {
+  'crates.io': 'rust',
+  'crates': 'rust',
+  'cargo': 'rust',
+  'packagist': 'composer',
+  'php': 'composer',
+  'hex': 'erlang',
+  'pip': 'pypi',
+  'python': 'pypi',
+  'golang': 'go',
+  'gem': 'rubygems',
+  'ruby': 'rubygems',
+  'node': 'npm',
+  'dart': 'pub',
+  'flutter': 'pub',
+  'github-actions': 'actions',
+};
+
+function normalizeEcosystem(v: unknown): string | null {
+  const raw = String(v ?? '').trim().toLowerCase();
+  if (!raw) return null;
+  const mapped = GHSA_ECOSYSTEM_ALIASES[raw] ?? raw;
+  return (GHSA_ECOSYSTEMS as readonly string[]).includes(mapped) ? mapped : null;
+}
+
 function validateSector(slug: unknown): string | null {
   const s = String(slug ?? '').trim().toLowerCase();
   return SECTOR_RE.test(s) ? s : null;
+}
+
+/**
+ * ICS asset sectors are MITRE's own labels ("Electric", "General", "Water and
+ * Wastewater"), not the lowercase slugs the threat-group filters use. Accept
+ * the label as written; /api/v1/assets matches it case-insensitively. Routing
+ * this through validateSector() rejected "Electric" and let "electric" through
+ * to an exact-match query, so the filter could never return a row.
+ */
+const ASSET_SECTOR_RE = /^[A-Za-z][A-Za-z0-9 &/-]{0,58}$/;
+function validateAssetSector(v: unknown): string | null {
+  const s = String(v ?? '').trim().replace(/\s+/g, ' ');
+  return ASSET_SECTOR_RE.test(s) ? s : null;
+}
+
+/**
+ * Mirror of normalize() in scripts/sync-cve-products.mjs: the catalogue slug
+ * in applications.normalized is lowercase [a-z0-9] only, per part.
+ */
+function normalizeAppPart(s: unknown): string {
+  return String(s ?? '').toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
 function validateDomain(d: unknown): string | null {
@@ -120,12 +178,23 @@ function badFilter(name: string, value: unknown, hint: string): Record<string, s
  * the whole answer, or re-issuing the same call with a bigger limit (silently
  * clamped, identical rows back) until it gives up.
  */
-function clampPage(val: unknown): string {
-  return String(Math.min(Math.max(Math.trunc(Number(val) || 1), 1), 1000));
+/**
+ * Clamp `page` to what the target route actually accepts.
+ *
+ * Default 100 matches paginationSchema (app/api/v1/lib/validate.ts), which every
+ * list route but /applications and /assets uses. Clamping to 1000 everywhere
+ * meant page 101-1000 reached the API and came back 400 "Invalid query
+ * parameters" -- reachable on search_cves, whose corpus is thousands of pages
+ * deep and whose guide entry tells the model to fetch further pages.
+ */
+function clampPage(val: unknown, max = 100): string {
+  return String(Math.min(Math.max(Math.trunc(Number(val) || 1), 1), max));
 }
 
 function clampLimit(val: unknown, def: number, max: number): string {
-  return String(Math.min(Math.max(Number(val) || def, 1), max));
+  // Math.trunc because every route validates limit with z.coerce.number().int();
+  // a fractional limit (10.5) was forwarded verbatim and 400'd.
+  return String(Math.trunc(Math.min(Math.max(Number(val) || def, 1), max)));
 }
 
 // -- Internal API caller ------------------------------------------------------
@@ -211,8 +280,12 @@ export async function executeTool(name: string, args: Record<string, unknown>): 
       return callInternalApi(`/groups?${params}`);
     }
     case 'get_application_security': {
-      const v = String(args.vendor ?? '').toLowerCase().replace(/[^a-z0-9_-]/g, '');
-      const p = String(args.product ?? '').toLowerCase().replace(/[^a-z0-9_-]/g, '');
+      // /api/v1/applications/<vendor>/<product> looks up applications.normalized,
+      // whose slug has no '-' or '_'. Keeping them here 400'd ("Invalid slug")
+      // for 2,430 of the 7,206 catalogue entries -- log4j-core, iphone_os,
+      // federation-internals -- so normalise exactly as the ingest does.
+      const v = normalizeAppPart(args.vendor);
+      const p = normalizeAppPart(args.product);
       if (!v || !p) return { error: 'Vendor and product are required' };
       const qp = args.version ? `?version=${encodeURIComponent(sanitizeSearch(args.version).slice(0, 100))}` : '';
       return callInternalApi(`/applications/${v}/${p}${qp}`);
@@ -221,7 +294,9 @@ export async function executeTool(name: string, args: Record<string, unknown>): 
       const params = new URLSearchParams();
       if (args.search) params.set('search', sanitizeSearch(args.search));
       if (args.version) params.set('version', sanitizeSearch(args.version).slice(0, 100));
-      if (args.page !== undefined) params.set('page', clampPage(args.page));
+      // /applications allows page up to 1000 (its own schema), unlike the
+      // shared paginationSchema ceiling of 100.
+      if (args.page !== undefined) params.set('page', clampPage(args.page, 1000));
       params.set('limit', clampLimit(args.limit, 10, 50));
       return callInternalApi(`/applications?${params}`);
     }
@@ -414,9 +489,16 @@ export async function executeTool(name: string, args: Record<string, unknown>): 
     }
     case 'get_package_vulnerabilities': {
       const eco = String(args.ecosystem ?? '').toLowerCase();
-      const name = String(args.package_name ?? '');
+      const name = String(args.package_name ?? '').trim();
       if (!/^[a-z][a-z0-9-]{1,49}$/.test(eco)) return { error: 'Invalid ecosystem' };
       if (!name || name.length > 500) return { error: 'Invalid package name' };
+      // '.' and '..' survive encodeURIComponent unchanged, and
+      // /api/v1/packages/npm/.. 308-redirects to /api/v1/packages, which fetch
+      // follows -- returning the GLOBAL cross-ecosystem package list as though
+      // it were one package's vulnerabilities.
+      if (name.split('/').some((seg) => seg === '.' || seg === '..')) {
+        return badFilter('package_name', args.package_name, 'Pass a real package name, e.g. lodash or github.com/gin-gonic/gin.');
+      }
       const qp = args.version ? `?version=${encodeURIComponent(sanitizeSearch(args.version).slice(0, 100))}` : '';
       return callInternalApi(`/packages/${eco}/${encodeURIComponent(name)}${qp}`);
     }
@@ -428,8 +510,13 @@ export async function executeTool(name: string, args: Record<string, unknown>): 
         if (SEVERITY_VALUES.has(sev)) params.set('severity', sev);
       }
       if (args.ecosystem) {
-        const eco = String(args.ecosystem).toLowerCase();
-        if (/^[a-z][a-z0-9-]{1,49}$/.test(eco)) params.set('ecosystem', eco);
+        // Fail loudly. Dropping an unmatched value returned the UNFILTERED
+        // corpus with HTTP 200, which the model then reported as that
+        // ecosystem's advisories -- the exact silent-filter failure the usage
+        // guide promises does not happen.
+        const eco = normalizeEcosystem(args.ecosystem);
+        if (!eco) return badFilter('ecosystem', args.ecosystem, `Use a GHSA ecosystem name: ${GHSA_ECOSYSTEMS.join(', ')}.`);
+        params.set('ecosystem', eco);
       }
       if (args.since) {
         const d = new Date(String(args.since));
@@ -491,8 +578,13 @@ export async function executeTool(name: string, args: Record<string, unknown>): 
         if (SEVERITY_VALUES.has(sev)) params.set('severity', sev);
       }
       if (args.ecosystem) {
-        const eco = validateAdvisoryEcosystem(args.ecosystem);
-        if (eco) params.set('ecosystem', eco);
+        // GHSA aliases are folded at ingest (crates.io -> rust, hex -> erlang),
+        // so pass the stored name; OSV ecosystems ('Debian', 'Alpine') keep
+        // their case and fall through. An unrecognised value errors instead of
+        // being dropped -- dropping it returned the whole corpus as if filtered.
+        const eco = normalizeEcosystem(args.ecosystem) ?? validateAdvisoryEcosystem(args.ecosystem);
+        if (!eco) return badFilter('ecosystem', args.ecosystem, `GHSA: ${GHSA_ECOSYSTEMS.join(', ')}. OSV keeps its own capitalisation, e.g. Debian, Ubuntu, Alpine, Android.`);
+        params.set('ecosystem', eco);
       }
       if (args.since) {
         const d = new Date(String(args.since));
@@ -541,12 +633,13 @@ export async function executeTool(name: string, args: Record<string, unknown>): 
       const zone = String(args.zone ?? '').toLowerCase();
       if (PURDUE_ZONES.has(zone)) params.set('zone', zone);
       if (args.sector !== undefined && args.sector !== null && args.sector !== '') {
-        const sector = validateSector(args.sector);
-        if (!sector) return badFilter('sector', args.sector, 'Use a lowercase sector slug such as financial, healthcare, government, energy. Call get_sector_threats or omit the filter if unsure.');
+        const sector = validateAssetSector(args.sector);
+        if (!sector) return badFilter('sector', args.sector, 'Use the sector label MITRE puts on ICS assets -- Electric, General, or "Water and Wastewater" (case-insensitive). This is not the threat-group sector slug. Omit the filter if unsure.');
         params.set('sector', sector);
       }
       if (typeof args.boundary === 'boolean') params.set('boundary', String(args.boundary));
-      if (args.page !== undefined) params.set('page', clampPage(args.page));
+      // /assets allows page up to 1000 (its own schema).
+      if (args.page !== undefined) params.set('page', clampPage(args.page, 1000));
       params.set('limit', clampLimit(args.limit, 50, 200));
       return callInternalApi(`/assets?${params}`);
     }

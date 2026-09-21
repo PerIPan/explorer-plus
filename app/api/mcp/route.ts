@@ -64,15 +64,40 @@ function toZodObject(decl: ToolDeclaration) {
         z.enum(values),
       );
     } else {
+      // Accept the shapes weaker clients actually emit. Rejecting them here
+      // made MCP stricter than the executor behind it: executeTool coerces
+      // with String()/Number() and treats 'true'/'false' as booleans, so a
+      // schema-level rejection failed calls the tool would have answered.
       switch (String(p.type ?? 'STRING').toUpperCase()) {
-        case 'NUMBER':  field = z.number(); break;
-        case 'BOOLEAN': field = z.boolean(); break;
-        default:        field = z.string(); break;
+        // "10" -> 10.
+        case 'NUMBER':
+          field = z.coerce.number();
+          break;
+        // "true" -> true (a JSON-mode model often quotes booleans).
+        case 'BOOLEAN':
+          field = z.preprocess(
+            (v) => (typeof v === 'string' && /^(true|false)$/i.test(v) ? v.toLowerCase() === 'true' : v),
+            z.boolean(),
+          );
+          break;
+        // true -> "true": several STRING params (has_cve) are documented as
+        // the words "true"/"false" and the executor compares them as strings.
+        default:
+          field = z.preprocess(
+            (v) => (typeof v === 'boolean' || typeof v === 'number' ? String(v) : v),
+            z.string(),
+          );
+          break;
       }
     }
 
     if (p.description) field = field.describe(p.description);
-    shape[key] = required.has(key) ? field : field.optional();
+    // null is how models spell "I am not using this optional filter"; Zod's
+    // .optional() accepts only undefined, so map it before validating rather
+    // than failing the whole call over an unused argument.
+    shape[key] = required.has(key)
+      ? field
+      : z.preprocess((v) => (v === null ? undefined : v), field.optional());
   }
 
   return z.object(shape);
@@ -137,9 +162,9 @@ const handler = createMcpHandler((server) => {
     '',
     'search_* tools return summaries; get_* tools return the full record. For a specific named entity, use the get_* tool; if you only have a name and not an ID, call the matching search_* tool first to resolve the ID.',
     '',
-    'For a specific technique, call BOTH get_technique_detail (description, tactics, mitigations, data sources) and get_technique_intelligence (threat groups, Sigma rules, Atomic tests, D3FEND) — neither is a superset of the other. For regulatory frameworks use get_technique_compliance.',
+    'For a specific technique, call BOTH get_technique_detail (description, tactics, mitigations, data sources, and the threat groups and malware that use it) and get_technique_intelligence (Sigma rules, Atomic tests, D3FEND, threat reports, linked CVEs and IOCs) — neither is a superset of the other. For regulatory frameworks use get_technique_compliance.',
     '',
-    'Dates: compute relative ranges ("last 7 days") from the current date and pass `since` as a full ISO-8601 string. A `since` value that is not a parseable date is ignored rather than applied.',
+    'Dates: compute relative ranges ("last 7 days") from the current date and pass `since` as a full ISO-8601 string. A `since` value that is not a parseable date is rejected with an error naming the field — fix it and retry rather than treating the unfiltered answer as close enough.',
     '',
     'When a list result carries a total larger than the rows returned, say so explicitly ("showing 10 of 47") rather than presenting the page as complete.',
     '',
@@ -154,10 +179,13 @@ function withOpenCors(res: Response): Response {
   const headers = new Headers(res.headers);
   headers.set('Access-Control-Allow-Origin', '*');
   headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  headers.set(
-    'Access-Control-Allow-Headers',
-    'Content-Type, Accept, Authorization, MCP-Protocol-Version, Mcp-Session-Id',
-  );
+  // '*' rather than a list: the installed SDK's modern protocol era (2026-07-28)
+  // carries per-request metadata in Mcp-Method, Mcp-Name and an open-ended
+  // Mcp-Param-* family, which cannot be enumerated ahead of time. A preflight
+  // that omits one fails in the browser as an opaque network error with no
+  // JSON-RPC diagnostic. Authorization is listed explicitly because the
+  // wildcard does not cover it.
+  headers.set('Access-Control-Allow-Headers', '*, Authorization');
   headers.set('Access-Control-Expose-Headers', 'Mcp-Session-Id, MCP-Protocol-Version');
   return new Response(res.body, { status: res.status, statusText: res.statusText, headers });
 }

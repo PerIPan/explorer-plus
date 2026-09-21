@@ -14,7 +14,15 @@ export async function GET(
     return withCors(errorResponse(400, 'Name parameter required', 'VALIDATION_ERROR'));
   }
 
-  const name = decodeURIComponent(rawName);
+  // Next.js already decodes dynamic params, so this is a SECOND decode and any
+  // name containing a bare '%' (or a stray escape) threw URIError -> HTTP 500.
+  // Decode defensively and fall back to the param as given.
+  let name: string;
+  try {
+    name = decodeURIComponent(rawName);
+  } catch {
+    name = rawName;
+  }
 
   const result = await query<{
     id: string;

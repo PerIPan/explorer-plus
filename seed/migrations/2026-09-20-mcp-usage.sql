@@ -15,9 +15,9 @@
 --   (which tools get used, how fast, how often they fail) at a fraction of the
 --   write cost and with no PII.
 --
--- CARDINALITY IS THE HAZARD HERE. `client` derives from the MCP client's
--- self-reported clientInfo.name, which is attacker-controlled free text on an
--- unauthenticated, unlimited endpoint. Left raw, one caller could mint millions
+-- CARDINALITY IS THE HAZARD HERE. `client` derives from the request's
+-- User-Agent header (normalizeClient in app/api/lib/mcp-usage.ts), which is
+-- attacker-controlled free text on an unauthenticated, unlimited endpoint. Left raw, one caller could mint millions
 -- of rows. The writer therefore normalizes it against a known-client allowlist
 -- and collapses everything else to 'other' — the same bounded-cardinality trick
 -- middleware.ts uses when it folds unknown path segments into ':id'. The CHECK

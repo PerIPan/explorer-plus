@@ -111,8 +111,8 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
     parameters: {
       type: "OBJECT",
       properties: {
-        vendor: { type: "STRING", description: 'Vendor name, e.g. microsoft, apache, litellm' },
-        product: { type: "STRING", description: 'Product name, e.g. windows_server_2022, http_server, litellm' },
+        vendor: { type: "STRING", description: 'Vendor name as written, e.g. Microsoft, apache, @apollo -- case and punctuation are normalised to the catalogue slug automatically.' },
+        product: { type: "STRING", description: 'Product name as written, e.g. "Windows Server 2022", log4j-core, iphone_os -- case and punctuation are normalised automatically. search_applications returns the exact vendor/product pair.' },
         version: { type: "STRING", description: 'Optional. Narrows the returned CVE list to entries whose affected version range (substring/text) mentions this value, e.g. 1.20. Surfaces matches — NOT a "this version is vulnerable" verdict; say so.' },
       },
       required: ['vendor', 'product'],
@@ -278,7 +278,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
     parameters: {
       type: "OBJECT",
       properties: {
-        q: { type: "STRING", description: 'Search keyword in title/description' },
+        q: { type: "STRING", description: 'Keyword matched against the rule title and Sigma rule ID only — not rule logic or description, so a miss is not proof no rule covers it.' },
         technique: { type: "STRING", description: 'Filter by ATT&CK technique ID, e.g. T1059' },
         level: { type: "STRING", enum: ['critical', 'high', 'medium', 'low', 'informational'], description: 'Severity level' },
         limit: { type: "NUMBER", description: 'Max results (default 20)' },
@@ -452,7 +452,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
         q: { type: "STRING", description: 'Keyword search over advisory ID, CVE ID, summary (min 3 chars)' },
         source: { type: "STRING", enum: ['GHSA', 'OSV'], description: 'Restrict to one source: GHSA (OSS packages) or OSV (OS/distros). Omit for both.' },
         severity: { type: "STRING", enum: ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'], description: 'Severity filter' },
-        ecosystem: { type: "STRING", description: 'Ecosystem filter — GHSA uses lowercase names (npm, pypi, go, maven, rubygems, nuget, composer, rust, hex, pub); OSV uses case-preserved names (Linux, Debian, Ubuntu, Alpine, Android, Rocky Linux, AlmaLinux, SUSE, openSUSE, Bitnami, OSS-Fuzz, etc.)' },
+        ecosystem: { type: "STRING", description: 'Ecosystem filter — GHSA uses lowercase names (npm, pypi, go, maven, rubygems, nuget, composer, rust, erlang, pub, swift, actions); registry aliases are mapped for you (crates.io→rust, packagist→composer, hex→erlang). OSV uses case-preserved names (Linux, Debian, Ubuntu, Alpine, Android, Rocky Linux, AlmaLinux, SUSE, openSUSE, Bitnami, OSS-Fuzz, etc.)' },
         since: { type: "STRING", description: 'ISO date — only advisories published after this date' },
         has_cve: { type: "STRING", description: 'Filter by CVE alias presence: "true" or "false"' },
         limit: { type: "NUMBER", description: 'Max results (default 50, max 100)' },
@@ -521,7 +521,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
         search: { type: "STRING", description: 'Name or ATT&CK ID substring, e.g. "historian", "PLC", "A0001". Minimum 2 characters or it is ignored.' },
         level: { type: "STRING", enum: ['l0', 'l1', 'l2', 'l3', 'l3_5', 'l4', 'l5'], description: 'Purdue level the asset is PRESENT at, not merely primary at -- a historian primarily at L3 but replicated into the DMZ matches both l3 and l3_5. l3_5 is the industrial DMZ.' },
         zone: { type: "STRING", enum: ['ot', 'dmz', 'it'], description: 'Purdue zone. ot = levels 0-3 (plant floor, where a breach moves physical things), dmz = level 3.5, it = levels 4-5 (corporate network).' },
-        sector: { type: "STRING", description: 'Industrial sector the asset is used in, e.g. electric, manufacturing, water.' },
+        sector: { type: "STRING", description: 'Sector label MITRE puts on the asset -- currently Electric, General, or Water and Wastewater -- matched case-insensitively. NOT the threat-group sector slug (financial, healthcare, ...) that search_groups uses.' },
         boundary: { type: "BOOLEAN", description: 'True returns only assets present in the industrial DMZ (L3.5) -- the IT/OT crossing points an attacker pivots through. Six of the eighteen assets qualify.' },
         limit: { type: "NUMBER", description: 'Max results (default 50, max 200)' },
         page: { type: "NUMBER", description: 'Page number, default 1. See pagination.total in the response.' },

@@ -54,8 +54,12 @@ export async function GET(req: NextRequest) {
     );
   }
   if (sector) {
+    // Labels are stored as MITRE writes them ("Electric", "Water and
+    // Wastewater"); match case-insensitively so "electric" finds them too.
     params.push(sector);
-    conditions.push(`$${params.length} = ANY(COALESCE(a.sectors, '{}'))`);
+    conditions.push(
+      `EXISTS (SELECT 1 FROM unnest(COALESCE(a.sectors, '{}')) s WHERE lower(s) = lower($${params.length}))`,
+    );
   }
   if (boundary === 'true')  conditions.push('p.is_boundary');
   if (boundary === 'false') conditions.push('NOT p.is_boundary');

@@ -27,8 +27,8 @@ Always call a tool before answering. This data changes continuously (CVEs, advis
 
 ## Choosing between similar tools
 **Techniques (three tools, none a superset):**
-- get_technique_detail -- description, tactics, platforms, sub-techniques, mitigations, data sources, CAPEC.
-- get_technique_intelligence -- threat groups, Sigma rules, Atomic tests, D3FEND, affected applications.
+- get_technique_detail -- description, tactics, platforms, sub-techniques, mitigations, data sources, CAPEC, and the threat groups, malware and campaigns that use it.
+- get_technique_intelligence -- Sigma rules, Atomic tests, D3FEND defensive mappings, detection strategies, threat reports, linked CVEs, IOCs and affected applications. It returns NO threat groups; those come from get_technique_detail.
 - get_technique_compliance -- regulatory frameworks referencing it.
 For "tell me about T1059", call the first two. They do not overlap.
 
@@ -48,7 +48,7 @@ For "tell me about T1059", call the first two. They do not overlap.
 - **Curated by this project:** Purdue level placement for ICS assets (primaryLevel, zone, spansLevels, isBoundary, rationale), derived from NIST SP 800-82r3 and ISA-95. Never attribute it to MITRE.
 - **Inferred, lower confidence:** CVE-to-technique links via the CWE -> CAPEC -> ATT&CK bridge. Curated CTID/CISA links are high confidence. Do not present inferred links as confirmed attribution.
 - **Version filters** surface advisories whose affected range MENTIONS a version string. That is not a verdict that the version is vulnerable. Say so every time.
-- **Empty results** are authoritative where a tool says so (get_technique_compliance, search_assets for non-ICS, get_cve_packages). Elsewhere an empty result means no match on those filters, not that nothing exists.
+- **Empty results** are authoritative where a tool says so (get_technique_compliance, search_assets for a non-ICS question). Elsewhere an empty result means no match on those filters, not that nothing exists. get_cve_packages is NOT authoritative: an empty list means the CVE has no GHSA alias or the lookup failed, never that no package is affected -- check osvAdvisories in get_cve_detail.
 - **Heat and coverage** metrics reflect detection relevance, not verified mitigation or compliance.
 
 ## Pagination
@@ -83,7 +83,7 @@ search_ghsa and search_advisories are NOT interchangeable. search_advisories is 
 
 ## What list rows actually contain
 Verified against the live API -- do not assume a field exists because it would be useful:
-- Counts are returned ONLY by: search_cves and search_assets (techniqueCount); search_capec (techniqueCount, mitigationCount); search_applications (cveCount, techniqueCount, groupCount); search_iocs (technique_count).
+- Counts are returned ONLY by: search_cves and search_assets (techniqueCount); search_capec (techniqueCount, mitigationCount); search_applications (cveCount, techniqueCount, groupCount); search_iocs (technique_count); search_ghsa (packageCount, techniqueCount); get_threat_reports (technique_count).
 - search_groups, search_software, search_campaigns, search_mitigations, search_sigma_rules and search_atomic_tests return NO counts. If you need "how many techniques does this group use", call get_group_profile and count the array; do not report a number the list row never gave you.
 - Field naming is camelCase everywhere EXCEPT search_iocs, which returns technique_count in snake_case.
 - search_iocs returns a technique COUNT but not the technique IDs, and excludes CVE rows unless type is cve or source is cisa_kev.

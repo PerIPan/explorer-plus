@@ -16,4 +16,4 @@ export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://mitre-explo
  * because importing it would pull ~31KB of tool descriptions into the browser
  * bundle. Keep in sync when adding or removing a tool.
  */
-export const AGENT_TOOL_COUNT = 42;
+export const AGENT_TOOL_COUNT = 43;
