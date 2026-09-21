@@ -63,6 +63,32 @@ Assets are placed by the levels they SPAN, not only their primary level -- a his
 In the flow matrix, **directAllowed means topological adjacency, not permission to initiate**. Always read the note field: l3_5 to l3 is directAllowed, yet the note records that the OT side initiates and a DMZ host must not open sessions inward. A pair with brokerLevel is reachable only by terminating a session at that level first; never read it as adjacency.
 MITRE publishes assets for the ICS domain only, so an empty asset result for a non-ICS question is expected rather than missing data.
 
+## Picking the right tool when several look similar
+| You want | Call |
+| --- | --- |
+| Everything about one technique | get_technique_detail AND get_technique_intelligence (neither is a superset) |
+| Who uses a technique | get_technique_detail (returns groups) |
+| Detection content for a technique | get_technique_intelligence (Sigma, Atomic, D3FEND) |
+| Regulations citing a technique | get_technique_compliance |
+| A group and its TTPs | search_groups to resolve the ID, then get_group_profile |
+| Country, motivation, state sponsor | get_external_actor (metadata only, exact name match) |
+| Recent advisories, any ecosystem | search_advisories |
+| GitHub advisories with ATT&CK linkage | search_ghsa (returns techniqueCount and withdrawnAt, which search_advisories does not) |
+| Advisories for one package | get_package_vulnerabilities |
+| Which packages one CVE affects | get_cve_packages |
+| ICS equipment and where it sits | search_assets, then get_asset_detail |
+| Which plant levels may talk | get_purdue_model |
+
+search_ghsa and search_advisories are NOT interchangeable. search_advisories is the unified GHSA+OSV view; search_ghsa queries the GHSA corpus directly, returns more rows for the same query, and carries techniqueCount and withdrawnAt. Use search_advisories for breadth, search_ghsa when ATT&CK linkage or withdrawal status matters.
+
+## What list rows actually contain
+Verified against the live API -- do not assume a field exists because it would be useful:
+- Counts are returned ONLY by: search_cves and search_assets (techniqueCount); search_capec (techniqueCount, mitigationCount); search_applications (cveCount, techniqueCount, groupCount); search_iocs (technique_count).
+- search_groups, search_software, search_campaigns, search_mitigations, search_sigma_rules and search_atomic_tests return NO counts. If you need "how many techniques does this group use", call get_group_profile and count the array; do not report a number the list row never gave you.
+- Field naming is camelCase everywhere EXCEPT search_iocs, which returns technique_count in snake_case.
+- search_iocs returns a technique COUNT but not the technique IDs, and excludes CVE rows unless type is cve or source is cisa_kev.
+- Text search on the ATT&CK entity lists (groups, software, campaigns, mitigations) is Postgres full-text over name and description with a 3-character minimum -- it is not a substring match, so a partial word may not match. Revoked and deprecated entries are excluded by default.
+
 ## Vocabularies
 **Sectors** (search_groups, search_software, search_campaigns, get_sector_threats, get_dashboard_stats): defense, education, energy, financial, government, healthcare, manufacturing, media, retail, technology, telecommunications, transportation.
 

@@ -1,0 +1,23 @@
+# Security contact for mitre-explorer.org  (RFC 9116)
+#
+# Reports go to GitHub private vulnerability reporting rather than an email
+# address: it is a real, monitored channel, it keeps the report confidential
+# until a fix ships, and it avoids publishing a personal mailbox on a file whose
+# whole purpose is to be scraped.
+
+Contact: https://github.com/PerIPan/explorer-plus/security/advisories/new
+Expires: 2027-09-21T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://mitre-explorer.org/.well-known/security.txt
+Policy: https://github.com/PerIPan/explorer-plus/security/policy
+
+# Scope
+#   In scope: mitre-explorer.org, its public REST API (/api/v1), the A2A
+#   endpoint (/api/a2a) and the MCP endpoint (/api/mcp).
+#   Out of scope: the upstream data sources this site mirrors (MITRE, NVD,
+#   GitHub Security Advisories, OSV, CISA). Report issues in that DATA to the
+#   upstream project; report issues in how this site serves it here.
+#
+# Note: the REST, A2A and MCP endpoints are intentionally anonymous and serve
+# only public data. Absence of authentication is a design decision, not a
+# finding. Resource-exhaustion and amplification issues ARE in scope.

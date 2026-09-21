@@ -48,7 +48,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
   },
   {
     name: 'get_cve_detail',
-    description: 'Full record for one CVE: CWEs, CVSS, EPSS, affected apps, OWASP categories, KEV status, GHSA alias, and osvAdvisories -- the distro and kernel advisories aliasing it, which answer which distros are affected. CAPEC patterns and ATT&CK techniques are inferred from shared CWEs, not published per-CVE; attribute them that way. version matches text in an affected range, not a verdict that the version is vulnerable; say so.',
+    description: 'Full record for one CVE: CWEs, CVSS, EPSS, affected apps, OWASP categories, KEV status, GHSA alias, and osvAdvisories -- the distro and kernel advisories aliasing it, which answer which distros are affected. CAPEC patterns and ATT&CK techniques are inferred from shared CWEs, not published per-CVE; attribute them that way. version matches text in an affected range, not a verdict that the version is vulnerable; say so. Find a CVE ID with search_cves.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -82,7 +82,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
   },
   {
     name: 'get_group_profile',
-    description: 'Full threat group profile: every technique, software and campaign, plus targeted sectors and a capped list of affected applications. If you have only a name, call search_groups for the ID first.',
+    description: 'Full threat group profile: every technique, software and campaign, plus targeted sectors and a capped list of affected applications. If you have only a name, call search_groups for the ID first. For country, motivation and state sponsor instead, use get_external_actor.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -300,7 +300,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
   },
   {
     name: 'get_external_actor',
-    description: 'ETDA/ThaiCERT reference metadata for one external actor: country, motivation, state sponsor, suspected victims, MITRE group mapping. No techniques, software or campaigns -- use get_group_profile for TTPs. The lookup is an exact name match, so a miss means only that this dataset has no entry under that spelling; always try search_groups before calling an actor unknown.',
+    description: 'ETDA/ThaiCERT reference metadata for one external actor: country, motivation, state sponsor, suspected victims, MITRE group mapping. No techniques, software or campaigns -- use get_group_profile for TTPs. The lookup is an exact name match, so a miss means only that this dataset has no entry under that spelling; always try search_groups before calling an actor unknown. Browse the dataset with search_external_actors.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -367,7 +367,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
   },
   {
     name: 'get_ghsa_detail',
-    description: 'Full record for one GitHub Security Advisory: summary, CVSS v3 and v4, CWEs, affected packages with vulnerable and fixed ranges. CAPEC patterns and ATT&CK techniques are inferred from shared CWEs, not published by GitHub; attribute them that way. version matches text in an affected range, not a verdict that the version is vulnerable; say so.',
+    description: 'Full record for one GitHub Security Advisory: summary, CVSS v3 and v4, CWEs, affected packages with vulnerable and fixed ranges. CAPEC patterns and ATT&CK techniques are inferred from shared CWEs, not published by GitHub; attribute them that way. version matches text in an affected range, not a verdict that the version is vulnerable; say so. Find an ID with search_ghsa.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -445,7 +445,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
   },
   {
     name: 'search_advisories',
-    description: 'Unified summary rows over GHSA (OSS packages) and OSV (OS, distro, kernel), each tagged with its source; the two sets are disjoint, so no duplicates. Filter by source, severity, ecosystem, date or CVE-alias presence; rows are severity-ranked, then newest. Full record: get_ghsa_detail or get_osv_detail.',
+    description: 'Unified summary rows over GHSA (OSS packages) and OSV (OS, distro, kernel), each tagged with its source; the two sets are disjoint, so no duplicates. Filter by source, severity, ecosystem, date or CVE-alias presence; rows are severity-ranked, then newest. Full record: get_ghsa_detail or get_osv_detail. This is the unified GHSA+OSV view; search_ghsa queries the GHSA corpus directly, returns more rows for the same query and adds techniqueCount and withdrawnAt, so prefer it when ATT&CK linkage or withdrawal status matters.',
     parameters: {
       type: "OBJECT",
       properties: {
@@ -494,7 +494,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
   },
   {
     name: 'get_technique_compliance',
-    description: 'Which compliance frameworks reference a single ATT&CK technique, with the SCF control count per framework and up to 8 of the article or section ref_ids that cite it -- a sample, not the full citation list. Takes T-IDs only -- ATLAS AML IDs are rejected. An empty frameworks array is authoritative not-covered for the tiers queried (Tier 1+2 unless include_all): do not infer or invent a mapping.',
+    description: 'Which compliance frameworks reference a single ATT&CK technique, with the SCF control count per framework and up to 8 of the article or section ref_ids that cite it -- a sample, not the full citation list. Takes T-IDs only -- ATLAS AML IDs are rejected. An empty frameworks array is authoritative not-covered for the tiers queried (Tier 1+2 unless include_all): do not infer or invent a mapping. For direct ATT&CK mappings (800-53, Engage, VERIS, cloud controls) use get_framework_mappings.',
     parameters: {
       type: "OBJECT",
       properties: {
