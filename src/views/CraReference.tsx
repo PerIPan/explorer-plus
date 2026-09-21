@@ -278,6 +278,46 @@ export function CraReference() {
           </li>
           <li>
             <a
+              href="https://portal.cra-srp.enisa.europa.eu"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[var(--accent-teal)] hover:underline"
+            >
+              ENISA Single Reporting Platform — submit a notification
+            </a>
+          </li>
+          <li>
+            <a
+              href="https://www.enisa.europa.eu/topics/product-security/single-reporting-platform-srp"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[var(--accent-teal)] hover:underline"
+            >
+              ENISA SRP — guidance, glossary of notification fields and manuals
+            </a>
+          </li>
+          <li>
+            <a
+              href="https://www.enisa.europa.eu/topics/product-security/single-reporting-platform-srp/cra-srp-ar-user-manual"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[var(--accent-teal)] hover:underline"
+            >
+              ENISA SRP — user manual for submitting reports
+            </a>
+          </li>
+          <li>
+            <a
+              href="https://digital-strategy.ec.europa.eu/en/policies/cra-reporting"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[var(--accent-teal)] hover:underline"
+            >
+              European Commission — CRA reporting obligations
+            </a>
+          </li>
+          <li>
+            <a
               href="https://www.enisa.europa.eu/topics/cyber-resilience-act"
               target="_blank"
               rel="noopener noreferrer"

@@ -53,7 +53,7 @@ const SOURCE_DESCRIPTIONS: Record<string, string> = {
   sigma: 'SigmaHQ detection rules — weekly refresh',
   atomic: 'Atomic Red Team adversary-emulation tests — weekly refresh',
   site_health: 'VirusTotal self-scan of mitre-explorer.org (weekly)',
-  scf: 'Secure Controls Framework XLSX — 1469 controls × ~250 framework mappings, ingested twice a year (Jan/Jul)',
+  scf: 'Secure Controls Framework 2026.2 XLSX — 1,534 controls × 254 framework mappings, ingested twice a year (Jan/Jul)',
 };
 
 function formatTimeAgo(iso: string): string {

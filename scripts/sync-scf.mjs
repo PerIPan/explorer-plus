@@ -871,7 +871,7 @@ async function main() {
         meta.tier1WithoutAliases = failed;
         console.warn('[sync-scf] Tier-1 keys without current-run aliases:', failed.join(', '));
         // Surface but do not abort: a Tier-1 key can legitimately have no SCF
-        // backing today (e.g. EU CRA not yet in SCF 2026.1.1). The workflow
+        // backing today (e.g. a curated entry may legitimately have no SCF column). The workflow
         // step "Tier-1 alias guard" examines meta.tier1WithoutAliases and pages
         // an operator if the set drifts unexpectedly.
       }
