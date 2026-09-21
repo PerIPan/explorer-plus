@@ -190,8 +190,12 @@ export const SCF_FRAMEWORK_REGISTRY: ScfFrameworkEntry[] = [
     license: 'EU Official Journal (public)',
     license_class: 'public-domain',
     short_blurb: 'Horizontal cybersecurity requirements for products with digital elements.',
-    aliases: ['EU CRA', 'Cyber Resilience Act', 'EU 2024/2847'],
-    effective: 'Main obligations apply from 11 December 2027',
+    // NOTE the spelling: SCF's column headers say "Cyber ResiliencY Act"
+    // (EMEA EU Cyber Resiliency Act 2024 / ... Annex I 2024), not "Resilience".
+    // Matching is substring-on-normalised-header, so the correct-spelling alias
+    // never matched and this Tier-1 framework silently carried zero controls.
+    aliases: ['EU CRA', 'Cyber Resiliency Act', 'Cyber Resilience Act', 'EU 2024/2847'],
+    effective: 'Article 14 reporting applies from 11 September 2026; main obligations from 11 December 2027',
     scope: 'Manufacturers, importers, distributors of products with digital elements placed on EU market',
   },
   {
