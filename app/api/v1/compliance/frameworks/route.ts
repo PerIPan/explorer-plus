@@ -44,6 +44,15 @@ export async function GET(req: NextRequest) {
     FROM scf_frameworks f
     LEFT JOIN scf_framework_coverage c USING (framework_key)
     WHERE f.tier = ANY($1::int[])
+      -- scf_frameworks is upsert-only, so a document SCF renames or retires
+      -- lingers with no refs and renders as a real-looking 0/0 tile. Hide
+      -- Tier-3 rows that map to nothing. Tier 1 and 2 are exempt on purpose:
+      -- a curated framework sitting at zero is a signal to investigate, which
+      -- is exactly what eu-cra was, and hiding it would bury that.
+      AND (
+        f.tier <= 2
+        OR EXISTS (SELECT 1 FROM scf_framework_refs r WHERE r.framework_key = f.framework_key)
+      )
     ORDER BY f.tier ASC, f.region ASC, c.techniques_filtered DESC NULLS LAST, f.name ASC
   `;
   const r = await query<FrameworkRow>(sql, [tierFilter]);
@@ -58,7 +67,12 @@ export async function GET(req: NextRequest) {
     scf_version: string | null;
   }>(
     `SELECT
-       (SELECT COUNT(*)::text FROM scf_frameworks)              AS framework_count,
+       -- Count only frameworks that actually map to something, so the number
+       -- matches what the listing above returns.
+       (SELECT COUNT(*)::text FROM scf_frameworks f2
+         WHERE f2.tier <= 2
+            OR EXISTS (SELECT 1 FROM scf_framework_refs r2 WHERE r2.framework_key = f2.framework_key)
+       )                                                        AS framework_count,
        (SELECT COUNT(*)::text FROM scf_controls)                AS control_count,
        (SELECT COUNT(*)::text FROM scf_attack_mappings)         AS mapping_count,
        (SELECT COUNT(*)::text FROM scf_attack_mappings WHERE is_unresolved) AS unresolved_count,

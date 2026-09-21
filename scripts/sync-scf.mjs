@@ -182,9 +182,20 @@ function findMainSheetName(workbook) {
 
 function findAttackColumn(headers) {
   // Header is multi-line: 'MITRE\r\nATT&CK\r\nN' — fold whitespace and match.
-  const idx = headers.findIndex((h) => /mitre.*att.*ck/i.test(normHeader(h)));
-  if (idx < 0) throw new Error('Could not locate MITRE ATT&CK column in main SCF sheet');
-  return idx;
+  const matches = headers
+    .map((h, i) => ({ h, i }))
+    .filter((x) => /mitre.*att.*ck/i.test(normHeader(x.h)));
+  if (matches.length === 0) throw new Error('Could not locate MITRE ATT&CK column in main SCF sheet');
+  // More than one match means the header shape changed and findIndex would have
+  // silently picked the first. Refuse rather than guess: every derived table
+  // (overlap, group/sector/software summary, coverage, technique heat) joins
+  // through scf_attack_mappings, so choosing wrong empties all of them.
+  if (matches.length > 1) {
+    throw new Error(
+      `ambiguous MITRE ATT&CK column: ${matches.length} headers matched — ${matches.map((m) => JSON.stringify(String(m.h))).join(', ')}`,
+    );
+  }
+  return matches[0].i;
 }
 
 // ----- DB writes ------------------------------------------------------------
@@ -283,6 +294,16 @@ async function upsertFrameworks(client, frameworkRows, registry, observedHeaders
   }
 }
 
+/**
+ * Returns Tier-1 keys with no alias seen in this run, split by whether that is
+ * a REGRESSION (the key had aliases as of the last successful run) or a
+ * pre-existing gap.
+ *
+ * Only regressions are fatal. Making every zero-alias event fatal would mean a
+ * framework SCF legitimately never covers hard-blocks every future sync; making
+ * none fatal is what let eu-cra sit at zero refs unnoticed and iso-27002-2022
+ * break silently on 2026.2.
+ */
 async function tier1AliasCheck(client, registry, runStart) {
   // Tier-1 keys are launch-critical. We compare against runStart (timestamp at
   // ingest entry) so stale aliases from a prior run can't mask a vanished column.
@@ -297,7 +318,30 @@ async function tier1AliasCheck(client, registry, runStart) {
     );
     if (r.rows[0].n === 0) failed.push(key);
   }
-  return failed;
+  if (failed.length === 0) return { failed, regressions: [] };
+
+  // A key that had a current alias at the last successful run and has none now
+  // is a break, not an accepted gap.
+  const prior = await client.query(
+    `SELECT completed_at
+       FROM feed_sync_log
+      WHERE source='scf' AND status='success'
+        AND COALESCE(metadata->>'dryRun','false') <> 'true'
+      ORDER BY completed_at DESC NULLS LAST LIMIT 1 OFFSET 0`,
+  );
+  const priorAt = prior.rows[0]?.completed_at ?? null;
+  if (!priorAt) return { failed, regressions: [] };
+
+  const regressions = [];
+  for (const key of failed) {
+    const r = await client.query(
+      `SELECT COUNT(*)::int AS n FROM scf_framework_aliases
+        WHERE framework_key=$1 AND last_seen_at >= $2 AND last_seen_at < $3`,
+      [key, new Date(priorAt.getTime() - 60 * 60 * 1000), runStart],
+    );
+    if (r.rows[0].n > 0) regressions.push(key);
+  }
+  return { failed, regressions };
 }
 
 // ----- Per-control + cross-link extraction ---------------------------------
@@ -467,6 +511,13 @@ async function rebuildFrameworkRefs(client, refsBatch, dryRun) {
 
 async function rebuildAttackMappings(client, attackBatch, validAttackIds, dryRun) {
   if (dryRun) return { inserted: 0, unresolved: 0 };
+  // Same reasoning as the auth-sheet guard: this function TRUNCATEs before it
+  // inserts, so an empty batch is not a no-op, it is deletion. SCF has never
+  // shipped a release with zero ATT&CK mappings; zero here means the column
+  // moved or the T-code regex stopped matching.
+  if (attackBatch.length === 0) {
+    throw new Error('extracted 0 ATT&CK mappings — refusing to truncate scf_attack_mappings');
+  }
   // Dedup + classify.
   const seen = new Set();
   const cleaned = [];
@@ -865,15 +916,29 @@ async function main() {
 
     // Tier-1 alias guard. Compare to runStart so stale aliases from prior
     // ingests don't mask a vanished column.
+    //
+    // This runs BEFORE ingestControlsAndRefs / rebuild*, and upsertFrameworks
+    // above performs only idempotent UPSERTs, so throwing here aborts the run
+    // without having touched scf_framework_refs, scf_attack_mappings or any
+    // summary table. That placement is deliberate -- it is what would have
+    // stopped the 2026.2 run before it destroyed data.
     if (!args.dryRun) {
-      const failed = await tier1AliasCheck(client, registry, runStart);
+      const { failed, regressions } = await tier1AliasCheck(client, registry, runStart);
       if (failed.length > 0) {
         meta.tier1WithoutAliases = failed;
+        meta.tier1AliasRegressions = regressions;
         console.warn('[sync-scf] Tier-1 keys without current-run aliases:', failed.join(', '));
-        // Surface but do not abort: a Tier-1 key can legitimately have no SCF
-        // backing today (e.g. a curated entry may legitimately have no SCF column). The workflow
-        // step "Tier-1 alias guard" examines meta.tier1WithoutAliases and pages
-        // an operator if the set drifts unexpectedly.
+      }
+      if (regressions.length > 0) {
+        // A key that matched a column at the last successful run and matches
+        // nothing now means SCF renamed or removed that column. Continuing
+        // would rebuild the framework with zero refs -- exactly how
+        // iso-27002-2022 silently emptied on 2026.2. Abort and let a human
+        // add the new header to the registry aliases.
+        throw new Error(
+          `Tier-1 alias regression: ${regressions.join(', ')} had SCF columns at the last successful run and match none now. ` +
+          `Check the workbook headers and update aliases in src/lib/scf-framework-registry.ts.`,
+        );
       }
     }
 
