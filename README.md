@@ -5,13 +5,15 @@
 <h1 align="center">MITRE Explorer Plus</h1>
 
 <p align="center">
-  Multi-domain threat intelligence platform on <strong>MITRE ATT&CK</strong>, <strong>ATLAS</strong>, and <strong>25+ interconnected data sources</strong>.<br/>
+  Multi-domain threat intelligence platform built on <strong>MITRE ATT&CK v19</strong>, <strong>ATLAS</strong>, and <strong>25+ interconnected data sources</strong>.<br/>
   One interface for adversary behaviour, detection, vulnerability management, compliance, and application security.
 </p>
 
 <p align="center">
   <a href="https://mitre-explorer.org">mitre-explorer.org</a> &nbsp;|&nbsp;
+  <a href="https://mitre-explorer.org/api/mcp">MCP endpoint</a> &nbsp;|&nbsp;
   <a href="https://mitre-explorer.org/.well-known/agent-card.json">A2A Agent Card</a> &nbsp;|&nbsp;
+  <a href="https://mitre-explorer.org/.well-known/security.txt">security.txt</a> &nbsp;|&nbsp;
   <a href="https://www.virustotal.com/gui/domain/mitre-explorer.org">VirusTotal 0/94</a>
 </p>
 
@@ -21,148 +23,174 @@
 
 | Capability | Details |
 |------------|---------|
-| **Multi-domain ATT&CK + ATLAS** | Enterprise, ICS, Mobile, ATLAS (AI/ML threats) with domain switcher and cross-domain "All" view |
-| **360° Entity Views** | Search any entity — explore via Technique Map, Actor Profile, Software Map, Application Map, Sector Map, Diamond Entities force graph |
-| **ATT&CK Matrix** | Heatmap with sub-technique counts, actor-comparison overlay (up to 3 groups), HTML export with filters |
-| **Applications** | 11K+ vendor/products linked to CVEs via CWE → CAPEC → ATT&CK techniques → threat groups |
-| **CVEs** | 26K+ vulnerabilities from CVElistV5 + NVD enrichment + CISA KEV + EPSS exploit probability, with technique IDs and affected apps |
-| **Advisories** | Unified GHSA + OSV list — 8K+ GitHub Security Advisories across npm/PyPI/Maven/Go/… and 50K+ OSV advisories covering Linux kernel, Debian, Ubuntu, Alpine, Android, OSS-Fuzz, Chainguard |
-| **Ecosystems** | Per-ecosystem dashboards for 40+ OSS registries, OS distros, and container distros — severity breakdown, top packages, advisory feed |
-| **IOCs** | 5,800+ indicators (IPs, domains, hashes, URLs) from OTX, ThreatFox, MalwareBazaar, enriched with VirusTotal verdicts |
-| **Detection** | 3,100+ Sigma rules, 1,770+ Atomic Red Team tests, 5,000+ D3FEND countermeasures, ATT&CK v18 detection strategies + analytics |
-| **Frameworks** | OWASP Top 10 (Web 2021, ML 2023, LLM 2025), NIST CSF v2, NIST 800-53, CAPEC (615 patterns), MITRE Engage, RE&CT, VERIS, Azure + GCP cloud controls, EU CRA (wip), OWASP AI Exchange (wip) |
-| **Threat actors** | 191 ATT&CK groups + 514 ThaiCERT/ETDA external actors with country, motivation, state-sponsor attribution |
-| **Sector intelligence** | 12 industry verticals with threat landscape — groups, techniques, campaigns, CVEs, vulnerable apps |
-| **A2A Agent Protocol v1.0** | 24 skills — AI agents query this knowledge base via JSON-RPC 2.0, powered by Gemini |
+| **Multi-domain ATT&CK + ATLAS** | Enterprise, ICS, Mobile and ATLAS (AI/ML) with a domain switcher and a cross-domain "All" view |
+| **360° entity views** | Search any entity, then explore it through a dedicated map: Technique, Threat Actor, Malware, Application, Sector, Tactic, Mitigation, Data Source, OWASP, ICS Asset, or a D3 force graph |
+| **ATT&CK matrix** | Heatmap with sub-technique counts, actor-comparison overlay (up to 3 groups), HTML export with filters |
+| **Applications** | 19,700 vendor/product pairs linked to CVEs through CWE → CAPEC → ATT&CK → threat groups |
+| **CVEs** | 107,000 vulnerabilities from CVElistV5 with NVD enrichment, CISA KEV flags and EPSS exploit probability, each carrying technique IDs and affected apps |
+| **Advisories** | 35,700 GitHub Security Advisories plus an OSV corpus covering Linux kernel, Debian, Ubuntu, Alpine, Android, OSS-Fuzz and Chainguard |
+| **Ecosystems** | Per-ecosystem dashboards across 40+ registries and distros: severity breakdown, top packages, advisory feed |
+| **IOCs** | 154,000 indicators (IPs, domains, hashes, URLs) from OTX, ThreatFox and MalwareBazaar, enriched with VirusTotal verdicts |
+| **Detection** | 3,146 Sigma rules, 2,042 Atomic Red Team tests, ATT&CK v19 detection strategies and analytics |
+| **Defence** | 5,750 D3FEND mappings across 153 countermeasures, browsable by defensive tactic, covering Enterprise **and ICS** |
+| **Compliance** | 224 frameworks bridged to ATT&CK through the Secure Controls Framework: 1,534 controls and 58,600 cross-references spanning NIS2, DORA, GDPR, EU CRA, EU AI Act, HIPAA, PCI DSS, SOC 2, CMMC, FedRAMP and more |
+| **ICS and OT** | 18 ATT&CK for ICS assets with curated Purdue-model placement (level, zone, boundary), the techniques that target them, and the D3FEND countermeasures that defend them |
+| **Threat actors** | 178 ATT&CK groups plus 514 ThaiCERT/ETDA external actors with country, motivation and state-sponsor attribution |
+| **Sector intelligence** | 12 industry verticals with their threat landscape: groups, techniques, campaigns, CVEs, vulnerable apps |
+| **Agent access** | An **MCP server** and an **A2A agent** over the same 43-tool catalogue, so AI clients can query all of the above directly |
+
+## For AI agents
+
+Two protocols front the same tool catalogue. Both are anonymous and need no key.
+
+### MCP (Model Context Protocol)
+
+```
+https://mitre-explorer.org/api/mcp
+```
+
+Streamable HTTP, stateless, 43 tools. Add it to any MCP client:
+
+```json
+{ "mcpServers": { "mitre-explorer": { "url": "https://mitre-explorer.org/api/mcp" } } }
+```
+
+The server ships `instructions` and a `mitre://guide` resource covering tool selection, pagination, data provenance and the vocabularies each filter accepts, so a model does not have to guess. JSON-RPC batches are capped at 100 members with a concurrency gate, which removes the amplification a stateless endpoint would otherwise hand an anonymous caller.
+
+### A2A (Agent-to-Agent)
+
+25 skills over JSON-RPC 2.0, described by the [Agent Card](https://mitre-explorer.org/.well-known/agent-card.json), powered by Gemini with multi-round tool chaining. Rate limited to 50 requests per day per IP, bypassed with `Authorization: Bearer <A2A_API_KEY>`.
+
+The difference: MCP gives a client the raw tools to orchestrate itself; A2A answers a question in prose and returns a structured artifact alongside it.
 
 ## Architecture
 
 ```
-Next.js 15 App Router (React 19 + TypeScript + Tailwind 4)
+Next.js 16 App Router (React 19 + TypeScript + Tailwind 4)
      |
-     +-- API routes under app/api (v1 REST + A2A + 11 Vercel crons)
+     +-- app/api  — v1 REST, MCP, A2A, 11 Vercel crons
      |        |
-     |        +-- PostgreSQL on Neon (~40 tables + matviews)
+     |        +-- PostgreSQL on Neon (80 tables + 3 matviews)
      |        |
-     |        +-- A2A endpoint (Gemini 3.1 Flash-Lite, 24 skills)
+     |        +-- Gemini (A2A agent, 25 skills)
      |
-     +-- 6 GitHub Actions workflows (heavy ingest jobs outside Vercel's 300s cron cap)
+     +-- 11 GitHub Actions workflows (ingests that overflow Vercel's 300s cron cap)
 ```
 
 ## Data sources
 
-| Source | What | Rows | Update |
-|--------|------|-----:|--------|
-| MITRE ATT&CK STIX | Techniques, groups, campaigns, software, mitigations, tactics | 22K+ | Seed |
-| MITRE ATLAS | AI/ML techniques, mitigations, cross-references | 200+ | Seed |
-| CVElistV5 | CVE metadata, CWEs, affected products (CPE) | 26K+ CVEs | Seed |
+| Source | What | Scale | Update |
+|--------|------|------:|--------|
+| MITRE ATT&CK STIX | Techniques, groups, campaigns, software, mitigations, tactics, ICS assets | v19.0 | GH Actions |
+| MITRE ATLAS | AI/ML techniques, mitigations, cross-references | 155 techniques | Seed |
+| CVElistV5 | CVE metadata, CWEs, affected products (CPE) | 107,295 | Seed + delta |
 | NVD API | CVSS scores, descriptions, CPE enrichment | hourly | GH Actions |
-| CISA KEV | Known exploited vulnerabilities | 1,550+ | Cron |
+| CISA KEV | Known exploited vulnerabilities | 1,716 | Cron |
 | EPSS (FIRST.org) | Daily exploit-probability scoring | per CVE | Cron |
-| GitHub Security Advisories | OSS advisories across npm, PyPI, Maven, Go, RubyGems, … | 8K+ | GH Actions |
-| OSV.dev | Non-GHSA ecosystems — Linux kernel, Debian, Ubuntu, Alpine, Android, OSS-Fuzz, Chainguard, … | 50K+ | GH Actions |
-| CAPEC STIX | CWE → CAPEC → ATT&CK technique bridge + 615-pattern taxonomy | 1,480+ | Seed |
+| GitHub Security Advisories | OSS advisories across npm, PyPI, Maven, Go, RubyGems, … | 35,736 | GH Actions |
+| OSV.dev | Non-GHSA ecosystems: Linux kernel, Debian, Ubuntu, Alpine, Android, OSS-Fuzz, Chainguard | 1.9M | GH Actions |
+| CAPEC STIX | CWE → CAPEC → ATT&CK bridge plus the 615-pattern taxonomy | 1,483 mappings | Seed |
 | CTID | Hand-curated CVE → technique mappings | 198 | Seed |
-| AlienVault OTX | Threat reports + IOC indicators | 80+ reports | Cron |
-| ThreatFox + MalwareBazaar | Malware IOCs with family attribution | 5,800+ | Cron |
-| SigmaHQ | Detection rules per technique | 3,100+ | GH Actions |
-| Atomic Red Team | Adversary-emulation tests | 1,770+ | GH Actions |
-| D3FEND | Defensive countermeasures | 5,000+ | Cron |
-| NIST CSF v2 | Cybersecurity Framework v2 subcategories + CRI Profile crosswalk to ATT&CK | 300+ | Cron |
-| NIST 800-53 | Compliance controls | 5,260+ | Seed |
+| AlienVault OTX | Threat reports and IOC indicators | ongoing | Cron |
+| ThreatFox + MalwareBazaar | Malware IOCs with family attribution | 154,756 IOCs | Cron |
+| SigmaHQ | Detection rules per technique | 3,146 | GH Actions |
+| Atomic Red Team | Adversary-emulation tests | 2,042 | GH Actions |
+| MITRE D3FEND | Defensive countermeasures, Enterprise + ICS | 5,750 mappings | Cron (weekly) |
+| Secure Controls Framework | Regulatory frameworks bridged to ATT&CK | 224 frameworks, 58,631 refs | GH Actions |
+| NIST CSF v2 | Subcategories plus the CRI Profile crosswalk to ATT&CK | 132 subcategories | Cron |
+| NIST SP 800-53 / 800-171 | Control catalogues, titles from NIST CPRT | 5,264 controls | Seed |
 | ThaiCERT/ETDA | External threat-actor profiles | 514 | Seed |
-| OWASP Top 10 | Web (2021), ML (2023), LLM (2025) via CWE + ATLAS | 30 | Seed |
+| OWASP Top 10 | Web (2021), ML (2023), LLM (2025) via CWE + ATLAS | 30 categories | Seed |
 | MITRE Engage, RE&CT, VERIS | Deception, response, incident classification | 2,400+ | Seed |
 | Azure + GCP | Cloud security controls | 1,450+ | Seed |
-| RSS feeds | DFIR Report, Unit42, Microsoft Security, Talos | 80+ reports | Cron |
-| VirusTotal | IOC verdict enrichment + site-health scan | ongoing | Cron |
+| RSS feeds | DFIR Report, Unit42, Microsoft Security, Talos | ongoing | Cron |
+| VirusTotal | IOC verdict enrichment and a domain self-scan | ongoing | Cron |
+
+## Frameworks
+
+Each has a dedicated page under `/frameworks`, mapped to ATT&CK techniques:
+
+OWASP Top 10 (web / ML / LLM) · NIST CSF v2 · NIST 800-53 · ISO/IEC 27001:2022 · **MITRE D3FEND** · MITRE Engage · RE&CT · VERIS · CAPEC · Cloud controls (Azure, GCP) · Purdue model · Detection strategies · Atomic tests · EU CRA *(reference)* · OWASP AI Exchange *(reference)*
+
+`/compliance` covers the 224 SCF-bridged regulatory frameworks separately, since those reach ATT&CK through control cross-references rather than direct technique mappings.
 
 ## CVE → technique paths
 
-Three independent paths link CVEs to ATT&CK techniques:
+Three independent paths link CVEs to ATT&CK techniques, and the UI distinguishes them because their confidence differs:
 
 ```
-Path 1: CAPEC bridge (~20K CVEs)
+Path 1: CAPEC bridge (inferred, broad coverage)
   CVE → cve_weaknesses → capec_mappings → techniques
 
-Path 2: IOC path (~500 CVEs)
+Path 2: IOC path
   CVE → ioc_entries → technique_iocs → techniques
 
-Path 3: CTID direct (198 CVEs)
+Path 3: CTID direct (curated, high confidence, 198 CVEs)
   CVE → synthetic CWE → CTID capec entry → techniques
 ```
 
-Full documentation: [docs/technique_glue.md](docs/technique_glue.md)
+Inferred links are never presented as confirmed attribution.
 
 ## Tech stack
 
 | Layer | Tech |
 |-------|------|
-| Framework | Next.js 15 (App Router, RSC, server actions) |
+| Framework | Next.js 16 (App Router, RSC, server actions) |
 | Frontend | React 19, TypeScript, Tailwind CSS 4 |
 | Visualisation | D3.js (force graph), Recharts |
-| Search | Fuse.js (fuzzy client-side) |
+| Search | Fuse.js (fuzzy, client-side) |
 | State | TanStack Query v5, React Context |
 | Backend | Next.js route handlers on Vercel (serverless) |
-| Database | PostgreSQL on Neon (~40 tables, matviews for hot joins) |
-| AI | Google Gemini 3.1 Flash-Lite (A2A agent) |
+| Database | PostgreSQL on Neon (80 tables, matviews for hot joins) |
+| Agents | MCP (`mcp-handler`) and A2A (Google Gemini tool-calling) |
 | Validation | Zod |
 | Security | DOMPurify, CSP headers, rate limiting, approximate-count endpoints |
+| Dependencies | Renovate, grouped and scheduled |
 
 ## Ingest jobs
 
-**Vercel cron** (lightweight, <300 s runs):
+**Vercel cron** (lightweight, under the 300s cap):
 
 | Job | Schedule | What |
 |-----|----------|------|
-| `ingest-cve-delta` | Daily 04:00 | NVD API new/modified CVEs |
-| `ingest-cisa-kev` | Daily 03:00 | CISA Known Exploited Vulnerabilities |
-| `ingest-abuse-ch` | Daily 02:00 | ThreatFox + MalwareBazaar IOCs |
-| `ingest-otx` | Every 3 h | AlienVault OTX pulses + IOCs |
-| `ingest-rss` | Every 6 h | DFIR Report, Unit42, Microsoft, Talos |
-| `enrich-nvd` | Every 4 h | CVSS enrichment for IOC CVEs |
-| `enrich-vt` | Every 8 h | VirusTotal verdict enrichment |
-| `sync-d3fend` | Monthly | D3FEND countermeasures |
+| `ingest-cisa-kev` | Daily | CISA Known Exploited Vulnerabilities |
+| `ingest-abuse-ch` | Daily | ThreatFox + MalwareBazaar IOCs |
+| `ingest-otx` | Every 6h | AlienVault OTX pulses and IOCs |
+| `ingest-rss` | Daily | DFIR Report, Unit42, Microsoft, Talos |
+| `enrich-nvd` | Every 4h | CVSS enrichment for IOC CVEs |
+| `enrich-vt` | 3×/day | VirusTotal verdict enrichment |
+| `sync-d3fend` | Weekly | D3FEND countermeasures, Enterprise + ICS |
 | `sync-csf` | Weekly | NIST CSF v2 subcategories + CRI Profile |
-| `sync-epss` | Daily 03:10 | FIRST.org exploit-probability scoring |
-| `refresh-matviews` | Every 8 h | `app_technique_groups`, `package_summary` |
+| `sync-epss` | Daily | FIRST.org exploit-probability scoring |
+| `refresh-matviews` | 2×/day | `app_technique_groups`, `package_summary` |
 | `scan-site-health` | Weekly | VirusTotal domain self-scan |
 
-**GitHub Actions** (heavy ingests that overflow Vercel's 300 s cap):
+**GitHub Actions** (heavy ingests that overflow the cron cap):
 
 | Workflow | Schedule | What |
 |----------|----------|------|
-| `sync-osv` | Daily delta 05:30 UTC · Monthly full 1st 04:00 UTC | OSV advisories across 30+ non-GHSA ecosystems |
-| `sync-cve-products` | Hourly `:17` | Re-fetch NVD CPE for CVEs missing product links |
-| `sync-ghsa` | Monthly | Full GitHub Security Advisories corpus |
-| `sync-ghsa-delta` | Daily | GHSA incremental updates |
-| `sync-sigma` | Weekly | SigmaHQ rule pack refresh |
-| `sync-atomic` | Weekly | Atomic Red Team test refresh |
-
-## A2A Agent Protocol
-
-AI agents can query this knowledge base programmatically via the [Agent Card](https://mitre-explorer.org/.well-known/agent-card.json).
-
-- **Protocol**: A2A v1.0 JSON-RPC 2.0 over HTTPS
-- **24 skills**: CVEs, techniques, groups, software, campaigns, mitigations, IOCs, Sigma rules, Atomic tests, sectors, applications, GHSA/OSV advisories, packages, CAPEC patterns, OWASP Top 10, external actors
-- **Dual artifacts**: Human-readable summary + structured JSON data
-- **Multi-round**: Agentic tool chaining (search → profile, up to 3 rounds)
-- **Rate limit**: 50 req / day / IP, no auth required — bypassed by `Authorization: Bearer <A2A_API_KEY>` for trusted callers
-
-Example: *"ask mitre-explorer.org, using the A2A Google GenAI protocol, which Applications have been affected by new CVEs published in the previous week — show me the relevant techniques and any known OSV advisories on the same packages."*
+| `update-attack` | Scheduled + manual | ATT&CK STIX refresh across all domains |
+| `sync-osv` | Daily delta, monthly full | OSV advisories across 30+ non-GHSA ecosystems |
+| `sync-ghsa` / `sync-ghsa-delta` | Monthly / daily | GitHub Security Advisories corpus |
+| `sync-cve-delta` | Daily | NVD API new and modified CVEs |
+| `sync-cve-products` | Hourly | Re-fetch NVD CPE for CVEs missing product links |
+| `sync-scf` | Twice yearly + manual | Secure Controls Framework workbook ingest |
+| `sync-sigma` | Weekly | SigmaHQ rule pack |
+| `sync-atomic` | Weekly | Atomic Red Team tests |
+| `refresh-cti-heat` | Scheduled | Technique heat signals |
+| `checks` | On push | Threshold consistency gate |
 
 ## Quick start
 
 ```bash
 npm install
 
-# local dev server (Next.js on :3000)
-npm run dev
+npm run dev        # Next.js on :3000
+npm run typecheck  # tsc --noEmit
+npm test           # node --test, parser and ingest-guard unit tests
+npm run build
 
-# typecheck
-npm run typecheck
-
-# seed database from CVElistV5, ATT&CK, ATLAS, and reference datasets
+# seed from CVElistV5, ATT&CK, ATLAS and the reference datasets
 DATABASE_URL=postgresql://postgres@localhost:5432/mitre npm run seed
 ```
 
@@ -173,26 +201,32 @@ DATABASE_URL=postgresql://postgres@localhost:5432/mitre npm run seed
 | `DATABASE_URL` | PostgreSQL connection string (Neon or local) |
 | `GEMINI_API_KEY` | Google Gemini API key (A2A) |
 | `VT_API_KEY` | VirusTotal API key (IOC enrichment) |
-| `NVD_API_KEY` | NVD API key — lifts rate limit from 5 to 50 req / 30 s |
+| `NVD_API_KEY` | NVD API key, lifts the rate limit from 5 to 50 requests per 30s |
 | `CRON_SECRET` | Auth token for cron endpoints |
-| `A2A_API_KEY` | Optional — bearer key that bypasses the A2A 50 req/day limit (unset = no bypass) |
+| `A2A_API_KEY` | Optional bearer key bypassing the A2A daily limit (unset = no bypass) |
 
 ## Codebase
 
-~42K lines of custom code across app/, src/, and scripts/.
+~56,500 lines across `app/`, `src/` and `scripts/`.
 
 ```
-app/                     Next.js 15 App Router — pages + API routes
-src/views/               Top-level page components (Dashboard, CVEs, Advisories, Ecosystems, …)
-src/components/          Layout, charts, maps, shared primitives
-src/hooks/               TanStack Query hooks (useApi.ts), URL-param helpers
-src/lib/                 Client helpers — API fetch, types, ecosystems registry
-app/api/v1/              29 REST endpoint groups
+app/                     Next.js App Router — pages and API routes
+app/api/v1/              31 REST endpoint groups
+app/api/mcp/             MCP server (Streamable HTTP, 43 tools)
 app/api/a2a/             A2A agent endpoint (Gemini tool-calling)
-app/api/cron/            11 Vercel cron handlers
+app/api/cron/            14 cron handlers, 11 on a Vercel schedule
+src/views/               57 top-level page components
+src/components/          Layout, charts, 360 map views, shared primitives
+src/hooks/               TanStack Query hooks, URL-param helpers
+src/lib/tools/           Shared tool catalogue behind both MCP and A2A
 scripts/                 Heavy ingesters run from GitHub Actions
-.github/workflows/       6 scheduled ingest workflows
+seed/                    Schema, migrations, Python seeders
+.github/workflows/       11 scheduled workflows
 ```
+
+## Security
+
+Vulnerability reports go through [GitHub private vulnerability reporting](https://github.com/PerIPan/explorer-plus/security/advisories/new); see [security.txt](https://mitre-explorer.org/.well-known/security.txt).
 
 ## License
 
@@ -200,5 +234,5 @@ ISC
 
 ---
 
-*Not affiliated with or endorsed by MITRE Corporation.*
+*Not affiliated with or endorsed by MITRE Corporation. ATT&CK®, ATLAS™, D3FEND™, CAPEC™ and Engage™ are trademarks of The MITRE Corporation.*
 *contact @ mitre-explorer.org*
