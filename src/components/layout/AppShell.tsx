@@ -131,6 +131,14 @@ const API_GROUPS: { label: string; routes: { path: string; desc: string }[] }[] 
     ],
   },
   {
+    label: 'ICS / OT',
+    routes: [
+      { path: '/assets', desc: 'ATT&CK for ICS assets (filter by search, level, zone, sector, boundary)' },
+      { path: '/assets/{attackId}', desc: 'asset 360 — Purdue placement, techniques that target it, D3FEND countermeasures' },
+      { path: '/frameworks/purdue', desc: 'Purdue levels and zones, and which levels may talk to which' },
+    ],
+  },
+  {
     label: 'Frameworks & compliance',
     routes: [
       { path: '/frameworks/owasp', desc: 'OWASP Top 10 (web / ML / LLM)' },
@@ -138,7 +146,11 @@ const API_GROUPS: { label: string; routes: { path: string; desc: string }[] }[] 
       { path: '/frameworks/nist', desc: 'NIST 800-53 controls' },
       { path: '/frameworks/iso27001', desc: 'ISO/IEC 27001:2022 (via CSF crosswalk)' },
       { path: '/frameworks/d3fend', desc: 'MITRE D3FEND countermeasures by defensive tactic' },
+      { path: '/frameworks/d3fend/{d3fendId}', desc: 'one countermeasure — every technique it counters, plus overlapping countermeasures' },
       { path: '/frameworks/engage', desc: 'MITRE Engage adversary-engagement activities' },
+      { path: '/frameworks/react', desc: 'RE&CT incident-response actions' },
+      { path: '/frameworks/veris', desc: 'VERIS enumerations (filter by q, category)' },
+      { path: '/frameworks/cloud-controls', desc: 'AWS / Azure / GCP controls (filter by provider, q)' },
       { path: '/frameworks/detection', desc: 'Detection Strategies + Analytics (ATT&CK v19)' },
       { path: '/compliance/frameworks', desc: 'SCF-bridged frameworks (NIS2, DORA, PCI, ...)' },
       { path: '/compliance/frameworks/{key}', desc: 'framework → ATT&CK technique detail' },
@@ -504,18 +516,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </p>
               <ul className="space-y-2 pl-4 list-disc marker:text-[var(--accent-teal)]">
                 <li><strong>Multi-domain ATT&CK + ATLAS</strong> — Enterprise, ICS, Mobile, ATLAS (AI/ML threats) with domain switcher + "All Domains" cross-domain view</li>
-                <li><strong>ICS / OT</strong> — 18 ATT&CK for ICS assets (PLCs, RTUs, HMIs, historians, safety controllers, jump hosts) with the techniques that target each, placed on the <strong>Purdue model</strong>: seven levels from the physical process to enterprise IT, the industrial DMZ between them, and which levels are allowed to communicate</li>
+                <li><strong>ICS / OT</strong> — 18 ATT&CK for ICS assets (PLCs, RTUs, HMIs, historians, safety controllers, jump hosts) with the techniques that target each, placed on the <strong>Purdue model</strong>: seven levels from the physical process to enterprise IT, the industrial DMZ between them, and which levels are allowed to communicate — each asset also showing the D3FEND countermeasures that defend it</li>
 <li><strong>Agent2Agent (A2A) protocol</strong> — AI agents can query this knowledge base programmatically. See the <strong>Agent2Agent</strong> tab.</li>
                 <li><strong>MCP server</strong> — point Claude, Cursor or any MCP client at <code>/api/mcp</code> and query all of the above in conversation: {AGENT_TOOL_COUNT} tools over Streamable HTTP, anonymous and unmetered. See the <strong>APIs / MCP</strong> button in the top bar.</li>
                 <li><strong>Actor comparison</strong> — select up to 3 threat actors on the Matrix, see technique overlap color-coded, export as HTML</li>
-                <li><strong>360 Views</strong> — search any entity, explore via Technique Map, Actor Profile, Malware Map, Application Map, Sector Map, or D3 force graph</li>
-                <li><strong>Applications</strong> — 11K+ vendor products linked to CVEs → CWE → CAPEC → ATT&CK techniques → threat groups. See which apps your adversaries target</li>
+                <li><strong>360 Views</strong> — search any entity, explore via Threat Actor Profile, Technique Map, Malware Map, Mitigation Map, Data Source Map, Tactic Map, Sector Map, Application Map, Asset Map, OWASP Map, or D3 force graph</li>
+                <li><strong>Applications</strong> — 19K+ vendor products linked to CVEs → CWE → CAPEC → ATT&CK techniques → threat groups. See which apps your adversaries target</li>
                 <li><strong>Advisories</strong> — unified GHSA (OSS packages) + OSV (Linux kernel, Debian, Ubuntu, Alpine, Android, Red Hat, SUSE, Rocky, Alma, Chainguard, OSS-Fuzz …) with faceted filters — severity, ecosystem category, CVE-alias</li>
                 <li><strong>CVEs</strong> — since 2017, CISA KEV + NVD CVSS enrichment + EPSS exploit-probability scoring (First.org, daily), linked to ATT&CK via CWE→CAPEC bridge + CTID mappings, cross-referenced to distro advisories</li>
-                <li><strong>Frameworks</strong> — OWASP Top 10 (Web 2021, ML 2023, LLM 2025), NIST 800-53 r5, NIST CSF v2 (GV/ID/PR/DE/RS/RC with CRI Profile crosswalk), MITRE Engage, D3FEND, RE&CT, VERIS, ISO/IEC 27001:2022, AWS + Azure + GCP cloud controls, CAPEC (615 patterns, full taxonomy), Purdue model (OT network segmentation), EU Cyber Resilience Act reference</li>
+                <li><strong>Frameworks</strong> — OWASP Top 10 (Web 2021, ML 2023, LLM 2025), NIST 800-53 r5, NIST CSF v2 (GV/ID/PR/DE/RS/RC with CRI Profile crosswalk), MITRE Engage, D3FEND (153 countermeasures across seven defensive tactics), RE&CT, VERIS, ISO/IEC 27001:2022, AWS + Azure + GCP cloud controls, CAPEC (615 patterns, full taxonomy), Purdue model (OT network segmentation), EU Cyber Resilience Act reference</li>
                 <li><strong>IOCs</strong> — OTX + ThreatFox + MalwareBazaar, enriched with VirusTotal verdicts and sandbox-derived techniques</li>
                 <li><strong>Detection</strong> — Detection Strategies + Analytics (ATT&CK v19), SigmaHQ rules, Atomic Red Team tests, MITRE Caldera, D3FEND countermeasures</li>
-                <li><strong>Threat actors</strong> — 191 ATT&CK groups + 514 ThaiCERT/ETDA actors with category inference</li>
+                <li><strong>Threat actors</strong> — 180 ATT&CK groups + 514 ThaiCERT/ETDA actors with category inference</li>
                 <li><strong>Compliance</strong> — regulatory + audit frameworks (NIS2, DORA, PCI DSS, NIST 800-53, HIPAA, GDPR, CMMC, ...) bridged to ATT&CK via the Secure Controls Framework (SCF)</li>
                 <li><strong>Data model</strong> — 30+ interconnected data sources: ATT&CK STIX (incl. the ICS asset catalogue), ATLAS, CVElistV5, NVD, CAPEC, CWE, NIST 800-53, NIST CSF v2, NIST 800-82r3 / ISA-95 (Purdue levels), CISA KEV, EPSS, OTX, SigmaHQ, Atomic Red Team, D3FEND, VERIS, CTID, GHSA, OSV, SCF</li>
                 <li><strong>Sector + domain filters</strong> — narrow everything by industry and ATT&CK domain (AND logic)</li>

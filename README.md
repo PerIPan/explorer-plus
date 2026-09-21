@@ -35,7 +35,7 @@
 | **Defence** | 5,750 D3FEND mappings across 153 countermeasures, browsable by defensive tactic, covering Enterprise **and ICS** |
 | **Compliance** | 224 frameworks bridged to ATT&CK through the Secure Controls Framework: 1,534 controls and 58,600 cross-references spanning NIS2, DORA, GDPR, EU CRA, EU AI Act, HIPAA, PCI DSS, SOC 2, CMMC, FedRAMP and more |
 | **ICS and OT** | 18 ATT&CK for ICS assets with curated Purdue-model placement (level, zone, boundary), the techniques that target them, and the D3FEND countermeasures that defend them |
-| **Threat actors** | 178 ATT&CK groups plus 514 ThaiCERT/ETDA external actors with country, motivation and state-sponsor attribution |
+| **Threat actors** | 180 ATT&CK groups plus 514 ThaiCERT/ETDA external actors with country, motivation and state-sponsor attribution |
 | **Sector intelligence** | 12 industry verticals with their threat landscape: groups, techniques, campaigns, CVEs, vulnerable apps |
 | **Agent access** | An **MCP server** and an **A2A agent** over the same 43-tool catalogue, so AI clients can query all of the above directly |
 
@@ -81,7 +81,7 @@ Next.js 16 App Router (React 19 + TypeScript + Tailwind 4)
 
 | Source | What | Scale | Update |
 |--------|------|------:|--------|
-| MITRE ATT&CK STIX | Techniques, groups, campaigns, software, mitigations, tactics, ICS assets | v19.0 | GH Actions |
+| MITRE ATT&CK STIX | Techniques, groups, campaigns, software, mitigations, tactics, ICS assets | v19.2 | GH Actions |
 | MITRE ATLAS | AI/ML techniques, mitigations, cross-references | 155 techniques | Seed |
 | CVElistV5 | CVE metadata, CWEs, affected products (CPE) | 107,295 | Seed + delta |
 | NVD API | CVSS scores, descriptions, CPE enrichment | hourly | GH Actions |
