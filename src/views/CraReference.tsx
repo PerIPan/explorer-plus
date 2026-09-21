@@ -47,6 +47,15 @@ interface ReportingStage {
   trigger: string;
 }
 
+// Regulation (EU) 2024/2847 Article 71 application dates. Ordered as the
+// regulation sequences them, not by proximity to today.
+const KEY_DATES = [
+  { iso: '2024-12-10', display: '10 December 2024', label: 'Entry into force' },
+  { iso: '2026-06-11', display: '11 June 2026',     label: 'Conformity-assessment bodies notification' },
+  { iso: '2026-09-11', display: '11 September 2026', label: 'Article 14 reporting obligations apply' },
+  { iso: '2027-12-11', display: '11 December 2027', label: 'Full application (CE marking required)' },
+];
+
 // Article 14 reporting cadence to CSIRT + ENISA SRP.
 const REPORTING_STAGES: ReportingStage[] = [
   { stage: 'Early warning', vulnerability: '24 hours', incident: '24 hours', trigger: 'From becoming aware of an actively exploited vulnerability / severe incident' },
@@ -87,26 +96,38 @@ export function CraReference() {
         </p>
       </div>
 
-      {/* Key dates */}
+      {/* Key dates — status is derived from today, not hard-coded, so a milestone
+          passing never leaves the page claiming an obligation is still upcoming. */}
       <section>
         <h2 className="text-sm font-bold uppercase tracking-wider text-[var(--accent-teal)] mb-3">Key dates</h2>
         <ul className="grid gap-2 md:grid-cols-2">
-          <li className="rounded-md border border-[var(--border-color)] bg-[var(--surface-card)] px-3 py-2">
-            <div className="text-xs text-[var(--text-secondary)]">Entry into force</div>
-            <div className="text-sm font-semibold text-[var(--text-primary)]">10 December 2024</div>
-          </li>
-          <li className="rounded-md border border-[var(--border-color)] bg-[var(--surface-card)] px-3 py-2">
-            <div className="text-xs text-[var(--text-secondary)]">Vulnerability-handling obligations apply</div>
-            <div className="text-sm font-semibold text-[var(--text-primary)]">11 September 2026</div>
-          </li>
-          <li className="rounded-md border border-[var(--border-color)] bg-[var(--surface-card)] px-3 py-2">
-            <div className="text-xs text-[var(--text-secondary)]">Conformity-assessment bodies notification</div>
-            <div className="text-sm font-semibold text-[var(--text-primary)]">11 June 2026</div>
-          </li>
-          <li className="rounded-md border border-[var(--border-color)] bg-[var(--surface-card)] px-3 py-2">
-            <div className="text-xs text-[var(--text-secondary)]">Full application (CE marking required)</div>
-            <div className="text-sm font-semibold text-[var(--text-primary)]">11 December 2027</div>
-          </li>
+          {KEY_DATES.map((d) => {
+            const live = new Date(d.iso) <= new Date();
+            return (
+              <li
+                key={d.iso}
+                className={`rounded-md border px-3 py-2 ${
+                  live
+                    ? 'border-[var(--teal-dim)] bg-[var(--teal-faint)]'
+                    : 'border-[var(--border-color)] bg-[var(--surface-card)]'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-[var(--text-secondary)]">{d.label}</span>
+                  <span
+                    className={`ml-auto text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded border ${
+                      live
+                        ? 'border-[var(--teal-dim)] text-[var(--accent-teal)]'
+                        : 'border-[var(--border-color)] text-[var(--text-secondary)]'
+                    }`}
+                  >
+                    {live ? 'in force' : 'upcoming'}
+                  </span>
+                </div>
+                <div className="text-sm font-semibold text-[var(--text-primary)]">{d.display}</div>
+              </li>
+            );
+          })}
         </ul>
       </section>
 
@@ -118,7 +139,17 @@ export function CraReference() {
         <p className="text-sm text-[var(--text-secondary)] mb-3 leading-relaxed">
           Manufacturers must notify the CSIRT of their main establishment and ENISA via the Single Reporting
           Platform (SRP) when they become aware of an actively exploited vulnerability or a severe incident
-          impacting the security of the product.
+          impacting the security of the product. The SRP has been operational since 11 September 2026 and is
+          the required channel &mdash; submit at{' '}
+          <a
+            href="https://portal.cra-srp.enisa.europa.eu"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[var(--accent-teal)] hover:underline"
+          >
+            portal.cra-srp.enisa.europa.eu
+          </a>
+          . Open-source software stewards take on the same obligations from 11 December 2027.
         </p>
         <div className="overflow-x-auto rounded-md border border-[var(--border-color)]">
           <table className="w-full text-sm">
