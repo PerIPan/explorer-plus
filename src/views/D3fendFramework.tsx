@@ -38,6 +38,19 @@ const DOMAIN_LABEL: Record<string, string> = {
   'atlas-attack': 'ATLAS',
 };
 
+/**
+ * D3FEND's site addresses a countermeasure by its ontology class name, never by
+ * its D3-XX id: D3-AM lives at /technique/d3f:AccessModeling/, while
+ * /technique/d3-am/ is a 404. The class name is the fragment of the ontology
+ * IRI already stored in d3fend_url (…/d3fend.owl#AccessModeling), so derive the
+ * link from there. Checked against all 153 countermeasures — every one resolves,
+ * including the hyphenated classes (d3f:Application-basedProcessIsolation).
+ */
+function d3fendSiteUrl(ontologyIri: string): string {
+  const className = ontologyIri.split('#')[1]?.trim();
+  return className ? `https://d3fend.mitre.org/technique/d3f:${className}/` : 'https://d3fend.mitre.org/';
+}
+
 export function D3fendFramework() {
   const { d3fendId: urlId } = useParams<{ d3fendId?: string }>();
   const [expanded, setExpanded] = useState<string | null>(() => urlId?.toUpperCase() ?? null);
@@ -221,7 +234,7 @@ export function D3fendFramework() {
                                 ))}
                                 {detail.countermeasure.d3fendUrl && (
                                   <a
-                                    href={`https://d3fend.mitre.org/technique/${cm.d3fendId.toLowerCase()}/`}
+                                    href={d3fendSiteUrl(detail.countermeasure.d3fendUrl)}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="text-[var(--accent-teal)] hover:underline"
