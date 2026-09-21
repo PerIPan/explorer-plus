@@ -19,6 +19,8 @@ interface NavItem {
   path: string;
   label: string;
   tooltip?: string;
+  /** Renders the label one step heavier than its siblings (semibold vs medium). */
+  emphasis?: boolean;
 }
 
 interface NavSection {
@@ -31,7 +33,7 @@ const topNav: NavItem[] = [
   { path: '/matrix', label: 'Matrix', tooltip: 'att&ck technique matrix heatmap — tactics vs techniques' },
   { path: '/dashboard', label: 'Overview', tooltip: 'summary stats, charts, and top threat groups' },
   { path: '/sectors', label: 'Sectors', tooltip: 'industry sectors targeted by threat groups — click any sector for its 360 view' },
-  { path: '/compliance', label: 'Compliance', tooltip: 'regulatory and audit frameworks (NIS2, DORA, PCI DSS, NIST 800-53, HIPAA, GDPR, CMMC, ...) bridged to ATT&CK Enterprise via the Secure Controls Framework (SCF)' },
+  { path: '/compliance', label: 'Compliance', emphasis: true, tooltip: 'regulatory and audit frameworks (NIS2, DORA, PCI DSS, NIST 800-53, HIPAA, GDPR, CMMC, ...) bridged to ATT&CK Enterprise via the Secure Controls Framework (SCF)' },
   { path: '/cti/feed-status', label: 'Feed Status', tooltip: 'CTI feed ingestion health and manual sync controls' },
 ];
 
@@ -82,7 +84,7 @@ const extendedIntelNav: NavItem[] = [
   { path: '/external-actors', label: 'Non-MITRE Actors', tooltip: '500+ threat actors from ThaiCERT encyclopedia' },
 ];
 
-function NavItemLink({ path, label, tooltip, end }: NavItem & { end?: boolean }) {
+function NavItemLink({ path, label, tooltip, end, emphasis }: NavItem & { end?: boolean }) {
   const pathname = usePathname();
   const isActive = end
     ? pathname === path
@@ -92,7 +94,8 @@ function NavItemLink({ path, label, tooltip, end }: NavItem & { end?: boolean })
       href={path}
       title={tooltip}
       className={[
-        'block px-3 py-2.5 rounded-md text-sm font-medium transition-colors duration-150',
+        'block px-3 py-2.5 rounded-md text-sm transition-colors duration-150',
+        emphasis ? 'font-semibold' : 'font-medium',
         isActive
           ? 'text-[var(--accent-teal)] bg-[var(--teal-faint)] border-l-2 border-[var(--accent-teal)]'
           : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--hover-overlay)]',
@@ -141,7 +144,7 @@ function CollapsibleNavSection({ label, items, defaultOpen = false, title }: { l
       {open && (
         <div className="space-y-0.5">
           {items.map((item) => (
-            <NavItemLink key={item.path} path={item.path} label={item.label} tooltip={item.tooltip} />
+            <NavItemLink key={item.path} {...item} />
           ))}
         </div>
       )}
@@ -209,7 +212,7 @@ export function Sidebar({ open, onClose, onOpenMcp }: SidebarProps) {
           [&::-webkit-scrollbar-thumb]:bg-[var(--border-color)] [&::-webkit-scrollbar-thumb]:rounded-full"
       >
         {topNav.map((item) => (
-          <NavItemLink key={item.path} path={item.path} label={item.label} tooltip={item.tooltip} end={item.path === '/'} />
+          <NavItemLink key={item.path} {...item} end={item.path === '/'} />
         ))}
       </nav>
 
