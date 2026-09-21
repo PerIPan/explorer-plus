@@ -37,7 +37,7 @@
 | **ICS and OT** | 18 ATT&CK for ICS assets with curated Purdue-model placement (level, zone, boundary), the techniques that target them, and the D3FEND countermeasures that defend them |
 | **Threat actors** | 180 ATT&CK groups plus 514 ThaiCERT/ETDA external actors with country, motivation and state-sponsor attribution |
 | **Sector intelligence** | 12 industry verticals with their threat landscape: groups, techniques, campaigns, CVEs, vulnerable apps |
-| **Agent access** | An **MCP server** and an **A2A agent** over the same 43-tool catalogue, so AI clients can query all of the above directly |
+| **MCP + A2A** | An **MCP server** (`/api/mcp`) and an **A2A agent** over the same 43-tool catalogue, so Claude, Cursor or any agent can query all of the above directly — anonymous, no key. See [For AI agents](#for-ai-agents) |
 
 ## For AI agents
 
