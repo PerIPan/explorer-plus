@@ -758,10 +758,38 @@ export function ProfilePanel({
 
   return (
     <>
-      {/* Scrim for the click-opened sheet only. The peek never dims or blocks
-          the page behind it — it was not asked for. */}
-      {!anchored && modal && (
-        <div data-profile-scrim="" className="fixed inset-0 z-40 bg-black/30" aria-hidden="true" />
+      {/* Scrim — CLICK-OPENED ONLY. The peek never gets one: it is explicitly
+          `aria-modal="false"`, and capturing clicks would interrupt a visitor
+          typing in the search field, which is the one thing it must not do.
+
+          The anchored variant is FULLY TRANSPARENT — no dim, no blur, nothing
+          visible. It is a popover, not a page-blocking modal. Its only job is
+          to own the pointer, so an outside click always lands on a live
+          element and the close path never depends on how a given engine
+          treats pointer events over `inert` content (retarget vs. suppress —
+          not something that can be settled without real browsers). `inert`
+          keeps owning focus and AT; the scrim owns the pointer. The sheet's
+          scrim keeps its dim, since a sheet does read as modal.
+
+          Rendered as a SIBLING of the panel rather than portalled: sharing a
+          parent means the z-order (40 under the panel's 50) is decided in one
+          stacking context and cannot be inverted by an ancestor, which would
+          leave the panel itself unclickable. `pointer-events-auto` because the
+          xl diamond's wrapper is `pointer-events-none`. Excluded from the
+          `inert` walk above by `data-profile-scrim`. A pointerdown on it is an
+          ordinary outside click: the document listener above sees a target
+          outside the panel and calls the same `dismiss` path as before — no
+          new action, no second handler. */}
+      {modal && (
+        <div
+          data-profile-scrim=""
+          aria-hidden="true"
+          className={
+            anchored
+              ? 'fixed inset-0 z-40 pointer-events-auto'
+              : 'fixed inset-0 z-40 bg-black/30'
+          }
+        />
       )}
 
       <div
