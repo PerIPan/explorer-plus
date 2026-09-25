@@ -65,6 +65,23 @@ export const sortKeySchema = z.enum(['io', 'rp', 'kev', 'cv', 'lift']).default('
 export const sectorSlugSchema = z.enum(SECTOR_SLUGS);
 
 /**
+ * Shared preprocessor for every comma-separated list param below.
+ *
+ * Splits on `,`, trims, drops blanks, and returns `undefined` when nothing
+ * survives — so `?platforms=`, `?assets=,,` and `?levels=` all mean ABSENT
+ * rather than "a constraint on the empty string", matching `versionParam`.
+ * A non-string value is passed through untouched for zod to reject.
+ *
+ * Factored out because `platforms`, `assets` and `levels` must normalise
+ * identically; three hand-copied closures is three chances to drift.
+ */
+function csvMembers(v: unknown): unknown {
+  if (typeof v !== 'string') return v;
+  const parts = v.split(',').map((s) => s.trim()).filter((s) => s !== '');
+  return parts.length > 0 ? parts : undefined;
+}
+
+/**
  * Comma-separated `?platforms=Windows,Linux`.
  *
  * The Threat Profile panel collects platforms as a MULTI-select (a binding
@@ -80,17 +97,45 @@ export const sectorSlugSchema = z.enum(SECTOR_SLUGS);
  * exactly as the old scalar `platform` did: `platformSchema` is applied to
  * every element.
  */
-export const platformsParam = z.preprocess(
-  (v) => {
-    if (typeof v !== 'string') return v;
-    const parts = v.split(',').map((s) => s.trim()).filter((s) => s !== '');
-    return parts.length > 0 ? parts : undefined;
-  },
-  z.array(platformSchema).max(24).optional(),
-);
+export const platformsParam = z.preprocess(csvMembers, z.array(platformSchema).max(24).optional());
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * OT (ICS) selection params
+ *
+ * The OT branch of the Threat Profile does not rank on platforms — it cannot.
+ * ATT&CK for ICS models ASSETS (A0001-A0018) and Purdue levels instead, and
+ * every live ICS technique carries the literal platform 'None' or none at all
+ * (see the header of src/lib/profile-options.ts). These two params are the OT
+ * analogue of `platforms`: same comma-separated wire form, same `.max(24)`
+ * bound, same "empty value means absent, unrecognised member 400s" contract.
+ * ──────────────────────────────────────────────────────────────────────────── */
+
+/**
+ * An ATT&CK ICS asset id. Verified against production 2026-09-26: `attack_assets`
+ * holds exactly 18 rows, A0001-A0018, all live (0 revoked, 0 deprecated), and all
+ * 18 carry an `asset_purdue_placement`. The regex is bounded to that range rather
+ * than a loose `A\d{4}` so a typo'd A0019 is a 400, not an empty band.
+ */
+export const assetIdSchema = z.string().regex(/^A00(0[1-9]|1[0-8])$/);
+
+/**
+ * A Purdue level key. Verified against production 2026-09-26: these seven are
+ * exactly `purdue_levels.level_key`, and exactly the values permitted by the
+ * `spans_valid` CHECK on `asset_purdue_placement.spans_levels`.
+ *
+ * `l5` is legal input that resolves to ZERO assets (Enterprise IT carries no
+ * ATT&CK asset — an honest absence, not missing data). The route handles that
+ * as the documented no-assets state; it is deliberately NOT a validation error.
+ */
+export const purdueLevelSchema = z.enum(['l0', 'l1', 'l2', 'l3', 'l3_5', 'l4', 'l5']);
+
+export const assetsParam = z.preprocess(csvMembers, z.array(assetIdSchema).max(24).optional());
+export const levelsParam = z.preprocess(csvMembers, z.array(purdueLevelSchema).max(24).optional());
 
 export const profileQuerySchema = z.object({
   sector: sectorSlugSchema.optional(),
   platforms: platformsParam,
+  assets: assetsParam,
+  levels: levelsParam,
   sort: sortKeySchema,
 });

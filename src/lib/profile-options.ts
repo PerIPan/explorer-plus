@@ -14,10 +14,29 @@
 // below, and `z.enum`'s narrowing over in `validate.ts`, both depend on it.
 
 /**
- * ATT&CK platforms. Values verified against production 2026-09-25: every entry
- * matches >=1 live technique. 'Network', 'Google Workspace' and 'Azure AD' were
- * removed (0 live techniques each) and ESXi/Network Devices added (117/100) —
- * they previously 400'd.
+ * ATT&CK platforms.
+ *
+ * Verified against production 2026-09-26, and the claim is narrower than it
+ * used to read here. What is true: every ENTERPRISE and MOBILE entry matches
+ * >=1 live technique (Windows 474, ESXi 117, Network Devices 100). 'Network',
+ * 'Google Workspace' and 'Azure AD' were removed (0 live techniques each) and
+ * ESXi/Network Devices added — they previously 400'd.
+ *
+ * What is NOT true, and what this comment previously asserted: the seven ICS
+ * entries below match ZERO live techniques each — Control Server 0, Data
+ * Historian 0, Engineering Workstation 0, Field Controller/RTU/PLC/IED 0,
+ * Human-Machine Interface 0, Input/Output Server 0, Safety Instrumented
+ * System/Protection Relay 0. ATT&CK for ICS does not model platforms: every
+ * live ICS technique carries either the literal platform 'None' (73) or no
+ * platforms array at all (24). Filtering ICS techniques by any of these seven
+ * values therefore returns an empty pool, silently.
+ *
+ * They stay in the list because they are still legal API input (dropping them
+ * would 400 a URL that used to work) and because `ICS_PLATFORMS` below derives
+ * the IT/OT picker split from them. The OT path does not rank on platforms at
+ * all — it ranks on ATT&CK assets (A0001-A0018) and Purdue levels; see the OT
+ * branch of app/api/v1/profile/route.ts. Never offering these seven in a
+ * picker is the UI's job, not this list's.
  */
 export const PLATFORMS = [
   // Enterprise

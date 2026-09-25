@@ -1,9 +1,35 @@
 /**
  * Pure ranking functions for the Threat Profile. Kept out of the route so they
  * can be unit-tested without a database — the repo has no jsdom/DB test harness.
+ *
+ * Shared by BOTH engines. The IT path ranks enterprise techniques for a sector;
+ * the OT path ranks ICS techniques for a set of ATT&CK assets. They differ in
+ * what they measure, not in how bands are cut, so the band logic lives here once
+ * and each path supplies its own metric and its own structural floor.
  */
 
-const METRIC = { io: 'iocs', rp: 'reports', kev: 'kevCount', cv: 'cveCount', lift: 'lift' };
+/**
+ * Band A's sort field, keyed by the `sort` the caller asked for.
+ *
+ * `exposure` is the OT path's metric and is NOT a visitor-selectable `sort`
+ * value (`sortKeySchema` deliberately does not offer it): Band A on the OT path
+ * is exposure by definition, and the route passes the literal.
+ *
+ * It MUST be present here. Without it `METRIC['exposure'] ?? 'kevCount'` falls
+ * back to kevCount — and kevCount is 0 for every live ICS technique (measured
+ * 2026-09-26: the only ICS row in `technique_cve_evidence` is T0812, which is
+ * revoked). Band A would then be an arbitrary stable-sort slice of an all-zero
+ * column, presented to a plant operator as "your top exposure". That is a
+ * silent wrong answer, not a crash, which is why it is called out here.
+ */
+const METRIC = {
+  io: 'iocs',
+  rp: 'reports',
+  kev: 'kevCount',
+  cv: 'cveCount',
+  lift: 'lift',
+  exposure: 'exposure',
+};
 
 /** Band B's group-count floor. A technique attributed to <3 groups is one sighting away
  * from noise — six single-sighting techniques tied at the same lift is not a defensible
@@ -11,17 +37,48 @@ const METRIC = { io: 'iocs', rp: 'reports', kev: 'kevCount', cv: 'cveCount', lif
 export const MIN_GROUPS = 3;
 
 /**
- * Band A = top N by the chosen evidence metric, unrestricted (reach stays valid at any
- * selection size). Band B = top N by lift among techniques with >= minGroups attributed
- * groups, Band A excluded. `bandBShort` is true whenever fewer than N candidates clear
- * the floor — the caller (the route) is responsible for the documented fallback: drop
- * the platform constraint, re-select, and label the widening.
+ * Band B's REACH floor, the OT analogue of `MIN_GROUPS`.
+ *
+ * Asset-derived items carry no group attribution at all, so `MIN_GROUPS` would
+ * empty Band B entirely rather than filter it — again silently. The structural
+ * intent MIN_GROUPS encodes ("one sighting must not mint a top-six entry")
+ * transfers to reach: a technique mapped to a single one of the 18 assets can
+ * reach lift 18.0 off one `asset_techniques` row. Requiring reach >= 2 costs
+ * nothing real — measured 2026-09-26, all three zone selections still produce a
+ * full six-item Band B under this floor.
  */
-export function splitBands(pool, sortKey, n = 6, minGroups = MIN_GROUPS) {
+export const MIN_REACH = 2;
+
+/**
+ * Band A = top N by the chosen evidence metric, unrestricted (reach stays valid at any
+ * selection size). Band B = top N by lift among techniques that clear BOTH floors,
+ * Band A excluded. `bandBShort` is true whenever fewer than N candidates clear
+ * the floors — on the IT path the caller (the route) is responsible for the documented
+ * fallback: drop the platform constraint, re-select, and label the widening.
+ *
+ * Band A's comparator has no explicit tie-break ON PURPOSE. `Array.prototype.sort` is
+ * stable, so ties resolve to the pool's incoming order, and BOTH routes order their pool
+ * query deterministically (IT: `lift DESC, attack_id ASC`; OT: `exposure DESC,
+ * attack_id ASC`). Adding a tie-break here would silently re-order the IT path's
+ * existing Band A, which is in production use.
+ *
+ * @param {Array<object>} pool         candidate techniques
+ * @param {string} sortKey             a key of METRIC; anything else falls back to kevCount
+ * @param {number} [n=6]               band size
+ * @param {number} [minGroups=MIN_GROUPS] group-attribution floor for Band B. The OT path
+ *   passes 0: its items have no group attribution, so the default would empty Band B.
+ * @param {number} [minReach=0]        reach floor for Band B. Defaults to 0 so it is
+ *   inert for the IT path (whose items have no `reach` field at all); the OT path
+ *   passes MIN_REACH.
+ */
+export function splitBands(pool, sortKey, n = 6, minGroups = MIN_GROUPS, minReach = 0) {
   const field = METRIC[sortKey] ?? 'kevCount';
   const bandA = [...pool].sort((a, b) => (b[field] ?? 0) - (a[field] ?? 0)).slice(0, n);
   const taken = new Set(bandA.map(t => t.attackId));
-  const eligible = pool.filter(t => !taken.has(t.attackId) && (t.groupCount ?? 0) >= minGroups);
+  const eligible = pool.filter(t =>
+    !taken.has(t.attackId)
+    && (t.groupCount ?? 0) >= minGroups
+    && (t.reach ?? 0) >= minReach);
   const bandB = eligible
     .sort((a, b) => (b.lift ?? 0) - (a.lift ?? 0) || (a.attackId < b.attackId ? -1 : 1))
     .slice(0, n);
