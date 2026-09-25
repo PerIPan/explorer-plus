@@ -18,6 +18,19 @@ const THEME_SCRIPT = `(function(){
   }
 })();`;
 
+// Mirrors THEME_SCRIPT's approach for the same reason: without this,
+// returning dismissers get a post-hydration panel flash on every cold load,
+// across every page AppShell wraps. Reads localStorage['mx-profile'] only —
+// it never writes it (see src/components/profile/useProfileState.ts, which
+// writes that key only on Apply or explicit close, never on mount).
+const PROFILE_SCRIPT = `(function(){
+  try {
+    if (localStorage.getItem('mx-profile')) {
+      document.documentElement.setAttribute('data-profile-seen','1');
+    }
+  } catch(e) {}
+})();`;
+
 const SITE_DESC =
   'Multi-domain threat intelligence platform built on MITRE ATT&CK — bridging techniques, threat groups, malware and campaigns to CVEs, advisories, detections and compliance frameworks.';
 
@@ -66,6 +79,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <head>
         <link rel="icon" href="/diamond-favicon.svg" type="image/svg+xml" />
         <script nonce={nonce} suppressHydrationWarning dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+        <script nonce={nonce} suppressHydrationWarning dangerouslySetInnerHTML={{ __html: PROFILE_SCRIPT }} />
         <script
           type="application/ld+json"
           nonce={nonce}
