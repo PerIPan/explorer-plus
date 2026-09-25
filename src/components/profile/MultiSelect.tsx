@@ -23,6 +23,13 @@ interface MultiSelectProps {
 // library is warranted at this size.
 const MAX_VISIBLE = 60;
 
+// DOM ids only ever need to be unique and attribute-safe — the option's own
+// `value` is an opaque string with no format guarantee, so strip anything
+// outside the safe set before interpolating it into an id.
+function domSafe(value: string): string {
+  return value.replace(/[^A-Za-z0-9_-]/g, '_');
+}
+
 /**
  * Searchable multi-select combobox. Selected values render as removable
  * chips ahead of the text input; the input filters `options`
@@ -55,12 +62,21 @@ export function MultiSelect({ id, label, options, selected, onChange, placeholde
     );
   }, [options, query]);
   const visible = filtered.slice(0, MAX_VISIBLE);
-  const activeOption = activeIndex >= 0 ? visible[activeIndex] : undefined;
 
-  // A stale index from the previous filter must never land Enter on the
-  // wrong row, so reset whenever the query (and therefore the visible set)
-  // changes.
-  useEffect(() => setActiveIndex(-1), [query]);
+  // A stale index from the previous filter must never land Enter (or
+  // aria-activedescendant) on the wrong row. Resetting via an effect runs
+  // after commit, so the first paint after a keystroke would briefly render
+  // with the old index against the new `visible` array. Reset it during
+  // render instead — the React-documented way to adjust state when a value
+  // it depends on changes — so no stale-index frame ever reaches the screen.
+  const [prevQuery, setPrevQuery] = useState(query);
+  let effectiveActiveIndex = activeIndex;
+  if (query !== prevQuery) {
+    setPrevQuery(query);
+    setActiveIndex(-1);
+    effectiveActiveIndex = -1;
+  }
+  const activeOption = effectiveActiveIndex >= 0 ? visible[effectiveActiveIndex] : undefined;
 
   // Click-outside close. Deliberately `pointerdown`, not `click` — it fires
   // before the option rows' own `onMouseDown` handler below, so a click on
@@ -90,10 +106,15 @@ export function MultiSelect({ id, label, options, selected, onChange, placeholde
       if (!open) setOpen(true);
       setActiveIndex((i) => Math.max(i - 1, -1));
     } else if (e.key === 'Enter') {
-      if (open && activeOption) {
+      // preventDefault whenever the list is open, even with nothing active —
+      // otherwise Enter with no highlighted row falls through to the native
+      // keystroke and submits whatever form this combobox is mounted in.
+      if (open) {
         e.preventDefault();
-        toggle(activeOption.value);
-        setQuery('');
+        if (activeOption) {
+          toggle(activeOption.value);
+          setQuery('');
+        }
       }
     } else if (e.key === 'Escape') {
       // Close only the list. Swallow the key so a parent panel that also
@@ -149,7 +170,7 @@ export function MultiSelect({ id, label, options, selected, onChange, placeholde
           aria-expanded={open}
           aria-autocomplete="list"
           aria-controls={listboxId}
-          aria-activedescendant={open && activeOption ? `${id}-option-${activeOption.value}` : undefined}
+          aria-activedescendant={open && activeOption ? `${id}-option-${domSafe(activeOption.value)}` : undefined}
           value={query}
           placeholder={placeholder}
           onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
@@ -183,11 +204,11 @@ export function MultiSelect({ id, label, options, selected, onChange, placeholde
           )}
           {visible.map((opt, i) => {
             const isSelected = selectedSet.has(opt.value);
-            const isActive = i === activeIndex;
+            const isActive = i === effectiveActiveIndex;
             return (
               <li
                 key={opt.value}
-                id={`${id}-option-${opt.value}`}
+                id={`${id}-option-${domSafe(opt.value)}`}
                 role="option"
                 aria-selected={isSelected}
                 onMouseDown={(e) => {
