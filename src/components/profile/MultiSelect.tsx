@@ -31,21 +31,40 @@ function domSafe(value: string): string {
 }
 
 /**
+ * How tall the open listbox may get.
+ *
+ * 176px (11rem) — four 44px rows. It was 256px, which is most of the ~500px
+ * panel this lives in: opening one combobox hid the form behind it, so there
+ * was no visible context to return to and no obvious way back. Four rows is
+ * enough to browse without the listbox swallowing the questions underneath.
+ */
+const LISTBOX_MAX_H = 'max-h-[11rem]';
+
+/**
  * Searchable multi-select combobox. Selected values render as removable
  * chips ahead of the text input; the input filters `options`
  * case-insensitively and drives a listbox via `aria-activedescendant`.
  *
- * DOM focus never leaves the input — options are plain, non-focusable `<li>`
- * rows referenced only through `aria-activedescendant`/`aria-selected`, so
- * Tab always leaves the whole control (landing on chip remove buttons first,
- * then the input, since those are the only real tab stops) instead of
- * tabbing into the open list.
+ * DOM focus never leaves the input FOR LIST NAVIGATION — options are plain,
+ * non-focusable `<li>` rows referenced only through
+ * `aria-activedescendant`/`aria-selected`, so Tab always leaves the whole
+ * control (landing on chip remove buttons, the input, then the chevron
+ * toggle, since those are the only real tab stops) instead of tabbing into
+ * the open list. The chevron suppresses focus on `mousedown` and hands focus
+ * back to the input, so pointer use never moves focus off the input either.
+ *
+ * The list opens on CLICK, TYPING and ArrowDown — never on bare focus.
+ * Opening on focus made Escape useless: it closed the list, and the click
+ * that returned focus to the input immediately reopened it, with no way out
+ * short of clicking elsewhere on the page. "Dismissed but still focused" has
+ * to be a reachable state, so `open` is only ever set by a deliberate act.
  */
 export function MultiSelect({ id, label, options, selected, onChange, placeholder }: MultiSelectProps) {
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const listboxId = `${id}-listbox`;
   const selectedSet = useMemo(() => new Set(selected), [selected]);
@@ -165,6 +184,7 @@ export function MultiSelect({ id, label, options, selected, onChange, placeholde
 
         <input
           id={id}
+          ref={inputRef}
           type="text"
           role="combobox"
           aria-expanded={open}
@@ -174,10 +194,58 @@ export function MultiSelect({ id, label, options, selected, onChange, placeholde
           value={query}
           placeholder={placeholder}
           onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
-          onFocus={() => setOpen(true)}
+          // Click, not focus: a click is a deliberate act, so Escape (or an
+          // outside click) followed by Tab back into the field leaves the
+          // list shut. See the component doc for why focus cannot do this.
+          onClick={() => setOpen(true)}
           onKeyDown={handleKeyDown}
           className="flex-1 min-w-[120px] min-h-[44px] bg-transparent text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none"
         />
+
+        {/* The close affordance. The question directly above this one is a
+            native <select> WITH a chevron, so the hand goes looking for the
+            same target here — and until this existed the only <button> in the
+            control was a chip's "×". A real button, not a decorative glyph:
+            it has an accessible name, it toggles (so it closes as well as
+            opens), and it reports `aria-expanded` for the same listbox the
+            input controls.
+
+            `mousedown` is prevented so the press cannot pull DOM focus off
+            the input, and focus is handed back explicitly for the case where
+            it was somewhere else entirely — the combobox contract is that the
+            input keeps focus while the list is open. Escape is handled here
+            too, and swallowed, for the keyboard visitor who tabbed to the
+            chevron: without it the key would bubble to the panel and close
+            the whole thing. */}
+        <button
+          type="button"
+          aria-label={open ? `Hide ${label} options` : `Show ${label} options`}
+          aria-expanded={open}
+          aria-controls={listboxId}
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => {
+            setOpen((wasOpen) => !wasOpen);
+            inputRef.current?.focus();
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape' && open) {
+              e.stopPropagation();
+              setOpen(false);
+            }
+          }}
+          className="shrink-0 flex items-center justify-center min-h-[44px] min-w-[44px] -mr-1 rounded-md text-[var(--text-secondary)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-teal)] transition-colors"
+        >
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            className={`w-3.5 h-3.5 transition-transform duration-150 motion-reduce:transition-none ${open ? 'rotate-180' : ''}`}
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
       </div>
 
       {/* Screen-reader-only status: option count updates as the query narrows
@@ -197,7 +265,7 @@ export function MultiSelect({ id, label, options, selected, onChange, placeholde
           role="listbox"
           aria-label={label}
           aria-multiselectable="true"
-          className="absolute z-50 mt-1 w-full max-h-64 overflow-y-auto rounded-md border border-[var(--border-color)] bg-[var(--surface-card)] shadow-xl"
+          className={`absolute z-50 mt-1 w-full ${LISTBOX_MAX_H} overflow-y-auto rounded-md border border-[var(--border-color)] bg-[var(--surface-card)] shadow-xl`}
         >
           {visible.length === 0 && (
             <li className="px-3 py-2.5 text-xs text-[var(--text-secondary)] italic">No matches</li>
