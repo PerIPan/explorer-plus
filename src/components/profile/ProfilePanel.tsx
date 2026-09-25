@@ -275,15 +275,55 @@ function useThreatProfile(variant: ProfileVariant): ThreatProfileController {
     });
   }, [report, variant]);
 
+  /**
+   * Put the popover away without recording anything. A visitor clicking the
+   * diamond a second time is toggling a disclosure shut, not rejecting the
+   * feature — `dismiss()` would write a `dismiss` row AND set `mx-profile`,
+   * silently costing them the peek for good. 'TOGGLE_CLOSE' reports null, so
+   * neither happens.
+   *
+   * The flag guards the gesture's second half. This runs from the scrim's
+   * `pointerdown`, and the scrim is unmounted before the matching `mouseup`,
+   * so whether the resulting `click` is then delivered to the diamond
+   * underneath is engine detail (the press target is detached, so there may be
+   * no common ancestor and therefore no click at all). If it IS delivered,
+   * `modal` is already false again and the trigger would re-open what was just
+   * toggled shut. Rather than bet on the behaviour, swallow exactly one
+   * trigger click and release the flag on the next click wherever it lands —
+   * including the common case where none reaches the diamond.
+   */
+  const suppressTriggerClickRef = useRef(false);
+  const releaseTriggerClick = useCallback(() => {
+    suppressTriggerClickRef.current = false;
+  }, []);
+
+  const onToggleClose = useCallback(() => {
+    suppressTriggerClickRef.current = true;
+    document.addEventListener('click', releaseTriggerClick, { once: true });
+    dispatch({ type: 'TOGGLE_CLOSE' });
+  }, [dispatch, releaseTriggerClick]);
+
   const onTriggerClick = useCallback(
     (event: ReactMouseEvent<HTMLButtonElement>) => {
+      // Tail of a toggle-close gesture that the scrim already handled.
+      if (suppressTriggerClickRef.current) {
+        suppressTriggerClickRef.current = false;
+        return;
+      }
+      // Already click-opened: this is the toggle-shut half of the disclosure.
+      // Gated on `modal`, not `open` — a click DURING an unsolicited peek must
+      // still promote it to a real click-open, not close it.
+      if (modal) {
+        dispatch({ type: 'TOGGLE_CLOSE' });
+        return;
+      }
       // Read the node synchronously — `currentTarget` is cleared once the
       // event finishes dispatching. Focus returns here when the panel closes.
       returnFocusRef.current = event.currentTarget;
       setModal(true);
       dispatch({ type: 'CLICK_OPEN' });
     },
-    [dispatch],
+    [dispatch, modal],
   );
 
   const onInteract = useCallback(() => {
@@ -312,10 +352,11 @@ function useThreatProfile(variant: ProfileVariant): ThreatProfileController {
       setAnswer,
       onApply,
       onClose,
+      onToggleClose,
       onInteract,
       returnFocusRef,
     }),
-    [modal, sector, answers, setAnswer, onApply, onClose, onInteract],
+    [modal, sector, answers, setAnswer, onApply, onClose, onToggleClose, onInteract],
   );
 
   return { open, modal, anchored, onTriggerClick, panelProps };
@@ -434,7 +475,10 @@ export interface ProfilePanelProps {
   answers: ProfileAnswers;
   setAnswer: (key: string, value: string[]) => void;
   onApply: () => void;
+  /** Rejection: reports `dismiss` and sets the dismissal flag. */
   onClose: () => void;
+  /** Toggle shut from the trigger: reports nothing, sets no flag. */
+  onToggleClose: () => void;
   onInteract: () => void;
   returnFocusRef: RefObject<HTMLElement | null>;
 }
@@ -476,6 +520,29 @@ function resolveReturnTarget(stored: HTMLElement | null): HTMLElement | null {
 }
 
 /**
+ * Whether a pointerdown belongs to a diamond trigger.
+ *
+ * `closest()` alone is not enough once the modal scrim is in play: the scrim
+ * covers the whole viewport, so the trigger is never the event target and the
+ * trigger exemption would be unreachable — a click on the diamond to toggle
+ * the popover shut would fall through to the outside-click path and be
+ * recorded as a rejection. Fall back to hit-testing the pointer against each
+ * visible trigger's rect, which works uniformly for the anchored panel and for
+ * the portalled sheet (whose trigger is not even a DOM sibling of the panel).
+ */
+function pointerIsOverTrigger(target: Element | null, x: number, y: number): boolean {
+  if (target && typeof target.closest === 'function' && target.closest('[data-profile-trigger]')) {
+    return true;
+  }
+  for (const el of Array.from(document.querySelectorAll<HTMLElement>('[data-profile-trigger]'))) {
+    if (!hasLayoutBox(el)) continue;
+    const r = el.getBoundingClientRect();
+    if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) return true;
+  }
+  return false;
+}
+
+/**
  * The nearest ancestor that actually clips and scrolls the anchored panel.
  * On this site that is `<main>` (AppShell.tsx: `overflow-y-auto
  * overflow-x-hidden`), not the viewport — measuring against
@@ -501,6 +568,7 @@ export function ProfilePanel({
   setAnswer,
   onApply,
   onClose,
+  onToggleClose,
   onInteract,
   returnFocusRef,
 }: ProfilePanelProps) {
@@ -598,17 +666,19 @@ export function ProfilePanel({
     if (!modal) return undefined;
     function handlePointerDown(event: PointerEvent) {
       const target = event.target as Element | null;
-      if (!target) return;
       if (panelRef.current?.contains(target)) return;
-      // A click on the diamond is the toggle's own business, not an outside
-      // click — otherwise it would dismiss then immediately reopen, posting a
-      // phantom `dismiss` on the way through.
-      if (typeof target.closest === 'function' && target.closest('[data-profile-trigger]')) return;
+      // A click on the diamond is the disclosure toggling itself shut, not a
+      // rejection of the feature — route it to the silent path so it writes no
+      // `dismiss` row and does not set the dismissal flag.
+      if (pointerIsOverTrigger(target, event.clientX, event.clientY)) {
+        onToggleClose();
+        return;
+      }
       onClose();
     }
     document.addEventListener('pointerdown', handlePointerDown);
     return () => document.removeEventListener('pointerdown', handlePointerDown);
-  }, [modal, onClose]);
+  }, [modal, onClose, onToggleClose]);
 
   /**
    * Escape net for focus OUTSIDE the trap (e.g. left on `<body>`).
@@ -700,7 +770,11 @@ export function ProfilePanel({
     ? {
         position: 'absolute',
         width: ANCHORED_WIDTH,
-        zIndex: 50,
+        // Above the sidebar (Sidebar.tsx: `fixed … z-50`) and its scrim below,
+        // so no fixed chrome is ever painted over the scrim — see the scrim's
+        // note. Still under the AppShell help/API overlays at `z-[100]`, which
+        // are genuinely higher-priority.
+        zIndex: 61,
         ...(flipX === 'left'
           ? { right: `calc(100% + ${ANCHOR_GAP}px)` }
           : { left: `calc(100% + ${ANCHOR_GAP}px)` }),
@@ -754,7 +828,7 @@ export function ProfilePanel({
 
   const shellClass = anchored
     ? 'pointer-events-auto select-text flex flex-col rounded-xl border border-[var(--border-color)] bg-[var(--surface-card)] shadow-2xl focus:outline-none'
-    : 'pointer-events-auto select-text fixed inset-x-0 bottom-0 z-50 mx-auto flex w-full max-h-[85vh] flex-col rounded-t-2xl border-t border-x border-[var(--border-color)] bg-[var(--surface-card)] shadow-2xl focus:outline-none sm:max-w-[560px]';
+    : 'pointer-events-auto select-text fixed inset-x-0 bottom-0 z-[61] mx-auto flex w-full max-h-[85vh] flex-col rounded-t-2xl border-t border-x border-[var(--border-color)] bg-[var(--surface-card)] shadow-2xl focus:outline-none sm:max-w-[560px]';
 
   return (
     <>
@@ -772,22 +846,34 @@ export function ProfilePanel({
           scrim keeps its dim, since a sheet does read as modal.
 
           Rendered as a SIBLING of the panel rather than portalled: sharing a
-          parent means the z-order (40 under the panel's 50) is decided in one
+          parent means the z-order (60 under the panel's 61) is decided in one
           stacking context and cannot be inverted by an ancestor, which would
           leave the panel itself unclickable. `pointer-events-auto` because the
           xl diamond's wrapper is `pointer-events-none`. Excluded from the
-          `inert` walk above by `data-profile-scrim`. A pointerdown on it is an
-          ordinary outside click: the document listener above sees a target
-          outside the panel and calls the same `dismiss` path as before — no
-          new action, no second handler. */}
+          `inert` walk above by `data-profile-scrim`.
+
+          60/61 rather than 40/50 because the sidebar is `fixed … z-50`
+          (Sidebar.tsx) and would otherwise paint its ~208px over a z-40
+          scrim, leaving a strip where a pointerdown lands on inert content —
+          exactly the dependency this scrim exists to remove. Audited the rest
+          of the layout for fixed elements at z>=40: the mobile drawer
+          backdrop (z-40, `lg:hidden`, only while the drawer is open), the
+          graph tooltip (z-50 but `pointer-events-none`), and the AppShell
+          help/API and VT overlays at `z-[100]` — the last of which stay above
+          us deliberately, being higher-priority full-page modals.
+
+          A pointerdown on the scrim goes to the document listener above: over
+          a diamond it routes to the silent toggle path, anywhere else it is an
+          ordinary outside click and calls the same `dismiss` as before. No new
+          telemetry action, no handler on the scrim itself. */}
       {modal && (
         <div
           data-profile-scrim=""
           aria-hidden="true"
           className={
             anchored
-              ? 'fixed inset-0 z-40 pointer-events-auto'
-              : 'fixed inset-0 z-40 bg-black/30'
+              ? 'fixed inset-0 z-[60] pointer-events-auto'
+              : 'fixed inset-0 z-[60] bg-black/30'
           }
         />
       )}
