@@ -2,17 +2,16 @@
 import { useCallback, useEffect, useReducer, useState } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { peekReducer } from '../../lib/profile-peek.mjs';
-import { DEFAULT_DOMAIN } from '../../contexts/DomainContext';
+import { DEFAULT_DOMAIN, useDomain } from '../../contexts/DomainContext';
+import { useSector } from '../../contexts/SectorContext';
 
-/** Mirrors the shape peekReducer (src/lib/profile-peek.mjs) produces — kept
- * here rather than in the .mjs so that module stays plain JS with no JSDoc
- * type ceremony, matching the brief's exact given implementation. */
-export interface PeekState {
-  open: boolean;
-  timer: number | null;
-  report: 'apply' | 'dismiss' | 'auto_close' | null;
-}
-export type PeekEvent = { type: 'PEEK' | 'CLICK_OPEN' | 'INTERACT' | 'EXPIRE' | 'CLOSE' | 'APPLY' };
+/**
+ * Sourced directly from profile-peek.mjs's own JSDoc `@typedef`s rather than
+ * hand-duplicated here — a shape change to the reducer's state/event surfaces
+ * as a typecheck failure at this import instead of silently drifting.
+ */
+export type PeekState = import('../../lib/profile-peek.mjs').PeekState;
+export type PeekEvent = import('../../lib/profile-peek.mjs').PeekEvent;
 
 /**
  * Dismissal flag. Not 'mx-theme' — a different key entirely, but the same
@@ -24,9 +23,6 @@ export type PeekEvent = { type: 'PEEK' | 'CLICK_OPEN' | 'INTERACT' | 'EXPIRE' | 
  * effect. Reading it is safe on mount; writing it is not.
  */
 const STORAGE_KEY = 'mx-profile';
-
-const SECTOR_STORAGE_KEY = 'mitre-sector';
-const DOMAIN_STORAGE_KEY = 'mitre-domain';
 
 /** Free-form multi-select answers, keyed by question id (e.g. 'platforms',
  * 'roles', 'frameworks', 'assets', 'purdue_levels'). Sector is intentionally
@@ -68,6 +64,14 @@ export interface UseProfileStateResult {
    * `UrlSyncEffect`, and SectorContext.tsx:49-68 / DomainContext.tsx:68-84).
    * The OT path calling this with sector+domain='ics-attack' together is the
    * exact case that race would break.
+   *
+   * Still calls `syncStoredSector`/`syncStoredDomain` (the state-only, no-router
+   * counterparts to those setters) so each context's own cached fallback value
+   * — `sector`/`domain` fall back to it whenever the URL has no param — stays
+   * coherent with what this just wrote to the URL and sessionStorage. Skipping
+   * that call is what previously let a cleared param resurface: the URL and
+   * sessionStorage were right, but the context's in-memory cache still held
+   * the old value and `useSector()`/`useDomain()` silently read the cache.
    */
   applyProfile: (next: { sector: string | null; domain: string }) => void;
   /** True once the visitor has ever applied or explicitly closed the panel
@@ -101,6 +105,8 @@ export function useProfileState(): UseProfileStateResult {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { syncStoredSector } = useSector();
+  const { syncStoredDomain } = useDomain();
 
   const [answers, setAnswers] = useState<ProfileAnswers>(EMPTY_ANSWERS);
   const [dismissed, setDismissed] = useState(false);
@@ -149,23 +155,21 @@ export function useProfileState(): UseProfileStateResult {
 
   const applyProfile = useCallback(
     (next: { sector: string | null; domain: string }) => {
-      // Mirrors SectorContext.setSector / DomainContext.setDomain's own
-      // storage writes exactly (including the sector null->remove case) so
-      // that clearing the sector here can't leave a stale sessionStorage
-      // value for `UrlSyncEffect` (app/providers.tsx:35-39) to re-inject on
-      // the next navigation. Writing storage directly like this — rather
-      // than calling the two context setters — is what keeps this a single
-      // push: each setter also calls its own router.push from a render-time
-      // closure, which is exactly the race app/providers.tsx:13-19 documents.
-      try {
-        if (next.sector) sessionStorage.setItem(SECTOR_STORAGE_KEY, next.sector);
-        else sessionStorage.removeItem(SECTOR_STORAGE_KEY);
-        sessionStorage.setItem(DOMAIN_STORAGE_KEY, next.domain);
-      } catch {
-        // Storage disabled — the URL update below still lands; on this render
-        // SectorContext/DomainContext read straight from `?sector=`/`?domain=`
-        // per the "URL beats sessionStorage" precedence (providers.tsx:35-39).
-      }
+      // syncStoredSector/syncStoredDomain do the sessionStorage write (their
+      // own try/catch — see SectorContext.tsx/DomainContext.tsx) AND update
+      // each context's cached fallback value, with no router call of their
+      // own. That's what keeps `useSector().sector`/`useDomain().domain`
+      // coherent with the URL this function is about to write, instead of
+      // falling through to a stale cache once the URL/sessionStorage are
+      // updated but the context's own React state isn't (the bug fixed in
+      // this file's fix round 1 — see PR history for the concrete repro).
+      //
+      // Calling these instead of `setSector`/`setDomain` themselves is what
+      // keeps this a single push: each setter also calls its own
+      // router.push from a render-time closure, which is exactly the race
+      // app/providers.tsx:13-19 documents.
+      syncStoredSector(next.sector);
+      syncStoredDomain(next.domain);
 
       const params = new URLSearchParams(searchParams.toString());
       if (next.sector) params.set('sector', next.sector);
@@ -178,7 +182,7 @@ export function useProfileState(): UseProfileStateResult {
 
       dispatch({ type: 'APPLY' });
     },
-    [searchParams, router, pathname],
+    [searchParams, router, pathname, syncStoredSector, syncStoredDomain],
   );
 
   const dismiss = useCallback(() => {

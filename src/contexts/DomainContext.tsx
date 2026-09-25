@@ -24,6 +24,17 @@ interface DomainContextValue {
   domain: string;
   /** Set the active domain */
   setDomain: (slug: string) => void;
+  /**
+   * Update the cached domain (and its sessionStorage backing) WITHOUT
+   * touching the router. Mirrors SectorContext's `syncStoredSector` for the
+   * same reason: a caller issuing its own single `router.replace` across
+   * multiple contexts (useProfileState.ts's `applyProfile`) must not call
+   * `setDomain`, which would push a second time from a stale closure — but
+   * skipping it entirely would leave `storedDomain` stale, and `domain`
+   * (below) falls back to that stale cache whenever the URL has no
+   * `?domain=` param.
+   */
+  syncStoredDomain: (slug: string) => void;
   /** Spread into API params: { domain: 'enterprise-attack' } */
   domainParam: Record<string, string>;
   /** Static list of available domains */
@@ -33,6 +44,7 @@ interface DomainContextValue {
 const Ctx = createContext<DomainContextValue>({
   domain: DEFAULT_DOMAIN,
   setDomain: () => {},
+  syncStoredDomain: () => {},
   domainParam: { domain: DEFAULT_DOMAIN },
   domains: DOMAINS,
 });
@@ -83,14 +95,24 @@ export function DomainProvider({ children }: { children: ReactNode }) {
     [searchParams, router, pathname],
   );
 
+  // State-only counterpart to setDomain: same sessionStorage write, no
+  // router call. setDomain always writes an explicit value (including the
+  // default — see above), so this mirrors that unconditionally too.
+  const syncStoredDomain = useCallback((slug: string) => {
+    try {
+      sessionStorage.setItem(STORAGE_KEY, slug);
+    } catch { /* private mode / storage disabled — cache below still updates for this session */ }
+    setStoredDomain(slug);
+  }, []);
+
   const domainParam = useMemo<Record<string, string>>(
     () => (domain === 'all' ? {} as Record<string, string> : { domain }),
     [domain],
   );
 
   const value = useMemo(
-    () => ({ domain, setDomain, domainParam, domains: DOMAINS }),
-    [domain, setDomain, domainParam],
+    () => ({ domain, setDomain, syncStoredDomain, domainParam, domains: DOMAINS }),
+    [domain, setDomain, syncStoredDomain, domainParam],
   );
 
   return (
