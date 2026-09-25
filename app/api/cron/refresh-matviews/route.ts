@@ -24,6 +24,9 @@ const MATVIEWS = [
   'catchall_cwes',
   'app_technique_groups',
   'package_summary',
+  // Threat Profile ranking. sector_technique_lift is only as fresh as the last
+  // sector_extractor run — see the staleness contract in the spec.
+  'sector_technique_lift',
 ];
 
 export async function GET(req: NextRequest) {
