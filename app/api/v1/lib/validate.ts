@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { PLATFORMS, SECTOR_SLUGS } from '../../../../src/lib/profile-options';
 
 export const VALID_DOMAINS = ['enterprise-attack', 'mobile-attack', 'ics-attack', 'atlas-attack'] as const;
 export const domainSchema = z.enum(VALID_DOMAINS).optional();
@@ -32,34 +33,11 @@ export const paginationSchema = z.object({
   order: z.enum(['asc', 'desc']).default('asc'),
 });
 
-export const platformSchema = z.enum([
-  // Enterprise
-  // Values verified against production 2026-09-25: every entry matches >=1 live
-  // technique. 'Network', 'Google Workspace' and 'Azure AD' were removed (0 live
-  // techniques each) and ESXi/Network Devices added (117/100) — they previously 400'd.
-  'Windows',
-  'Linux',
-  'macOS',
-  'IaaS',
-  'SaaS',
-  'Containers',
-  'Office Suite',
-  'Identity Provider',
-  'PRE',
-  'ESXi',
-  'Network Devices',
-  // ICS
-  'Field Controller/RTU/PLC/IED',
-  'Safety Instrumented System/Protection Relay',
-  'Engineering Workstation',
-  'Human-Machine Interface',
-  'Control Server',
-  'Data Historian',
-  'Input/Output Server',
-  // Mobile
-  'Android',
-  'iOS',
-]);
+// Built from the zod-free list in src/lib/profile-options.ts so the Threat
+// Profile pickers can read the same values without pulling zod into the
+// client bundle. That module is the single source of truth; this is the
+// validator over it.
+export const platformSchema = z.enum(PLATFORMS);
 
 export const softwareTypeSchema = z.enum(['malware', 'tool']);
 
@@ -79,15 +57,12 @@ export const exportSchema = z.object({
 });
 
 export type PaginationParams = z.infer<typeof paginationSchema>;
-export type Platform = z.infer<typeof platformSchema>;
+export type { Platform } from '../../../../src/lib/profile-options';
 export type SoftwareType = z.infer<typeof softwareTypeSchema>;
 export type ExportParams = z.infer<typeof exportSchema>;
 
 export const sortKeySchema = z.enum(['io', 'rp', 'kev', 'cv', 'lift']).default('kev');
-export const sectorSlugSchema = z.enum([
-  'defense','education','energy','financial','government','healthcare',
-  'manufacturing','media','retail','technology','telecommunications','transportation',
-]);
+export const sectorSlugSchema = z.enum(SECTOR_SLUGS);
 export const profileQuerySchema = z.object({
   sector: sectorSlugSchema.optional(),
   platform: platformSchema.optional(),

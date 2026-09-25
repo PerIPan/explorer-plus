@@ -21,22 +21,27 @@ import { MultiSelect, type MultiSelectOption } from './MultiSelect';
 import { useProfileState, type ProfileAnswers } from './useProfileState';
 import { DEFAULT_DOMAIN } from '../../contexts/DomainContext';
 import { SCF_FRAMEWORK_REGISTRY } from '../../lib/scf-framework-registry';
-import { platformSchema, sectorSlugSchema, type Platform } from '../../../app/api/v1/lib/validate';
+import { PLATFORMS, SECTOR_SLUGS, type Platform, type SectorSlug } from '../../lib/profile-options';
 
 /* ────────────────────────────────────────────────────────────────────────────
  * Option sources
  *
- * Every list below is DERIVED from the schema/registry that already owns those
+ * Every list below is DERIVED from the module/registry that already owns those
  * values — never hand-copied — so a change at the source either flows through
  * or fails `npm run typecheck`, rather than silently leaving the picker
  * offering values the API will 400 on.
+ *
+ * `PLATFORMS`/`SECTOR_SLUGS` come from src/lib/profile-options.ts, NOT from
+ * app/api/v1/lib/validate.ts, even though that module is where the matching
+ * zod schemas live: validate.ts imports zod, and dragging zod into a
+ * 'use client' component on the homepage would cost ~13 KB gz of first-load
+ * JS to read two arrays. validate.ts builds its enums from the same module,
+ * so there is still exactly one source of truth.
  * ──────────────────────────────────────────────────────────────────────────── */
 
-type SectorSlug = (typeof sectorSlugSchema.options)[number];
-
-/** Presentation only: the 12 slugs come from `sectorSlugSchema`, these are the
+/** Presentation only: the 12 slugs come from `SECTOR_SLUGS`, these are the
  *  human labels for them. Typed as a total `Record` so adding a slug to the
- *  schema without a label is a compile error. */
+ *  shared list without a label is a compile error. */
 const SECTOR_LABELS: Record<SectorSlug, string> = {
   defense: 'Defense',
   education: 'Education',
@@ -53,15 +58,15 @@ const SECTOR_LABELS: Record<SectorSlug, string> = {
 };
 
 export const SECTOR_OPTIONS: ReadonlyArray<{ value: SectorSlug; label: string }> =
-  sectorSlugSchema.options.map((slug) => ({ value: slug, label: SECTOR_LABELS[slug] }));
+  SECTOR_SLUGS.map((slug) => ({ value: slug, label: SECTOR_LABELS[slug] }));
 
 /**
- * The ICS half of `platformSchema`. Named and exported so the OT variant can
- * take this set directly (and the IT variant below its complement) instead of
- * both hand-maintaining a copy of the split that then drifts apart.
+ * The ICS half of `PLATFORMS`. Named and exported so the OT variant can take
+ * this set directly (and the IT variant below its complement) instead of both
+ * hand-maintaining a copy of the split that then drifts apart.
  *
  * `satisfies readonly Platform[]` is the guard: if ATT&CK renames one of these
- * in `platformSchema`, this list stops compiling instead of quietly excluding
+ * in `PLATFORMS`, this list stops compiling instead of quietly excluding
  * nothing from the IT picker.
  */
 export const ICS_PLATFORMS = [
@@ -76,11 +81,11 @@ export const ICS_PLATFORMS = [
 
 const ICS_PLATFORM_SET: ReadonlySet<string> = new Set<string>(ICS_PLATFORMS);
 
-/** Enterprise + mobile platforms — `platformSchema` minus the ICS values. */
-export const IT_PLATFORMS: Platform[] = platformSchema.options.filter((p) => !ICS_PLATFORM_SET.has(p));
+/** Enterprise + mobile platforms — `PLATFORMS` minus the ICS values. */
+export const IT_PLATFORMS: Platform[] = PLATFORMS.filter((p) => !ICS_PLATFORM_SET.has(p));
 
 /** The complement, for the OT variant. Derived here so the two never diverge. */
-export const OT_PLATFORMS: Platform[] = platformSchema.options.filter((p) => ICS_PLATFORM_SET.has(p));
+export const OT_PLATFORMS: Platform[] = PLATFORMS.filter((p) => ICS_PLATFORM_SET.has(p));
 
 const PLATFORM_OPTIONS: MultiSelectOption[] = IT_PLATFORMS.map((p) => ({ value: p, label: p }));
 
