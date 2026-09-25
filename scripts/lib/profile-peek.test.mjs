@@ -1,7 +1,14 @@
 // scripts/lib/profile-peek.test.mjs — run with `npm test`, no DB required.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { peekReducer, PEEK_MS } from '../../src/lib/profile-peek.mjs';
+import { peekReducer, peekNudgeDelay, PEEK_MS, PEEK_NUDGE_LEAD_MS } from '../../src/lib/profile-peek.mjs';
+
+test('peek: the unsolicited peek lasts 3s', () => {
+  // Pinned as a literal on purpose. Every other assertion in this file uses
+  // the symbol, so they would all keep passing if the duration silently
+  // changed; this is the one that fails when it does.
+  assert.equal(PEEK_MS, 3000);
+});
 
 test('peek: timer is armed only for an unsolicited peek', () => {
   assert.equal(peekReducer({ open: false, timer: null }, { type: 'PEEK' }).timer, PEEK_MS);
@@ -46,4 +53,37 @@ test('peek: toggle-close and explicit close differ only in what they report', ()
   assert.equal(toggled.timer, null, 'toggle-close clears the peek timer');
   assert.equal(closed.timer, null, 'explicit close clears the peek timer');
   assert.notEqual(toggled.report, closed.report, 'they must not be interchangeable');
+});
+
+test('peek: the diamond nudges shortly before the peek expires', () => {
+  const armed = peekReducer({ open: false, timer: null }, { type: 'PEEK' });
+  const delay = peekNudgeDelay(armed.timer);
+  assert.equal(delay, PEEK_MS - PEEK_NUDGE_LEAD_MS);
+  assert.equal(delay, 2750);
+  assert.ok(delay > 0 && delay < PEEK_MS, 'the cue must land inside the peek, before the close');
+});
+
+test('peek: a click-opened panel never nudges — there is no auto-close to announce', () => {
+  const clicked = peekReducer({ open: false, timer: null }, { type: 'CLICK_OPEN' });
+  assert.equal(clicked.timer, null);
+  assert.equal(peekNudgeDelay(clicked.timer), null);
+});
+
+test('peek: a cancelled peek never nudges', () => {
+  let s = peekReducer({ open: false, timer: null }, { type: 'PEEK' });
+  assert.notEqual(peekNudgeDelay(s.timer), null, 'armed: the cue is scheduled');
+  s = peekReducer(s, { type: 'INTERACT' });
+  // INTERACT cancels permanently, so the cue must be cancelled with it —
+  // nudging at someone who is mid-answer would promise a close that is no
+  // longer coming.
+  assert.equal(peekNudgeDelay(s.timer), null);
+});
+
+test('peek: no cue is scheduled when it could not precede the close', () => {
+  assert.equal(peekNudgeDelay(PEEK_NUDGE_LEAD_MS), null, 'exactly the lead time leaves no room');
+  assert.equal(peekNudgeDelay(PEEK_NUDGE_LEAD_MS - 1), null);
+  assert.equal(peekNudgeDelay(0), null);
+  assert.equal(peekNudgeDelay(undefined), null);
+  assert.equal(peekNudgeDelay(Number.NaN), null);
+  assert.equal(peekNudgeDelay(Number.POSITIVE_INFINITY), null);
 });

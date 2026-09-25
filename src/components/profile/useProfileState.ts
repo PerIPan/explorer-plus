@@ -1,7 +1,7 @@
 'use client';
 import { useCallback, useEffect, useReducer, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { peekReducer } from '../../lib/profile-peek.mjs';
+import { peekReducer, peekNudgeDelay } from '../../lib/profile-peek.mjs';
 import { buildProfileUrl } from '../../lib/profile-url.mjs';
 import { useDomain } from '../../contexts/DomainContext';
 import { useSector } from '../../contexts/SectorContext';
@@ -121,6 +121,15 @@ export interface UseProfileStateResult {
    * pointerenter/focusin/keydown/scroll inside the panel) without this hook
    * needing to know about those DOM events. */
   peek: PeekState & { dispatch: (event: PeekEvent) => void };
+  /**
+   * True for the last fraction of a second of an unsolicited peek: the
+   * diamond should make its small "I am taking this back" movement now.
+   *
+   * Never true for a click-opened panel or a cancelled peek — the schedule
+   * comes from `peekNudgeDelay`, which reads the same `timer` field the
+   * auto-close does and returns null in both cases (see profile-peek.mjs).
+   */
+  peekNudge: boolean;
 }
 
 const INITIAL_PEEK: PeekState = { open: false, timer: null, report: null };
@@ -143,6 +152,7 @@ export function useProfileState(): UseProfileStateResult {
 
   const [answers, setAnswers] = useState<ProfileAnswers>(EMPTY_ANSWERS);
   const [dismissed, setDismissed] = useState(false);
+  const [peekNudge, setPeekNudge] = useState(false);
   const [peekState, dispatch] = useReducer<PeekState, [PeekEvent]>(peekReducer, INITIAL_PEEK);
 
   // Mount-only: READ the dismissal flag, never write it here. A first-time
@@ -170,6 +180,27 @@ export function useProfileState(): UseProfileStateResult {
     if (peekState.timer == null) return undefined;
     const id = setTimeout(() => dispatch({ type: 'EXPIRE' }), peekState.timer);
     return () => clearTimeout(id);
+  }, [peekState.timer]);
+
+  /**
+   * The close cue, on the same clock as the close itself.
+   *
+   * Deliberately keyed on `peekState.timer` — the SAME dependency as the
+   * auto-close timer above — rather than on a second notion of "is a peek
+   * running". Any event that clears `timer` (INTERACT, EXPIRE, CLOSE, APPLY,
+   * TOGGLE_CLOSE) therefore re-runs this effect, whose cleanup both cancels
+   * the pending cue and puts the diamond back. A click-opened panel arms
+   * `timer: null`, so `peekNudgeDelay` returns null and nothing is scheduled
+   * at all.
+   */
+  useEffect(() => {
+    const delay = peekNudgeDelay(peekState.timer);
+    if (delay == null) return undefined;
+    const id = setTimeout(() => setPeekNudge(true), delay);
+    return () => {
+      clearTimeout(id);
+      setPeekNudge(false);
+    };
   }, [peekState.timer]);
 
   // Persist the dismissal flag on a real interaction only — apply or an
@@ -233,5 +264,6 @@ export function useProfileState(): UseProfileStateResult {
     dismissed,
     dismiss,
     peek: { ...peekState, dispatch },
+    peekNudge,
   };
 }

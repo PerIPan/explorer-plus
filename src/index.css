@@ -228,5 +228,31 @@ body {
     rotate: none !important;
     transform: none !important;
     transition: none !important;
+    /* Covers `.profile-diamond-nudge` below, which is applied to this same
+       element. Extending this rule rather than adding a second mechanism is
+       deliberate: one place decides what this element does under reduced
+       motion, and it is keyed on the class the element always carries, so a
+       new animation cannot be added without it. */
+    animation: none !important;
   }
+}
+
+/* The pre-close cue. Shortly before an unsolicited peek expires (see
+   PEEK_NUDGE_LEAD_MS in src/lib/profile-peek.mjs) the diamond lifts and
+   settles, so the panel closing reads as caused — the thing it came out of
+   taking it back — rather than as the panel randomly vanishing.
+
+   Animated on `translate`, the same individual property Tailwind v4 compiles
+   the hover nudge to, so the two compose instead of one silently cancelling
+   the other via `transform`. Runs once: the peek is armed at most once per
+   page load, and `peekNudge` goes false again the moment the timer clears. */
+@keyframes profile-diamond-nudge {
+  0% { translate: 0 0; }
+  40% { translate: 0 -6px; }
+  70% { translate: 0 1px; }
+  100% { translate: 0 0; }
+}
+
+.profile-diamond-img.profile-diamond-nudge {
+  animation: profile-diamond-nudge 260ms ease-out 1;
 }

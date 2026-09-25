@@ -150,12 +150,18 @@ export interface ThreatProfileController {
    * gives for <lg, applied to the mid-size diamond as well.
    */
   anchored: boolean;
+  /**
+   * The diamond should make its small "about to take this back" movement
+   * now — the last ~250ms of an unsolicited peek. Always false for a
+   * click-opened panel (no timer) and for a peek that has been cancelled.
+   */
+  peekNudge: boolean;
   onTriggerClick: (event: ReactMouseEvent<HTMLButtonElement>) => void;
   panelProps: Omit<ProfilePanelProps, 'anchored'>;
 }
 
 function useThreatProfile(variant: ProfileVariant): ThreatProfileController {
-  const { answers, setAnswer, applyProfile, dismiss, peek } = useProfileState();
+  const { answers, setAnswer, applyProfile, dismiss, peek, peekNudge } = useProfileState();
   // `peek` is a fresh object every render; `dispatch` inside it is stable.
   const { open, timer, report, dispatch } = peek;
 
@@ -337,7 +343,7 @@ function useThreatProfile(variant: ProfileVariant): ThreatProfileController {
     [modal, sector, answers, setAnswer, onApply, onClose, onToggleClose, onInteract],
   );
 
-  return { open, modal, anchored, onTriggerClick, panelProps };
+  return { open, modal, anchored, peekNudge, onTriggerClick, panelProps };
 }
 
 /* ────────────────────────────────────────────────────────────────────────────
@@ -386,6 +392,13 @@ function useController(): ThreatProfileController | null {
  * output). The stylesheet rule neutralises `translate`/`scale`/`transition`
  * themselves. `motion-reduce:group-hover:opacity-90` stays: opacity is not a
  * transform and is a legitimate reduced-motion affordance.
+ *
+ * `.profile-diamond-nudge` — the pre-close cue — is a keyframe animation on
+ * the SAME element, added to that same rule (`animation: none !important`)
+ * rather than given a competing `motion-reduce:` mechanism, for exactly the
+ * reason above: one place decides what this element does under reduced
+ * motion. The class is applied from `ctl.peekNudge`, which is only ever true
+ * for an armed, untouched peek.
  */
 export function ProfileDiamondTrigger({ size }: { size: number }) {
   const ctl = useController();
@@ -410,10 +423,10 @@ export function ProfileDiamondTrigger({ size }: { size: number }) {
         alt=""
         width={size}
         height={size}
-        className="profile-diamond-img opacity-[0.55] transition-transform duration-150 ease-out
+        className={`profile-diamond-img opacity-[0.55] transition-transform duration-150 ease-out
                    group-hover:-translate-y-[3px] group-hover:scale-[1.02] group-hover:opacity-80
                    group-focus-visible:-translate-y-[3px] group-focus-visible:scale-[1.02]
-                   motion-reduce:group-hover:opacity-90"
+                   motion-reduce:group-hover:opacity-90${ctl.peekNudge ? ' profile-diamond-nudge' : ''}`}
       />
     </button>
   );
