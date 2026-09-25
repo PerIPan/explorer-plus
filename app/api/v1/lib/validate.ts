@@ -82,3 +82,14 @@ export type PaginationParams = z.infer<typeof paginationSchema>;
 export type Platform = z.infer<typeof platformSchema>;
 export type SoftwareType = z.infer<typeof softwareTypeSchema>;
 export type ExportParams = z.infer<typeof exportSchema>;
+
+export const sortKeySchema = z.enum(['io', 'rp', 'kev', 'cv', 'lift']).default('kev');
+export const sectorSlugSchema = z.enum([
+  'defense','education','energy','financial','government','healthcare',
+  'manufacturing','media','retail','technology','telecommunications','transportation',
+]);
+export const profileQuerySchema = z.object({
+  sector: sectorSlugSchema.optional(),
+  platform: platformSchema.optional(),
+  sort: sortKeySchema,
+});
