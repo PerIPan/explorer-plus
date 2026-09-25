@@ -32,6 +32,29 @@ export type ProfileAnswers = Record<string, string[]>;
 
 const EMPTY_ANSWERS: ProfileAnswers = {};
 
+/**
+ * Module scope, deliberately: the unsolicited peek must arm at most once per
+ * PAGE LOAD, not once per mount.
+ *
+ * The provider that owns this hook is mounted only while the homepage shows
+ * its diamonds, so selecting an entity unmounts it and clearing the selection
+ * mounts it again. Without this flag every landing -> select -> clear round
+ * trip re-arms the peek and writes another `auto_close` row — and because
+ * `auto_close` deliberately never sets the dismissal flag (see below), there
+ * is nothing to stop it repeating. That inflates the one metric this feature
+ * is judged on; the mirror case (a provider unmounted mid-peek, whose
+ * `auto_close` is never written at all) deflates it. Arming once per load is
+ * the only reading of "unsolicited first-visit peek" that both of those agree
+ * with.
+ *
+ * NOT storage: this must reset on a real page load, and adding a storage
+ * access here would also have to be guarded for blocked site data. A module
+ * variable resets exactly when the JS context does, which is the semantics we
+ * want, and it survives client-side navigation within the app — which is
+ * correct, since that is not a new page load either.
+ */
+let peekArmedThisPageLoad = false;
+
 function readDismissed(): boolean {
   try {
     return Boolean(localStorage.getItem(STORAGE_KEY));
@@ -119,7 +142,8 @@ export function useProfileState(): UseProfileStateResult {
   useEffect(() => {
     const seen = readDismissed();
     setDismissed(seen);
-    if (!seen) {
+    if (!seen && !peekArmedThisPageLoad) {
+      peekArmedThisPageLoad = true;
       dispatch({ type: 'PEEK' });
     }
     // Intentionally mount-only — re-running this on every render would risk
