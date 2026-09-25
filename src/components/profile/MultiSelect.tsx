@@ -41,6 +41,24 @@ function domSafe(value: string): string {
 const LISTBOX_MAX_H = 'max-h-[11rem]';
 
 /**
+ * Selected-value chips, in the site's house pill style.
+ *
+ * These are the same three classes `Badge` (src/components/shared/Badge.tsx)
+ * emits for its `teal` variant — faint fill, accent text, dim border — and the
+ * chip's own geometry (`px-1.5 py-px rounded-full text-[10px] font-medium
+ * leading-tight border`) matches Badge's too. Teal because it is the app's
+ * primary accent and these pills are the visitor's OWN selections, not a
+ * severity or a taxonomy colour.
+ *
+ * Matched locally rather than rendered through `Badge`: a chip is a label
+ * PLUS a remove button, and `Badge` takes `label: string` with no children.
+ * Teaching it to carry a button would mean adding a prop that exactly one of
+ * its ~90 call sites uses, which is a worse trade than duplicating three
+ * class names behind this constant.
+ */
+const CHIP_VARIANT = 'bg-[var(--teal-faint)] text-[var(--accent-teal)] border-[var(--teal-dim)]';
+
+/**
  * Searchable multi-select combobox. Selected values render as removable
  * chips ahead of the text input; the input filters `options`
  * case-insensitively and drives a listbox via `aria-activedescendant`.
@@ -167,16 +185,34 @@ export function MultiSelect({ id, label, options, selected, onChange, placeholde
           return (
             <span
               key={value}
-              className="inline-flex items-center gap-0.5 pl-2.5 rounded-full text-xs font-medium border border-[var(--border-color)] bg-[var(--surface-alt)] text-[var(--text-primary)] max-w-full"
+              className={`inline-flex items-center gap-0.5 py-px pl-1.5 pr-1 rounded-full text-[10px] font-medium leading-tight border max-w-full ${CHIP_VARIANT}`}
             >
               <span className="truncate max-w-[160px]">{chipLabel}</span>
+              {/* The remove target is 44x44 and the pill is not.
+                  `min-h-[44px] min-w-[44px]` on this button used to force the
+                  whole pill to 44px tall, which is what made it bulky — the
+                  touch target was doing the pill's layout. The hit region is
+                  now an absolutely-positioned pseudo-element, so it is 44x44
+                  without contributing a single pixel to the pill's box.
+
+                  Anchored to the button's RIGHT edge rather than centred on
+                  it: the extra 32px then falls back over this chip's own
+                  (inert) label instead of over the NEXT chip, so the worst a
+                  stray press can do is remove the chip you aimed at. The
+                  vertical 44px still bleeds ~14px above and below the pill —
+                  unavoidable once a 16px pill carries a 44px target, and
+                  harmless since the row above/below is the field's own
+                  padding. */}
               <button
                 type="button"
                 onClick={() => toggle(value)}
                 aria-label={`Remove ${chipLabel}`}
-                className="flex items-center justify-center min-h-[44px] min-w-[44px] rounded-full text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--hover-overlay)] focus-visible:text-[var(--text-primary)] focus-visible:bg-[var(--hover-overlay)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-teal)] transition-colors"
+                className="relative shrink-0 flex items-center justify-center rounded-full opacity-70 hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-teal)] transition-opacity
+                           before:content-[''] before:absolute before:right-0 before:top-1/2 before:h-11 before:w-11 before:-translate-y-1/2"
               >
-                <span aria-hidden="true">×</span>
+                <span aria-hidden="true" className="text-[11px] leading-none">
+                  ×
+                </span>
               </button>
             </span>
           );
