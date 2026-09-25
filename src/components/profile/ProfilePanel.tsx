@@ -335,9 +335,20 @@ function useThreatProfile(variant: ProfileVariant): ThreatProfileController {
   }, [timer, dispatch]);
 
   const onApply = useCallback(() => {
-    // One action, one push — `applyProfile` owns the single router.replace.
-    applyProfile({ sector, domain: DEFAULT_DOMAIN });
-  }, [applyProfile, sector]);
+    // One action, one push — `applyProfile` owns the single router.push, to
+    // the briefing at /profile.
+    //
+    // `platforms` is the only answer the briefing reads; roles and frameworks
+    // are collected for the telemetry row and deliberately stay out of the
+    // URL, since nothing on `/profile` consumes them. `domain` is passed
+    // explicitly and is written even when it equals the default — on
+    // `/profile` an absent `domain` is no filter at all, not "enterprise".
+    applyProfile({
+      sector,
+      domain: DEFAULT_DOMAIN,
+      params: { platforms: answers.platforms ?? EMPTY_SELECTION },
+    });
+  }, [applyProfile, sector, answers]);
 
   const onClose = useCallback(() => {
     dismiss();

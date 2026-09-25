@@ -1,8 +1,9 @@
 'use client';
 import { useCallback, useEffect, useReducer, useState } from 'react';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { peekReducer } from '../../lib/profile-peek.mjs';
-import { DEFAULT_DOMAIN, useDomain } from '../../contexts/DomainContext';
+import { buildProfileUrl } from '../../lib/profile-url.mjs';
+import { useDomain } from '../../contexts/DomainContext';
 import { useSector } from '../../contexts/SectorContext';
 
 /**
@@ -12,6 +13,17 @@ import { useSector } from '../../contexts/SectorContext';
  */
 export type PeekState = import('../../lib/profile-peek.mjs').PeekState;
 export type PeekEvent = import('../../lib/profile-peek.mjs').PeekEvent;
+
+/**
+ * What one Apply carries. Sourced from the URL builder's own typedef for the
+ * same reason as above — the two cannot drift without a typecheck failure.
+ *
+ * `sector` and `domain` are named because they are not merely URL payload:
+ * each is mirrored into its context's cache and sessionStorage below.
+ * Everything else the variant answers goes in `params`, keyed by param name,
+ * so the OT variant adding `assets` and `purdue_levels` needs no change here.
+ */
+export type ApplyProfileInput = import('../../lib/profile-url.mjs').ProfileUrlInput;
 
 /**
  * Dismissal flag. Not 'mx-theme' — a different key entirely, but the same
@@ -80,8 +92,8 @@ export interface UseProfileStateResult {
   /** Replace one question's answer. */
   setAnswer: (key: string, value: string[]) => void;
   /**
-   * One action, one push. Builds a single `URLSearchParams` from the current
-   * URL and issues exactly one `router.replace` — never calls `setSector`
+   * One action, one push: exactly one `router.push`, to `/profile`. Never
+   * calls `setSector`
    * and `setDomain` from their contexts, which would each rebuild params
    * from a render-time closure and race (see app/providers.tsx:10-45,
    * `UrlSyncEffect`, and SectorContext.tsx:49-68 / DomainContext.tsx:68-84).
@@ -96,7 +108,7 @@ export interface UseProfileStateResult {
    * sessionStorage were right, but the context's in-memory cache still held
    * the old value and `useSector()`/`useDomain()` silently read the cache.
    */
-  applyProfile: (next: { sector: string | null; domain: string }) => void;
+  applyProfile: (next: ApplyProfileInput) => void;
   /** True once the visitor has ever applied or explicitly closed the panel
    * (read from `localStorage['mx-profile']` on mount). Gates the unsolicited
    * first-visit peek — it never re-arms for a visitor who has already acted. */
@@ -126,8 +138,6 @@ const INITIAL_PEEK: PeekState = { open: false, timer: null, report: null };
  */
 export function useProfileState(): UseProfileStateResult {
   const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
   const { syncStoredSector } = useSector();
   const { syncStoredDomain } = useDomain();
 
@@ -178,7 +188,7 @@ export function useProfileState(): UseProfileStateResult {
   }, []);
 
   const applyProfile = useCallback(
-    (next: { sector: string | null; domain: string }) => {
+    (next: ApplyProfileInput) => {
       // syncStoredSector/syncStoredDomain do the sessionStorage write (their
       // own try/catch — see SectorContext.tsx/DomainContext.tsx) AND update
       // each context's cached fallback value, with no router call of their
@@ -195,18 +205,21 @@ export function useProfileState(): UseProfileStateResult {
       syncStoredSector(next.sector);
       syncStoredDomain(next.domain);
 
-      const params = new URLSearchParams(searchParams.toString());
-      if (next.sector) params.set('sector', next.sector);
-      else params.delete('sector');
-      if (next.domain && next.domain !== DEFAULT_DOMAIN) params.set('domain', next.domain);
-      else params.delete('domain');
-
-      const qs = params.toString();
-      router.replace(qs ? `${pathname}?${qs}` : pathname);
+      // `push`, not `replace`, and to `/profile` rather than the current
+      // pathname: landing on a briefing is a real navigation, and Back must
+      // return the visitor to the homepage they came from. This is still one
+      // action, one push — the ruling that phrase comes from exists to stop
+      // two context setters racing two navigations out of stale closures, and
+      // it is satisfied by there being exactly ONE router call here.
+      //
+      // The query is built fresh rather than from the current `searchParams`:
+      // `/profile` reads only sector/platforms/sort/domain, so carrying the
+      // homepage's `entity`/`tab` across would be noise on a different route.
+      router.push(buildProfileUrl(next));
 
       dispatch({ type: 'APPLY' });
     },
-    [searchParams, router, pathname, syncStoredSector, syncStoredDomain],
+    [router, syncStoredSector, syncStoredDomain],
   );
 
   const dismiss = useCallback(() => {
