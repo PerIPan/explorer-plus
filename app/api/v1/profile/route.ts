@@ -14,7 +14,26 @@ export { OPTIONS };
 // in the shared `domainSchema` piece rather than duplicating the enum.
 const querySchema = profileQuerySchema.extend({ domain: domainSchema });
 
-interface PoolRow {
+// Raw shape straight off the wire. `numeric` columns (lift, max_epss) come back
+// from node-postgres as strings, not numbers -- coerced below before anything
+// downstream (this route's own JSON, and Tasks 11/12's consumers) has to
+// `parseFloat` them itself. `platforms` rides along only to do the Band-B
+// platform-fallback filtering in JS; it is stripped before the pool is turned
+// into response items (it is not part of the bandA/bandB item shape).
+interface RawPoolRow {
+  attackId: string;
+  name: string;
+  lift: string;
+  groupCount: number;
+  iocs: number;
+  reports: number;
+  cveCount: number;
+  kevCount: number;
+  maxEpss: string | null;
+  platforms: string[] | null;
+}
+
+interface PoolItem {
   attackId: string;
   name: string;
   lift: number;
@@ -24,6 +43,20 @@ interface PoolRow {
   cveCount: number;
   kevCount: number;
   maxEpss: number | null;
+}
+
+function toPoolItem(r: RawPoolRow): PoolItem {
+  return {
+    attackId: r.attackId,
+    name: r.name,
+    lift: Number(r.lift),
+    groupCount: r.groupCount,
+    iocs: r.iocs,
+    reports: r.reports,
+    cveCount: r.cveCount,
+    kevCount: r.kevCount,
+    maxEpss: r.maxEpss === null ? null : Number(r.maxEpss),
+  };
 }
 
 interface GroupRow {
@@ -54,20 +87,23 @@ async function handler(req: NextRequest): Promise<NextResponse> {
       groups: [],
       bandA: [],
       bandB: [],
-      meta: { poolSize: 0, degenerate: true, reason: 'no-sector' },
+      meta: { poolSize: 0, degenerate: true, bandBShort: true, platformDropped: false, reason: 'no-sector' },
     }, 3600));
   }
 
   const [poolResult, groupsResult, sectorResult] = await Promise.all([
     // Technique pool for this sector: lift + group_count from the
     // precomputed matview, joined against live evidence (IOC sightings, CTI
-    // report mentions, CVE/KEV/EPSS). `techniques.platforms` is `text[]` and
-    // `techniques.domain` is a scalar `varchar` (NOT `text[]`) -- ANY() on
-    // platforms, plain equality on domain. Both filters use the
-    // `$n::type IS NULL OR ...` form (precedented in
-    // app/api/v1/packages/[ecosystem]/[nameEncoded]/route.ts) so one query
-    // covers all four platform/domain combinations without branching SQL.
-    query<PoolRow>(
+    // report mentions, CVE/KEV/EPSS). `platforms` rides along unfiltered --
+    // the platform constraint is applied in JS below, not in SQL, so that the
+    // documented Band-B fallback ("drop the platform constraint and
+    // re-select") can re-run splitBands() over the same fetched pool instead
+    // of firing a second query. `techniques.domain` is a scalar `varchar`
+    // (NOT `text[]`) -- plain equality, via the `$n::type IS NULL OR ...`
+    // form precedented in
+    // app/api/v1/packages/[ecosystem]/[nameEncoded]/route.ts. Secondary
+    // `ORDER BY` on attack_id makes row order deterministic on tied lift.
+    query<RawPoolRow>(
       `SELECT
          t.attack_id AS "attackId",
          t.name,
@@ -77,7 +113,8 @@ async function handler(req: NextRequest): Promise<NextResponse> {
          COALESCE(rp.reports, 0)::int AS reports,
          COALESCE(ev.cve_count, 0)::int AS "cveCount",
          COALESCE(ev.kev_count, 0)::int AS "kevCount",
-         ev.max_epss AS "maxEpss"
+         ev.max_epss AS "maxEpss",
+         t.platforms
        FROM sector_technique_lift stl
        JOIN techniques t ON t.id = stl.technique_id
        LEFT JOIN technique_cve_evidence ev ON ev.attack_id = t.attack_id
@@ -91,14 +128,14 @@ async function handler(req: NextRequest): Promise<NextResponse> {
        ) rp ON rp.technique_id = stl.technique_id
        WHERE stl.sector_slug = $1
          AND t.is_revoked = false AND t.is_deprecated = false
-         AND ($2::text IS NULL OR $2 = ANY(t.platforms))
-         AND ($3::text IS NULL OR t.domain = $3)
-       ORDER BY stl.lift DESC`,
-      [sector, platform ?? null, domain ?? null],
+         AND ($2::text IS NULL OR t.domain = $2)
+       ORDER BY stl.lift DESC, t.attack_id ASC`,
+      [sector, domain ?? null],
     ),
 
     // Groups active in this sector. threat_groups.domain is text[] --
     // `= $n` raises 22P02 (fixed in 4d4d1ac); must be `$n = ANY(tg.domain)`.
+    // Secondary `ORDER BY` on attack_id keeps ordering deterministic.
     query<GroupRow>(
       `SELECT tg.attack_id AS "attackId", tg.name, tg.aliases
        FROM group_sectors gs
@@ -107,7 +144,7 @@ async function handler(req: NextRequest): Promise<NextResponse> {
        WHERE s.slug = $1
          AND tg.is_revoked = false AND tg.is_deprecated = false
          AND ($2::text IS NULL OR $2 = ANY(tg.domain))
-       ORDER BY tg.name ASC
+       ORDER BY tg.name ASC, tg.attack_id ASC
        LIMIT 20`,
       [sector, domain ?? null],
     ),
@@ -115,8 +152,29 @@ async function handler(req: NextRequest): Promise<NextResponse> {
     query<{ name: string }>(`SELECT name FROM sectors WHERE slug = $1`, [sector]),
   ]);
 
-  const pool = poolResult.rows;
-  const { bandA, bandB } = splitBands(pool, sort, 6);
+  const rawPool = poolResult.rows;
+  const fullPool = rawPool.map(toPoolItem);
+  const platformPool = platform
+    ? rawPool.filter((r) => Array.isArray(r.platforms) && r.platforms.includes(platform)).map(toPoolItem)
+    : fullPool;
+
+  let { bandA, bandB, bandBShort } = splitBands(platformPool, sort, 6);
+  let effectivePool = platformPool;
+  let platformDropped = false;
+
+  // Spec fallback: if Band B has fewer than 6 candidates, drop the platform
+  // constraint and re-select over the full sector pool, labelling the
+  // widening in `meta` so the UI can say so. Only fires when a platform was
+  // actually applied -- otherwise platformPool === fullPool already and
+  // re-selecting would be a no-op.
+  if (bandBShort && platform) {
+    const widened = splitBands(fullPool, sort, 6);
+    bandA = widened.bandA;
+    bandB = widened.bandB;
+    bandBShort = widened.bandBShort;
+    effectivePool = fullPool;
+    platformDropped = true;
+  }
 
   return withCors(jsonResponse({
     profile: {
@@ -130,8 +188,10 @@ async function handler(req: NextRequest): Promise<NextResponse> {
     bandA,
     bandB,
     meta: {
-      poolSize: pool.length,
-      degenerate: isDegenerate(pool),
+      poolSize: effectivePool.length,
+      degenerate: isDegenerate(effectivePool),
+      bandBShort,
+      platformDropped,
     },
   }, 3600));
 }
