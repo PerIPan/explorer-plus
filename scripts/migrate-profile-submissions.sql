@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS profile_submissions (
   assets         text[] NOT NULL DEFAULT '{}',
   purdue_levels  text[] NOT NULL DEFAULT '{}',
   visitor_day    text,
+  ip_day         text,
   created_at     timestamptz NOT NULL DEFAULT now(),
   UNIQUE (day, visitor_day, action, variant)
 );
@@ -20,3 +21,16 @@ CREATE TABLE IF NOT EXISTS profile_submissions (
 -- the dismissal-rate query is day-scoped.
 CREATE INDEX IF NOT EXISTS idx_profile_submissions_day
   ON profile_submissions (day, action);
+
+-- Fix round 1 (Critical): visitor_day folds in User-Agent, which is fully
+-- attacker-controlled, and was wrongly used to gate the per-visitor rate cap
+-- -- trivially bypassed by varying User-Agent per request from one IP (proved
+-- live: 15 requests, 1 IP, 15 distinct UAs -> 15 distinct visitor_day values,
+-- cap never fired). ip_day is IP-only (sha256(hmac(PROFILE_IP_SALT, utc_date)
+-- || ip), no UA) and is what the rate limiter must query against. visitor_day
+-- is kept, UA-inclusive, for storage grouping and the UNIQUE dedup only -- it
+-- must never again be load-bearing for abuse resistance. Additive and safe to
+-- re-run against the already-applied table (ADD COLUMN IF NOT EXISTS).
+ALTER TABLE profile_submissions ADD COLUMN IF NOT EXISTS ip_day text;
+CREATE INDEX IF NOT EXISTS idx_profile_submissions_ip_day
+  ON profile_submissions (day, ip_day);

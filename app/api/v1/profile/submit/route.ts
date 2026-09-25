@@ -39,12 +39,20 @@ const DAILY_LIMIT = 20;
  * does: the HMAC key changes once per UTC calendar day, deterministically,
  * no matter which lambda instance computes it.
  *
- * Set PROFILE_IP_SALT in the Vercel environment. In local dev, a fallback is
- * used with a loud warning; this is NOT GDPR-compliant for production, but
- * lets tests and local development work without extra setup. Same pattern as
- * A2A_IP_SALT, app/api/a2a/route.ts:144-157.
+ * Set PROFILE_IP_SALT in the Vercel environment. Fix round 1: unlike
+ * A2A_IP_SALT (app/api/a2a/route.ts:144-157), an unset salt in *production*
+ * now throws at module load rather than silently degrading -- this endpoint
+ * drives a go/no-go decision on the whole feature, and a hardcoded fallback
+ * string sitting in the repo is not an acceptable production posture for it.
+ * Local dev/test keep the warn-and-fallback behavior so nothing extra is
+ * required to run `npm test` or `npm run dev`.
  */
-const IP_SALT = process.env.PROFILE_IP_SALT || (() => {
+const IP_SALT = (() => {
+  const salt = process.env.PROFILE_IP_SALT;
+  if (salt) return salt;
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('[profile/submit] PROFILE_IP_SALT is required in production and is not set.');
+  }
   console.warn('[profile/submit] PROFILE_IP_SALT is not set — using insecure fallback. Set the env var in production.');
   return 'dev-only-insecure-salt';
 })();
@@ -77,33 +85,48 @@ function getRawClientIp(req: NextRequest): string {
 }
 
 /**
- * visitor_day = sha256(hmac(PROFILE_IP_SALT, utc_date) || ip || ua)
+ * ip_day    = sha256(hmac(PROFILE_IP_SALT, utc_date) || ip)              -- IP only
+ * visitor_day = sha256(hmac(PROFILE_IP_SALT, utc_date) || ip || ua)      -- IP + UA
  *
- * The HMAC keys on the UTC calendar day, so this digest -- and therefore
- * every downstream visitor_day hash -- rotates at UTC midnight without any
- * in-process timer or stored rotation state. ip/ua are never stored raw,
- * only folded into this one-way hash.
+ * The HMAC keys on the UTC calendar day, so both digests -- and therefore
+ * every downstream hash -- rotate at UTC midnight without any in-process
+ * timer or stored rotation state. ip/ua are never stored raw, only folded
+ * into these one-way hashes.
+ *
+ * Fix round 1 (Critical): `ip_day` is the one that gates the rate limiter.
+ * `visitor_day` folds in the User-Agent header, which is fully
+ * attacker-controlled -- using it for the cap meant varying UA per request
+ * from a single IP minted a "new visitor" (count 0) every time, proven live
+ * to bypass the cap entirely (15/15 requests succeeded, 15 distinct
+ * visitor_day values, 1 constant IP). `visitor_day` is kept for storage
+ * grouping and the UNIQUE dedup below -- UA still buys real visitor
+ * separation behind shared NAT for THAT purpose -- but it must never again
+ * be load-bearing for abuse resistance.
  */
-function getVisitorDay(req: NextRequest): string {
+function computeVisitorHashes(req: NextRequest): { ipDay: string; visitorDay: string } {
   const utcDate = new Date().toISOString().slice(0, 10); // YYYY-MM-DD, UTC
   const dayKey = createHmac('sha256', IP_SALT).update(utcDate).digest('hex');
   const ip = getRawClientIp(req);
   const ua = req.headers.get('user-agent') ?? 'unknown';
-  return createHash('sha256').update(dayKey).update(ip).update(ua).digest('hex');
+  const ipDay = createHash('sha256').update(dayKey).update(ip).digest('hex');
+  const visitorDay = createHash('sha256').update(dayKey).update(ip).update(ua).digest('hex');
+  return { ipDay, visitorDay };
 }
 
 // -- Rate limiting -------------------------------------------------------------
 
 /**
- * Per-visitor daily cap, scoped to the same UTC calendar day the `day` column
- * and visitor_day hash both use. Mirrors checkRateLimit in
- * app/api/a2a/route.ts:214-221; the caller below fails CLOSED on any error.
+ * Per-IP daily cap, scoped to the same UTC calendar day the `day` column and
+ * ip_day hash both use. Mirrors checkRateLimit in app/api/a2a/route.ts:214-221
+ * (IP-hash only, no UA) -- the same shape the design spec specifies and the
+ * one place this must never drift from again. The caller below fails CLOSED
+ * on any error.
  */
-async function underDailyCap(visitorDay: string): Promise<boolean> {
+async function underDailyCap(ipDay: string): Promise<boolean> {
   const result = await query<{ count: string }>(
     `SELECT COUNT(*) FROM profile_submissions
-     WHERE visitor_day = $1 AND day = (now() AT TIME ZONE 'utc')::date`,
-    [visitorDay],
+     WHERE ip_day = $1 AND day = (now() AT TIME ZONE 'utc')::date`,
+    [ipDay],
   );
   const used = parseInt(result.rows[0].count, 10);
   return used < DAILY_LIMIT;
@@ -126,12 +149,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return withCors(errorResponse(400, 'Invalid submission payload', 'VALIDATION_ERROR'));
   }
 
-  const visitorDay = getVisitorDay(req);
+  const { ipDay, visitorDay } = computeVisitorHashes(req);
 
   // Fail CLOSED: an error while checking the cap rejects the write rather
   // than silently allowing it — same posture as a2a/route.ts:295-318.
   try {
-    if (!(await underDailyCap(visitorDay))) {
+    if (!(await underDailyCap(ipDay))) {
       const resp = NextResponse.json({ error: 'Rate limit exceeded', code: 'RATE_LIMITED' }, { status: 429 });
       resp.headers.set('Retry-After', '86400');
       return withCors(resp);
@@ -147,12 +170,14 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     // ON CONFLICT DO NOTHING against the UNIQUE (day, visitor_day, action,
     // variant) constraint — one apply and one dismiss (and one auto_close)
     // per visitor-day-variant; a resubmission is a silent no-op, not an error.
+    // ip_day rides along purely so the next request's rate-limit check can
+    // find this row -- it plays no role in the uniqueness/dedup logic.
     await query(
       `INSERT INTO profile_submissions
-         (variant, action, sectors, platforms, roles, frameworks, assets, purdue_levels, visitor_day)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+         (variant, action, sectors, platforms, roles, frameworks, assets, purdue_levels, visitor_day, ip_day)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        ON CONFLICT DO NOTHING`,
-      [variant, action, sectors, platforms, roles, frameworks, assets, purdue_levels, visitorDay],
+      [variant, action, sectors, platforms, roles, frameworks, assets, purdue_levels, visitorDay, ipDay],
     );
   } catch (err) {
     console.error('profile/submit insert failed:', err instanceof Error ? err.message : err);
