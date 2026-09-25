@@ -26,3 +26,24 @@ test('peek: an explicit close reports dismiss', () => {
   const s = peekReducer({ open: true, timer: null }, { type: 'CLOSE' });
   assert.equal(s.report, 'dismiss');
 });
+
+test('peek: toggle-close closes silently — no report, so no telemetry row and no dismissal flag', () => {
+  // Clicking the diamond a second time to put the panel away is not a
+  // dismissal. `report` must stay null: ProfilePanel only POSTs (and
+  // useProfileState only writes localStorage['mx-profile']) on a non-null
+  // report, so a reported 'dismiss' here would silently cost the visitor the
+  // feature for good for doing the ordinary thing with a popover.
+  const s = peekReducer({ open: true, timer: null }, { type: 'TOGGLE_CLOSE' });
+  assert.equal(s.open, false);
+  assert.equal(s.report, null, 'toggle-close must not report — dismiss is for a real outside click / X');
+});
+
+test('peek: toggle-close and explicit close differ only in what they report', () => {
+  const start = { open: true, timer: PEEK_MS };
+  const toggled = peekReducer(start, { type: 'TOGGLE_CLOSE' });
+  const closed = peekReducer(start, { type: 'CLOSE' });
+  assert.equal(toggled.open, closed.open, 'both close the panel');
+  assert.equal(toggled.timer, null, 'toggle-close clears the peek timer');
+  assert.equal(closed.timer, null, 'explicit close clears the peek timer');
+  assert.notEqual(toggled.report, closed.report, 'they must not be interchangeable');
+});
