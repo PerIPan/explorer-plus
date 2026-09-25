@@ -6,6 +6,7 @@ import { track } from '@vercel/analytics';
 import { useQuery } from '@tanstack/react-query';
 import { useTheme } from '../../contexts/ThemeContext';
 import { Sidebar } from './Sidebar';
+import { ThreatProfileProvider, ProfileLargeModal } from '../profile/ProfilePanel';
 import { SearchBar } from './SearchBar';
 import { RelationshipModel } from '../relationships/RelationshipModel';
 
@@ -357,6 +358,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [apisTab, setApisTab] = useState<'rest' | 'mcp'>('rest');
 
   return (
+    /* The Threat Profile controller lives here, not on the homepage, so the
+       sidebar's "Threat Profile" entry can open the same questions on ANY
+       page. Mounting the provider is availability only: it arms no timer and
+       posts no telemetry. The unsolicited peek is still homepage-only — it is
+       armed by `ProfilePeekArmer`, which renders exclusively in the homepage
+       landing state next to the diamonds (src/views/Relationships.tsx). */
+    <ThreatProfileProvider variant="v1-4q">
     <div className="flex min-h-screen bg-[var(--surface-deep)]">
       {/* Mobile overlay */}
       {sidebarOpen && (
@@ -577,6 +585,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       )}
+
+      {/* The sidebar entry's presentation. Portals to <body>, renders only
+          when the sidebar opened it, and is inert otherwise — the diamonds'
+          two presentations are still mounted on the homepage. */}
+      <ProfileLargeModal />
     </div>
+    </ThreatProfileProvider>
   );
 }

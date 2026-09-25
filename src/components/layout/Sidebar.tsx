@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Fragment, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { DomainDropdown } from './DomainDropdown';
 import { SectorDropdown } from './SectorDropdown';
+import { ProfileSidebarTrigger } from '../profile/ProfilePanel';
 
 
 interface SidebarProps {
@@ -84,6 +85,16 @@ const extendedIntelNav: NavItem[] = [
   { path: '/external-actors', label: 'Non-MITRE Actors', tooltip: '500+ threat actors from ThaiCERT encyclopedia' },
 ];
 
+/**
+ * The shared geometry of a nav row. Pulled out so the Threat Profile entry —
+ * a <button>, since it opens a modal instead of navigating — sits on exactly
+ * the same grid as the links around it. `w-full text-left` is the only thing
+ * a button needs on top of it to look like a block-level link.
+ */
+const NAV_ROW_CLASS = 'block px-3 py-2.5 rounded-md text-sm transition-colors duration-150';
+const NAV_ROW_IDLE_CLASS =
+  'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--hover-overlay)]';
+
 function NavItemLink({ path, label, tooltip, end, emphasis }: NavItem & { end?: boolean }) {
   const pathname = usePathname();
   const isActive = end
@@ -94,11 +105,11 @@ function NavItemLink({ path, label, tooltip, end, emphasis }: NavItem & { end?: 
       href={path}
       title={tooltip}
       className={[
-        'block px-3 py-2.5 rounded-md text-sm transition-colors duration-150',
+        NAV_ROW_CLASS,
         emphasis ? 'font-semibold' : 'font-medium',
         isActive
           ? 'text-[var(--accent-teal)] bg-[var(--teal-faint)] border-l-2 border-[var(--accent-teal)]'
-          : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--hover-overlay)]',
+          : NAV_ROW_IDLE_CLASS,
       ].join(' ')}
     >
       {label}
@@ -217,7 +228,23 @@ export function Sidebar({ open, onClose, onOpenMcp }: SidebarProps) {
           [&::-webkit-scrollbar-thumb]:bg-[var(--border-color)] [&::-webkit-scrollbar-thumb]:rounded-full"
       >
         {topNav.map((item) => (
-          <NavItemLink key={item.path} {...item} end={item.path === '/'} />
+          <Fragment key={item.path}>
+            <NavItemLink {...item} end={item.path === '/'} />
+            {/* Directly after Compliance. Not a NavItem: it has no route —
+                it opens the four questions in a modal over whatever page you
+                are on, and only Apply navigates (to /profile). */}
+            {item.path === '/compliance' && (
+              <ProfileSidebarTrigger
+                title="tailor this to what you defend — four questions (sector, environment, role, compliance regime) that rank techniques, actors and controls for your organisation"
+                className={[
+                  NAV_ROW_CLASS,
+                  'w-full text-left font-medium',
+                  NAV_ROW_IDLE_CLASS,
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-teal)]',
+                ].join(' ')}
+              />
+            )}
+          </Fragment>
         ))}
       </nav>
 

@@ -48,10 +48,11 @@ const EMPTY_ANSWERS: ProfileAnswers = {};
  * Module scope, deliberately: the unsolicited peek must arm at most once per
  * PAGE LOAD, not once per mount.
  *
- * The provider that owns this hook is mounted only while the homepage shows
- * its diamonds, so selecting an entity unmounts it and clearing the selection
- * mounts it again. Without this flag every landing -> select -> clear round
- * trip re-arms the peek and writes another `auto_close` row — and because
+ * The peek is armed by `ProfilePeekArmer`, which is mounted only while the
+ * homepage shows its diamonds, so selecting an entity unmounts it and
+ * clearing the selection mounts it again. Without this flag every landing ->
+ * select -> clear round trip re-arms the peek and writes another
+ * `auto_close` row — and because
  * `auto_close` deliberately never sets the dismissal flag (see below), there
  * is nothing to stop it repeating. That inflates the one metric this feature
  * is judged on; the mirror case (a provider unmounted mid-peek, whose
@@ -63,7 +64,10 @@ const EMPTY_ANSWERS: ProfileAnswers = {};
  * access here would also have to be guarded for blocked site data. A module
  * variable resets exactly when the JS context does, which is the semantics we
  * want, and it survives client-side navigation within the app — which is
- * correct, since that is not a new page load either.
+ * correct, since that is not a new page load either. That last property now
+ * does double duty: the provider lives in AppShell and therefore survives
+ * client-side navigation, but returning to the homepage remounts the armer,
+ * and this flag is what stops that second mount peeking again.
  */
 let peekArmedThisPageLoad = false;
 
@@ -116,6 +120,17 @@ export interface UseProfileStateResult {
   /** Explicit close (the "X" / Escape / outside-click path). Reports 'dismiss'
    * — distinct from an expired peek's 'auto_close' (see peekReducer). */
   dismiss: () => void;
+  /**
+   * Arm the unsolicited peek, at most once per page load and never for a
+   * visitor who has already applied or closed it.
+   *
+   * Mounting this hook deliberately does NOT do this. The provider is
+   * app-wide so the panel can be opened from the sidebar anywhere; the peek
+   * is homepage-only, and stays that way because only the homepage landing
+   * state calls this. Safe to call repeatedly — every call after the first
+   * is a no-op.
+   */
+  armPeek: () => void;
   /** The peek/panel open-state machine. `dispatch` is exposed directly so a
    * consumer can fire 'CLICK_OPEN' (diamond click) and 'INTERACT' (any
    * pointerenter/focusin/keydown/scroll inside the panel) without this hook
@@ -155,25 +170,45 @@ export function useProfileState(): UseProfileStateResult {
   const [peekNudge, setPeekNudge] = useState(false);
   const [peekState, dispatch] = useReducer<PeekState, [PeekEvent]>(peekReducer, INITIAL_PEEK);
 
-  // Mount-only: READ the dismissal flag, never write it here. A first-time
-  // visitor (no stored flag) gets the unsolicited peek armed exactly once;
-  // a returning visitor who already applied/closed gets neither the peek
-  // nor a write on this pass.
+  // Mount-only: READ the dismissal flag, never write it here. Mounting this
+  // hook does NOT arm the peek — see `armPeek` below for why that is now a
+  // separate, explicit act.
   useEffect(() => {
-    const seen = readDismissed();
-    setDismissed(seen);
-    if (!seen && !peekArmedThisPageLoad) {
-      peekArmedThisPageLoad = true;
-      dispatch({ type: 'PEEK' });
-    }
-    // Intentionally mount-only — re-running this on every render would risk
-    // re-arming the peek, which is the one thing that must never happen.
+    setDismissed(readDismissed());
+    // Intentionally mount-only.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  /**
+   * Arm the unsolicited peek — if this page load has not already, and if the
+   * visitor has not already applied or closed it.
+   *
+   * This used to happen in the mount effect above, because the provider was
+   * mounted ONLY on the homepage landing state, so "the hook exists" and "a
+   * visitor is looking at the diamonds" were the same fact. The provider now
+   * sits in AppShell so the panel is reachable from the sidebar on every
+   * page, and those two facts have come apart: arming on mount would peek at
+   * visitors on every route and write an `auto_close` row from each one,
+   * corrupting the ratio this feature is judged on.
+   *
+   * So availability is the provider's business and arming is the caller's:
+   * exactly one caller (`ProfilePeekArmer`, rendered inside the homepage
+   * landing branch) ever calls this, and the module-scope flag still caps it
+   * at once per page load however many times it is called.
+   *
+   * `readDismissed()` is re-read here rather than using the `dismissed` state
+   * above, so this cannot race the mount effect that sets it.
+   */
+  const armPeek = useCallback(() => {
+    if (peekArmedThisPageLoad) return;
+    if (readDismissed()) return;
+    peekArmedThisPageLoad = true;
+    dispatch({ type: 'PEEK' });
+  }, []);
+
   // Mirror peekState.timer with a real timer. INTERACT/CLOSE/APPLY/EXPIRE all
-  // set timer back to null; since 'PEEK' is dispatched at most once (the
-  // mount effect above), once timer goes null here it can never be re-armed
+  // set timer back to null; since 'PEEK' is dispatched at most once per page
+  // load (`armPeek` above), once timer goes null here it can never be re-armed
   // — the cancellation this effect performs on cleanup is therefore
   // permanent, not merely "until the next render".
   useEffect(() => {
@@ -263,6 +298,7 @@ export function useProfileState(): UseProfileStateResult {
     applyProfile,
     dismissed,
     dismiss,
+    armPeek,
     peek: { ...peekState, dispatch },
     peekNudge,
   };

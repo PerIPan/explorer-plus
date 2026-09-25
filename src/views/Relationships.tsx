@@ -31,7 +31,7 @@ import { RecentReportsCard } from '../components/home/RecentReportsCard';
 import type { GraphNode, GraphData } from '../lib/types';
 import { DiamondLoader } from '../components/shared/FoldingDiamond';
 import {
-  ThreatProfileProvider,
+  ProfilePeekArmer,
   ProfileDiamondTrigger,
   ProfileAnchoredPanel,
   ProfileSheet,
@@ -649,7 +649,13 @@ export function Relationships() {
 
       {/* Instructions when nothing selected */}
       {!selectedId && (
-        <ThreatProfileProvider variant="v1-4q">
+        <>
+          {/* The provider now lives in AppShell, so the panel is reachable
+              from the sidebar on every page. The unsolicited PEEK is not:
+              it is armed here and nowhere else, which is the homepage
+              landing state — exactly where it was armed before. Arming is
+              still capped at once per page load. */}
+          <ProfilePeekArmer />
           <div className="mt-8 md:mt-12">
             <div className="flex items-start justify-between gap-8">
             <p className="text-sm md:text-base text-[var(--text-secondary)] leading-relaxed mb-12 md:mb-16 max-w-2xl">
@@ -754,7 +760,7 @@ export function Relationships() {
             <RecentAffectedCard />
 
           </div>
-        </ThreatProfileProvider>
+        </>
       )}
 
       {/* Loading */}

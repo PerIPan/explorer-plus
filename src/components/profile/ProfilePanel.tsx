@@ -151,17 +151,29 @@ export interface ThreatProfileController {
    */
   anchored: boolean;
   /**
+   * Open as the LARGE centred modal, from the sidebar entry — the third
+   * presentation, available on every page. Outranks `anchored`: while this
+   * is true neither the anchored popover nor the sheet renders, so the same
+   * controller never has two presentations on screen at once.
+   */
+  large: boolean;
+  /**
    * The diamond should make its small "about to take this back" movement
    * now — the last ~250ms of an unsolicited peek. Always false for a
    * click-opened panel (no timer) and for a peek that has been cancelled.
    */
   peekNudge: boolean;
+  /** Arm the unsolicited peek. Called ONLY from the homepage landing state
+   *  (see `ProfilePeekArmer`) — mounting the provider must not peek. */
+  armPeek: () => void;
   onTriggerClick: (event: ReactMouseEvent<HTMLButtonElement>) => void;
-  panelProps: Omit<ProfilePanelProps, 'anchored'>;
+  /** The sidebar entry. Same questions, same telemetry, larger modal. */
+  onSidebarTriggerClick: (event: ReactMouseEvent<HTMLButtonElement>) => void;
+  panelProps: Omit<ProfilePanelProps, 'anchored' | 'large'>;
 }
 
 function useThreatProfile(variant: ProfileVariant): ThreatProfileController {
-  const { answers, setAnswer, applyProfile, dismiss, peek, peekNudge } = useProfileState();
+  const { answers, setAnswer, applyProfile, dismiss, armPeek, peek, peekNudge } = useProfileState();
   // `peek` is a fresh object every render; `dispatch` inside it is stable.
   const { open, timer, report, dispatch } = peek;
 
@@ -169,6 +181,7 @@ function useThreatProfile(variant: ProfileVariant): ThreatProfileController {
   // multi-select `answers` bag, and reaches `applyProfile` as `string | null`.
   const [sector, setSector] = useState<string | null>(null);
   const [modal, setModal] = useState(false);
+  const [large, setLarge] = useState(false);
   const [anchored, setAnchored] = useState(false);
   const returnFocusRef = useRef<HTMLElement | null>(null);
 
@@ -196,10 +209,14 @@ function useThreatProfile(variant: ProfileVariant): ThreatProfileController {
     return () => mql.removeEventListener('change', sync);
   }, []);
 
-  // A closed panel is never modal — so the next unsolicited peek (next cold
-  // visit after an auto_close) is non-modal again.
+  // A closed panel is never modal, and never large — so the next unsolicited
+  // peek (next cold visit after an auto_close) is a non-modal popover again
+  // rather than inheriting the sidebar's presentation.
   useEffect(() => {
-    if (!open) setModal(false);
+    if (!open) {
+      setModal(false);
+      setLarge(false);
+    }
   }, [open]);
 
   // Latest payload, kept in a ref so the outcome effect below depends only on
@@ -276,8 +293,16 @@ function useThreatProfile(variant: ProfileVariant): ThreatProfileController {
     dispatch({ type: 'TOGGLE_CLOSE' });
   }, [dispatch, releaseTriggerClick]);
 
-  const onTriggerClick = useCallback(
-    (event: ReactMouseEvent<HTMLButtonElement>) => {
+  /**
+   * Every click-open path, for both triggers. `asLarge` is the ONLY
+   * difference between them: the sidebar entry opens the big centred modal,
+   * a diamond opens the anchored popover or the sheet. Same controller, same
+   * questions, same telemetry — so a submission from the sidebar is still
+   * `variant: 'v1-4q'` with the same actions, and 'CLICK_OPEN' arms no timer,
+   * which is what keeps `auto_close` impossible from this presentation.
+   */
+  const openFromTrigger = useCallback(
+    (event: ReactMouseEvent<HTMLButtonElement>, asLarge: boolean) => {
       // Tail of a toggle-close gesture that the scrim already handled.
       if (suppressTriggerClickRef.current) {
         suppressTriggerClickRef.current = false;
@@ -293,10 +318,21 @@ function useThreatProfile(variant: ProfileVariant): ThreatProfileController {
       // Read the node synchronously — `currentTarget` is cleared once the
       // event finishes dispatching. Focus returns here when the panel closes.
       returnFocusRef.current = event.currentTarget;
+      setLarge(asLarge);
       setModal(true);
       dispatch({ type: 'CLICK_OPEN' });
     },
     [dispatch, modal],
+  );
+
+  const onTriggerClick = useCallback(
+    (event: ReactMouseEvent<HTMLButtonElement>) => openFromTrigger(event, false),
+    [openFromTrigger],
+  );
+
+  const onSidebarTriggerClick = useCallback(
+    (event: ReactMouseEvent<HTMLButtonElement>) => openFromTrigger(event, true),
+    [openFromTrigger],
   );
 
   const onInteract = useCallback(() => {
@@ -327,7 +363,7 @@ function useThreatProfile(variant: ProfileVariant): ThreatProfileController {
     dismiss();
   }, [dismiss]);
 
-  const panelProps = useMemo<Omit<ProfilePanelProps, 'anchored'>>(
+  const panelProps = useMemo<Omit<ProfilePanelProps, 'anchored' | 'large'>>(
     () => ({
       modal,
       sector,
@@ -343,25 +379,50 @@ function useThreatProfile(variant: ProfileVariant): ThreatProfileController {
     [modal, sector, answers, setAnswer, onApply, onClose, onToggleClose, onInteract],
   );
 
-  return { open, modal, anchored, peekNudge, onTriggerClick, panelProps };
+  return {
+    open,
+    modal,
+    anchored,
+    large,
+    peekNudge,
+    armPeek,
+    onTriggerClick,
+    onSidebarTriggerClick,
+    panelProps,
+  };
 }
 
 /* ────────────────────────────────────────────────────────────────────────────
- * Provider + the three mount points
+ * Provider + the mount points
  *
- * One controller, shared. The three hero diamonds are mutually exclusive by
- * breakpoint but ALL THREE stay mounted (they are hidden with `display:none`),
- * so giving each its own hook would arm three peek timers and post three
- * telemetry rows for one visitor.
+ * One controller, shared by every trigger and every presentation. The three
+ * hero diamonds are mutually exclusive by breakpoint but ALL THREE stay
+ * mounted (they are hidden with `display:none`), so giving each its own hook
+ * would arm three peek timers and post three telemetry rows for one visitor.
+ * The sidebar entry joins them on the same controller for the same reason.
+ *
+ * Presentations (at most one on screen at a time):
+ *   ProfileAnchoredPanel — xl+, anchored beside the homepage diamond
+ *   ProfileSheet         — below xl, a bottom sheet
+ *   ProfileLargeModal    — the sidebar entry's larger centred modal, any page
+ *
+ * Plus `ProfilePeekArmer`, which renders nothing and is the homepage-only
+ * rule for the unsolicited peek.
  * ──────────────────────────────────────────────────────────────────────────── */
 
 const ThreatProfileCtx = createContext<ThreatProfileController | null>(null);
 
 /**
- * Mount this ONLY around the tree that actually shows the diamonds. The peek
- * timer arms on mount and reports `auto_close` when it expires, so mounting it
- * on a view where no panel is visible would post outcomes for a panel the
- * visitor was never shown.
+ * Mount this once, app-wide (AppShell). It is the panel's AVAILABILITY, not
+ * its peek: mounting it arms nothing, posts nothing and shows nothing.
+ *
+ * It used to be mounted only around the homepage diamonds, because arming
+ * happened on mount and an expired peek posts `auto_close` — mounting it
+ * anywhere else would have posted outcomes for a panel the visitor was never
+ * shown. The sidebar entry needs the panel on every page, so those two
+ * concerns were separated instead of the rule being relaxed: `armPeek` is now
+ * an explicit call, and `ProfilePeekArmer` — the only caller — still renders
+ * only in the homepage landing state.
  */
 export function ThreatProfileProvider({
   variant,
@@ -414,7 +475,11 @@ export function ProfileDiamondTrigger({ size }: { size: number }) {
       data-profile-trigger=""
       onClick={ctl.onTriggerClick}
       aria-haspopup="dialog"
-      aria-expanded={ctl.open}
+      // Not `ctl.open`: the sidebar entry can have the same questions open as
+      // the large modal, which this diamond did not expand and does not
+      // control. Claiming otherwise would point a screen reader at the wrong
+      // trigger.
+      aria-expanded={ctl.open && !ctl.large}
       aria-label="Tailor this to what you defend"
       className="block pointer-events-auto group rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--accent-teal)]"
     >
@@ -432,12 +497,35 @@ export function ProfileDiamondTrigger({ size }: { size: number }) {
   );
 }
 
+/**
+ * Arms the unsolicited peek. Renders nothing.
+ *
+ * This component IS the homepage-only rule, made explicit and placed where
+ * the rule lives: inside the landing state, alongside the diamonds. The
+ * provider is app-wide, so without this every route would peek at visitors
+ * and post an `auto_close` per mount.
+ *
+ * `armPeek` is idempotent per page load (see useProfileState), so the effect
+ * re-running or the armer remounting — landing -> select an entity -> clear
+ * the selection — cannot arm a second peek.
+ */
+export function ProfilePeekArmer() {
+  const ctl = useController();
+  const armPeek = ctl?.armPeek;
+  useEffect(() => {
+    armPeek?.();
+  }, [armPeek]);
+  return null;
+}
+
 /** Place inside the xl diamond's existing `relative` wrapper. Renders nothing
- *  below xl, where `ProfileSheet` takes over. */
+ *  below xl, where `ProfileSheet` takes over, and nothing while the sidebar's
+ *  large modal is up — that presentation replaces this one rather than
+ *  stacking with it. */
 export function ProfileAnchoredPanel() {
   const ctl = useController();
-  if (!ctl || !ctl.open || !ctl.anchored) return null;
-  return <ProfilePanel anchored {...ctl.panelProps} />;
+  if (!ctl || !ctl.open || !ctl.anchored || ctl.large) return null;
+  return <ProfilePanel anchored large={false} {...ctl.panelProps} />;
 }
 
 /** The below-xl sheet. Portalled to `document.body` so neither the diamond
@@ -447,8 +535,77 @@ export function ProfileSheet() {
   const ctl = useController();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
-  if (!mounted || !ctl || !ctl.open || ctl.anchored) return null;
-  return createPortal(<ProfilePanel anchored={false} {...ctl.panelProps} />, document.body);
+  if (!mounted || !ctl || !ctl.open || ctl.anchored || ctl.large) return null;
+  return createPortal(<ProfilePanel anchored={false} large={false} {...ctl.panelProps} />, document.body);
+}
+
+/**
+ * The third presentation: the larger centred modal the sidebar entry opens.
+ *
+ * Mounted once in AppShell, so it is reachable from every page, and portalled
+ * to `document.body` for the same reason the sheet is. It renders only when
+ * the sidebar opened it, at every breakpoint — an entry in the sidebar is a
+ * deliberate request, so unlike the diamonds there is nothing breakpoint-
+ * dependent to decide.
+ *
+ * No new modal machinery: it is `ProfilePanel` with `modal` already true, so
+ * `aria-modal`, the focus move, the Tab trap, the inert sibling walk, the
+ * focus return to the sidebar entry, the scrim and both close paths are the
+ * ones the anchored panel already uses.
+ */
+export function ProfileLargeModal() {
+  const ctl = useController();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted || !ctl || !ctl.open || !ctl.large) return null;
+  return createPortal(<ProfilePanel anchored={false} large {...ctl.panelProps} />, document.body);
+}
+
+/**
+ * The sidebar entry, as a trigger.
+ *
+ * A `<button>`, not a `<Link>`: it opens the questions in place on whatever
+ * page the visitor is on. Apply still owns the single navigation to
+ * `/profile`.
+ *
+ * Carries `data-profile-trigger` like the diamonds do, which buys the whole
+ * disclosure-toggle contract for free: clicking it while the modal is open
+ * routes through `pointerIsOverTrigger` to the SILENT close, so re-clicking
+ * the entry you opened it from is not recorded as a rejection and does not
+ * set the dismissal flag — exactly the ruling that already covers the
+ * diamond. Every other way of closing it (the X, Escape, a click anywhere
+ * else) is an ordinary `dismiss`, and no timer exists on this presentation,
+ * so `auto_close` is unreachable from here.
+ *
+ * `className` comes from the caller: this is a nav row, and the sidebar owns
+ * what a nav row looks like.
+ */
+export function ProfileSidebarTrigger({
+  className,
+  label = 'Threat Profile',
+  title,
+}: {
+  className?: string;
+  label?: string;
+  title?: string;
+}) {
+  const ctl = useController();
+  // Rendered outside a provider (e.g. the sidebar in isolation): no
+  // controller, no panel to open, so no dead affordance either.
+  if (!ctl) return null;
+  return (
+    <button
+      type="button"
+      data-profile-trigger=""
+      onClick={ctl.onSidebarTriggerClick}
+      aria-haspopup="dialog"
+      aria-expanded={ctl.open && ctl.large}
+      title={title}
+      className={className}
+    >
+      {label}
+    </button>
+  );
 }
 
 /* ────────────────────────────────────────────────────────────────────────────
@@ -458,6 +615,12 @@ export function ProfileSheet() {
 export interface ProfilePanelProps {
   /** Absolutely positioned against the diamond (xl+) vs. a centred sheet. */
   anchored: boolean;
+  /**
+   * The sidebar's presentation: a larger centred modal, at every breakpoint.
+   * Mutually exclusive with `anchored` — the two mount points that can set
+   * this both pass `anchored={false}`.
+   */
+  large: boolean;
   /** Click-opened: focus moves in, Tab is trapped, the background is marked
    *  `inert`, and `aria-modal="true"` is therefore true rather than claimed. */
   modal: boolean;
@@ -552,6 +715,7 @@ function clippingAncestor(el: HTMLElement): HTMLElement | null {
 
 export function ProfilePanel({
   anchored,
+  large,
   modal,
   sector,
   onSectorChange,
@@ -817,9 +981,24 @@ export function ProfilePanel({
     onApply();
   }
 
-  const shellClass = anchored
-    ? 'pointer-events-auto select-text flex flex-col rounded-xl border border-[var(--border-color)] bg-[var(--surface-card)] shadow-2xl focus:outline-none'
-    : 'pointer-events-auto select-text fixed inset-x-0 bottom-0 z-[61] mx-auto flex w-full max-h-[85vh] flex-col rounded-t-2xl border-t border-x border-[var(--border-color)] bg-[var(--surface-card)] shadow-2xl focus:outline-none sm:max-w-[560px]';
+  /**
+   * Three presentations, one panel.
+   *
+   * The large one is centred with `top-1/2 left-1/2` + a -50% translate
+   * rather than flex centring, because it is portalled to `<body>` and has
+   * no layout parent to centre within. `w-[calc(100%-2rem)]` keeps a gutter
+   * on a narrow viewport, where it is still the right shape — an entry in
+   * the sidebar is a deliberate request, so it gets a real modal at every
+   * width rather than degrading into the sheet the diamonds use.
+   *
+   * z-[61] on both portalled variants, matching the anchored panel's inline
+   * z-index and sitting one above the shared scrim at z-60.
+   */
+  const shellClass = large
+    ? 'pointer-events-auto select-text fixed left-1/2 top-1/2 z-[61] -translate-x-1/2 -translate-y-1/2 flex w-[calc(100%-2rem)] max-w-[620px] max-h-[85vh] flex-col rounded-2xl border border-[var(--border-color)] bg-[var(--surface-card)] shadow-2xl focus:outline-none'
+    : anchored
+      ? 'pointer-events-auto select-text flex flex-col rounded-xl border border-[var(--border-color)] bg-[var(--surface-card)] shadow-2xl focus:outline-none'
+      : 'pointer-events-auto select-text fixed inset-x-0 bottom-0 z-[61] mx-auto flex w-full max-h-[85vh] flex-col rounded-t-2xl border-t border-x border-[var(--border-color)] bg-[var(--surface-card)] shadow-2xl focus:outline-none sm:max-w-[560px]';
 
   return (
     <>
@@ -862,7 +1041,7 @@ export function ProfilePanel({
           data-profile-scrim=""
           aria-hidden="true"
           className={
-            anchored
+            anchored && !large
               ? 'fixed inset-0 z-[60] pointer-events-auto'
               : 'fixed inset-0 z-[60] bg-black/30'
           }
@@ -902,7 +1081,16 @@ export function ProfilePanel({
           </button>
         </div>
 
-        <div className="flex flex-col gap-4 overflow-y-auto px-4 py-3 max-h-[min(60vh,420px)]" onScroll={onInteract}>
+        {/* The scroll box grows with the presentation: the popover is pinned
+            beside a diamond and must stay compact, the large modal is centred
+            with the whole viewport to itself and can show more of the form at
+            once — which also means less scrolling behind an open listbox. */}
+        <div
+          className={`flex flex-col gap-4 overflow-y-auto px-4 py-3 ${
+            large ? 'max-h-[min(70vh,560px)]' : 'max-h-[min(60vh,420px)]'
+          }`}
+          onScroll={onInteract}
+        >
           {/* Sector is the load-bearing answer and is single-select, so it is a
               real single-select control. `MultiSelect` advertises
               aria-multiselectable="true" on its listbox, which would misreport
