@@ -3,7 +3,7 @@ import { query } from '../lib/db';
 import { jsonResponse, errorResponse } from '../../lib/handler';
 import { withCors, corsOptions as OPTIONS } from '../../lib/cors';
 import { profileQuerySchema, domainSchema } from '../lib/validate';
-import { splitBands, isDegenerate, MIN_REACH } from '../../../../src/lib/profile-rank.mjs';
+import { splitBands, isDegenerate, otLift, MIN_REACH } from '../../../../src/lib/profile-rank.mjs';
 
 export { OPTIONS };
 
@@ -161,11 +161,11 @@ interface ImpactRow {
 }
 
 /**
- * Lift is computed HERE, not in SQL. `numeric` comes back from node-postgres as
+ * Lift is computed in JS, not in SQL. `numeric` comes back from node-postgres as
  * a string (the IT path has to `Number()` it), and the division needs `n_eff`,
- * which is just `effective.length` — already in hand. Doing it in JS keeps the
- * pool query a plain integer GROUP BY and makes the fixture tests reproduce the
- * exact arithmetic the route runs.
+ * which is just `effective.length` — already in hand. Keeping it out of SQL
+ * leaves the pool query a plain integer GROUP BY, and puts the arithmetic in
+ * `otLift` where scripts/lib/profile-rank.test.mjs can pin it directly.
  */
 function toOtItem(r: RawOtRow, nEffective: number, nAll: number): OtItem {
   return {
@@ -173,7 +173,7 @@ function toOtItem(r: RawOtRow, nEffective: number, nAll: number): OtItem {
     name: r.name,
     exposure: r.exposure,
     reach: r.reach,
-    lift: (r.exposure / nEffective) / (r.reach / nAll),
+    lift: otLift(r.exposure, r.reach, nEffective, nAll),
     groupCount: r.groupCount,
     mitigationCount: r.mitigationCount,
     d3fendCount: r.d3fendCount,

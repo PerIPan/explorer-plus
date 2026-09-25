@@ -86,6 +86,44 @@ export function splitBands(pool, sortKey, n = 6, minGroups = MIN_GROUPS, minReac
 }
 
 /**
+ * OT lift: how much more of the VISITOR's asset surface a technique covers than
+ * it covers of the whole ATT&CK ICS asset surface.
+ *
+ *     (exposure / nEffective) / (reach / nAll)
+ *
+ * `nEffective` is the cardinality of the DISTINCT union of the explicitly named
+ * assets and the assets expanded from the selected Purdue levels. Distinct is
+ * not a detail — measured 2026-09-26, l2 holds 7 assets and l3 holds 7, but
+ * their union is 10, because A0001, A0009, A0014 and A0015 span both. Passing
+ * 14 here instead of 10 scales every lift by 0.71 and nothing anywhere
+ * complains.
+ *
+ * THROWS rather than returning `NaN`/`Infinity` when the denominator is empty.
+ * `nEffective` is 0 for a real, reachable request — `?levels=l5`, since
+ * Enterprise IT carries no ATT&CK asset — and the route is responsible for
+ * short-circuiting that into the documented no-assets state before it gets
+ * here. If that guard is ever removed, this turns a page silently full of
+ * `NaN` into one loud, named error.
+ *
+ * @param {number} exposure   effective assets targeted by the technique
+ * @param {number} reach      ALL live assets targeted by the technique
+ * @param {number} nEffective size of the distinct effective asset union
+ * @param {number} nAll       total live assets (18 in production)
+ * @returns {number}
+ */
+export function otLift(exposure, reach, nEffective, nAll) {
+  if (!(nEffective > 0)) {
+    throw new Error(
+      `otLift: empty effective asset set (nEffective=${nEffective}). The caller must ` +
+      'short-circuit an empty selection into the no-assets state before ranking.');
+  }
+  if (!(reach > 0)) {
+    throw new Error(`otLift: technique has reach=${reach}; it should not be in the pool at all.`);
+  }
+  return (exposure / nEffective) / (reach / nAll);
+}
+
+/**
  * True when the candidate set cannot produce a defensible lift ordering.
  * Fires on the COMPUTED RESULT, not on missing input: a full OT asset
  * selection is valid input that still collapses every lift to 1.0.
