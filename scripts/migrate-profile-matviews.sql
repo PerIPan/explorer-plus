@@ -47,3 +47,26 @@ JOIN sector_n sn ON sn.slug = sect.slug;
 
 CREATE UNIQUE INDEX sector_technique_lift_pk
   ON sector_technique_lift (sector_slug, technique_id);
+
+-- KEV/EPSS/CVE evidence per technique. The CWE->CAPEC chain is coarse (one
+-- broad CWE fans out to thousands of CVEs), so notCatchallCwe is mandatory:
+-- unfiltered, T1574.007 reports 12,511 CVEs; filtered, 8,862.
+DROP MATERIALIZED VIEW IF EXISTS technique_cve_evidence;
+CREATE MATERIALIZED VIEW technique_cve_evidence AS
+WITH chain AS (
+  SELECT DISTINCT cm.attack_technique_id AS attack_id, cw.cve_id
+  FROM capec_mappings cm
+  JOIN cve_weaknesses cw ON cw.cwe_id = cm.cwe_id
+  WHERE cm.attack_technique_id IS NOT NULL
+    AND cm.cwe_id NOT IN (SELECT cwe_id FROM catchall_cwes)
+)
+SELECT c.attack_id,
+       count(*)::int                                AS cve_count,
+       count(*) FILTER (WHERE d.is_kev)::int        AS kev_count,
+       max(d.epss_score)                            AS max_epss
+FROM chain c
+JOIN cve_details d ON d.cve_id = c.cve_id
+GROUP BY 1;
+
+CREATE UNIQUE INDEX technique_cve_evidence_pk
+  ON technique_cve_evidence (attack_id);
