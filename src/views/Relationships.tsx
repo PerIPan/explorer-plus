@@ -30,6 +30,12 @@ import { RecentAffectedCard } from '../components/home/RecentAffectedCard';
 import { RecentReportsCard } from '../components/home/RecentReportsCard';
 import type { GraphNode, GraphData } from '../lib/types';
 import { DiamondLoader } from '../components/shared/FoldingDiamond';
+import {
+  ThreatProfileProvider,
+  ProfileDiamondTrigger,
+  ProfileAnchoredPanel,
+  ProfileSheet,
+} from '../components/profile/ProfilePanel';
 
 interface EntityEntry {
   attackId: string;
@@ -643,104 +649,112 @@ export function Relationships() {
 
       {/* Instructions when nothing selected */}
       {!selectedId && (
-        <div className="mt-8 md:mt-12">
-          <div className="flex items-start justify-between gap-8">
-          <p className="text-sm md:text-base text-[var(--text-secondary)] leading-relaxed mb-12 md:mb-16 max-w-2xl">
-            Search for any{' '}
-            <span className="font-medium text-[var(--text-primary)]">Technique</span>,{' '}
-            <span className="font-medium text-[var(--text-primary)]">Actor</span>,{' '}
-            <span className="font-medium text-[var(--text-primary)]">Malware</span>,{' '}
-            <span className="font-medium text-[var(--text-primary)]">Campaign</span>,{' '}
-            <span className="font-medium text-[var(--text-primary)]">Mitigation</span>,{' '}
-            <span className="font-medium text-[var(--text-primary)]">Tactic</span>,{' '}
-            <span className="font-medium text-[var(--text-primary)]">Sector</span>,{' '}
-            <span className="font-medium text-[var(--text-primary)]">Application</span>, or{' '}
-            <span className="font-medium text-[var(--text-primary)]">OWASP category</span>{' '}
-            to explore its relationships.
-          </p>
+        <ThreatProfileProvider variant="v1-4q">
+          <div className="mt-8 md:mt-12">
+            <div className="flex items-start justify-between gap-8">
+            <p className="text-sm md:text-base text-[var(--text-secondary)] leading-relaxed mb-12 md:mb-16 max-w-2xl">
+              Search for any{' '}
+              <span className="font-medium text-[var(--text-primary)]">Technique</span>,{' '}
+              <span className="font-medium text-[var(--text-primary)]">Actor</span>,{' '}
+              <span className="font-medium text-[var(--text-primary)]">Malware</span>,{' '}
+              <span className="font-medium text-[var(--text-primary)]">Campaign</span>,{' '}
+              <span className="font-medium text-[var(--text-primary)]">Mitigation</span>,{' '}
+              <span className="font-medium text-[var(--text-primary)]">Tactic</span>,{' '}
+              <span className="font-medium text-[var(--text-primary)]">Sector</span>,{' '}
+              <span className="font-medium text-[var(--text-primary)]">Application</span>, or{' '}
+              <span className="font-medium text-[var(--text-primary)]">OWASP category</span>{' '}
+              to explore its relationships.
+            </p>
 
-          {/* Corner diamond — beside the intro on xl+ (where the field can stay wide
-              without colliding). Inline flex item so it never overlaps the tables. */}
-          <div className="hidden xl:block flex-shrink-0 pl-20 pr-24 -mt-32 pointer-events-none select-none">
-            <div className="relative" style={{ width: 210, height: 210 }}>
-              <img src="/diamond-favicon.svg" alt="" width={210} height={210} className="opacity-[0.55]" />
+            {/* Corner diamond — beside the intro on xl+ (where the field can stay wide
+                without colliding). Inline flex item so it never overlaps the tables. */}
+            <div className="hidden xl:block flex-shrink-0 pl-20 pr-24 -mt-32 pointer-events-none select-none">
+              <div className="relative" style={{ width: 210, height: 210 }}>
+                <ProfileDiamondTrigger size={210} />
+                <ProfileAnchoredPanel />
 
-              <div className="absolute -top-10 left-1/2 -translate-x-1/2 text-center">
-                <div className="text-xs font-medium text-[var(--accent-orange)] opacity-50">actor</div>
-                <div className="text-xs font-medium text-[var(--accent-orange)] opacity-50">adversary</div>
-              </div>
-              <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 text-center">
-                <div className="text-xs font-medium text-[var(--text-secondary)] opacity-50">sector</div>
-                <div className="text-xs font-medium text-[var(--text-secondary)] opacity-50">victim</div>
-              </div>
-              <div className="absolute top-1/2 -left-20 -translate-y-1/2 text-right">
-                <div className="text-xs font-medium text-[var(--accent-teal)] opacity-50">technique</div>
-                <div className="text-xs font-medium text-[var(--accent-teal)] opacity-50">capability</div>
-              </div>
-              <div className="absolute top-1/2 -right-24 -translate-y-1/2 text-center">
-                <div className="text-xs font-medium text-[var(--accent-blue)] opacity-50">application</div>
-                <div className="text-xs font-medium text-[var(--accent-blue)] opacity-50">infrastructure</div>
+                <div className="absolute -top-10 left-1/2 -translate-x-1/2 text-center">
+                  <div className="text-xs font-medium text-[var(--accent-orange)] opacity-50">actor</div>
+                  <div className="text-xs font-medium text-[var(--accent-orange)] opacity-50">adversary</div>
+                </div>
+                <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 text-center">
+                  <div className="text-xs font-medium text-[var(--text-secondary)] opacity-50">sector</div>
+                  <div className="text-xs font-medium text-[var(--text-secondary)] opacity-50">victim</div>
+                </div>
+                <div className="absolute top-1/2 -left-20 -translate-y-1/2 text-right">
+                  <div className="text-xs font-medium text-[var(--accent-teal)] opacity-50">technique</div>
+                  <div className="text-xs font-medium text-[var(--accent-teal)] opacity-50">capability</div>
+                </div>
+                <div className="absolute top-1/2 -right-24 -translate-y-1/2 text-center">
+                  <div className="text-xs font-medium text-[var(--accent-blue)] opacity-50">application</div>
+                  <div className="text-xs font-medium text-[var(--accent-blue)] opacity-50">infrastructure</div>
+                </div>
               </div>
             </div>
-          </div>
-          </div>
+            </div>
 
-          {/* Compact centered diamond — mobile/tablet only (<lg) */}
-          <div className="flex lg:hidden justify-center mt-2 mb-12 pointer-events-none select-none">
-            <div className="relative" style={{ width: 140, height: 140 }}>
-              <img src="/diamond-favicon.svg" alt="" width={140} height={140} className="opacity-[0.55]" />
+            {/* Compact centered diamond — mobile/tablet only (<lg) */}
+            <div className="flex lg:hidden justify-center mt-2 mb-12 pointer-events-none select-none">
+              <div className="relative" style={{ width: 140, height: 140 }}>
+                <ProfileDiamondTrigger size={140} />
 
-              <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-center">
-                <div className="text-[10px] font-medium text-[var(--accent-orange)] opacity-60 leading-tight">actor</div>
-                <div className="text-[10px] font-medium text-[var(--accent-orange)] opacity-60 leading-tight">adversary</div>
-              </div>
-              <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-center">
-                <div className="text-[10px] font-medium text-[var(--text-secondary)] opacity-60 leading-tight">sector</div>
-                <div className="text-[10px] font-medium text-[var(--text-secondary)] opacity-60 leading-tight">victim</div>
-              </div>
-              <div className="absolute top-1/2 -left-16 -translate-y-1/2 text-right">
-                <div className="text-[10px] font-medium text-[var(--accent-teal)] opacity-60 leading-tight">technique</div>
-                <div className="text-[10px] font-medium text-[var(--accent-teal)] opacity-60 leading-tight">capability</div>
-              </div>
-              <div className="absolute top-1/2 -right-[72px] -translate-y-1/2 text-left">
-                <div className="text-[10px] font-medium text-[var(--accent-blue)] opacity-60 leading-tight">application</div>
-                <div className="text-[10px] font-medium text-[var(--accent-blue)] opacity-60 leading-tight">infra</div>
+                <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-center">
+                  <div className="text-[10px] font-medium text-[var(--accent-orange)] opacity-60 leading-tight">actor</div>
+                  <div className="text-[10px] font-medium text-[var(--accent-orange)] opacity-60 leading-tight">adversary</div>
+                </div>
+                <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-center">
+                  <div className="text-[10px] font-medium text-[var(--text-secondary)] opacity-60 leading-tight">sector</div>
+                  <div className="text-[10px] font-medium text-[var(--text-secondary)] opacity-60 leading-tight">victim</div>
+                </div>
+                <div className="absolute top-1/2 -left-16 -translate-y-1/2 text-right">
+                  <div className="text-[10px] font-medium text-[var(--accent-teal)] opacity-60 leading-tight">technique</div>
+                  <div className="text-[10px] font-medium text-[var(--accent-teal)] opacity-60 leading-tight">capability</div>
+                </div>
+                <div className="absolute top-1/2 -right-[72px] -translate-y-1/2 text-left">
+                  <div className="text-[10px] font-medium text-[var(--accent-blue)] opacity-60 leading-tight">application</div>
+                  <div className="text-[10px] font-medium text-[var(--accent-blue)] opacity-60 leading-tight">infra</div>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Mid-size centered diamond — lg only (1024–1279), a step up from the
-              compact one before the beside layout kicks in at xl. */}
-          <div className="hidden lg:flex xl:hidden justify-center mt-2 mb-12 pointer-events-none select-none">
-            <div className="relative" style={{ width: 190, height: 190 }}>
-              <img src="/diamond-favicon.svg" alt="" width={190} height={190} className="opacity-[0.55]" />
+            {/* Mid-size centered diamond — lg only (1024–1279), a step up from the
+                compact one before the beside layout kicks in at xl. */}
+            <div className="hidden lg:flex xl:hidden justify-center mt-2 mb-12 pointer-events-none select-none">
+              <div className="relative" style={{ width: 190, height: 190 }}>
+                <ProfileDiamondTrigger size={190} />
 
-              <div className="absolute -top-9 left-1/2 -translate-x-1/2 text-center">
-                <div className="text-xs font-medium text-[var(--accent-orange)] opacity-50 leading-tight">actor</div>
-                <div className="text-xs font-medium text-[var(--accent-orange)] opacity-50 leading-tight">adversary</div>
-              </div>
-              <div className="absolute -bottom-9 left-1/2 -translate-x-1/2 text-center">
-                <div className="text-xs font-medium text-[var(--text-secondary)] opacity-50 leading-tight">sector</div>
-                <div className="text-xs font-medium text-[var(--text-secondary)] opacity-50 leading-tight">victim</div>
-              </div>
-              <div className="absolute top-1/2 -left-20 -translate-y-1/2 text-right">
-                <div className="text-xs font-medium text-[var(--accent-teal)] opacity-50 leading-tight">technique</div>
-                <div className="text-xs font-medium text-[var(--accent-teal)] opacity-50 leading-tight">capability</div>
-              </div>
-              <div className="absolute top-1/2 -right-24 -translate-y-1/2 text-left">
-                <div className="text-xs font-medium text-[var(--accent-blue)] opacity-50 leading-tight">application</div>
-                <div className="text-xs font-medium text-[var(--accent-blue)] opacity-50 leading-tight">infrastructure</div>
+                <div className="absolute -top-9 left-1/2 -translate-x-1/2 text-center">
+                  <div className="text-xs font-medium text-[var(--accent-orange)] opacity-50 leading-tight">actor</div>
+                  <div className="text-xs font-medium text-[var(--accent-orange)] opacity-50 leading-tight">adversary</div>
+                </div>
+                <div className="absolute -bottom-9 left-1/2 -translate-x-1/2 text-center">
+                  <div className="text-xs font-medium text-[var(--text-secondary)] opacity-50 leading-tight">sector</div>
+                  <div className="text-xs font-medium text-[var(--text-secondary)] opacity-50 leading-tight">victim</div>
+                </div>
+                <div className="absolute top-1/2 -left-20 -translate-y-1/2 text-right">
+                  <div className="text-xs font-medium text-[var(--accent-teal)] opacity-50 leading-tight">technique</div>
+                  <div className="text-xs font-medium text-[var(--accent-teal)] opacity-50 leading-tight">capability</div>
+                </div>
+                <div className="absolute top-1/2 -right-24 -translate-y-1/2 text-left">
+                  <div className="text-xs font-medium text-[var(--accent-blue)] opacity-50 leading-tight">application</div>
+                  <div className="text-xs font-medium text-[var(--accent-blue)] opacity-50 leading-tight">infrastructure</div>
+                </div>
               </div>
             </div>
+
+            {/* Below xl every diamond is centred, so the panel is a sheet rather
+                than anchored. Rendered once, here, outside the three
+                `pointer-events-none` diamond wrappers (it portals to <body>). */}
+            <ProfileSheet />
+
+            {/* Latest CTI reports — full width above the affected tables */}
+            <RecentReportsCard />
+
+            {/* Recently affected Applications + Packages — last 10 days */}
+            <RecentAffectedCard />
+
           </div>
-
-          {/* Latest CTI reports — full width above the affected tables */}
-          <RecentReportsCard />
-
-          {/* Recently affected Applications + Packages — last 10 days */}
-          <RecentAffectedCard />
-
-        </div>
+        </ThreatProfileProvider>
       )}
 
       {/* Loading */}
