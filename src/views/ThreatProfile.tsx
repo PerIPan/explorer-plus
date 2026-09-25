@@ -9,13 +9,22 @@ import { EntityLink } from '../components/shared/EntityLink';
 import { DiamondLoader } from '../components/shared/FoldingDiamond';
 import { ErrorState } from '../components/shared/ErrorState';
 import { MultiSelect, type MultiSelectOption } from '../components/profile/MultiSelect';
+// Value imports come from the zod-free shared module, NOT from ProfilePanel:
+// that module also builds a picker from `SCF_FRAMEWORK_REGISTRY` (254 entries)
+// and importing it here for two arrays pulled the whole registry into this
+// page's bundle. `ProfileVariant` is a type-only import below, which is erased
+// at compile time and costs nothing.
+import { SECTOR_OPTIONS, IT_PLATFORMS, OT_PLATFORMS } from '../lib/profile-options';
+import type { ProfileVariant } from '../components/profile/ProfilePanel';
+import { buildProfileUrl } from '../lib/profile-url.mjs';
 import {
-  SECTOR_OPTIONS,
-  IT_PLATFORMS,
-  OT_PLATFORMS,
-  type ProfileVariant,
-} from '../components/profile/ProfilePanel';
+  resolveProfileDomain,
+  parsePlatforms,
+  buildProfileApiQuery,
+  ALL_DOMAINS,
+} from '../lib/profile-query.mjs';
 import { useSector } from '../contexts/SectorContext';
+import { DEFAULT_DOMAIN, useDomain } from '../contexts/DomainContext';
 
 /* ────────────────────────────────────────────────────────────────────────────
  * Wire types
@@ -198,16 +207,28 @@ function scoreTone(score: number): { text: string; bg: string; border: string } 
 /* ────────────────────────────────────────────────────────────────────────────
  * Known-value sets
  *
- * Built from the lists ProfilePanel already exports, so a 400 can name the
- * offending parameter instead of shrugging. Never re-declared here and never
- * imported from app/api/v1/lib/validate.ts — that module imports zod, and
- * this is a 'use client' component (see the header comment in
+ * Built from the shared option lists, so a 400 can name the offending
+ * parameter instead of shrugging. Never re-declared here and never imported
+ * from app/api/v1/lib/validate.ts — that module imports zod, and this is a
+ * 'use client' component (see the header comment in
  * src/lib/profile-options.ts).
  * ──────────────────────────────────────────────────────────────────────────── */
 
 const KNOWN_SECTORS: ReadonlySet<string> = new Set(SECTOR_OPTIONS.map((o) => o.value));
 const KNOWN_PLATFORMS: ReadonlySet<string> = new Set<string>([...IT_PLATFORMS, ...OT_PLATFORMS]);
 const KNOWN_SORTS: ReadonlySet<string> = new Set<string>(SORT_OPTIONS.map((o) => o.value));
+
+/**
+ * Mirrors `VALID_DOMAINS` in app/api/v1/lib/validate.ts. Four real domains —
+ * `'all'`, which the site-wide dropdown can put in the URL, is NOT one of
+ * them and would 400 if forwarded, so it is handled separately below.
+ */
+const KNOWN_DOMAINS: ReadonlySet<string> = new Set([
+  'enterprise-attack',
+  'mobile-attack',
+  'ics-attack',
+  'atlas-attack',
+]);
 
 /** `submissionSchema.platforms` / `platformsParam` both cap at 24. */
 const MAX_PLATFORMS = 24;
@@ -511,6 +532,7 @@ export function ThreatProfile() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { syncStoredSector } = useSector();
+  const { domains } = useDomain();
 
   /**
    * Read STRICTLY from the URL. Not from `useSector()`, not from
@@ -521,25 +543,53 @@ export function ThreatProfile() {
    * briefing at all. With no `?sector=`, the API returns `reason: 'no-sector'`
    * and this page says so in as many words.
    *
-   * (`UrlSyncEffect` in app/providers.tsx may re-inject the visitor's OWN
-   * previously chosen sector into the URL on arrival — app-wide behaviour, not
-   * a default invented here. When it does, the sector reaches this page as a
-   * real URL parameter and the header names it outright, so nothing is
-   * attributed to the visitor silently.)
+   * `UrlSyncEffect` in app/providers.tsx deliberately EXCLUDES this path from
+   * its stored-sector injection, so a bare `/profile` genuinely arrives with
+   * no sector even for a visitor who picked one elsewhere. Everywhere else in
+   * the app the sector is a view filter and carrying it forward is helpful;
+   * here it would be a claim about who the reader is.
    */
   const sector = searchParams.get('sector');
   const rawPlatforms = searchParams.get('platforms');
   const rawSort = searchParams.get('sort');
-  const domain = searchParams.get('domain');
+  const rawDomain = searchParams.get('domain');
 
-  const platforms = useMemo(
-    () => (rawPlatforms ? rawPlatforms.split(',').map((s) => s.trim()).filter(Boolean) : []),
-    [rawPlatforms],
-  );
+  const platforms = useMemo(() => parsePlatforms(rawPlatforms), [rawPlatforms]);
 
   const sortKey: SortKey =
     rawSort && KNOWN_SORTS.has(rawSort) ? (rawSort as SortKey) : DEFAULT_SORT;
   const sortOption = SORT_BY_KEY.get(sortKey) ?? SORT_OPTIONS[1];
+
+  /**
+   * Domain is NEVER allowed to be absent.
+   *
+   * The assembler reads `AND ($2::text IS NULL OR t.domain = $2)`, so an
+   * omitted `domain` is not "enterprise" — it is NO FILTER AT ALL. Measured on
+   * production: the `energy` pool is 219 techniques only because it is
+   * 205 enterprise + 12 ics-attack + 2 mobile-attack mixed together. ICS and
+   * mobile techniques carry essentially no CVE, KEV or EPSS evidence, so they
+   * enter a briefing headed with one sector's name as permanent zeroes that
+   * still consume Band A and Band B slots and still dilute lift.
+   *
+   * The param reaches this page only on the Apply path (`buildProfileUrl`
+   * always writes it) — a bare `/profile`, a shared link or a back-button
+   * landing has none. Hence the default here, and hence the domain is printed
+   * in the subtitle unconditionally: if it is ever wrong again, it is at least
+   * visible.
+   *
+   * `'all'` is the one legitimate absence. The site-wide dropdown can write
+   * it, it is not an API value (it would 400), and coercing it to enterprise
+   * would silently overrule an explicit choice. It becomes a real no-filter
+   * request, disclosed on the page.
+   *
+   * The resolution itself lives in src/lib/profile-query.mjs, pure and
+   * fixture-tested, precisely because it was an inline expression here when it
+   * was wrong.
+   */
+  const { domain, allDomains } = resolveProfileDomain(rawDomain, DEFAULT_DOMAIN);
+  const domainLabel = allDomains
+    ? 'All domains'
+    : (domains.find((d) => d.value === domain)?.label ?? domain ?? DEFAULT_DOMAIN);
 
   /** OT variant when the visitor is in the ICS domain — same split the panel makes. */
   const variant: ProfileVariant = domain === 'ics-attack' ? 'v1-6q-ot' : 'v1-4q';
@@ -554,14 +604,10 @@ export function ThreatProfile() {
    * a fixed order. Unrelated params the app carries around (`entity`, `tab`,
    * …) neither reach the API nor fragment the react-query cache.
    */
-  const apiSearch = useMemo(() => {
-    const p = new URLSearchParams();
-    if (sector) p.set('sector', sector);
-    if (platforms.length > 0) p.set('platforms', platforms.join(','));
-    p.set('sort', sortKey);
-    if (domain) p.set('domain', domain);
-    return p.toString();
-  }, [sector, platforms, sortKey, domain]);
+  const apiSearch = useMemo(
+    () => buildProfileApiQuery({ sector, platforms, sort: sortKey, domain }),
+    [sector, platforms, sortKey, domain],
+  );
 
   const { data, isPending, error, refetch } = useQuery({
     queryKey: ['profile', apiSearch],
@@ -573,16 +619,30 @@ export function ThreatProfile() {
       failureCount < 2,
   });
 
-  /** Write one parameter, preserving everything else in the URL. */
-  const setParam = useCallback(
-    (key: string, value: string | null) => {
-      const p = new URLSearchParams(searchParams.toString());
-      if (value) p.set(key, value);
-      else p.delete(key);
-      const qs = p.toString();
-      router.replace(qs ? `/profile?${qs}` : '/profile', { scroll: false });
+  /**
+   * Rewrite the URL from the four parameters this page owns, through the same
+   * tested builder the panel's Apply uses (src/lib/profile-url.mjs). Built
+   * fresh rather than patched onto the current query string, for the reason
+   * that module exists: it writes `domain` unconditionally, so a control
+   * change can never produce the domain-less URL that finding 1 was about.
+   * It also drops params this page does not read, and caps lists at 24.
+   */
+  const navigate = useCallback(
+    (next: { sector?: string | null; platforms?: string[]; sort?: SortKey }) => {
+      router.replace(
+        buildProfileUrl({
+          sector: next.sector !== undefined ? next.sector : sector,
+          // Preserves an explicit `all`; otherwise the resolved domain.
+          domain: rawDomain ?? DEFAULT_DOMAIN,
+          params: {
+            platforms: next.platforms !== undefined ? next.platforms : platforms,
+            sort: next.sort ?? sortKey,
+          },
+        }),
+        { scroll: false },
+      );
     },
-    [router, searchParams],
+    [router, sector, rawDomain, platforms, sortKey],
   );
 
   const onSectorChange = useCallback(
@@ -592,16 +652,16 @@ export function ThreatProfile() {
       // `setSector` — that would fire its own router.push from a render-time
       // closure alongside the replace below (app/providers.tsx:10-45).
       syncStoredSector(next);
-      setParam('sector', next);
+      navigate({ sector: next });
     },
-    [setParam, syncStoredSector],
+    [navigate, syncStoredSector],
   );
 
   const onPlatformsChange = useCallback(
     (next: string[]) => {
-      setParam('platforms', next.length > 0 ? next.slice(0, MAX_PLATFORMS).join(',') : null);
+      navigate({ platforms: next });
     },
-    [setParam],
+    [navigate],
   );
 
   /* ── Controls: rendered in every state, including the error ones, so a bad
@@ -653,7 +713,7 @@ export function ThreatProfile() {
               <button
                 key={o.value}
                 type="button"
-                onClick={() => setParam('sort', o.value)}
+                onClick={() => navigate({ sort: o.value })}
                 aria-pressed={active}
                 title={o.blurb}
                 className={`inline-flex items-center gap-2 rounded-md border px-2.5 py-1 text-xs transition-colors ${
@@ -684,6 +744,52 @@ export function ThreatProfile() {
     </Card>
   );
 
+  /**
+   * One shell for every state: header, then the controls, then whatever the
+   * results region has to say.
+   *
+   * The controls are OUTSIDE the swap deliberately. Every sort, sector or
+   * platform change mints a new react-query key, so `isPending` goes true and
+   * a full-page loader would unmount the very control the visitor just
+   * clicked — the selection appears to vanish, the focused element is
+   * destroyed, and the page jumps. Only the results region below changes.
+   */
+  const urlSectorName =
+    sector && KNOWN_SECTORS.has(sector) ? (SECTOR_NAME_BY_SLUG.get(sector) ?? sector) : null;
+
+  const shell = (subtitle: ReactNode, body: ReactNode) => (
+    <div className="space-y-6">
+      <PageHeader
+        title={urlSectorName ? `Threat profile — ${urlSectorName}` : 'Threat profile'}
+        subtitle={subtitle}
+        breadcrumb={[{ label: 'Threat profile' }]}
+      />
+      {controls}
+      {body}
+    </div>
+  );
+
+  /**
+   * Shown in every successful state, and never conditionally: a domain that is
+   * missing from the page is exactly how the cross-domain pool went unnoticed.
+   */
+  const domainLine = (
+    <>
+      {' '}
+      · <span className="font-semibold text-[var(--text-primary)]">{domainLabel}</span>
+    </>
+  );
+
+  const allDomainsNotice = allDomains ? (
+    <Notice tone="warn" title="All domains — the pool is mixed">
+      You have the site-wide domain filter on <span className="font-semibold">All Domains</span>, so
+      enterprise, mobile, ICS and ATLAS techniques are ranked together under one sector heading.
+      Mobile, ICS and ATLAS techniques carry close to no CVE, KEV or EPSS evidence, so they sit at
+      zero in every evidence column while still occupying band slots and still diluting lift. Pick a
+      single domain in the sidebar for a briefing that compares like with like.
+    </Notice>
+  ) : null;
+
   /* ── Failure states ───────────────────────────────────────────────────── */
 
   if (error) {
@@ -693,91 +799,90 @@ export function ThreatProfile() {
       const badSector = sector && !KNOWN_SECTORS.has(sector) ? sector : null;
       const badPlatforms = platforms.filter((p) => !KNOWN_PLATFORMS.has(p));
       const badSort = rawSort && !KNOWN_SORTS.has(rawSort) ? rawSort : null;
+      const badDomain =
+        rawDomain && rawDomain !== ALL_DOMAINS && !KNOWN_DOMAINS.has(rawDomain) ? rawDomain : null;
+      const identified =
+        badSector || badPlatforms.length > 0 || badSort || badDomain || platforms.length > MAX_PLATFORMS;
 
-      return (
-        <div className="space-y-6">
-          <PageHeader
-            title="Threat profile"
-            subtitle="The API rejected this request — nothing was ranked."
-            breadcrumb={[{ label: 'Threat profile' }]}
-          />
-          <Notice tone="warn" title="Invalid profile query (HTTP 400)">
-            <p>
-              Nothing below is a threat finding. The request never reached the ranking engine, so an
-              empty page here would mean &ldquo;we could not ask&rdquo; — never &ldquo;nothing
-              targets you&rdquo;.
-            </p>
-            <ul className="mt-2 list-disc space-y-1 pl-5">
-              {badSector && (
-                <li>
-                  <code className="font-mono text-xs">sector={badSector}</code> is not one of the
-                  twelve sectors this dataset tracks.
-                </li>
-              )}
-              {badPlatforms.map((p) => (
-                <li key={p}>
-                  <code className="font-mono text-xs">{p}</code> is not an ATT&amp;CK platform with
-                  live techniques.
-                </li>
-              ))}
-              {badSort && (
-                <li>
-                  <code className="font-mono text-xs">sort={badSort}</code> is not a ranking key.
-                </li>
-              )}
-              {platforms.length > MAX_PLATFORMS && (
-                <li>
-                  {platforms.length} platforms were sent; the limit is {MAX_PLATFORMS}.
-                </li>
-              )}
-              {!badSector && badPlatforms.length === 0 && !badSort && platforms.length <= MAX_PLATFORMS && (
-                <li>
-                  The rejected parameter is not one this page can identify. The API said:{' '}
-                  <span className="italic">{err.message}</span>
-                </li>
-              )}
-            </ul>
-            <p className="mt-2">Pick a valid combination below and the briefing will load.</p>
-          </Notice>
-          {controls}
-        </div>
+      return shell(
+        'The API rejected this request — nothing was ranked.',
+        <Notice tone="warn" title="Invalid profile query (HTTP 400)">
+          <p>
+            Nothing below is a threat finding. The request never reached the ranking engine, so an
+            empty page here would mean &ldquo;we could not ask&rdquo; — never &ldquo;nothing targets
+            you&rdquo;.
+          </p>
+          <ul className="mt-2 list-disc space-y-1 pl-5">
+            {badSector && (
+              <li>
+                <code className="font-mono text-xs">sector={badSector}</code> is not one of the
+                twelve sectors this dataset tracks.
+              </li>
+            )}
+            {badPlatforms.map((p) => (
+              <li key={p}>
+                <code className="font-mono text-xs">{p}</code> is not an ATT&amp;CK platform with
+                live techniques.
+              </li>
+            ))}
+            {badSort && (
+              <li>
+                <code className="font-mono text-xs">sort={badSort}</code> is not a ranking key.
+              </li>
+            )}
+            {badDomain && (
+              <li>
+                <code className="font-mono text-xs">domain={badDomain}</code> is not an ATT&amp;CK
+                domain.
+              </li>
+            )}
+            {platforms.length > MAX_PLATFORMS && (
+              <li>
+                {platforms.length} platforms were sent; the limit is {MAX_PLATFORMS}.
+              </li>
+            )}
+            {!identified && (
+              <li>
+                The rejected parameter is not one this page can identify. The API said:{' '}
+                <span className="italic">{err.message}</span>
+              </li>
+            )}
+          </ul>
+          <p className="mt-2">Pick a valid combination above and the briefing will load.</p>
+        </Notice>,
       );
     }
 
-    return (
-      <div className="space-y-6">
-        <PageHeader
-          title="Threat profile"
-          subtitle="The briefing could not be loaded."
-          breadcrumb={[{ label: 'Threat profile' }]}
-        />
-        <ErrorState
-          message={`Could not load the threat profile — ${err ? `HTTP ${err.status}: ` : ''}${
-            error instanceof Error ? error.message : 'request failed'
-          }`}
-          onRetry={() => void refetch()}
-        />
-        {controls}
-      </div>
+    return shell(
+      'The briefing could not be loaded.',
+      <ErrorState
+        message={`Could not load the threat profile — ${err ? `HTTP ${err.status}: ` : ''}${
+          error instanceof Error ? error.message : 'request failed'
+        }`}
+        onRetry={() => void refetch()}
+      />,
     );
   }
 
+  /* ── Pending: controls stay, results region swaps ─────────────────────── */
+
   if (isPending || !data) {
-    return <DiamondLoader text="Ranking techniques..." />;
+    return shell(
+      <span>
+        Ranking{urlSectorName ? ` for ${urlSectorName}` : ''}…{domainLine}
+      </span>,
+      <Card className="py-8">
+        <DiamondLoader text="Ranking techniques..." />
+      </Card>,
+    );
   }
 
   /* ── The valid "no sector" state ──────────────────────────────────────── */
 
-  const noSector = data.meta.reason === 'no-sector' || !data.profile.sector;
-
-  if (noSector) {
-    return (
-      <div className="space-y-6">
-        <PageHeader
-          title="Threat profile"
-          subtitle="No sector chosen — nothing has been ranked."
-          breadcrumb={[{ label: 'Threat profile' }]}
-        />
+  if (data.meta.reason === 'no-sector' || !data.profile.sector) {
+    return shell(
+      <span>No sector chosen — nothing has been ranked.{domainLine}</span>,
+      <>
         <Notice tone="info" title="Band A and Band B are absent, on purpose">
           <p>
             This page ranks techniques by how disproportionately{' '}
@@ -786,50 +891,52 @@ export function ThreatProfile() {
             so there is nothing here rather than a guess.
           </p>
           <p className="mt-2">
-            No sector has been substituted for you. A briefing headed &ldquo;most disproportionate
-            for you&rdquo; over somebody else&apos;s sector is worse than an empty page, so this one
-            stays empty until you choose.
+            No sector has been substituted for you — not even one you picked elsewhere in the app.
+            A briefing headed &ldquo;most disproportionate for you&rdquo; over somebody else&apos;s
+            sector is worse than an empty page, so this one stays empty until you choose above.
           </p>
         </Notice>
-        {controls}
         <Provenance />
-      </div>
+      </>,
     );
   }
 
   /* ── The briefing ─────────────────────────────────────────────────────── */
 
   const { profile, groups, bandA, bandB, meta } = data;
-  const sectorName = profile.sectorName ?? SECTOR_NAME_BY_SLUG.get(profile.sector ?? '') ?? profile.sector;
+  const sectorName =
+    profile.sectorName ?? SECTOR_NAME_BY_SLUG.get(profile.sector ?? '') ?? profile.sector;
   const appliedPlatforms = profile.platforms ?? [];
   const groupsShown = groups.length;
   const moreGroups = Math.max(0, meta.groupCount - groupsShown);
+  const platformList = (appliedPlatforms.length > 0 ? appliedPlatforms : platforms).join(', ');
 
-  return (
-    <div className="space-y-6">
-      <PageHeader
-        title={`Threat profile — ${sectorName}`}
-        subtitle={
-          <span>
-            <span className="font-semibold text-[var(--text-primary)] tabular-nums">
-              {meta.groupCount.toLocaleString()}
-            </span>{' '}
-            threat {meta.groupCount === 1 ? 'group' : 'groups'} attributed to this sector ·{' '}
-            <span className="font-semibold text-[var(--text-primary)] tabular-nums">
-              {meta.poolSize.toLocaleString()}
-            </span>{' '}
-            techniques in the ranked pool
-            {appliedPlatforms.length > 0 && !meta.platformDropped && (
-              <> · filtered to {appliedPlatforms.join(', ')}</>
-            )}
-            {domain && <> · {domain}</>}
-          </span>
-        }
-        breadcrumb={[{ label: 'Threat profile' }]}
-      />
+  return shell(
+    <span>
+      <span className="font-semibold text-[var(--text-primary)] tabular-nums">
+        {meta.groupCount.toLocaleString()}
+      </span>{' '}
+      threat {meta.groupCount === 1 ? 'group' : 'groups'} attributed to this sector ·{' '}
+      <span className="font-semibold text-[var(--text-primary)] tabular-nums">
+        {meta.poolSize.toLocaleString()}
+      </span>{' '}
+      techniques in the ranked pool
+      {appliedPlatforms.length > 0 && !meta.platformDropped && (
+        // The assembler keeps a technique if it runs on ANY selected platform.
+        // "filtered to Windows, Linux" reads as a conjunction and would mean a
+        // far narrower pool than the one actually ranked.
+        <> · running on any of: {platformList}</>
+      )}
+      {domainLine}
+    </span>,
+    <>
+      {allDomainsNotice}
 
-      {controls}
-
+      {/* Each of these four conditions is rendered independently. They are not
+          mutually exclusive — `bandBShort` is recomputed AFTER the platform
+          widening, so it and `platformDropped` are routinely true together,
+          and suppressing one of them left a short Band B on screen with
+          nothing at all saying why. */}
       {meta.degenerate && (
         <Notice tone="warn" title="Lift cannot rank this selection">
           Fewer than six distinct lift values exist across the {meta.poolSize.toLocaleString()}{' '}
@@ -850,11 +957,15 @@ export function ThreatProfile() {
         </Notice>
       )}
 
-      {meta.bandBShort && !meta.platformDropped && (
-        <Notice tone="info" title="Band B is short">
-          Fewer than six techniques in this pool are attributed to at least three of this
-          sector&apos;s groups. A technique used by one or two groups is one sighting away from
-          noise, so the floor is not lowered to pad the list.
+      {meta.bandBShort && (
+        <Notice tone="info" title={bandB.length === 0 ? 'Band B is empty' : 'Band B is short'}>
+          Band B holds {bandB.length === 0 ? 'no technique' : `only ${bandB.length} of six`}
+          {meta.platformDropped ? ', even after the platform filter was dropped' : ''}. It draws only
+          from techniques attributed to at least three of this sector&apos;s groups{' '}
+          <span className="font-semibold">and not already in Band A</span>, so either the pool holds
+          too few that clear the three-group floor, or Band A above has taken them. A technique used
+          by one or two groups is one sighting away from noise, so the floor is not lowered to pad
+          the list.
         </Notice>
       )}
 
@@ -867,7 +978,10 @@ export function ThreatProfile() {
               Top six by <span className="font-semibold">{sortOption.column}</span> across the whole{' '}
               {sectorName} pool, with no group-count floor. This is what is loudest — reach, not
               sector fit — and at {sortOption.score}/12 differentiation it is{' '}
-              {sortOption.score <= 2 ? 'very nearly the list every other sector sees' : 'largely specific to this sector'}.
+              {sortOption.score <= 2
+                ? 'very nearly the list every other sector sees'
+                : 'largely specific to this sector'}
+              .
             </>
           }
           items={bandA}
@@ -891,10 +1005,10 @@ export function ThreatProfile() {
           showLift
           empty={
             <>
-              <span className="font-semibold">Band B is absent.</span> No technique in this pool is
-              attributed to at least three of {sectorName}&apos;s groups, so there is nothing that can
-              honestly be called disproportionately aimed at this sector. Nothing has been
-              substituted in its place.
+              <span className="font-semibold">Band B is absent.</span> Nothing in this pool is both
+              attributed to at least three of {sectorName}&apos;s groups and absent from Band A, so
+              there is nothing that can honestly be called disproportionately aimed at this sector.
+              Nothing has been substituted in its place.
             </>
           }
         />
@@ -909,8 +1023,8 @@ export function ThreatProfile() {
             {meta.groupCount.toLocaleString()}
           </span>
           <span className="text-xs text-[var(--text-secondary)]">
-            attributed to {sectorName}
-            {domain ? ` in ${domain}` : ''} — every lift figure above is computed from this set.
+            attributed to {sectorName} in {domainLabel} — every lift figure above is computed from
+            this set.
           </span>
         </div>
 
@@ -930,13 +1044,13 @@ export function ThreatProfile() {
           </>
         ) : (
           <p className="mt-3 text-sm text-[var(--text-primary)]">
-            No group is attributed to this sector under the current domain filter — which means the
-            lift figures above rest on an empty attribution set. Treat both bands as unsupported.
+            No group is attributed to this sector in {domainLabel} — which means the lift figures
+            above rest on an empty attribution set. Treat both bands as unsupported.
           </p>
         )}
       </Card>
 
       <Provenance />
-    </div>
+    </>,
   );
 }

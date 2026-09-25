@@ -40,11 +40,20 @@ function UrlSyncEffect() {
       changed = true;
     }
 
+    // NOT on /profile. Everywhere else the sector is a view FILTER, and
+    // carrying the visitor's last choice across a link that dropped the param
+    // is the helpful thing to do. The briefing is not a filter: it is a claim
+    // about who the reader is ("most disproportionate for YOU"), and it is
+    // headed with the sector's name. Re-injecting a value the visitor chose on
+    // some other page, in some earlier minute, would make a bare /profile
+    // render a full briefing for a sector they did not choose HERE — the one
+    // failure mode the page is required not to have. With no ?sector= it must
+    // reach /profile with no sector, so the page can say so.
     let storedSector: string | null = null;
     try {
       storedSector = sessionStorage.getItem('mitre-sector');
     } catch { /* private mode / storage disabled — behave as unset */ }
-    if (storedSector && !params.has('sector')) {
+    if (storedSector && !params.has('sector') && pathname !== '/profile') {
       params.set('sector', storedSector);
       changed = true;
     }

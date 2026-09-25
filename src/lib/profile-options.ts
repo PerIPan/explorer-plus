@@ -64,3 +64,62 @@ export const SECTOR_SLUGS = [
 ] as const;
 
 export type SectorSlug = (typeof SECTOR_SLUGS)[number];
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * Derived pickers
+ *
+ * These lived in src/components/profile/ProfilePanel.tsx until the briefing
+ * page needed them too. That module also builds a framework picker from
+ * `SCF_FRAMEWORK_REGISTRY` (254 entries), so importing it purely to read two
+ * option arrays dragged the whole registry into /profile's bundle — the same
+ * class of cost this module was created to avoid for zod. ProfilePanel now
+ * imports and re-exports them, so its public surface is unchanged.
+ * ──────────────────────────────────────────────────────────────────────────── */
+
+/** Presentation only: the 12 slugs come from `SECTOR_SLUGS`, these are the
+ *  human labels for them. Typed as a total `Record` so adding a slug to the
+ *  shared list without a label is a compile error. */
+const SECTOR_LABELS: Record<SectorSlug, string> = {
+  defense: 'Defense',
+  education: 'Education',
+  energy: 'Energy & Utilities',
+  financial: 'Financial Services',
+  government: 'Government',
+  healthcare: 'Healthcare',
+  manufacturing: 'Manufacturing',
+  media: 'Media',
+  retail: 'Retail',
+  technology: 'Technology',
+  telecommunications: 'Telecommunications',
+  transportation: 'Transportation',
+};
+
+export const SECTOR_OPTIONS: ReadonlyArray<{ value: SectorSlug; label: string }> =
+  SECTOR_SLUGS.map((slug) => ({ value: slug, label: SECTOR_LABELS[slug] }));
+
+/**
+ * The ICS half of `PLATFORMS`. Named and exported so the OT variant can take
+ * this set directly (and the IT variant below its complement) instead of both
+ * hand-maintaining a copy of the split that then drifts apart.
+ *
+ * `satisfies readonly Platform[]` is the guard: if ATT&CK renames one of these
+ * in `PLATFORMS`, this list stops compiling instead of quietly excluding
+ * nothing from the IT picker.
+ */
+export const ICS_PLATFORMS = [
+  'Field Controller/RTU/PLC/IED',
+  'Safety Instrumented System/Protection Relay',
+  'Engineering Workstation',
+  'Human-Machine Interface',
+  'Control Server',
+  'Data Historian',
+  'Input/Output Server',
+] as const satisfies readonly Platform[];
+
+const ICS_PLATFORM_SET: ReadonlySet<string> = new Set<string>(ICS_PLATFORMS);
+
+/** Enterprise + mobile platforms — `PLATFORMS` minus the ICS values. */
+export const IT_PLATFORMS: Platform[] = PLATFORMS.filter((p) => !ICS_PLATFORM_SET.has(p));
+
+/** The complement, for the OT variant. Derived here so the two never diverge. */
+export const OT_PLATFORMS: Platform[] = PLATFORMS.filter((p) => ICS_PLATFORM_SET.has(p));

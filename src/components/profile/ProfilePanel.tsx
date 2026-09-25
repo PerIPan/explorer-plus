@@ -21,9 +21,14 @@ import { MultiSelect, type MultiSelectOption } from './MultiSelect';
 import { useProfileState, type ProfileAnswers } from './useProfileState';
 import { DEFAULT_DOMAIN } from '../../contexts/DomainContext';
 import { SCF_FRAMEWORK_REGISTRY } from '../../lib/scf-framework-registry';
-import { PLATFORMS, SECTOR_SLUGS, type Platform, type SectorSlug } from '../../lib/profile-options';
+import {
+  SECTOR_OPTIONS,
+  ICS_PLATFORMS,
+  IT_PLATFORMS,
+  OT_PLATFORMS,
+} from '../../lib/profile-options';
 
-/* ────────────────────────────────────────────────────────────────────────────
+/* ─────────────────────────────────────────────────────────────────────────────
  * Option sources
  *
  * Every list below is DERIVED from the module/registry that already owns those
@@ -31,61 +36,23 @@ import { PLATFORMS, SECTOR_SLUGS, type Platform, type SectorSlug } from '../../l
  * or fails `npm run typecheck`, rather than silently leaving the picker
  * offering values the API will 400 on.
  *
- * `PLATFORMS`/`SECTOR_SLUGS` come from src/lib/profile-options.ts, NOT from
+ * The sector and platform lists come from src/lib/profile-options.ts, NOT from
  * app/api/v1/lib/validate.ts, even though that module is where the matching
  * zod schemas live: validate.ts imports zod, and dragging zod into a
  * 'use client' component on the homepage would cost ~13 KB gz of first-load
  * JS to read two arrays. validate.ts builds its enums from the same module,
  * so there is still exactly one source of truth.
- * ──────────────────────────────────────────────────────────────────────────── */
-
-/** Presentation only: the 12 slugs come from `SECTOR_SLUGS`, these are the
- *  human labels for them. Typed as a total `Record` so adding a slug to the
- *  shared list without a label is a compile error. */
-const SECTOR_LABELS: Record<SectorSlug, string> = {
-  defense: 'Defense',
-  education: 'Education',
-  energy: 'Energy & Utilities',
-  financial: 'Financial Services',
-  government: 'Government',
-  healthcare: 'Healthcare',
-  manufacturing: 'Manufacturing',
-  media: 'Media',
-  retail: 'Retail',
-  technology: 'Technology',
-  telecommunications: 'Telecommunications',
-  transportation: 'Transportation',
-};
-
-export const SECTOR_OPTIONS: ReadonlyArray<{ value: SectorSlug; label: string }> =
-  SECTOR_SLUGS.map((slug) => ({ value: slug, label: SECTOR_LABELS[slug] }));
-
-/**
- * The ICS half of `PLATFORMS`. Named and exported so the OT variant can take
- * this set directly (and the IT variant below its complement) instead of both
- * hand-maintaining a copy of the split that then drifts apart.
  *
- * `satisfies readonly Platform[]` is the guard: if ATT&CK renames one of these
- * in `PLATFORMS`, this list stops compiling instead of quietly excluding
- * nothing from the IT picker.
- */
-export const ICS_PLATFORMS = [
-  'Field Controller/RTU/PLC/IED',
-  'Safety Instrumented System/Protection Relay',
-  'Engineering Workstation',
-  'Human-Machine Interface',
-  'Control Server',
-  'Data Historian',
-  'Input/Output Server',
-] as const satisfies readonly Platform[];
+ * They were DEFINED here until /profile needed them as well. Importing this
+ * module to read them pulled `SCF_FRAMEWORK_REGISTRY` (254 entries, below)
+ * into that page's bundle for nothing, so the definitions moved down to
+ * profile-options.ts — which is exactly the module for plain shared value
+ * lists — and are re-exported here unchanged. Every existing importer of
+ * `SECTOR_OPTIONS`/`ICS_PLATFORMS`/`IT_PLATFORMS`/`OT_PLATFORMS` from this
+ * file keeps working; nothing about the panel's behaviour changes.
+ * ───────────────────────────────────────────────────────────────────────────── */
 
-const ICS_PLATFORM_SET: ReadonlySet<string> = new Set<string>(ICS_PLATFORMS);
-
-/** Enterprise + mobile platforms — `PLATFORMS` minus the ICS values. */
-export const IT_PLATFORMS: Platform[] = PLATFORMS.filter((p) => !ICS_PLATFORM_SET.has(p));
-
-/** The complement, for the OT variant. Derived here so the two never diverge. */
-export const OT_PLATFORMS: Platform[] = PLATFORMS.filter((p) => ICS_PLATFORM_SET.has(p));
+export { SECTOR_OPTIONS, ICS_PLATFORMS, IT_PLATFORMS, OT_PLATFORMS };
 
 const PLATFORM_OPTIONS: MultiSelectOption[] = IT_PLATFORMS.map((p) => ({ value: p, label: p }));
 
