@@ -220,13 +220,24 @@ body {
    compile to `.util:is(:where(.group):hover *)`, which is specificity (0,2,0)
    against this rule's (0,1,0). (This file is also unlayered while the
    utilities sit in `@layer utilities`, which would already win — the
-   `!important` keeps that true if index.css is ever moved into a layer.) */
+   `!important` keeps that true if index.css is ever moved into a layer.)
+
+   And NO `transform: none` here, however tempting a belt-and-braces line it
+   looks. Next's CSS minifier (lightningcss) treats `transform: none` as
+   superseding `translate`/`scale`/`rotate` in the same rule and DELETES them
+   — which is wrong, they are independent properties — so the production
+   stylesheet ended up carrying only the one declaration that cancels nothing
+   and none of the three that do. Verified by running the minifier over this
+   rule both ways: with `transform` present the output is
+   `transform:none!important` alone; without it, all of these survive.
+   Splitting it into a second rule with the same selector does not help — the
+   minifier merges them first. So the property that does not belong stays
+   out. */
 @media (prefers-reduced-motion: reduce) {
   .profile-diamond-img {
     translate: none !important;
     scale: none !important;
     rotate: none !important;
-    transform: none !important;
     transition: none !important;
     /* Covers `.profile-diamond-nudge` below, which is applied to this same
        element. Extending this rule rather than adding a second mechanism is
