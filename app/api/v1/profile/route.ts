@@ -63,6 +63,9 @@ interface GroupRow {
   attackId: string;
   name: string;
   aliases: string[] | null;
+  /** Pre-LIMIT total from `count(*) OVER ()` — identical on every row, and
+   *  absent entirely when there are no rows. Stripped before the response. */
+  totalGroups: number;
 }
 
 async function handler(req: NextRequest): Promise<NextResponse> {
@@ -76,18 +79,25 @@ async function handler(req: NextRequest): Promise<NextResponse> {
     return withCors(errorResponse(400, 'Invalid profile query parameters', 'VALIDATION_ERROR'));
   }
 
-  const { sector, platform, sort, domain } = parsed.data;
+  const { sector, platforms, sort, domain } = parsed.data;
 
   // Sector carries the whole IT ranking engine (lift is meaningless without
   // one). No sector selected -> no pool, no groups, nothing to rank; this is
   // a valid, non-error state (Optionality table: "Sector empty (IT)").
   if (!sector) {
     return withCors(jsonResponse({
-      profile: { sector: null, platform: platform ?? null, domain: domain ?? null, sort },
+      profile: { sector: null, platforms: platforms ?? null, domain: domain ?? null, sort },
       groups: [],
       bandA: [],
       bandB: [],
-      meta: { poolSize: 0, degenerate: true, bandBShort: true, platformDropped: false, reason: 'no-sector' },
+      meta: {
+        poolSize: 0,
+        groupCount: 0,
+        degenerate: true,
+        bandBShort: true,
+        platformDropped: false,
+        reason: 'no-sector',
+      },
     }, 3600));
   }
 
@@ -136,8 +146,16 @@ async function handler(req: NextRequest): Promise<NextResponse> {
     // Groups active in this sector. threat_groups.domain is text[] --
     // `= $n` raises 22P02 (fixed in 4d4d1ac); must be `$n = ANY(tg.domain)`.
     // Secondary `ORDER BY` on attack_id keeps ordering deterministic.
+    //
+    // `count(*) OVER ()` is the PRE-LIMIT total: window functions are
+    // evaluated before LIMIT, so this is the true number of groups in scope
+    // even though only the first 20 rows come back. It rides on the query
+    // that is already running rather than costing a second round trip, and
+    // it exists so the briefing page can state "N groups in scope" honestly
+    // instead of reporting the cap (20) as if it were the count.
     query<GroupRow>(
-      `SELECT tg.attack_id AS "attackId", tg.name, tg.aliases
+      `SELECT tg.attack_id AS "attackId", tg.name, tg.aliases,
+              count(*) OVER ()::int AS "totalGroups"
        FROM group_sectors gs
        JOIN sectors s ON s.id = gs.sector_id
        JOIN threat_groups tg ON tg.id = gs.group_id
@@ -154,8 +172,16 @@ async function handler(req: NextRequest): Promise<NextResponse> {
 
   const rawPool = poolResult.rows;
   const fullPool = rawPool.map(toPoolItem);
-  const platformPool = platform
-    ? rawPool.filter((r) => Array.isArray(r.platforms) && r.platforms.includes(platform)).map(toPoolItem)
+
+  // Platforms are a SET, and the constraint is an INTERSECTION test: keep a
+  // technique if it runs on ANY of the platforms the visitor named. A `Set`
+  // rather than `selected.includes(p)` for two reasons -- it is O(1) per
+  // membership test over a ~200-row pool x up to 24 values, and `r.platforms`
+  // is `string[]` while `platforms` is `Platform[]`, so `includes` would need
+  // a cast to compile.
+  const selected = new Set<string>(platforms ?? []);
+  const platformPool = selected.size > 0
+    ? rawPool.filter((r) => Array.isArray(r.platforms) && r.platforms.some((p) => selected.has(p))).map(toPoolItem)
     : fullPool;
 
   let { bandA, bandB, bandBShort } = splitBands(platformPool, sort, 6);
@@ -164,10 +190,12 @@ async function handler(req: NextRequest): Promise<NextResponse> {
 
   // Spec fallback: if Band B has fewer than 6 candidates, drop the platform
   // constraint and re-select over the full sector pool, labelling the
-  // widening in `meta` so the UI can say so. Only fires when a platform was
-  // actually applied -- otherwise platformPool === fullPool already and
-  // re-selecting would be a no-op.
-  if (bandBShort && platform) {
+  // widening in `meta` so the UI can say so. `platformDropped` still means
+  // "the whole platform constraint was dropped" -- now for the set rather
+  // than for a single value; there is no partial widening. Only fires when a
+  // constraint was actually applied -- otherwise platformPool === fullPool
+  // already and re-selecting would be a no-op.
+  if (bandBShort && selected.size > 0) {
     const widened = splitBands(fullPool, sort, 6);
     bandA = widened.bandA;
     bandB = widened.bandB;
@@ -180,15 +208,20 @@ async function handler(req: NextRequest): Promise<NextResponse> {
     profile: {
       sector,
       sectorName: sectorResult.rows[0]?.name ?? null,
-      platform: platform ?? null,
+      platforms: platforms ?? null,
       domain: domain ?? null,
       sort,
     },
-    groups: groupsResult.rows,
+    // `totalGroups` is a per-row artefact of the window function, not part of
+    // the group shape -- strip it here and carry the number once, in `meta`.
+    groups: groupsResult.rows.map(({ attackId, name, aliases }) => ({ attackId, name, aliases })),
     bandA,
     bandB,
     meta: {
       poolSize: effectivePool.length,
+      // Total groups attributed to this sector, NOT `groups.length` (capped
+      // at 20 by the query's LIMIT).
+      groupCount: groupsResult.rows[0]?.totalGroups ?? 0,
       degenerate: isDegenerate(effectivePool),
       bandBShort,
       platformDropped,

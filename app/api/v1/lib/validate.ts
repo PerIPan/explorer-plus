@@ -63,8 +63,34 @@ export type ExportParams = z.infer<typeof exportSchema>;
 
 export const sortKeySchema = z.enum(['io', 'rp', 'kev', 'cv', 'lift']).default('kev');
 export const sectorSlugSchema = z.enum(SECTOR_SLUGS);
+
+/**
+ * Comma-separated `?platforms=Windows,Linux`.
+ *
+ * The Threat Profile panel collects platforms as a MULTI-select (a binding
+ * user requirement) and `submissionSchema.platforms` in
+ * src/lib/profile-submit-schema.mjs is already an array — a single scalar
+ * `platform` here could only ever have carried the first of the visitor's
+ * answers. The bound is 24, the same `.max(24)` that module's `slugList`
+ * uses, so the assembler and the telemetry sink agree on how many a
+ * submission may carry.
+ *
+ * An empty value (`?platforms=`) preprocesses to `undefined` — absent, not a
+ * 400 — matching `versionParam` above. An UNRECOGNISED member still 400s,
+ * exactly as the old scalar `platform` did: `platformSchema` is applied to
+ * every element.
+ */
+export const platformsParam = z.preprocess(
+  (v) => {
+    if (typeof v !== 'string') return v;
+    const parts = v.split(',').map((s) => s.trim()).filter((s) => s !== '');
+    return parts.length > 0 ? parts : undefined;
+  },
+  z.array(platformSchema).max(24).optional(),
+);
+
 export const profileQuerySchema = z.object({
   sector: sectorSlugSchema.optional(),
-  platform: platformSchema.optional(),
+  platforms: platformsParam,
   sort: sortKeySchema,
 });
