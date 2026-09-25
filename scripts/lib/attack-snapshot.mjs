@@ -40,6 +40,11 @@ const RELATION_TABLES = [
   'campaign_software',
   'group_campaigns',
   'technique_data_components',
+  // Not written by update-attack.mjs — extract_sectors lives only in the
+  // destructive seed. Snapshotted so an ATT&CK release that adds groups
+  // without sector links shows up as coverage decay in the diff instead of
+  // silently thinning sector_technique_lift.
+  'group_sectors',
 ];
 
 export async function captureSnapshot(pool) {

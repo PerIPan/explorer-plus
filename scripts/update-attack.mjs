@@ -624,6 +624,7 @@ async function main() {
 
     if (args.dryRun) {
       console.log('[attack-update] DRY-RUN: skipping all UPSERTs. Counts above are projected delta.');
+      console.log('[attack-update] relation counts:', JSON.stringify(preSnapshot.relationCounts));
       await updateLogDone(pool, logId, 'success', counters, {
         domains: args.domains, dryRun: true, attackVersion: detectedVersion,
         preSnapshot,
