@@ -9,6 +9,7 @@ import assert from 'node:assert/strict';
 import {
   resolveProfileDomain,
   parsePlatforms,
+  parseCsvParam,
   buildProfileApiQuery,
   ALL_DOMAINS,
 } from '../../src/lib/profile-query.mjs';
@@ -88,4 +89,49 @@ test('profile query: a null sector is omitted, not sent blank', () => {
   );
   assert.equal(q.has('sector'), false);
   assert.equal(q.get('domain'), ENTERPRISE, 'still domain-filtered with no sector');
+});
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * The OT path's parameters
+ * ──────────────────────────────────────────────────────────────────────────── */
+
+test('profile query: the OT call carries assets and levels and no sort', () => {
+  // The OT engine ranks Band A on exposure by definition — `exposure` is
+  // deliberately not in `sortKeySchema`. Sending a sort key it cannot act on
+  // would put a parameter in the URL that cannot affect the answer.
+  const q = new URLSearchParams(
+    buildProfileApiQuery({
+      assets: ['A0003', 'A0010'],
+      levels: ['l1', 'l2'],
+      domain: 'ics-attack',
+    }),
+  );
+  assert.deepEqual([...q.keys()].sort(), ['assets', 'domain', 'levels']);
+  assert.equal(q.get('assets'), 'A0003,A0010');
+  assert.equal(q.get('levels'), 'l1,l2');
+  assert.equal(q.has('sort'), false);
+});
+
+test('profile query: an empty OT selection writes no blank params', () => {
+  // `no-assets` (nothing chosen) and `empty-selection` (chose only l5) are
+  // distinct visitor-facing states on the OT path, and the assembler tells them
+  // apart by whether the parameters are PRESENT. A blank `levels=` would
+  // collapse the two.
+  const q = new URLSearchParams(
+    buildProfileApiQuery({ assets: [], levels: [], domain: 'ics-attack' }),
+  );
+  assert.deepEqual([...q.keys()], ['domain']);
+
+  const l5 = new URLSearchParams(
+    buildProfileApiQuery({ assets: [], levels: ['l5'], domain: 'ics-attack' }),
+  );
+  assert.equal(l5.get('levels'), 'l5', 'an l5-only pick is a real selection, not an absence');
+});
+
+test('profile query: parseCsvParam normalises assets and levels like platforms', () => {
+  assert.deepEqual(parseCsvParam('A0001,A0014'), ['A0001', 'A0014']);
+  assert.deepEqual(parseCsvParam(' l3 , l3_5 '), ['l3', 'l3_5']);
+  for (const empty of ['', ',,', '  ', null, undefined]) {
+    assert.deepEqual(parseCsvParam(empty), [], `${JSON.stringify(empty)} is no constraint`);
+  }
 });

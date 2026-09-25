@@ -21,12 +21,7 @@ import { MultiSelect, type MultiSelectOption } from './MultiSelect';
 import { useProfileState, type ProfileAnswers } from './useProfileState';
 import { DEFAULT_DOMAIN } from '../../contexts/DomainContext';
 import { SCF_FRAMEWORK_REGISTRY } from '../../lib/scf-framework-registry';
-import {
-  SECTOR_OPTIONS,
-  ICS_PLATFORMS,
-  IT_PLATFORMS,
-  OT_PLATFORMS,
-} from '../../lib/profile-options';
+import { SECTOR_OPTIONS, ICS_PLATFORMS, IT_PLATFORMS } from '../../lib/profile-options';
 
 /* ─────────────────────────────────────────────────────────────────────────────
  * Option sources
@@ -48,11 +43,14 @@ import {
  * into that page's bundle for nothing, so the definitions moved down to
  * profile-options.ts — which is exactly the module for plain shared value
  * lists — and are re-exported here unchanged. Every existing importer of
- * `SECTOR_OPTIONS`/`ICS_PLATFORMS`/`IT_PLATFORMS`/`OT_PLATFORMS` from this
- * file keeps working; nothing about the panel's behaviour changes.
+ * `SECTOR_OPTIONS`/`ICS_PLATFORMS`/`IT_PLATFORMS` from this file keeps
+ * working; nothing about the panel's behaviour changes. `OT_PLATFORMS` is
+ * gone — all seven ICS platform values match ZERO live techniques, so the OT
+ * path asks about assets and Purdue levels instead and there is no list to
+ * re-export.
  * ───────────────────────────────────────────────────────────────────────────── */
 
-export { SECTOR_OPTIONS, ICS_PLATFORMS, IT_PLATFORMS, OT_PLATFORMS };
+export { SECTOR_OPTIONS, ICS_PLATFORMS, IT_PLATFORMS };
 
 const PLATFORM_OPTIONS: MultiSelectOption[] = IT_PLATFORMS.map((p) => ({ value: p, label: p }));
 

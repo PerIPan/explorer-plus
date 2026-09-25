@@ -14,8 +14,7 @@ import { MultiSelect, type MultiSelectOption } from '../components/profile/Multi
 // and importing it here for two arrays pulled the whole registry into this
 // page's bundle. `ProfileVariant` is a type-only import below, which is erased
 // at compile time and costs nothing.
-import { SECTOR_OPTIONS, IT_PLATFORMS, OT_PLATFORMS } from '../lib/profile-options';
-import type { ProfileVariant } from '../components/profile/ProfilePanel';
+import { SECTOR_OPTIONS, PLATFORMS, platformsForDomain } from '../lib/profile-options';
 import { buildProfileUrl } from '../lib/profile-url.mjs';
 import {
   resolveProfileDomain,
@@ -215,7 +214,11 @@ function scoreTone(score: number): { text: string; bg: string; border: string } 
  * ──────────────────────────────────────────────────────────────────────────── */
 
 const KNOWN_SECTORS: ReadonlySet<string> = new Set(SECTOR_OPTIONS.map((o) => o.value));
-const KNOWN_PLATFORMS: ReadonlySet<string> = new Set<string>([...IT_PLATFORMS, ...OT_PLATFORMS]);
+/** Every platform the API will ACCEPT — not the ones this page offers. The
+ *  picker below is built per-domain (`platformsForDomain`), but a pasted URL
+ *  can legally carry any of the 20, so the 400 diagnostic must recognise all
+ *  of them or it would blame a value the API did not reject. */
+const KNOWN_PLATFORMS: ReadonlySet<string> = new Set<string>(PLATFORMS);
 const KNOWN_SORTS: ReadonlySet<string> = new Set<string>(SORT_OPTIONS.map((o) => o.value));
 
 /**
@@ -591,12 +594,23 @@ export function ThreatProfile() {
     ? 'All domains'
     : (domains.find((d) => d.value === domain)?.label ?? domain ?? DEFAULT_DOMAIN);
 
-  /** OT variant when the visitor is in the ICS domain — same split the panel makes. */
-  const variant: ProfileVariant = domain === 'ics-attack' ? 'v1-6q-ot' : 'v1-4q';
+  /**
+   * The platform picker, DERIVED FROM THE DOMAIN.
+   *
+   * It used to switch to `OT_PLATFORMS` for ics-attack, which offered seven
+   * values that match ZERO live ICS techniques (measured: every live ICS
+   * technique carries the literal platform 'None' or no platforms array at
+   * all). Picking one narrowed the pool to nothing, silently. That export is
+   * gone and the ICS domain no longer reaches this component at all — it is
+   * routed to `OtProfile`, which asks about assets and Purdue levels instead.
+   *
+   * A domain with no platform vocabulary (atlas-attack, measured: all 155 live
+   * techniques carry no platforms array) gets an empty list, and the control is
+   * not rendered — an empty picker is a question that cannot be answered.
+   */
   const platformOptions = useMemo<MultiSelectOption[]>(
-    () =>
-      (variant === 'v1-6q-ot' ? OT_PLATFORMS : IT_PLATFORMS).map((p) => ({ value: p, label: p })),
-    [variant],
+    () => platformsForDomain(domain).map((p) => ({ value: p, label: p })),
+    [domain],
   );
 
   /**
@@ -691,14 +705,16 @@ export function ThreatProfile() {
           </select>
         </div>
 
-        <MultiSelect
-          id="profile-platforms"
-          label={variant === 'v1-6q-ot' ? 'OT platforms' : 'Platforms'}
-          options={platformOptions}
-          selected={platforms}
-          onChange={onPlatformsChange}
-          placeholder="Any platform"
-        />
+        {platformOptions.length > 0 && (
+          <MultiSelect
+            id="profile-platforms"
+            label="Platforms"
+            options={platformOptions}
+            selected={platforms}
+            onChange={onPlatformsChange}
+            placeholder="Any platform"
+          />
+        )}
       </div>
 
       <fieldset className="mt-4">

@@ -53,21 +53,37 @@ export function resolveProfileDomain(rawDomain, defaultDomain) {
 }
 
 /**
- * Split a `?platforms=` value into its members. Blank entries are dropped, so
- * `platforms=` and `platforms=,,` both mean "no constraint" rather than a
- * constraint on the empty string — matching `platformsParam` on the
+ * Split a comma-separated list param into its members. Blank entries are
+ * dropped, so `platforms=` and `platforms=,,` both mean "no constraint" rather
+ * than a constraint on the empty string — matching `csvMembers` on the
  * assembler, which preprocesses the same shapes to `undefined`.
+ *
+ * One function for `platforms`, `assets` and `purdue_levels`: the assembler
+ * normalises all three through a single shared preprocessor, and three
+ * hand-copied splitters on this side is three chances to drift from it.
+ *
+ * @param {string | null | undefined} raw
+ * @returns {string[]}
+ */
+export function parseCsvParam(raw) {
+  if (typeof raw !== 'string') return [];
+  return raw.split(',').map((s) => s.trim()).filter(Boolean);
+}
+
+/**
+ * `?platforms=` specifically. Kept as a named export because it is what the IT
+ * briefing calls and what this module's tests pin; it is `parseCsvParam` under
+ * a name that says which param.
  *
  * @param {string | null | undefined} rawPlatforms
  * @returns {string[]}
  */
 export function parsePlatforms(rawPlatforms) {
-  if (typeof rawPlatforms !== 'string') return [];
-  return rawPlatforms.split(',').map((s) => s.trim()).filter(Boolean);
+  return parseCsvParam(rawPlatforms);
 }
 
 /**
- * Build the assembler's query string: ONLY the four parameters
+ * Build the assembler's query string: ONLY the parameters
  * `GET /api/v1/profile` reads, in a fixed order, so unrelated params the app
  * carries around (`entity`, `tab`, …) neither reach the API nor fragment the
  * react-query cache key.
@@ -75,18 +91,38 @@ export function parsePlatforms(rawPlatforms) {
  * `domain` is written whenever it is non-null — i.e. always, except for the
  * explicit all-domains case above.
  *
+ * `assets` and `levels` are the OT path's answers. Note the NAME CHANGE across
+ * the boundary: the page URL carries `?purdue_levels=` (which is what the
+ * telemetry row calls the field, and what reads as a question rather than an
+ * abbreviation), while the API param is `?levels=`, which is what
+ * `profileQuerySchema` validates. The translation happens HERE, once, rather
+ * than being spelled either way in two views.
+ *
+ * `sort` is optional. The OT engine ranks Band A on exposure by definition and
+ * exposes no sort option at all, so sending a sort key it will ignore would put
+ * a parameter in the URL that cannot affect the answer.
+ *
+ * Empty lists are omitted rather than written blank, for the same reason the
+ * page URL builder omits them: a blank param is indistinguishable from
+ * "answered with nothing", and on the OT path that distinction is the whole
+ * difference between `no-assets` and `empty-selection`.
+ *
  * @param {Object} input
- * @param {string | null | undefined} input.sector
+ * @param {string | null | undefined} [input.sector]
  * @param {string[]} [input.platforms]
- * @param {string} input.sort
+ * @param {string[]} [input.assets] ATT&CK ICS asset ids (A0001-A0018)
+ * @param {string[]} [input.levels] Purdue level keys, written as `levels`
+ * @param {string} [input.sort] omitted entirely when absent
  * @param {string | null} input.domain already resolved by `resolveProfileDomain`
  * @returns {string} a query string with no leading `?`
  */
-export function buildProfileApiQuery({ sector, platforms = [], sort, domain }) {
+export function buildProfileApiQuery({ sector, platforms = [], assets = [], levels = [], sort, domain }) {
   const p = new URLSearchParams();
   if (sector) p.set('sector', sector);
   if (platforms.length > 0) p.set('platforms', platforms.join(','));
-  p.set('sort', sort);
+  if (assets.length > 0) p.set('assets', assets.join(','));
+  if (levels.length > 0) p.set('levels', levels.join(','));
+  if (sort) p.set('sort', sort);
   if (domain) p.set('domain', domain);
   return p.toString();
 }

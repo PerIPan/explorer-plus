@@ -13,33 +13,28 @@
 // value the API would 400 on. Keep them `as const`: the literal-union types
 // below, and `z.enum`'s narrowing over in `validate.ts`, both depend on it.
 
+/* ────────────────────────────────────────────────────────────────────────────
+ * ATT&CK platforms, BY DOMAIN
+ *
+ * The three lists below are the authoritative per-domain platform vocabularies,
+ * measured against production 2026-09-26 over live (non-revoked, non-deprecated)
+ * techniques. `PLATFORMS` is assembled FROM them rather than the other way
+ * round, so a picker built for a domain cannot offer a value that domain has no
+ * technique for — the defect this replaces (see `IT_PLATFORMS` below).
+ * ──────────────────────────────────────────────────────────────────────────── */
+
 /**
- * ATT&CK platforms.
+ * enterprise-attack. All eleven match >=1 live technique: Windows 474,
+ * macOS 356, Linux 355, ESXi 117, IaaS 104, Network Devices 100, PRE 96,
+ * Office Suite 78, SaaS 70, Identity Provider 48, Containers 48.
  *
- * Verified against production 2026-09-26, and the claim is narrower than it
- * used to read here. What is true: every ENTERPRISE and MOBILE entry matches
- * >=1 live technique (Windows 474, ESXi 117, Network Devices 100). 'Network',
- * 'Google Workspace' and 'Azure AD' were removed (0 live techniques each) and
- * ESXi/Network Devices added — they previously 400'd.
- *
- * What is NOT true, and what this comment previously asserted: the seven ICS
- * entries below match ZERO live techniques each — Control Server 0, Data
- * Historian 0, Engineering Workstation 0, Field Controller/RTU/PLC/IED 0,
- * Human-Machine Interface 0, Input/Output Server 0, Safety Instrumented
- * System/Protection Relay 0. ATT&CK for ICS does not model platforms: every
- * live ICS technique carries either the literal platform 'None' (73) or no
- * platforms array at all (24). Filtering ICS techniques by any of these seven
- * values therefore returns an empty pool, silently.
- *
- * They stay in the list because they are still legal API input (dropping them
- * would 400 a URL that used to work) and because `ICS_PLATFORMS` below derives
- * the IT/OT picker split from them. The OT path does not rank on platforms at
- * all — it ranks on ATT&CK assets (A0001-A0018) and Purdue levels; see the OT
- * branch of app/api/v1/profile/route.ts. Never offering these seven in a
- * picker is the UI's job, not this list's.
+ * 'Network', 'Google Workspace' and 'Azure AD' were removed in an earlier pass
+ * (0 live techniques each) and ESXi / Network Devices added — they previously
+ * 400'd. Order is by live technique count, not alphabetical: this list is
+ * rendered straight into a picker and the platforms most visitors defend
+ * should not be the ones they have to scroll for.
  */
-export const PLATFORMS = [
-  // Enterprise
+export const ENTERPRISE_PLATFORMS = [
   'Windows',
   'Linux',
   'macOS',
@@ -51,7 +46,44 @@ export const PLATFORMS = [
   'PRE',
   'ESXi',
   'Network Devices',
-  // ICS
+] as const;
+
+/**
+ * mobile-attack. Measured: Android 122 live techniques, iOS 89 — and ZERO
+ * enterprise techniques each.
+ *
+ * That zero is the whole point of this list existing. `IT_PLATFORMS` used to be
+ * "PLATFORMS minus the seven ICS values", which left Android and iOS in the
+ * picker offered to a visitor whose domain is pinned to enterprise-attack.
+ * Selecting either produced an empty pool, the assembler's `platformDropped`
+ * fallback fired, and the visitor's only environment answer was silently
+ * discarded — a question that could not affect the result, which is the same
+ * defect as offering a sector question on the OT path.
+ */
+export const MOBILE_PLATFORMS = ['Android', 'iOS'] as const;
+
+/**
+ * ics-attack. Measured: every one of these seven matches ZERO live techniques —
+ * Control Server 0, Data Historian 0, Engineering Workstation 0, Field
+ * Controller/RTU/PLC/IED 0, Human-Machine Interface 0, Input/Output Server 0,
+ * Safety Instrumented System/Protection Relay 0.
+ *
+ * ATT&CK for ICS does not model platforms at all: every live ICS technique
+ * carries either the literal platform 'None' (73 techniques) or no platforms
+ * array whatsoever (24). Filtering an ICS pool by any of these seven returns an
+ * empty pool, silently.
+ *
+ * So there is NO OT platform picker and no `OT_PLATFORMS` export. The OT path
+ * ranks on ATT&CK assets (A0001-A0018) and Purdue levels instead — see the OT
+ * branch of app/api/v1/profile/route.ts. These seven stay in `PLATFORMS` ONLY
+ * because they are still legal API input and dropping them would 400 a URL that
+ * used to work; nothing may ever OFFER them.
+ *
+ * atlas-attack is absent from this file deliberately: measured, all 155 live
+ * ATLAS techniques carry no platforms array at all, so its picker is empty and
+ * `PLATFORMS_BY_DOMAIN` says so with an empty list rather than a named one.
+ */
+export const ICS_PLATFORMS = [
   'Field Controller/RTU/PLC/IED',
   'Safety Instrumented System/Protection Relay',
   'Engineering Workstation',
@@ -59,9 +91,18 @@ export const PLATFORMS = [
   'Control Server',
   'Data Historian',
   'Input/Output Server',
-  // Mobile
-  'Android',
-  'iOS',
+] as const;
+
+/**
+ * Every platform the API will accept — the union of the three lists above, in
+ * that order. ASSEMBLED, never hand-maintained: `validate.ts` builds
+ * `platformSchema` from this, so a value that is legal input but belongs to no
+ * domain list is now impossible by construction.
+ */
+export const PLATFORMS = [
+  ...ENTERPRISE_PLATFORMS,
+  ...MOBILE_PLATFORMS,
+  ...ICS_PLATFORMS,
 ] as const;
 
 export type Platform = (typeof PLATFORMS)[number];
@@ -117,28 +158,47 @@ export const SECTOR_OPTIONS: ReadonlyArray<{ value: SectorSlug; label: string }>
   SECTOR_SLUGS.map((slug) => ({ value: slug, label: SECTOR_LABELS[slug] }));
 
 /**
- * The ICS half of `PLATFORMS`. Named and exported so the OT variant can take
- * this set directly (and the IT variant below its complement) instead of both
- * hand-maintaining a copy of the split that then drifts apart.
+ * The platform picker for one ATT&CK domain — the ONLY sanctioned way to build
+ * one.
  *
- * `satisfies readonly Platform[]` is the guard: if ATT&CK renames one of these
- * in `PLATFORMS`, this list stops compiling instead of quietly excluding
- * nothing from the IT picker.
+ * Keyed by the four values of `VALID_DOMAINS` in app/api/v1/lib/validate.ts.
+ * `ics-attack` and `atlas-attack` are deliberately EMPTY, and that is a
+ * measured fact rather than a gap: no live ICS technique carries any of the 20
+ * platform values (73 carry the literal 'None', 24 carry none at all), and all
+ * 155 live ATLAS techniques carry no platforms array. A domain whose list is
+ * empty must be asked a different question entirely — which is exactly what the
+ * OT path does with assets and Purdue levels — never offered an empty picker,
+ * and never offered another domain's list.
  */
-export const ICS_PLATFORMS = [
-  'Field Controller/RTU/PLC/IED',
-  'Safety Instrumented System/Protection Relay',
-  'Engineering Workstation',
-  'Human-Machine Interface',
-  'Control Server',
-  'Data Historian',
-  'Input/Output Server',
-] as const satisfies readonly Platform[];
+export const PLATFORMS_BY_DOMAIN: Readonly<Record<string, readonly Platform[]>> = {
+  'enterprise-attack': ENTERPRISE_PLATFORMS,
+  'mobile-attack': MOBILE_PLATFORMS,
+  'ics-attack': [],
+  'atlas-attack': [],
+};
 
-const ICS_PLATFORM_SET: ReadonlySet<string> = new Set<string>(ICS_PLATFORMS);
+/**
+ * Platforms for a domain, or an empty list for a domain that has none (and for
+ * an unrecognised one — a bad `?domain=` is the API's 400 to give, not a
+ * reason for a picker to guess).
+ */
+export function platformsForDomain(domain: string | null | undefined): readonly Platform[] {
+  if (!domain) return [];
+  return PLATFORMS_BY_DOMAIN[domain] ?? [];
+}
 
-/** Enterprise + mobile platforms — `PLATFORMS` minus the ICS values. */
-export const IT_PLATFORMS: Platform[] = PLATFORMS.filter((p) => !ICS_PLATFORM_SET.has(p));
-
-/** The complement, for the OT variant. Derived here so the two never diverge. */
-export const OT_PLATFORMS: Platform[] = PLATFORMS.filter((p) => ICS_PLATFORM_SET.has(p));
+/**
+ * The IT panel's picker. The panel pins `domain: 'enterprise-attack'`, so this
+ * is that domain's list and nothing else.
+ *
+ * It was `PLATFORMS` minus the seven ICS values, which is not the same thing:
+ * that subtraction left Android and iOS in a picker whose domain is pinned to
+ * enterprise, where both match ZERO techniques. Anyone who answered the one
+ * environment question with "iOS" got an empty pool, the `platformDropped`
+ * fallback, and their answer thrown away without being told. Deriving the list
+ * from the domain is what makes that unrepresentable.
+ *
+ * There is deliberately no `OT_PLATFORMS` counterpart any more — see
+ * `ICS_PLATFORMS` above.
+ */
+export const IT_PLATFORMS: readonly Platform[] = ENTERPRISE_PLATFORMS;
