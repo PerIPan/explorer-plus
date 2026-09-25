@@ -199,12 +199,24 @@ function useThreatProfile(variant: ProfileVariant): ThreatProfileController {
   const [anchored, setAnchored] = useState(false);
   const returnFocusRef = useRef<HTMLElement | null>(null);
 
-  // Tailwind's `xl` breakpoint, read once and on change. Starts false so the
-  // server render and the first client render agree; the panel cannot be open
-  // on either (the peek is armed from a mount effect), so there is no flash.
+  /**
+   * Tailwind's `xl` breakpoint, read once and on change. Starts false so the
+   * server render and the first client render agree; the panel cannot be open
+   * on either (the peek is armed from a mount effect), so there is no flash.
+   *
+   * `80rem`, NOT `1280px`. Tailwind v4 emits `@media (width >= 80rem)` for
+   * `xl` (verified against the compiled stylesheet), and `rem` in a media
+   * query resolves against the BROWSER's default font size, not the document
+   * root — so for anyone who raised that default the two units disagree.
+   * `anchored` would then go true while `hidden xl:block` still hides the
+   * wrapper: the panel would render inside a `display:none` container,
+   * `ProfileSheet` would bail, the visible diamond would do nothing, and a
+   * cold load would still post a phantom `auto_close`. Same unit as the
+   * utility is the only way these cannot drift.
+   */
   useEffect(() => {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return undefined;
-    const mql = window.matchMedia('(min-width: 1280px)');
+    const mql = window.matchMedia('(min-width: 80rem)');
     const sync = () => setAnchored(mql.matches);
     sync();
     mql.addEventListener('change', sync);
@@ -345,7 +357,16 @@ function useController(): ThreatProfileController | null {
  * The hero diamond, as a trigger. Drops `pointer-events-none` for the BUTTON
  * only — the four corner labels around it stay non-interactive, in all three
  * blocks. `focus-visible` gets the same nudge as `hover` so keyboard users see
- * the affordance, and `motion-reduce` drops the transform entirely.
+ * the affordance.
+ *
+ * Reduced motion is handled by `.profile-diamond-img` in src/index.css, NOT by
+ * a `motion-reduce:` utility. Tailwind v4 compiles `-translate-y-[3px]` to
+ * `translate:` and `scale-[1.02]` to `scale:`, while `transform-none` emits
+ * `transform: none` — a different property, so the utility the brief specified
+ * cancels nothing (verified by compiling the utilities and reading the
+ * output). The stylesheet rule neutralises `translate`/`scale`/`transition`
+ * themselves. `motion-reduce:group-hover:opacity-90` stays: opacity is not a
+ * transform and is a legitimate reduced-motion affordance.
  */
 export function ProfileDiamondTrigger({ size }: { size: number }) {
   const ctl = useController();
@@ -370,10 +391,10 @@ export function ProfileDiamondTrigger({ size }: { size: number }) {
         alt=""
         width={size}
         height={size}
-        className="opacity-[0.55] transition-transform duration-150 ease-out
+        className="profile-diamond-img opacity-[0.55] transition-transform duration-150 ease-out
                    group-hover:-translate-y-[3px] group-hover:scale-[1.02] group-hover:opacity-80
                    group-focus-visible:-translate-y-[3px] group-focus-visible:scale-[1.02]
-                   motion-reduce:transform-none motion-reduce:group-hover:opacity-90"
+                   motion-reduce:group-hover:opacity-90"
       />
     </button>
   );
@@ -405,7 +426,8 @@ export function ProfileSheet() {
 export interface ProfilePanelProps {
   /** Absolutely positioned against the diamond (xl+) vs. a centred sheet. */
   anchored: boolean;
-  /** Click-opened: `aria-modal`, focus moves in, Tab is trapped. */
+  /** Click-opened: focus moves in, Tab is trapped, the background is marked
+   *  `inert`, and `aria-modal="true"` is therefore true rather than claimed. */
   modal: boolean;
   sector: string | null;
   onSectorChange: (next: string | null) => void;
@@ -429,10 +451,45 @@ const FOCUSABLE_SELECTOR = [
   '[tabindex]:not([tabindex="-1"])',
 ].join(',');
 
+function hasLayoutBox(el: unknown): el is HTMLElement {
+  return el instanceof HTMLElement && el.isConnected && el.getClientRects().length > 0;
+}
+
 function focusableWithin(root: HTMLElement): HTMLElement[] {
-  return Array.from(root.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
-    (el) => el.getClientRects().length > 0,
-  );
+  return Array.from(root.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(hasLayoutBox);
+}
+
+/**
+ * Where focus goes when a click-opened panel closes.
+ *
+ * The trigger that opened it can have become `display:none` in the meantime —
+ * crossing the xl breakpoint while open swaps which of the three diamonds is
+ * rendered — and `focus()` on a hidden element silently no-ops, dropping focus
+ * to `<body>`. Fall back to whichever trigger is actually on screen.
+ */
+function resolveReturnTarget(stored: HTMLElement | null): HTMLElement | null {
+  if (hasLayoutBox(stored)) return stored;
+  for (const el of Array.from(document.querySelectorAll<HTMLElement>('[data-profile-trigger]'))) {
+    if (hasLayoutBox(el)) return el;
+  }
+  return null;
+}
+
+/**
+ * The nearest ancestor that actually clips and scrolls the anchored panel.
+ * On this site that is `<main>` (AppShell.tsx: `overflow-y-auto
+ * overflow-x-hidden`), not the viewport — measuring against
+ * `window.innerWidth/innerHeight` would let the panel be positioned into a
+ * region `<main>` then clips away.
+ */
+function clippingAncestor(el: HTMLElement): HTMLElement | null {
+  let node: HTMLElement | null = el.parentElement;
+  while (node && node !== document.body && node !== document.documentElement) {
+    const style = getComputedStyle(node);
+    if (/(auto|scroll|hidden|clip)/.test(`${style.overflowX} ${style.overflowY}`)) return node;
+    node = node.parentElement;
+  }
+  return null;
 }
 
 export function ProfilePanel({
@@ -463,10 +520,60 @@ export function ProfilePanel({
    * focus from a visitor mid-sentence in the search field is exactly the
    * WCAG 2.4.3 failure this panel must not commit, so in peek mode nothing
    * here touches focus at all.
+   *
+   * This also re-establishes the trap after an anchored<->sheet flip: crossing
+   * the breakpoint while open unmounts one instance and mounts another in the
+   * same commit, and the new instance runs this effect with `modal` already
+   * true.
    */
   useEffect(() => {
     wasModalRef.current = modal;
     if (modal) panelRef.current?.focus();
+  }, [modal]);
+
+  /**
+   * Make `aria-modal="true"` true rather than merely claimed. A Tab trap alone
+   * still leaves the background reachable by a screen reader's virtual cursor,
+   * by pointer and by browser find — so asserting modality without this was
+   * telling assistive tech something false.
+   *
+   * Marks every SIBLING along the panel's ancestor chain `inert`, which is how
+   * you inert "everything except this subtree": the panel's own ancestors stay
+   * live, so the panel is unaffected. Outside-click still works — hit testing
+   * skips inert subtrees and resolves to the nearest live ancestor, which is
+   * never inside the panel.
+   *
+   * Declared BEFORE the focus-return effect on purpose. React runs a
+   * component's cleanups in hook declaration order, and the diamond focus is
+   * handed back to is itself one of the siblings marked here — so `inert` has
+   * to come off first or the `focus()` would be refused.
+   */
+  useEffect(() => {
+    if (!modal) return undefined;
+    const root = panelRef.current;
+    if (!root) return undefined;
+    const marked: HTMLElement[] = [];
+    let node: HTMLElement | null = root;
+    while (node && node !== document.body) {
+      const parent: HTMLElement | null = node.parentElement;
+      if (!parent) break;
+      for (const sibling of Array.from(parent.children)) {
+        if (sibling === node || !(sibling instanceof HTMLElement)) continue;
+        // The sheet's own scrim is a portal sibling of the panel. Leave it
+        // live: it is already `aria-hidden`, and it is the element an
+        // outside-click lands on, which must keep working whatever a given
+        // engine does with pointer events over inert content.
+        if (sibling.hasAttribute('data-profile-scrim')) continue;
+        // Already inert for someone else's reason — not ours to restore.
+        if (sibling.hasAttribute('inert')) continue;
+        sibling.setAttribute('inert', '');
+        marked.push(sibling);
+      }
+      node = parent;
+    }
+    return () => {
+      for (const el of marked) el.removeAttribute('inert');
+    };
   }, [modal]);
 
   // Return focus to the diamond that opened it — but only if it WAS
@@ -474,7 +581,8 @@ export function ProfilePanel({
   // the same WCAG failure in reverse.
   useEffect(
     () => () => {
-      if (wasModalRef.current) returnFocusRef.current?.focus();
+      if (!wasModalRef.current) return;
+      resolveReturnTarget(returnFocusRef.current)?.focus();
     },
     [returnFocusRef],
   );
@@ -502,37 +610,90 @@ export function ProfilePanel({
     return () => document.removeEventListener('pointerdown', handlePointerDown);
   }, [modal, onClose]);
 
-  // Safety net for Escape when focus somehow sits outside the trap (e.g. on
-  // <body>). The in-panel handler below stops propagation, so this never
-  // double-fires for the normal case.
+  /**
+   * Escape net for focus OUTSIDE the trap (e.g. left on `<body>`).
+   *
+   * The bail-out when focus is INSIDE is load-bearing, not defensive. This
+   * listener sits on `document` — and so does React's delegated keydown
+   * listener, because Next's App Router hydrates `document` itself. Two
+   * listeners on the SAME node are unaffected by `stopPropagation()`; only
+   * `stopImmediatePropagation()` would suppress the second. So without this
+   * guard, every Escape used to close a `MultiSelect` listbox (MultiSelect
+   * swallows the key with `stopPropagation()`) would ALSO close the whole
+   * panel, post a bogus `dismiss` row and call `markProfileSeen()` — leaving
+   * `mx-profile` set so the visitor never peeks again.
+   *
+   * The alternative — switching MultiSelect to `stopImmediatePropagation` —
+   * would fix it by coupling two components through event-dispatch internals.
+   * The guard is local and says what it means.
+   */
   useEffect(() => {
     if (!modal) return undefined;
     function handleKey(event: KeyboardEvent) {
-      if (event.key === 'Escape') onClose();
+      if (event.key !== 'Escape') return;
+      const root = panelRef.current;
+      if (root && root.contains(document.activeElement)) return;
+      onClose();
     }
     document.addEventListener('keydown', handleKey);
     return () => document.removeEventListener('keydown', handleKey);
   }, [modal, onClose]);
 
-  // Flip the anchored panel to stay in the viewport. Left is the usual side —
-  // the xl diamond sits at the right edge of the content column — so the flip
-  // only engages on a narrow xl window.
+  /**
+   * Keep the anchored panel inside the box that actually clips it.
+   *
+   * Three things the first cut got wrong: it measured the viewport rather than
+   * `<main>` (the real scroll/clip container); it never recomputed when the
+   * container scrolled or the panel's own height changed (adding chips to a
+   * combobox resizes it); and when NEITHER side had room it fell through to
+   * 'left' and hung off-screen instead of taking the roomier side.
+   */
   useEffect(() => {
     if (!anchored) return undefined;
+    const el = panelRef.current;
+    if (!el) return undefined;
+    const container = clippingAncestor(el);
+
     function compute() {
-      const el = panelRef.current;
-      const anchor = el?.offsetParent as HTMLElement | null;
-      if (!el || !anchor) return;
+      const node = panelRef.current;
+      const anchor = node?.offsetParent as HTMLElement | null;
+      if (!node || !anchor) return;
       const rect = anchor.getBoundingClientRect();
+      const bounds = container
+        ? container.getBoundingClientRect()
+        : { left: 0, right: window.innerWidth, top: 0, bottom: window.innerHeight };
+
       const needed = ANCHORED_WIDTH + ANCHOR_GAP;
-      const fitsLeft = rect.left >= needed;
-      const fitsRight = window.innerWidth - rect.right >= needed;
-      setFlipX(fitsLeft || !fitsRight ? 'left' : 'right');
-      setFlipY(rect.top + el.offsetHeight <= window.innerHeight - 8 ? 'top' : 'bottom');
+      const roomLeft = rect.left - bounds.left;
+      const roomRight = bounds.right - rect.right;
+      if (roomLeft >= needed) setFlipX('left');
+      else if (roomRight >= needed) setFlipX('right');
+      else setFlipX(roomLeft >= roomRight ? 'left' : 'right');
+
+      // 'top' aligns the panel's top with the anchor's and grows down;
+      // 'bottom' aligns their bottoms and grows up.
+      const height = node.offsetHeight;
+      const roomBelow = bounds.bottom - rect.top;
+      const roomAbove = rect.bottom - bounds.top;
+      if (height + 8 <= roomBelow) setFlipY('top');
+      else setFlipY(roomBelow >= roomAbove ? 'top' : 'bottom');
     }
+
     compute();
+
+    // The panel's own height changes as combobox chips are added/removed.
+    const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(compute) : null;
+    observer?.observe(el);
+
     window.addEventListener('resize', compute);
-    return () => window.removeEventListener('resize', compute);
+    window.addEventListener('scroll', compute, { passive: true });
+    container?.addEventListener('scroll', compute, { passive: true });
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener('resize', compute);
+      window.removeEventListener('scroll', compute);
+      container?.removeEventListener('scroll', compute);
+    };
   }, [anchored]);
 
   const anchoredStyle: CSSProperties | undefined = anchored
@@ -551,8 +712,10 @@ export function ProfilePanel({
     onInteract();
 
     if (event.key === 'Escape') {
-      // Stop here so the document-level net above does not also fire, and so
-      // a parent listener does not react to the same keypress.
+      // Stops ancestor React handlers reacting to the same keypress. It does
+      // NOT suppress the document-level net above — that listener shares a
+      // node with React's own delegated one — which is why the net checks
+      // whether focus is inside the panel instead of relying on this.
       event.stopPropagation();
       onClose();
       return;
@@ -597,7 +760,9 @@ export function ProfilePanel({
     <>
       {/* Scrim for the click-opened sheet only. The peek never dims or blocks
           the page behind it — it was not asked for. */}
-      {!anchored && modal && <div className="fixed inset-0 z-40 bg-black/30" aria-hidden="true" />}
+      {!anchored && modal && (
+        <div data-profile-scrim="" className="fixed inset-0 z-40 bg-black/30" aria-hidden="true" />
+      )}
 
       <div
         ref={panelRef}

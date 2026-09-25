@@ -206,3 +206,27 @@ body {
     animation: none;
   }
 }
+
+/* ───────────────── Threat Profile: hero diamond trigger ─────────────────
+   Reduced motion for the diamond's hover/focus nudge.
+
+   This is a plain stylesheet rule rather than a `motion-reduce:` utility on
+   purpose. Tailwind v4 compiles `-translate-y-[3px]` to the `translate`
+   property and `scale-[1.02]` to `scale`, but `transform-none` emits
+   `transform: none` — a DIFFERENT property, so it cancels neither. The nudge
+   has to be undone on the same properties that set it.
+
+   `!important` because the `group-hover:`/`group-focus-visible:` utilities
+   compile to `.util:is(:where(.group):hover *)`, which is specificity (0,2,0)
+   against this rule's (0,1,0). (This file is also unlayered while the
+   utilities sit in `@layer utilities`, which would already win — the
+   `!important` keeps that true if index.css is ever moved into a layer.) */
+@media (prefers-reduced-motion: reduce) {
+  .profile-diamond-img {
+    translate: none !important;
+    scale: none !important;
+    rotate: none !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
