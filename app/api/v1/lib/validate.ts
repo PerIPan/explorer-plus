@@ -34,18 +34,20 @@ export const paginationSchema = z.object({
 
 export const platformSchema = z.enum([
   // Enterprise
+  // Values verified against production 2026-09-25: every entry matches >=1 live
+  // technique. 'Network', 'Google Workspace' and 'Azure AD' were removed (0 live
+  // techniques each) and ESXi/Network Devices added (117/100) — they previously 400'd.
   'Windows',
   'Linux',
   'macOS',
   'IaaS',
   'SaaS',
   'Containers',
-  'Network',
   'Office Suite',
   'Identity Provider',
-  'Google Workspace',
-  'Azure AD',
   'PRE',
+  'ESXi',
+  'Network Devices',
   // ICS
   'Field Controller/RTU/PLC/IED',
   'Safety Instrumented System/Protection Relay',
