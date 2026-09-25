@@ -18,6 +18,7 @@ import {
 import { createPortal } from 'react-dom';
 
 import { MultiSelect, type MultiSelectOption } from './MultiSelect';
+import { PurdueAssetPickerLoader } from './PurdueAssetPicker';
 import { useProfileState, type ProfileAnswers } from './useProfileState';
 import { DEFAULT_DOMAIN } from '../../contexts/DomainContext';
 import { SCF_FRAMEWORK_REGISTRY } from '../../lib/scf-framework-registry';
@@ -87,6 +88,38 @@ const FRAMEWORK_OPTIONS: MultiSelectOption[] = SCF_FRAMEWORK_REGISTRY.map((f) =>
 
 /** Mirrors `submissionSchema.variant` in src/lib/profile-submit-schema.mjs. */
 export type ProfileVariant = 'v1-4q' | 'v1-6q-ot';
+
+/**
+ * Which ENGINE the visitor is answering for. A mode, not a fifth question: it
+ * decides which questions follow, so it is rendered as a two-option control at
+ * the top of the panel rather than as another dropdown among them.
+ *
+ * 'it' -> domain `enterprise-attack`, ranked on sector lift and CTI/CVE evidence.
+ * 'ot' -> domain `ics-attack`, ranked on the visitor's ATT&CK ICS asset surface.
+ *
+ * Until this existed nothing in the app could produce an OT briefing at all:
+ * the provider hardcoded `v1-4q` and Apply hardcoded `DEFAULT_DOMAIN`, so the
+ * ICS engine — which is built, measured and tested — was unreachable.
+ */
+export type ProfileMode = 'it' | 'ot';
+
+/**
+ * The telemetry variant string for a mode.
+ *
+ * `'v1-6q-ot'` keeps its digit even though the OT panel asks FOUR questions.
+ * It is a CHECK-constraint value on `profile_submissions.variant`; migrating a
+ * constraint for a cosmetic digit would be a schema change to make a string
+ * read nicer. Treat it as an opaque id.
+ */
+function variantFor(mode: ProfileMode): ProfileVariant {
+  return mode === 'ot' ? 'v1-6q-ot' : 'v1-4q';
+}
+
+/** ATT&CK domain for a mode. The OT branch of the assembler fires on
+ *  `domain=ics-attack` ALONE, so this is the whole switch. */
+function domainFor(mode: ProfileMode, defaultDomain: string): string {
+  return mode === 'ot' ? 'ics-attack' : defaultDomain;
+}
 
 type SubmitAction = 'apply' | 'dismiss' | 'auto_close';
 
@@ -170,13 +203,27 @@ export interface ThreatProfileController {
   panelProps: Omit<ProfilePanelProps, 'anchored' | 'large'>;
 }
 
-function useThreatProfile(variant: ProfileVariant): ThreatProfileController {
+function useThreatProfile(defaultVariant: ProfileVariant): ThreatProfileController {
   const { answers, setAnswer, applyProfile, dismiss, armPeek, peek, peekNudge } = useProfileState();
   // `peek` is a fresh object every render; `dispatch` inside it is stable.
   const { open, timer, report, dispatch } = peek;
 
+  /**
+   * The engine switch, defaulting to IT and VISIBLY selected in the panel.
+   *
+   * The mount point still passes a variant, and it is now the DEFAULT mode
+   * rather than the only one — which is the point: `variant="v1-4q"` in
+   * AppShell used to be an invisible hardcode that no visitor could see or
+   * change, and the ICS engine was unreachable behind it. The same value now
+   * seeds a control that shows what was chosen for you and lets you choose
+   * otherwise.
+   */
+  const [mode, setMode] = useState<ProfileMode>(defaultVariant === 'v1-6q-ot' ? 'ot' : 'it');
+  const variant = variantFor(mode);
+
   // Sector is single-select, so it lives here rather than in the hook's
   // multi-select `answers` bag, and reaches `applyProfile` as `string | null`.
+  // It is asked in IT mode ONLY — see `onApply`.
   const [sector, setSector] = useState<string | null>(null);
   const [modal, setModal] = useState(false);
   const [large, setLarge] = useState(false);
@@ -219,20 +266,31 @@ function useThreatProfile(variant: ProfileVariant): ThreatProfileController {
 
   // Latest payload, kept in a ref so the outcome effect below depends only on
   // `report` and therefore cannot re-fire when an answer changes.
-  const payloadRef = useRef<Pick<ProfileSubmission, 'sectors' | 'platforms' | 'roles' | 'frameworks'>>({
+  type ReportedAnswers = Omit<ProfileSubmission, 'variant' | 'action'>;
+  const payloadRef = useRef<ReportedAnswers>({
     sectors: [],
     platforms: [],
     roles: [],
     frameworks: [],
+    assets: [],
+    purdue_levels: [],
   });
   useEffect(() => {
+    // Only what the CURRENT mode actually asked. A row that carried the
+    // sector/platform answers a visitor gave before switching to OT would
+    // report questions the OT panel never put to them — and `sectors` on an
+    // OT row would be read as evidence that sector matters to the ICS ranking,
+    // which is exactly the claim this variant exists to avoid making.
+    const ot = mode === 'ot';
     payloadRef.current = {
-      sectors: sector ? [sector] : [],
-      platforms: answers.platforms ?? [],
+      sectors: !ot && sector ? [sector] : [],
+      platforms: ot ? [] : (answers.platforms ?? []),
       roles: answers.roles ?? [],
       frameworks: answers.frameworks ?? [],
+      assets: ot ? (answers.assets ?? []) : [],
+      purdue_levels: ot ? (answers.purdue_levels ?? []) : [],
     };
-  }, [sector, answers]);
+  }, [sector, answers, mode]);
 
   /**
    * Exactly one POST per outcome TRANSITION — not one per session and not one
@@ -249,18 +307,10 @@ function useThreatProfile(variant: ProfileVariant): ThreatProfileController {
     lastReportRef.current = next;
     if (!next) return;
     const payload = payloadRef.current;
-    reportSubmission({
-      variant,
-      action: next,
-      sectors: payload.sectors,
-      platforms: payload.platforms,
-      roles: payload.roles,
-      frameworks: payload.frameworks,
-      // Not asked in this variant. Sent explicitly rather than omitted so the
-      // row shape is identical across variants.
-      assets: [],
-      purdue_levels: [],
-    });
+    // Every field is sent on every row, whichever mode produced it, so the
+    // row shape is identical across variants and an unasked question is an
+    // empty list rather than a missing key.
+    reportSubmission({ variant, action: next, ...payload });
   }, [report, variant]);
 
   /**
@@ -345,25 +395,54 @@ function useThreatProfile(variant: ProfileVariant): ThreatProfileController {
     // One action, one push — `applyProfile` owns the single router.push, to
     // the briefing at /profile.
     //
-    // `platforms` is the only answer the briefing reads; roles and frameworks
-    // are collected for the telemetry row and deliberately stay out of the
-    // URL, since nothing on `/profile` consumes them. `domain` is passed
-    // explicitly and is written even when it equals the default — on
-    // `/profile` an absent `domain` is no filter at all, not "enterprise".
+    // Roles and frameworks are collected for the telemetry row and deliberately
+    // stay out of the URL in BOTH modes, since nothing on `/profile` consumes
+    // them. `domain` is passed explicitly and is written even when it equals
+    // the default — on `/profile` an absent `domain` is no filter at all, not
+    // "enterprise".
+    //
+    // OT sends NO sector and NO platforms. Not as an omission: the ICS engine
+    // ranks on assets, `meta.ignoredParams` names both as received-and-ignored,
+    // and putting either in the URL would suggest it narrowed something.
+    if (mode === 'ot') {
+      applyProfile({
+        sector: null,
+        domain: domainFor('ot', DEFAULT_DOMAIN),
+        params: {
+          assets: answers.assets ?? EMPTY_SELECTION,
+          purdue_levels: answers.purdue_levels ?? EMPTY_SELECTION,
+        },
+      });
+      return;
+    }
+
     applyProfile({
       sector,
-      domain: DEFAULT_DOMAIN,
+      domain: domainFor('it', DEFAULT_DOMAIN),
       params: { platforms: answers.platforms ?? EMPTY_SELECTION },
     });
-  }, [applyProfile, sector, answers]);
+  }, [applyProfile, sector, answers, mode]);
 
   const onClose = useCallback(() => {
     dismiss();
   }, [dismiss]);
 
+  const onModeChange = useCallback(
+    (next: ProfileMode) => {
+      // Switching mode is an interaction like any other: it must cancel the
+      // unsolicited peek's timer, or the panel would close under a visitor who
+      // had just told us which estate they defend.
+      onInteract();
+      setMode(next);
+    },
+    [onInteract],
+  );
+
   const panelProps = useMemo<Omit<ProfilePanelProps, 'anchored' | 'large'>>(
     () => ({
       modal,
+      mode,
+      onModeChange,
       sector,
       onSectorChange: setSector,
       answers,
@@ -374,7 +453,7 @@ function useThreatProfile(variant: ProfileVariant): ThreatProfileController {
       onInteract,
       returnFocusRef,
     }),
-    [modal, sector, answers, setAnswer, onApply, onClose, onToggleClose, onInteract],
+    [modal, mode, onModeChange, sector, answers, setAnswer, onApply, onClose, onToggleClose, onInteract],
   );
 
   return {
@@ -426,6 +505,11 @@ export function ThreatProfileProvider({
   variant,
   children,
 }: {
+  /**
+   * The DEFAULT engine mode, as a variant id. The panel now renders a visible
+   * two-option control over it, so this seeds the control rather than pinning
+   * the panel to one engine — which is what made the OT path unreachable.
+   */
   variant: ProfileVariant;
   children: ReactNode;
 }) {
@@ -622,6 +706,10 @@ export interface ProfilePanelProps {
   /** Click-opened: focus moves in, Tab is trapped, the background is marked
    *  `inert`, and `aria-modal="true"` is therefore true rather than claimed. */
   modal: boolean;
+  /** Which engine the questions below belong to. */
+  mode: ProfileMode;
+  onModeChange: (next: ProfileMode) => void;
+  /** IT mode only — the OT panel does not ask for a sector. */
   sector: string | null;
   onSectorChange: (next: string | null) => void;
   answers: ProfileAnswers;
@@ -715,6 +803,8 @@ export function ProfilePanel({
   anchored,
   large,
   modal,
+  mode,
+  onModeChange,
   sector,
   onSectorChange,
   answers,
@@ -731,7 +821,23 @@ export function ProfilePanel({
   const titleId = `${baseId}-title`;
   const statusId = `${baseId}-status`;
   const sectorId = `${baseId}-sector`;
-  const ready = Boolean(sector);
+  const isOt = mode === 'ot';
+
+  /**
+   * The load-bearing question, per mode. Apply stays inert until it is
+   * answered, and the reason is shown — the same "no silent defaults" rule the
+   * IT panel already followed, applied to the OT question set.
+   *
+   * OT readiness is "a level or an asset was ticked", with no need to resolve
+   * the level to its assets first: the picker renders a level that holds no
+   * asset as DISABLED (measured: `l5` is the only one, at zero), so a level
+   * that made it into this answer necessarily resolves to at least one. The
+   * engine's `empty-selection` state is the backstop if that ever stops being
+   * true — it says so rather than ranking nothing.
+   */
+  const otAnswered =
+    (answers.assets?.length ?? 0) > 0 || (answers.purdue_levels?.length ?? 0) > 0;
+  const ready = isOt ? otAnswered : Boolean(sector);
 
   const [flipX, setFlipX] = useState<'left' | 'right'>('left');
   const [flipY, setFlipY] = useState<'top' | 'bottom'>('top');
@@ -1064,7 +1170,8 @@ export function ProfilePanel({
               Tailor this to what you defend
             </h2>
             <p className="mt-0.5 text-xs text-[var(--text-secondary)]">
-              Four questions. Only the sector is required — nothing is answered for you.
+              Four questions. Only the {isOt ? 'plant surface is' : 'sector is'} required — nothing
+              is answered for you.
             </p>
           </div>
           <button
@@ -1089,6 +1196,86 @@ export function ProfilePanel({
           }`}
           onScroll={onInteract}
         >
+          {/* ── The engine switch ────────────────────────────────────────
+              A MODE, not a fifth question: it changes which questions follow,
+              so it sits above them and is not another dropdown in the stack.
+
+              Native radios rather than `role="radio"` buttons. Arrow-key
+              navigation, the single tab stop for the group, and the
+              checked/unchecked announcement all come free and correct from the
+              platform, and the visually-hidden input still has a client rect —
+              so the panel's own Tab trap (`focusableWithin`, which filters on
+              `getClientRects()`) still finds it.
+
+              IT is the default, and the whole point of rendering it is that it
+              is now VISIBLY the default. It used to be a hardcoded
+              `variant="v1-4q"` in AppShell plus a hardcoded `DEFAULT_DOMAIN`
+              in Apply, which is the same choice made silently — and it left
+              the ICS engine unreachable from anywhere in the app. */}
+          <fieldset className="min-w-0">
+            <legend className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+              Which estate are you asking about?
+            </legend>
+            <div className="flex w-full rounded-md border border-[var(--border-color)] p-0.5 gap-0.5">
+              {(
+                [
+                  { value: 'it', label: 'IT estate', hint: 'ATT&CK Enterprise — ranked on your sector and platforms.' },
+                  { value: 'ot', label: 'OT plant', hint: 'ATT&CK for ICS — ranked on the plant assets you run.' },
+                ] as const
+              ).map((opt) => (
+                <label
+                  key={opt.value}
+                  title={opt.hint}
+                  className="flex-1 min-w-0 cursor-pointer"
+                >
+                  <input
+                    type="radio"
+                    name={`${baseId}-mode`}
+                    value={opt.value}
+                    checked={mode === opt.value}
+                    onChange={() => onModeChange(opt.value)}
+                    className="sr-only peer"
+                  />
+                  <span
+                    className="flex items-center justify-center min-h-[44px] px-2 rounded text-sm font-medium text-[var(--text-secondary)] transition-colors
+                               peer-checked:bg-[var(--teal-ghost)] peer-checked:text-[var(--accent-teal)] peer-checked:font-semibold
+                               peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[var(--accent-teal)]
+                               hover:text-[var(--text-primary)]"
+                  >
+                    {opt.label}
+                  </span>
+                </label>
+              ))}
+            </div>
+            <p className="mt-1 text-[11px] leading-snug text-[var(--text-secondary)]">
+              {isOt
+                ? 'ATT&CK for ICS ranks on the assets you run, so there is no sector question here — a sector answer could not change the result.'
+                : 'ATT&CK Enterprise. Switch to OT plant for the ICS engine, which asks about Purdue levels and plant assets instead.'}
+            </p>
+          </fieldset>
+
+          {isOt ? (
+            /* ── OT: assets and Purdue levels ─────────────────────────────
+               Deliberately NO sector question, and deliberately no platform
+               question. Per-sector ICS technique counts are an artefact of
+               automated group attribution rather than OT exposure — measured,
+               technology 34 and government 33 outrank energy 12 and
+               manufacturing 19, and transportation, a classic OT sector, has
+               zero — so asking would be a question that cannot honestly affect
+               the answer. All seven ICS platform values match zero live
+               techniques, so a platform question could only ever empty the
+               pool. */
+            <PurdueAssetPickerLoader
+              id={`${baseId}-plant`}
+              selectedAssets={answers.assets ?? EMPTY_SELECTION}
+              selectedLevels={answers.purdue_levels ?? EMPTY_SELECTION}
+              onAssetsChange={(next) => setAnswer('assets', next)}
+              onLevelsChange={(next) => setAnswer('purdue_levels', next)}
+              onInteract={onInteract}
+              compact={!large}
+            />
+          ) : (
+            <>
           {/* Sector is the load-bearing answer and is single-select, so it is a
               real single-select control. `MultiSelect` advertises
               aria-multiselectable="true" on its listbox, which would misreport
@@ -1123,6 +1310,8 @@ export function ProfilePanel({
             onChange={(next) => setAnswer('platforms', next)}
             placeholder="Windows, SaaS, Containers…"
           />
+            </>
+          )}
 
           <MultiSelect
             id={`${baseId}-roles`}
@@ -1149,7 +1338,7 @@ export function ProfilePanel({
             aria-live="polite"
             className={`text-xs font-medium ${ready ? 'text-[var(--accent-green)]' : 'text-[var(--accent-yellow)]'}`}
           >
-            {ready ? 'Ready' : 'Pick at least one sector'}
+            {ready ? 'Ready' : isOt ? 'Pick a Purdue level or an asset' : 'Pick a sector'}
           </p>
           <button
             type="button"

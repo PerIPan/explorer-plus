@@ -7,6 +7,7 @@ import {
   resolveEffectiveAssets,
   describeSelection,
   emptyLevelKeys,
+  levelDisplay,
   OT_ZONE_ORDER,
 } from '../../src/lib/profile-ot.mjs';
 
@@ -174,4 +175,11 @@ test('describeSelection: all 18 assets is a valid selection with nothing dropped
   assert.equal(d.memberships, 0);
   assert.equal(d.overlapDropped, 0);
   assert.equal(d.boundaryCount, 6);
+});
+
+test('levelDisplay: the database key is not what anyone says out loud', () => {
+  assert.equal(levelDisplay('l0'), 'L0');
+  assert.equal(levelDisplay('l3'), 'L3');
+  assert.equal(levelDisplay('l3_5'), 'L3.5');
+  assert.equal(levelDisplay('l5'), 'L5');
 });

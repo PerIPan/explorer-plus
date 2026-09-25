@@ -78,6 +78,20 @@ export const OT_ZONE_META = {
 };
 
 /**
+ * The level's display key: `l3_5` -> `L3.5`, `l0` -> `L0`.
+ *
+ * Purdue levels are spoken as numbers ("we terminate everything at three and a
+ * half"), and `l3_5` is a database key, not a thing anyone says. Derived rather
+ * than tabled so a new level key needs no second edit here.
+ *
+ * @param {string} levelKey
+ * @returns {string}
+ */
+export function levelDisplay(levelKey) {
+  return `L${String(levelKey).replace(/^l/, '').replace('_', '.')}`;
+}
+
+/**
  * Assets present at one level.
  *
  * `spansLevels` overlap, not `primaryLevel` — see rule 1 in the header. An
