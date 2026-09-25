@@ -26,13 +26,24 @@ function UrlSyncEffect() {
     const params = new URLSearchParams(searchParams.toString());
     let changed = false;
 
-    const storedDomain = sessionStorage.getItem('mitre-domain');
+    // Each read is guarded independently — private mode / blocked site data
+    // makes sessionStorage throw on access (ThemeContext.tsx:36-41 is the
+    // same fix for the same failure mode). A failed read behaves as "no
+    // stored value" so the OTHER read, and the single router.replace below,
+    // still proceed normally instead of this effect — and the app — crashing.
+    let storedDomain: string | null = null;
+    try {
+      storedDomain = sessionStorage.getItem('mitre-domain');
+    } catch { /* private mode / storage disabled — behave as unset */ }
     if (storedDomain && storedDomain !== DEFAULT_DOMAIN && !params.has('domain')) {
       params.set('domain', storedDomain);
       changed = true;
     }
 
-    const storedSector = sessionStorage.getItem('mitre-sector');
+    let storedSector: string | null = null;
+    try {
+      storedSector = sessionStorage.getItem('mitre-sector');
+    } catch { /* private mode / storage disabled — behave as unset */ }
     if (storedSector && !params.has('sector')) {
       params.set('sector', storedSector);
       changed = true;

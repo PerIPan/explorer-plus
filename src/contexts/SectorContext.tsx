@@ -44,15 +44,19 @@ export function SectorProvider({ children }: { children: ReactNode }) {
   const [storedSector, setStoredSector] = useState<string | null>(null);
 
   useEffect(() => {
-    const stored = sessionStorage.getItem(STORAGE_KEY);
-    if (stored) setStoredSector(stored);
+    try {
+      const stored = sessionStorage.getItem(STORAGE_KEY);
+      if (stored) setStoredSector(stored);
+    } catch { /* private mode / storage disabled — stay on the null default */ }
   }, []);
   const sector = urlSector ?? storedSector;
 
   // Persist to sessionStorage when URL sector changes
   useEffect(() => {
     if (urlSector) {
-      sessionStorage.setItem(STORAGE_KEY, urlSector);
+      try {
+        sessionStorage.setItem(STORAGE_KEY, urlSector);
+      } catch { /* private mode / storage disabled — sector still works from the URL this render */ }
     }
   }, [urlSector]);
 
@@ -61,11 +65,13 @@ export function SectorProvider({ children }: { children: ReactNode }) {
 
   const setSector = useCallback(
     (slug: string | null) => {
-      if (slug) {
-        sessionStorage.setItem(STORAGE_KEY, slug);
-      } else {
-        sessionStorage.removeItem(STORAGE_KEY);
-      }
+      try {
+        if (slug) {
+          sessionStorage.setItem(STORAGE_KEY, slug);
+        } else {
+          sessionStorage.removeItem(STORAGE_KEY);
+        }
+      } catch { /* private mode / storage disabled — in-memory state below still updates */ }
       setStoredSector(slug);
 
       const params = new URLSearchParams(searchParams.toString());

@@ -60,8 +60,10 @@ export function DomainProvider({ children }: { children: ReactNode }) {
   const [storedDomain, setStoredDomain] = useState<string | null>(null);
 
   useEffect(() => {
-    const stored = sessionStorage.getItem(STORAGE_KEY);
-    if (stored) setStoredDomain(stored);
+    try {
+      const stored = sessionStorage.getItem(STORAGE_KEY);
+      if (stored) setStoredDomain(stored);
+    } catch { /* private mode / storage disabled — stay on the DEFAULT_DOMAIN fallback below */ }
   }, []);
 
   const domain = urlDomain ?? storedDomain ?? DEFAULT_DOMAIN;
@@ -69,7 +71,9 @@ export function DomainProvider({ children }: { children: ReactNode }) {
   // Persist to sessionStorage when URL domain changes
   useEffect(() => {
     if (urlDomain) {
-      sessionStorage.setItem(STORAGE_KEY, urlDomain);
+      try {
+        sessionStorage.setItem(STORAGE_KEY, urlDomain);
+      } catch { /* private mode / storage disabled — domain still works from the URL this render */ }
       setStoredDomain(urlDomain);
     }
   }, [urlDomain]);
@@ -79,7 +83,9 @@ export function DomainProvider({ children }: { children: ReactNode }) {
 
   const setDomain = useCallback(
     (slug: string) => {
-      sessionStorage.setItem(STORAGE_KEY, slug);
+      try {
+        sessionStorage.setItem(STORAGE_KEY, slug);
+      } catch { /* private mode / storage disabled — in-memory state below still updates */ }
       setStoredDomain(slug);
 
       const params = new URLSearchParams(searchParams.toString());

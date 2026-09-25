@@ -167,8 +167,13 @@ export function Sidebar({ open, onClose, onOpenMcp }: SidebarProps) {
         <button
           type="button"
           onClick={() => {
-            sessionStorage.removeItem('mitre-domain');
-            sessionStorage.removeItem('mitre-sector');
+            // Best-effort filter reset — private mode / blocked site data
+            // must not stop the logo from navigating home (see
+            // ThemeContext.tsx:36-41 for the same failure mode elsewhere).
+            try {
+              sessionStorage.removeItem('mitre-domain');
+              sessionStorage.removeItem('mitre-sector');
+            } catch { /* private mode / storage disabled — navigate anyway */ }
             window.location.href = '/';
           }}
           className="group text-left"
