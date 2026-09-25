@@ -22,7 +22,13 @@ export async function GET(req: NextRequest) {
   const parsed = querySchema.safeParse(rawParams);
   const domain = parsed.success ? parsed.data.domain ?? null : null;
 
+  // Two forms: techniques, mitigations and tactics hold domain as a scalar
+  // varchar, while attack_software and campaigns hold text[] (an entity can
+  // belong to several domains). Equality against the array columns makes
+  // Postgres parse the scalar as an array literal and raise 22P02 — which
+  // 500'd this endpoint, and with it the search bar, whenever a domain was set.
   const domainWhere = domain ? ` AND domain = $1` : '';
+  const domainArrayWhere = domain ? ` AND $1 = ANY(domain)` : '';
   const domainParams = domain ? [domain] : [];
 
   const [techniques, groups, software, campaigns, mitigations, tactics, externalActors, sectors, applications, owaspCategories, csfSubcategories, assets] = await Promise.all([
@@ -40,13 +46,13 @@ export async function GET(req: NextRequest) {
     `),
     query<{ attackId: string; name: string; domain: string | null }>(
       `SELECT attack_id AS "attackId", name, domain FROM attack_software
-       WHERE is_revoked = false AND is_deprecated = false${domainWhere}
+       WHERE is_revoked = false AND is_deprecated = false${domainArrayWhere}
        ORDER BY name`,
       domainParams,
     ),
     query<{ attackId: string; name: string; domain: string | null }>(
       `SELECT attack_id AS "attackId", name, domain FROM campaigns
-       WHERE is_revoked = false AND is_deprecated = false${domainWhere}
+       WHERE is_revoked = false AND is_deprecated = false${domainArrayWhere}
        ORDER BY name`,
       domainParams,
     ),

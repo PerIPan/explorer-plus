@@ -25,7 +25,14 @@ export async function GET(req: NextRequest) {
 
   const { q, domain } = parsed.data;
   // $1 = search term; $2 = domain (when provided)
+  //
+  // Two forms, because domain is not one type across these tables: techniques,
+  // mitigations and data_sources hold a scalar varchar, while attack_software
+  // and campaigns hold text[] (an entity can belong to several domains).
+  // Equality against the array columns makes Postgres parse the scalar as an
+  // array literal and raise 22P02, which 500'd every domain-filtered search.
   const domainCond = domain ? ` AND domain = $2` : '';
+  const domainArrayCond = domain ? ` AND $2 = ANY(domain)` : '';
   const domainParams = domain ? [q, domain] : [q];
 
   const [techResult, groupResult, softResult, mitResult, campResult, dsResult, owaspResult, csfResult] = await Promise.all([
@@ -47,7 +54,7 @@ export async function GET(req: NextRequest) {
     query<{ attackId: string; name: string; type: string; description: string | null }>(
       `SELECT attack_id AS "attackId", name, type, description
        FROM attack_software
-       WHERE ${FTS} AND is_revoked = false AND is_deprecated = false${domainCond}
+       WHERE ${FTS} AND is_revoked = false AND is_deprecated = false${domainArrayCond}
        ORDER BY name ASC LIMIT 20`,
       domainParams,
     ),
@@ -61,7 +68,7 @@ export async function GET(req: NextRequest) {
     query<{ attackId: string; name: string; description: string | null }>(
       `SELECT attack_id AS "attackId", name, description
        FROM campaigns
-       WHERE ${FTS} AND is_revoked = false AND is_deprecated = false${domainCond}
+       WHERE ${FTS} AND is_revoked = false AND is_deprecated = false${domainArrayCond}
        ORDER BY name ASC LIMIT 20`,
       domainParams,
     ),
