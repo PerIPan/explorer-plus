@@ -23,7 +23,10 @@ export function Matrix() {
   const { domain, domainParam } = useDomain();
   const { theme } = useTheme();
   const isAllDomains = domain === 'all';
-  const { data, isLoading, error } = useMatrix(isAllDomains ? sectorParam : { ...sectorParam, ...domainParam });
+  const { data: matrixResponse, isLoading, error } = useMatrix(isAllDomains ? sectorParam : { ...sectorParam, ...domainParam });
+  const data = matrixResponse?.data;
+  /* Present only when a sector filter is active — see the route. */
+  const sectorMeta = matrixResponse?.meta;
   const [inputValue, setInputValue] = useState('');
   const [filterText, setFilterText] = useState('');
   const [selectedActors, setSelectedActors] = useState<SelectedActor[]>([]);
@@ -241,7 +244,17 @@ export function Matrix() {
         actions={
           <div className="flex items-center gap-3">
             <span className="text-[var(--text-secondary)] text-sm">
-              {totalTechniques} techniques across {(data ?? []).length} tactics
+              {sectorMeta ? (
+                <span title={sectorMeta.basis}>
+                  {totalTechniques} of {sectorMeta.techniquesTotal} techniques across{' '}
+                  {(data ?? []).length} tactics
+                  <span className="ml-1 text-[var(--accent-orange)]">
+                    · {sectorMeta.techniquesHidden} hidden by the sector filter
+                  </span>
+                </span>
+              ) : (
+                <>{totalTechniques} techniques across {(data ?? []).length} tactics</>
+              )}
             </span>
           </div>
         }

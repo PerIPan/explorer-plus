@@ -20,10 +20,12 @@ import { DiamondLoader } from '../shared/FoldingDiamond';
  * background this lights against is the visitor's, not ATT&CK's whole corpus.
  */
 export function ProfileMatrix({
+  sector,
   sectorName,
   domain,
   techniqueIds,
 }: {
+  sector: string | null;
   sectorName?: string | null;
   domain: string | null;
   techniqueIds: string[];
@@ -31,27 +33,27 @@ export function ProfileMatrix({
   const [open, setOpen] = useState(true);
 
   /**
-   * Domain only — deliberately NOT the briefing's sector.
+   * Sector AND domain — the same scoping the briefing was built from.
    *
-   * /matrix?sector= means "techniques used by groups ATTRIBUTED to this
-   * sector", which is a narrower idea than the one the briefing ranks by.
-   * Measured on energy/enterprise: the sector-filtered matrix holds 121
-   * techniques and is missing 8 of the 12 this briefing names, because Band A
-   * ranks on CVE/KEV evidence and Band B on lift, neither of which requires a
-   * group in that sector to have used the technique. Passing sector here would
-   * hide two-thirds of the very techniques this panel exists to place.
-   *
-   * So the sector lives in the HIGHLIGHT, not the filter: the full domain
-   * matrix is the backdrop, and what is lit is personal.
+   * This was domain-only until the matrix's sector filter was fixed. That
+   * filter matched group usage against the parent technique alone, so a group
+   * that only ever used T1003.001 did not count towards T1003 and the parent
+   * was dropped: on energy it hid 47 parents its own groups demonstrably use,
+   * and with them 8 of the 12 techniques this panel exists to place. With
+   * sub-technique usage counted, all 12 survive on every sector tried
+   * (energy, financial, healthcare, government, defense, technology,
+   * manufacturing), so the tighter and more relevant lens is safe to use.
    */
   const params = useMemo(() => {
     const p: Record<string, string> = {};
+    if (sector) p.sector = sector;
     // 'all' is the absence of a domain filter for this endpoint, not a value.
     if (domain && domain !== 'all') p.domain = domain;
     return p;
-  }, [domain]);
+  }, [sector, domain]);
 
-  const { data, isLoading, error } = useMatrix(params);
+  const { data: matrixResponse, isLoading, error } = useMatrix(params);
+  const data = matrixResponse?.data;
 
   /**
    * Both the id and its parent.
@@ -100,8 +102,8 @@ export function ProfileMatrix({
       </div>
 
       <p className="mb-3 text-xs leading-relaxed text-[var(--text-secondary)]">
-        The {techniqueIds.length} techniques ranked above
-        {sectorName ? <> for {sectorName}</> : null}, lit in the tactic columns where they are used.
+        The {techniqueIds.length} techniques ranked above, lit in the tactic columns where they are
+        used{sectorName ? <> — against the {sectorName} matrix, not the whole corpus</> : null}.
         Everything else is dimmed. A column with nothing lit is a phase this briefing says nothing
         about, which is worth knowing as much as the ones that glow.
       </p>

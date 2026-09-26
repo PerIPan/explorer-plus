@@ -183,12 +183,25 @@ export function useSearch(q: string, params: Record<string, string> = EMPTY_PARA
   });
 }
 
+export interface MatrixSectorMeta {
+  sector: string;
+  techniquesShown: number;
+  techniquesTotal: number;
+  techniquesHidden: number;
+  basis: string;
+}
+
+/**
+ * Returns the whole response, not just `data`: a sector filter DROPS techniques
+ * rather than dimming them, and `meta` is how the page can say so instead of
+ * quietly showing a smaller number.
+ */
 export function useMatrix(params: Record<string, string> = EMPTY_PARAMS) {
   return useQuery({
     queryKey: ['matrix', params],
     queryFn: async () => {
-      const res = await apiFetch<{ data: MatrixData }>('/matrix', params);
-      return res.data;
+      const res = await apiFetch<{ data: MatrixData; meta?: MatrixSectorMeta }>('/matrix', params);
+      return res;
     },
   });
 }

@@ -43,7 +43,20 @@ export async function GET(req: NextRequest) {
     return withCors(jsonResponse({ data: [] }, 1800));
   }
 
-  // Parent techniques per tactic with group usage count
+  /**
+   * Parent techniques per tactic with group usage count.
+   *
+   * When a sector is applied, group usage is matched against the technique AND
+   * its sub-techniques (`fam`). Without that, a group that only ever used
+   * T1003.001 did not count towards T1003, and the HAVING below dropped T1003
+   * from the sector's matrix altogether — measured on energy: its 17 groups use
+   * 69 parent techniques directly and 136 sub-techniques, and 47 parents were
+   * reachable ONLY through a sub. The sector lens was hiding 47 techniques its
+   * own groups demonstrably use.
+   *
+   * The unfiltered path deliberately keeps the parent-only join, so the
+   * heat values on the main matrix are unchanged by this fix.
+   */
   const techParams: unknown[] = [];
   const domainTechCond = domain ? (() => { techParams.push(domain); return `AND t.domain = $${techParams.length}`; })() : '';
 
@@ -63,7 +76,10 @@ export async function GET(req: NextRequest) {
        AND t.is_revoked = false
        AND t.is_deprecated = false
        ${domainTechCond}
-     LEFT JOIN group_techniques gt ON gt.technique_id = t.id
+     ${sector
+       ? `LEFT JOIN techniques fam ON fam.id = t.id OR fam.parent_technique_id = t.id
+     LEFT JOIN group_techniques gt ON gt.technique_id = fam.id`
+       : `LEFT JOIN group_techniques gt ON gt.technique_id = t.id`}
      ${sector ? (() => { techParams.push(sector); return `LEFT JOIN group_sectors gs ON gs.group_id = gt.group_id LEFT JOIN sectors s ON s.id = gs.sector_id AND s.slug = $${techParams.length}`; })() : ''}
      GROUP BY tt.tactic_id, t.id, t.attack_id, t.name
      ${sector ? 'HAVING COUNT(DISTINCT CASE WHEN s.id IS NOT NULL THEN gt.group_id END) > 0' : ''}
@@ -147,5 +163,47 @@ export async function GET(req: NextRequest) {
       techniques: colMap[ta.id].techniques,
     }));
 
-  return withCors(jsonResponse({ data: matrix }, 1800));
+  /**
+   * What a sector filter HIDES, stated rather than left to be inferred.
+   *
+   * `?sector=` is not a highlight: the query drops a technique entirely unless
+   * some group attributed to that sector is recorded using it
+   * (HAVING ... > 0 above). ATT&CK's group-to-sector attribution is sparse, so
+   * the drop is large and uneven — energy/enterprise shows 75 of 254
+   * technique-tactic cells — and a reader sees only the smaller number with
+   * nothing to compare it against. A technique missing here may simply have no
+   * attributed group yet, which is not the same as being irrelevant to the
+   * sector, and the difference matters when the matrix is read as coverage.
+   *
+   * One extra count, measured at ~20ms, and only when a sector is applied.
+   */
+  let meta: Record<string, unknown> | undefined;
+  if (sector) {
+    const totalParams: unknown[] = [];
+    const totalDomainCond = domain
+      ? (() => { totalParams.push(domain); return `AND t.domain = $${totalParams.length}`; })()
+      : '';
+    const totalResult = await query<{ total: string }>(
+      `SELECT COUNT(*) AS total
+         FROM technique_tactics tt
+         JOIN techniques t ON t.id = tt.technique_id
+          AND t.is_subtechnique = false
+          AND t.is_revoked = false
+          AND t.is_deprecated = false
+          ${totalDomainCond}`,
+      totalParams,
+    );
+    const shown = techniquesResult.rows.length;
+    const total = parseInt(totalResult.rows[0].total, 10);
+    meta = {
+      sector,
+      techniquesShown: shown,
+      techniquesTotal: total,
+      techniquesHidden: total - shown,
+      basis:
+        'A sector filter keeps only techniques used by a threat group attributed to that sector. A hidden technique may have no attributed group yet rather than being irrelevant to the sector.',
+    };
+  }
+
+  return withCors(jsonResponse(meta ? { data: matrix, meta } : { data: matrix }, 1800));
 }

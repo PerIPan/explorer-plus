@@ -1145,6 +1145,7 @@ export function ThreatProfile() {
       </Card>
 
       <ProfileMatrix
+        sector={profile.sector}
         sectorName={profile.sectorName}
         domain={profile.domain}
         techniqueIds={[...bandA, ...bandB].map((t) => t.attackId)}
