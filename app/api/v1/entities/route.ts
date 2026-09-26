@@ -97,7 +97,12 @@ export async function GET(req: NextRequest) {
     // dropdown and the full search page disagreed about what exists.
     // `data_sources.domain` is a scalar varchar, like techniques.
     query<{ attackId: string; name: string; domain: string | null }>(
-      `SELECT attack_id AS "attackId", name, domain FROM data_sources${domainWhere}
+      // `domainWhere` is ` AND domain = $1` — it appends to a query that ALREADY
+      // has a WHERE. This one does not, so it needs its own, exactly like
+      // tactics above. Concatenated blind it produced `FROM data_sources AND
+      // domain = $1`, and /api/v1/entities?domain=<anything> 500'd with a bare
+      // syntax error — the header search's domain filter, on a documented route.
+      `SELECT attack_id AS "attackId", name, domain FROM data_sources${domain ? ` WHERE domain = $1` : ''}
        ORDER BY name`,
       domainParams,
     ),

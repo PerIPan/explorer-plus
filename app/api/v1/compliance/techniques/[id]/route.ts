@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { query } from '../../../lib/db';
 import { jsonResponse, errorResponse } from '../../../../lib/handler';
 import { withCors, corsOptions as OPTIONS } from '../../../../lib/cors';
+import { boolParam } from '../../../lib/validate';
 
 export { OPTIONS };
 
@@ -17,7 +18,7 @@ interface RouteCtx { params: Promise<{ id: string }> }
 
 export async function GET(req: NextRequest, ctx: RouteCtx) {
   const { id } = await ctx.params;
-  const includeAll = req.nextUrl.searchParams.get('include_all') === '1';
+  const includeAll = boolParam(req.nextUrl.searchParams.get('include_all'));
   const tierFilter = includeAll ? [1, 2, 3] : [1, 2];
 
   if (!/^T\d{4}(?:\.\d{3})?$/.test(id)) {

@@ -108,7 +108,8 @@ export const API_FACTS = {
   pagination: {
     envelope: '{ data: [...], pagination: { page, limit, total, totalPages } }',
     page: '1-based, max 100',
-    limit: 'max 5000, default 50',
+    limit:
+      'max 5000, default 50 — except /applications and /assets (200), /applications/{...} (100) and /relationships/{attackId} (500), which answer 400 above their own cap',
     /** Was missing from llms.txt until 2026-09-25; an external caller guessed. */
     noOffset: 'There is no ?offset=. An unknown query parameter is IGNORED, so ?offset=50 silently returns page 1.',
   },
@@ -159,7 +160,7 @@ const P = {
   severity: { name: 'severity', type: 'string', values: SEVERITIES } as ApiParam,
   since: { name: 'since', type: 'string', note: 'ISO-8601 date. Only rows published after it.' } as ApiParam,
   version: { name: 'version', type: 'string', note: 'Text match on an affected-version range — not a vulnerability verdict. Needs product context on list routes.' } as ApiParam,
-  includeAll: { name: 'include_all', type: 'boolean', note: 'Adds the Tier 3 long tail (~250 frameworks). Default false — the curated 21.' } as ApiParam,
+  includeAll: { name: 'include_all', type: 'boolean', note: 'Adds the Tier 3 long tail (~250 frameworks). Default false — the curated 21. Send 1 or true.' } as ApiParam,
   includeDeprecated: { name: 'include_deprecated', type: 'boolean', note: 'Revoked and deprecated ATT&CK entries are excluded by default.' } as ApiParam,
   hasCve: { name: 'has_cve', type: 'string', values: ['true', 'false'], note: 'Filter on CVE-alias presence.' } as ApiParam,
 } as const;

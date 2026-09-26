@@ -171,3 +171,15 @@ export const profileQuerySchema = z.object({
   levels: levelsParam,
   sort: sortKeySchema,
 });
+
+/**
+ * A query flag that is on for `1` or `true`, off otherwise.
+ *
+ * Six compliance routes tested `=== '1'` while the published catalogue typed
+ * `include_all` as a boolean, so `?include_all=true` — the obvious thing to
+ * send, and what the docs implied — was silently ignored and the caller got the
+ * default set back with no error to tell them why.
+ */
+export function boolParam(value: string | null): boolean {
+  return value === '1' || value === 'true';
+}

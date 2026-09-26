@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { query } from '../../lib/db';
 import { jsonResponse } from '../../../lib/handler';
 import { withCors, corsOptions as OPTIONS } from '../../../lib/cors';
+import { boolParam } from '../../lib/validate';
 
 export { OPTIONS };
 
@@ -29,7 +30,7 @@ interface FrameworkRow {
 }
 
 export async function GET(req: NextRequest) {
-  const includeAll = req.nextUrl.searchParams.get('include_all') === '1';
+  const includeAll = boolParam(req.nextUrl.searchParams.get('include_all'));
   const tierFilter = includeAll ? [1, 2, 3] : [1, 2];
 
   // PK lookup on scf_framework_coverage (pre-computed at ingest end).

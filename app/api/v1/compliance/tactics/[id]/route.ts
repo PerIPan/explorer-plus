@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { query } from '../../../lib/db';
 import { jsonResponse, errorResponse } from '../../../../lib/handler';
 import { withCors, corsOptions as OPTIONS } from '../../../../lib/cors';
+import { boolParam } from '../../../lib/validate';
 
 export { OPTIONS };
 
@@ -16,7 +17,7 @@ export async function GET(req: NextRequest, ctx: RouteCtx) {
   if (!/^TA\d{4}$/.test(id)) {
     return errorResponse(400, 'Invalid tactic id', 'BAD_REQUEST');
   }
-  const includeAll = req.nextUrl.searchParams.get('include_all') === '1';
+  const includeAll = boolParam(req.nextUrl.searchParams.get('include_all'));
   const tierFilter = includeAll ? [1, 2, 3] : [1, 2];
 
   const r = await query<{

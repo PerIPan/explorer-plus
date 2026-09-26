@@ -62,7 +62,7 @@ export function routeFileToPath(relPath) {
     relPath
       .replace(/\\/g, '/')
       .replace(/^app\/api\/v1\/?/, '')
-      .replace(/\/?route\.ts$/, '')
+      .replace(/\/?route\.m?[jt]sx?$/, '')
   )
     .replace(/\/+$/, '')
     .replace(/\[\.\.\.([^\]]+)\]/g, '{...$1}')
@@ -202,11 +202,18 @@ export function checkLlmsTxt(text, { toolCount, origin }) {
 
 /* ─────────────────────────── source parsing ─────────────────────────── */
 
+/**
+ * Next 16 accepts route.ts, route.tsx, route.js and route.mjs alike. Matching
+ * only `route.ts` meant a handler added in any of the others was invisible to
+ * this guard — undocumented, and green.
+ */
+const ROUTE_FILE = /^route\.(m?[jt]sx?)$/;
+
 function walkRoutes(dir, out = []) {
   for (const name of readdirSync(dir)) {
     const full = join(dir, name);
     if (statSync(full).isDirectory()) walkRoutes(full, out);
-    else if (name === 'route.ts') out.push(full);
+    else if (ROUTE_FILE.test(name)) out.push(full);
   }
   return out;
 }
