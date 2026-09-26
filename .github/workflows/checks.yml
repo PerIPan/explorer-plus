@@ -19,3 +19,7 @@ jobs:
       # Fails if the catch-all CWE threshold drifts between inference.ts and the
       # SQL/mjs build-time copies (see scripts/check-catchall-threshold.mjs).
       - run: node scripts/check-catchall-threshold.mjs
+      # Fails if a route under app/api/v1 is in neither the open-API catalogue
+      # nor the guard's EXCLUDED map, if an entry points at no route, or if the
+      # agent tool count disagrees across site.ts, declarations.ts and llms.txt.
+      - run: node scripts/check-api-catalog.mjs
