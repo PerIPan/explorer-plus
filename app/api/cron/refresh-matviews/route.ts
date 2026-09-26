@@ -39,15 +39,46 @@ const MATVIEWS = [
   // other — but they are the same endpoint so they are kept adjacent.
   'ecosystem_advisory_days',
   'ecosystem_advisory_stats',
-  // Listed LAST because it is the expensive one: 1.9M rows built off a per-row
-  // cve_details LATERAL. If it ever overruns the soft timeout, everything
-  // before it has already been refreshed.
+  // The expensive one: 1.9M rows built off a per-row cve_details LATERAL, 90.2s
+  // to refresh. It has its OWN daily cron slot at 06:45 — an hour after the OSV
+  // delta, which runs from GitHub Actions (.github/workflows/sync-osv.yml,
+  // every 2 days at 05:30 plus a monthly full), NOT from vercel.json. Commit
+  // 564d6e7 moved OSV and cve-products off Vercel deliberately, so an absence
+  // here does not mean the source is static: the 2026-09-25 delta inserted
+  // 82,948 rows.
   'osv_advisory_rank',
 ];
 
 export async function GET(req: NextRequest) {
   const authError = verifyCronAuth(req);
   if (authError) return authError;
+
+  /**
+   * One matview per cron slot — see the `crons` block in vercel.json.
+   *
+   * Measured against Neon 2026-09-26, REFRESH ... CONCURRENTLY, seconds:
+   *   catchall_cwes 0.3 · sector_technique_lift 0.2 · technique_cve_evidence 4.2
+   *   package_summary 2.3 · app_technique_groups 28.1 · ecosystem_advisory_days 10.9
+   *   ecosystem_advisory_stats 86.5 · osv_advisory_rank 90.2     TOTAL ~222.6
+   *
+   * All eight in one invocation is 222.6s against `maxDuration = 300` — 74% of
+   * budget, measured from a low-latency connection with no concurrent load, so
+   * the real margin is thinner. An overrun kills the function mid-REFRESH: the
+   * work rolls back, the log row sits 'running' until the 15-minute sweeper
+   * relabels it, and WHICH matviews went stale is recorded nowhere. Separate
+   * staggered slots remove the ceiling instead of budgeting against it.
+   *
+   * Omitting `mv` still refreshes everything, so a manual catch-up run is
+   * unchanged.
+   */
+  const requested = req.nextUrl.searchParams.get('mv');
+  if (requested !== null && !MATVIEWS.includes(requested)) {
+    return NextResponse.json(
+      { error: `Unknown matview: ${requested}`, known: MATVIEWS },
+      { status: 400 },
+    );
+  }
+  const targets = requested ? [requested] : MATVIEWS;
 
   // Clean up stale 'running' entries (timed-out previous runs)
   await query(
@@ -68,7 +99,7 @@ export async function GET(req: NextRequest) {
   const results: Record<string, { ok: boolean; durationMs?: number; error?: string }> = {};
 
   const doWork = async (): Promise<NextResponse> => {
-    for (const mv of MATVIEWS) {
+    for (const mv of targets) {
       const start = Date.now();
       try {
         await query(`REFRESH MATERIALIZED VIEW CONCURRENTLY ${mv}`);

@@ -1,28 +1,107 @@
 {
   "framework": "nextjs",
   "crons": [
-    { "path": "/api/cron/ingest-otx", "schedule": "0 */6 * * *" },
-    { "path": "/api/cron/ingest-abuse-ch", "schedule": "0 4 * * *" },
-    { "path": "/api/cron/ingest-cisa-kev", "schedule": "2 4 * * *" },
-    { "path": "/api/cron/ingest-rss", "schedule": "15 6 * * *" },
-    { "path": "/api/cron/sync-d3fend", "schedule": "0 6 * * 2" },
-    { "path": "/api/cron/enrich-nvd", "schedule": "0 */4 * * *" },
-    { "path": "/api/cron/enrich-vt", "schedule": "0 0,8,16 * * *" },
-    { "path": "/api/cron/scan-site-health", "schedule": "0 12 * * 1" },
-    { "path": "/api/cron/sync-csf", "schedule": "0 5 * * 1" },
-    { "path": "/api/cron/refresh-matviews", "schedule": "30 6,18 * * *" },
-    { "path": "/api/cron/sync-epss", "schedule": "5 4 * * *" }
+    {
+      "path": "/api/cron/ingest-otx",
+      "schedule": "0 */6 * * *"
+    },
+    {
+      "path": "/api/cron/ingest-abuse-ch",
+      "schedule": "0 4 * * *"
+    },
+    {
+      "path": "/api/cron/ingest-cisa-kev",
+      "schedule": "2 4 * * *"
+    },
+    {
+      "path": "/api/cron/ingest-rss",
+      "schedule": "15 6 * * *"
+    },
+    {
+      "path": "/api/cron/sync-d3fend",
+      "schedule": "0 6 * * 2"
+    },
+    {
+      "path": "/api/cron/enrich-nvd",
+      "schedule": "0 */4 * * *"
+    },
+    {
+      "path": "/api/cron/enrich-vt",
+      "schedule": "0 0,8,16 * * *"
+    },
+    {
+      "path": "/api/cron/scan-site-health",
+      "schedule": "0 12 * * 1"
+    },
+    {
+      "path": "/api/cron/sync-csf",
+      "schedule": "0 5 * * 1"
+    },
+    {
+      "path": "/api/cron/sync-epss",
+      "schedule": "5 4 * * *"
+    },
+    {
+      "path": "/api/cron/refresh-matviews?mv=catchall_cwes",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/refresh-matviews?mv=sector_technique_lift",
+      "schedule": "5 2 * * *"
+    },
+    {
+      "path": "/api/cron/refresh-matviews?mv=technique_cve_evidence",
+      "schedule": "10 2 * * *"
+    },
+    {
+      "path": "/api/cron/refresh-matviews?mv=package_summary",
+      "schedule": "15 2 * * *"
+    },
+    {
+      "path": "/api/cron/refresh-matviews?mv=app_technique_groups",
+      "schedule": "20 2 * * *"
+    },
+    {
+      "path": "/api/cron/refresh-matviews?mv=ecosystem_advisory_days",
+      "schedule": "30 2 * * *"
+    },
+    {
+      "path": "/api/cron/refresh-matviews?mv=ecosystem_advisory_stats",
+      "schedule": "0 3 * * 0"
+    },
+    {
+      "path": "/api/cron/refresh-matviews?mv=osv_advisory_rank",
+      "schedule": "45 6 * * *"
+    }
   ],
   "headers": [
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "X-Frame-Options", "value": "DENY" },
-        { "key": "X-XSS-Protection", "value": "0" },
-        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-        { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" },
-        { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains; preload" }
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "0"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=()"
+        },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=63072000; includeSubDomains; preload"
+        }
       ]
     }
   ]
