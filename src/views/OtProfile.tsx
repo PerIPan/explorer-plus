@@ -15,6 +15,7 @@ import { PurdueAssetPickerLoader } from '../components/profile/PurdueAssetPicker
 import { buildProfileUrl } from '../lib/profile-url.mjs';
 import { buildProfileApiQuery, parseCsvParam } from '../lib/profile-query.mjs';
 import { levelDisplay, type OtSelection } from '../lib/profile-ot.mjs';
+import { ProfileMatrix } from '../components/profile/ProfileMatrix';
 
 /* ════════════════════════════════════════════════════════════════════════════
  * The OT (ICS) briefing.
@@ -812,6 +813,16 @@ export function OtProfile() {
       />
 
       <ImpactPanel items={impact} />
+
+      {/* The ICS matrix, not the Enterprise one. No sector: this engine ranks on
+          asset exposure and Purdue placement, and /matrix?sector= means "used by
+          groups attributed to that sector" — a filter with nothing to say about
+          a selection of PLCs. */}
+      <ProfileMatrix
+        sector={null}
+        domain="ics-attack"
+        techniqueIds={[...bandA, ...bandB].map((t) => t.attackId)}
+      />
 
       <OtProvenance minReach={meta.minReach} />
     </>,
