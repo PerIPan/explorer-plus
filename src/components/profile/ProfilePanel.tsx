@@ -1281,10 +1281,8 @@ export function ProfilePanel({
                 written down, so it cannot go stale again. */}
             <p className="mt-0.5 text-xs leading-snug text-[var(--text-secondary)]">
               {isOt
-                ? 'One question ranks your briefing: the plant surface, which is required. '
-                : 'Two questions rank your briefing: sector — the only required one — and environment. '}
-              Role and compliance regime are context for us and change nothing in the ranking.
-              Nothing is answered for you.
+                ? 'One question ranks your briefing: the plant surface, which is required.'
+                : 'Two questions rank your briefing: sector — the only required one — and environment.'}
             </p>
           </div>
           <button

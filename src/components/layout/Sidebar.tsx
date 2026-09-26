@@ -241,7 +241,7 @@ export function Sidebar({ open, onClose, onOpenMcp }: SidebarProps) {
                 // reach nothing on /profile — and "four questions" stopped
                 // being true when the OT set (plant surface, role, regime)
                 // shipped. Neither a count nor an unearned promise now.
-                title="tailor this to what you defend — an IT sector and environment, or an OT plant surface, and the briefing ranks techniques, actors and controls on that"
+                title="tailor the explorer to what you defend — an IT sector and environment, or an OT plant surface, and the briefing ranks techniques, actors and controls on that"
                 className={[
                   NAV_ROW_CLASS,
                   'w-full text-left font-medium',
