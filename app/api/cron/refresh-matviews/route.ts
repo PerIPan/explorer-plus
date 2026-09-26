@@ -28,6 +28,12 @@ const MATVIEWS = [
   // sector_extractor run — see the staleness contract in the spec.
   'sector_technique_lift',
   'technique_cve_evidence',
+  // Public-API aggregates. See scripts/migrate-ecosystem-stats.sql and
+  // scripts/migrate-advisory-rank.sql. osv_advisory_rank is the expensive one
+  // in this list (1.9M rows built off a per-row cve_details LATERAL) and is
+  // listed LAST so a soft-timeout on it cannot starve the others.
+  'ecosystem_advisory_stats',
+  'osv_advisory_rank',
 ];
 
 export async function GET(req: NextRequest) {
