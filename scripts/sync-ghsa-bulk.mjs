@@ -488,9 +488,32 @@ const stats = {
   batches: 0,
 };
 
+/**
+ * feed_sync_log id for this run.
+ *
+ * This script had no logging at all, while scripts/sync-ghsa.mjs -- which logs
+ * under source='ghsa' and is referenced by nothing -- sat beside it. The result
+ * was that the weekly full sweep succeeded every Sunday (verified in the Actions
+ * history) while /cti/feed-status showed GHSA as never synced, because the page
+ * reads feed_sync_log and nothing had ever written a 'ghsa' row. A backstop
+ * whose success is invisible is one nobody notices the loss of.
+ */
+let logId = null;
+
 try {
   console.log(`Loading advisories from ${ROOT} ...`);
   await client.query('SELECT 1'); // Neon warmup
+
+  await client.query(
+    `UPDATE feed_sync_log SET status='error', completed_at=NOW(),
+            error_message='Timed out (auto-cleaned)'
+      WHERE source='ghsa' AND status='running' AND started_at < NOW() - INTERVAL '2 hours'`,
+  );
+  const started = await client.query(
+    `INSERT INTO feed_sync_log (source, status, started_at)
+     VALUES ('ghsa', 'running', NOW()) RETURNING id`,
+  );
+  logId = started.rows[0].id;
 
   let batch = [];
   const flush = async () => {
@@ -542,11 +565,32 @@ try {
   console.log('\nRefreshing package_summary (concurrent) ...');
   await client.query('REFRESH MATERIALIZED VIEW CONCURRENTLY package_summary');
 
+  await client.query(
+    `UPDATE feed_sync_log
+        SET status='success', completed_at=NOW(),
+            records_inserted=$1, records_skipped=$2, metadata=$3
+      WHERE id=$4 AND status='running'`,
+    [
+      stats.advisoriesProcessed,
+      stats.skippedPreCutoff + stats.skippedMalformed,
+      JSON.stringify(stats),
+      logId,
+    ],
+  );
+
   console.log('\n=== Bulk sync complete ===');
   console.log(JSON.stringify(stats, null, 2));
 } catch (err) {
   console.error('\nSync failed:', err);
   console.log(JSON.stringify(stats, null, 2));
+  if (logId) {
+    await client.query(
+      `UPDATE feed_sync_log
+          SET status='error', completed_at=NOW(), error_message=$1
+        WHERE id=$2 AND status='running'`,
+      [String(err && err.message ? err.message : err).slice(0, 500), logId],
+    ).catch(() => { /* the exit code is the real signal */ });
+  }
   process.exit(1);
 } finally {
   await client.end();

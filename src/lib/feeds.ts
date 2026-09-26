@@ -72,16 +72,16 @@ export const AUTOMATED_TABLES: FrameworkTable[] = [
   { key: 'packages', label: 'Packages (derived from GHSA)', description: 'Unique (ecosystem, package) pairs across 8 OSS ecosystems' },
   { key: 'osv_advisories', label: 'OSV Advisories (OS, distro, kernel)', description: 'Non-GHSA ecosystems — Linux, Debian, Ubuntu, Alpine, Android, OSS-Fuzz, …' },
   { key: 'osv_affected', label: 'OSV Affected Packages', description: 'Per-package version ranges for OSV advisories' },
-  { key: 'csf_subcategories', label: 'NIST CSF v2 Subcategories', description: 'GV/ID/PR/DE/RS/RC functions — 23 subcategories from the 2024 release' },
   { key: 'csf_technique_mappings', label: 'NIST CSF v2 → ATT&CK', description: 'CRI Profile crosswalk: CSF subcategory → ATT&CK technique' },
-  { key: 'csf_implementation_examples', label: 'NIST CSF v2 Examples', description: 'One-line implementation examples per CSF subcategory' },
-  { key: 'csf_informative_references', label: 'NIST CSF v2 References', description: 'Informative references into NIST 800-53 r5 and ISO 27001:2022' },
   { key: 'defensive_mappings', label: 'D3FEND', description: 'Defensive countermeasures from the MITRE D3FEND knowledge graph' },
   { key: 'sigma_rules', label: 'Sigma Rules', description: '3,100+ detection rules from SigmaHQ with ATT&CK mappings' },
   { key: 'atomic_tests', label: 'Atomic Red Team', description: '1,770+ adversary-emulation tests (PowerShell/bash/batch)' },
 ];
 
 export const REFERENCE_TABLES: FrameworkTable[] = [
+  { key: 'csf_subcategories', label: 'NIST CSF v2 Subcategories', description: 'GV/ID/PR/DE/RS/RC functions — 23 subcategories from the 2024 release' },
+  { key: 'csf_implementation_examples', label: 'NIST CSF v2 Examples', description: 'One-line implementation examples per CSF subcategory' },
+  { key: 'csf_informative_references', label: 'NIST CSF v2 References', description: 'Informative references into NIST 800-53 r5 and ISO 27001:2022' },
   { key: 'owasp_top10', label: 'OWASP Top 10 (Web, ML, LLM)', description: '30 categories across 3 frameworks — CWEs, ATT&CK techniques, ATLAS techniques' },
   { key: 'nist_controls', label: 'NIST 800-53', description: '5,200+ security controls from NIST 800-53 r5 mapped to ATT&CK' },
   { key: 'engage_mappings', label: 'MITRE Engage', description: 'Adversary engagement activities — deception and engagement mappings' },

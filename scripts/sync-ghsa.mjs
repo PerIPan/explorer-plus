@@ -1,6 +1,17 @@
 #!/usr/bin/env node
 // scripts/sync-ghsa.mjs
 //
+// SUPERSEDED — NOT WHAT RUNS. .github/workflows/sync-ghsa.yml invokes
+// scripts/sync-ghsa-bulk.mjs, which sweeps the cloned advisory-database tree
+// instead of paging the GraphQL API. This file is referenced by no workflow, no
+// npm script and no doc.
+//
+// Left in place rather than deleted because the GraphQL path is the only way to
+// fetch a single advisory on demand, but do not "fix" this file expecting a
+// change in production: it is the wrong one, and its feed_sync_log writes are
+// why GHSA appeared to log and did not. Kept as a reference; delete it if that
+// on-demand path is never built.
+//
 // Pulls GitHub Security Advisories via GraphQL and upserts into ghsa_*, packages tables.
 // Spec: docs/superpowers/specs/2026-04-15-ghsa-packages-integration-design.md
 //
