@@ -16,9 +16,9 @@
  */
 export const FEED_SOURCES = [
   // The ATT&CK corpus itself and the ICS asset catalogue. Both log to
-  // feed_sync_log and neither was listed here, so the page could not show that
-  // attack_update had been failing since 2026-09-25 — the one feed whose
-  // failure matters most, invisible on the page that exists to surface it.
+  // feed_sync_log and neither was listed here, so neither could ever show a
+  // failure on the page that exists to surface failures — attack_update logged
+  // five errors before succeeding on 2026-09-25 and none of it was visible.
   'attack_update', 'ics_assets',
   'otx', 'abuse_ch', 'cisa_kev', 'rss',
   'nvd', 'virustotal',
