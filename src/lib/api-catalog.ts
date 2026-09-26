@@ -31,7 +31,7 @@
  * `app/api/**` import — every consumer below is a `'use client'` component.
  */
 
-import { SITE_URL } from './site';
+import { DOCS_PROBE_HEADER, SITE_URL } from './site';
 
 /* ───────────────────────────── types ───────────────────────────── */
 
@@ -118,13 +118,8 @@ export const API_FACTS = {
   errors: '{ error, code } with a 4xx status. An unusable filter value fails loudly rather than being dropped.',
 } as const;
 
-/**
- * Sent by the docs pages on every live-Run fetch. `middleware.ts` skips
- * `api_usage` tagging when it is present — 61 of the 86 routes set no
- * `cacheTtl`, so every Run is a CDN miss, and without this the docs page would
- * become the top consumer in our own API analytics.
- */
-export const DOCS_PROBE_HEADER = 'x-mitre-docs-probe';
+/** Re-exported so the docs components import one module. See site.ts for why. */
+export { DOCS_PROBE_HEADER };
 
 export const API_GROUP_META: readonly ApiGroupMeta[] = [
   { key: 'attack', label: 'ATT&CK core', blurb: 'Techniques, tactics, malware, mitigations, data sources, the matrix and cross-domain search.' },

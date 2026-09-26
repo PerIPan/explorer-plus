@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { AGENT_TOOL_COUNT } from '../../lib/site';
+import { Suspense, lazy, useRef, useState } from 'react';
+import { AGENT_TOOL_COUNT, SITE_URL } from '../../lib/site';
 import { track } from '@vercel/analytics';
 import { useQuery } from '@tanstack/react-query';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -9,6 +9,7 @@ import { Sidebar } from './Sidebar';
 import { ThreatProfileProvider, ProfileLargeModal } from '../profile/ProfilePanel';
 import { SearchBar } from './SearchBar';
 import { RelationshipModel } from '../relationships/RelationshipModel';
+import { Dialog, DialogTab } from '../shared/Dialog';
 
 interface SiteHealth {
   available: boolean;
@@ -69,284 +70,35 @@ function ThemeToggle() {
   );
 }
 
-/** Public REST API reference — rendered in the info modal's "API" tab.
- *  Documents the open, keyless /api/v1 surface that already powers the site. */
-const API_GROUPS: { label: string; routes: { path: string; desc: string }[] }[] = [
-  {
-    label: 'CTI feeds & search  ·  the gems',
-    routes: [
-      { path: '/feed/reports', desc: 'CTI reports (OTX, DFIR, Unit42, ...)' },
-      { path: '/feed/reports/{reportId}/techniques', desc: 'ATT&CK techniques extracted from a report' },
-      { path: '/feed/iocs', desc: 'IOCs — IPs, domains, hashes, URLs' },
-      { path: '/feed/iocs/{iocId}/techniques', desc: 'techniques associated with an IOC' },
-      { path: '/feed/sigma', desc: 'Sigma detection rules' },
-      { path: '/feed/atomic', desc: 'Atomic Red Team tests' },
-      { path: '/feed/intelligence/{attackId}', desc: 'per-technique CTI rollup — reports, IOCs, detections' },
-      { path: '/feed/vt-lookup', desc: 'VirusTotal verdict lookup for a hash/IOC' },
-      { path: '/search?q=', desc: 'cross-domain entity search' },
-      { path: '/dashboard', desc: 'aggregate stats' },
-    ],
-  },
-  {
-    label: 'Vulnerabilities & advisories  ·  the gems',
-    routes: [
-      { path: '/cves', desc: 'CVEs — CVSS, EPSS, KEV, CWE (filter by severity, date, app + version)' },
-      { path: '/cves/{cveId}', desc: 'CVE detail + linked techniques + advisories (?version= narrows affected apps)' },
-      { path: '/cves/{cveId}/packages', desc: 'OSS / distro packages affected by a CVE' },
-      { path: '/cves?severity=CRITICAL', desc: '— example: filtered query, newest first' },
-      { path: '/cves?app=nginx&version=1.20', desc: '— example: CVEs affecting a product version (text match; version needs app)' },
-      { path: '/applications', desc: 'affected products (filter by search/vendor; + version requires search/vendor)' },
-      { path: '/applications/{vendor}/{product}', desc: 'product 360 — CVEs, techniques, groups (?version= narrows CVEs)' },
-      { path: '/advisories', desc: 'unified GHSA + OSV advisory list' },
-      { path: '/ghsa/{ghsaId}', desc: 'GitHub Security Advisory detail (?version= narrows affected packages)' },
-      { path: '/osv/{osvId}', desc: 'OSV advisory detail (Debian, Ubuntu, Alpine, RH, SUSE, ...)' },
-      { path: '/packages', desc: 'OSS / distro packages (filter ecosystem/q; + version requires ecosystem/q)' },
-      { path: '/packages/{ecosystem}/{name}', desc: 'package detail — advisories, techniques (?version= narrows advisories)' },
-      { path: '/ecosystems', desc: 'per-ecosystem advisory dashboards' },
-      { path: '/home/recent-affected', desc: 'recently affected applications + packages (refreshed daily)' },
-      { path: '/capec', desc: 'CAPEC attack patterns' },
-    ],
-  },
-  {
-    label: 'ATT&CK core',
-    routes: [
-      { path: '/techniques', desc: 'list + filter techniques (domain, tactic, platform, search)' },
-      { path: '/techniques/{attackId}', desc: 'full technique detail' },
-      { path: '/techniques/{attackId}/packages', desc: 'packages linked to a technique via CWE→CAPEC' },
-      { path: '/tactics', desc: 'kill-chain tactics' },
-      { path: '/software', desc: 'malware + tools' },
-      { path: '/mitigations', desc: 'countermeasures' },
-      { path: '/data-sources', desc: 'detection data sources' },
-      { path: '/relationships/{attackId}', desc: 'graph relationships for any ATT&CK entity' },
-      { path: '/matrix', desc: 'tactic × technique matrix' },
-    ],
-  },
-  {
-    label: 'Threat actors',
-    routes: [
-      { path: '/groups', desc: 'ATT&CK threat groups' },
-      { path: '/groups/{attackId}', desc: 'group profile — techniques, software, campaigns, sectors' },
-      { path: '/campaigns', desc: 'named intrusion campaigns' },
-      { path: '/external-actors', desc: '500+ ThaiCERT / ETDA actors' },
-      { path: '/sectors', desc: 'targeted industry sectors' },
-    ],
-  },
-  {
-    label: 'ICS / OT',
-    routes: [
-      { path: '/assets', desc: 'ATT&CK for ICS assets (filter by search, level, zone, sector, boundary)' },
-      { path: '/assets/{attackId}', desc: 'asset 360 — Purdue placement, techniques that target it, D3FEND countermeasures' },
-      { path: '/frameworks/purdue', desc: 'Purdue levels and zones, and which levels may talk to which' },
-    ],
-  },
-  {
-    label: 'Frameworks & compliance',
-    routes: [
-      { path: '/frameworks/owasp', desc: 'OWASP Top 10 (web / ML / LLM)' },
-      { path: '/frameworks/csf', desc: 'NIST CSF v2 subcategories' },
-      { path: '/frameworks/nist', desc: 'NIST 800-53 controls' },
-      { path: '/frameworks/iso27001', desc: 'ISO/IEC 27001:2022 (via CSF crosswalk)' },
-      { path: '/frameworks/d3fend', desc: 'MITRE D3FEND countermeasures by defensive tactic' },
-      { path: '/frameworks/d3fend/{d3fendId}', desc: 'one countermeasure — every technique it counters, plus overlapping countermeasures' },
-      { path: '/frameworks/engage', desc: 'MITRE Engage adversary-engagement activities' },
-      { path: '/frameworks/react', desc: 'RE&CT incident-response actions' },
-      { path: '/frameworks/veris', desc: 'VERIS enumerations (filter by q, category)' },
-      { path: '/frameworks/cloud-controls', desc: 'AWS / Azure / GCP controls (filter by provider, q)' },
-      { path: '/frameworks/detection', desc: 'Detection Strategies + Analytics (ATT&CK v19)' },
-      { path: '/compliance/frameworks', desc: 'SCF-bridged frameworks (NIS2, DORA, PCI, ...)' },
-      { path: '/compliance/frameworks/{key}', desc: 'framework → ATT&CK technique detail' },
-    ],
-  },
-];
+/**
+ * The API / A2A / MCP prose, loaded on demand.
+ *
+ * It used to live here as four components over a hand-written `API_GROUPS` array
+ * — 55 documented paths against 86 real routes, with the origin hardcoded six
+ * times. It now renders `src/lib/api-catalog.ts`, the one catalogue that
+ * /open-apis and /open-mcp also read, and `scripts/check-api-catalog.mjs` fails
+ * the build if that catalogue and the route tree disagree.
+ *
+ * LAZY on purpose: AppShell is in the chunk every page loads, and a static
+ * import would put the whole catalogue there for a modal most visitors never
+ * open. The cost lands when the panel does.
+ */
+const ApiCatalogPanel = lazy(() =>
+  import('../api/ApiCatalogPanel').then((m) => ({ default: m.ApiCatalogPanel })),
+);
 
-/** Agent2Agent (A2A) tab — how AI agents query the knowledge base programmatically. */
-function AgentToAgent() {
+function ApiPanel({ tab }: { tab: 'rest' | 'mcp' | 'a2a' }) {
   return (
-    <div className="px-6 py-5 space-y-4 text-sm text-[var(--text-primary)] leading-relaxed">
-      <p>
-        <strong>Agent2Agent (A2A) protocol.</strong> AI agents can query this knowledge base
-        programmatically — discover the available skills, call them, and get back structured
-        threat-intel. Open and keyless; powered by Gemini function-calling.
-      </p>
-
-      <div className="rounded-md border border-[var(--border-color)] bg-[var(--surface-card)] px-4 py-3 font-mono text-xs space-y-1">
-        <div><span className="text-[var(--text-secondary)]">Agent Card</span>{'  '}
-          <a href="/.well-known/agent-card.json" target="_blank" rel="noopener noreferrer" className="text-[var(--accent-teal)] hover:underline">/.well-known/agent-card.json</a>
-        </div>
-        <div><span className="text-[var(--text-secondary)]">Endpoint{'  '}</span>{'  '}POST /api/a2a</div>
-        <div><span className="text-[var(--text-secondary)]">Skills{'    '}</span>{'  '}25 skills · {AGENT_TOOL_COUNT} tools</div>
-        <div><span className="text-[var(--text-secondary)]">Limit{'     '}</span>{'  '}50 requests/day per IP · no auth</div>
-        <div><span className="text-[var(--text-secondary)]">Protocol{'  '}</span>{'  '}A2A (JSON-RPC) · Gemini function-calling</div>
-      </div>
-
-      <p className="text-xs text-[var(--text-secondary)]">
-        Agents fetch the Agent Card to learn the skills (CVE lookup, technique intelligence,
-        threat-group profiles, advisories, CAPEC, compliance frameworks, …), then issue a
-        natural-language request. The agent chains the right tools and returns a structured
-        result + a rendered summary.
-      </p>
-
-      {/* Example prompt */}
-      <div>
-        <div className="text-[11px] font-bold uppercase tracking-wider text-[var(--accent-teal)] mb-1">Example</div>
-        <div className="rounded-md border border-[var(--border-color)] bg-[var(--surface-card)] px-4 py-3 text-xs italic text-[var(--text-secondary)]">
-          &ldquo;Ask mitre-explorer.org, using the A2A protocol: <span className="not-italic text-[var(--text-primary)]">which Applications have been affected by new CVEs published in the previous week? Show the relevant ATT&amp;CK techniques, plus the latest 2-day threat reports. Render the result for me.</span>&rdquo;
-        </div>
-      </div>
-
-      <p className="text-[11px] text-[var(--text-secondary)]">
-        Build agent-facing apps with the latest Claude or Gemini models. The Agent Card is the
-        machine-readable contract — point any A2A-capable agent at it.
-      </p>
-    </div>
+    <Suspense
+      fallback={<div className="px-6 py-8 text-xs text-[var(--text-secondary)]">Loading the catalogue…</div>}
+    >
+      <ApiCatalogPanel tab={tab} />
+    </Suspense>
   );
 }
 
-/** Info-modal API tab — short summary: available categories + the keyless/auth-free fact.
-    The comprehensive endpoint catalog lives behind the "APIs" top-bar button (<ApiReference/>). */
-function ApiSummary() {
-  return (
-    <div className="px-6 py-5 space-y-4 text-sm text-[var(--text-primary)] leading-relaxed">
-      <p>
-        <strong>Open REST API.</strong> Every page here is backed by a public JSON API —
-        <span className="text-[var(--accent-teal)]"> no auth, no sign-up, open CORS</span>. Query the same data directly.
-      </p>
-      <div className="rounded-md border border-[var(--border-color)] bg-[var(--surface-card)] px-4 py-3 font-mono text-xs space-y-1">
-        <div><span className="text-[var(--text-secondary)]">Base URL</span>{'  '}<span className="text-[var(--accent-teal)]">https://mitre-explorer.org/api/v1</span></div>
-        <div><span className="text-[var(--text-secondary)]">Auth{'     '}</span>{'  '}none — keyless · open CORS</div>
-      </div>
-      <div>
-        <div className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)] mb-2">Categories</div>
-        <ul className="space-y-1">
-          {API_GROUPS.map((g) => (
-            <li key={g.label} className="flex items-baseline gap-2 text-xs">
-              <span className="text-[var(--accent-teal)]">▸</span>
-              <span className="text-[var(--text-primary)]">{g.label.replace(/\s*·.*$/, '')}</span>
-              <span className="text-[var(--text-secondary)]">· {g.routes.length} endpoints</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-      <p className="text-xs text-[var(--text-secondary)] pt-2 border-t border-[var(--border-color)]">
-        Full endpoint list, descriptions &amp; usage → the{' '}
-        <strong className="text-[var(--text-primary)]">APIs / MCP</strong> button in the top bar.
-        The same data is also served to AI clients over{' '}
-        <strong className="text-[var(--text-primary)]">MCP</strong> at <code className="text-[var(--accent-teal)]">/api/mcp</code>{' '}
-        — {AGENT_TOOL_COUNT} tools, no key, no rate limit.
-      </p>
-    </div>
-  );
-}
-
-/** MCP tab — how to point an MCP client at this knowledge base. */
-function McpReference() {
-  return (
-    <div className="px-6 py-5 space-y-4 text-sm text-[var(--text-primary)] leading-relaxed">
-      <p>
-        <strong>Model Context Protocol (MCP).</strong> Connect Claude, Cursor or any MCP client
-        straight to this knowledge base — the same {AGENT_TOOL_COUNT} tools the A2A endpoint uses, exposed over
-        Streamable HTTP. <span className="text-[var(--accent-teal)]">No key, no sign-up, no rate limit.</span>
-      </p>
-
-      <div className="rounded-md border border-[var(--border-color)] bg-[var(--surface-card)] px-4 py-3 font-mono text-xs space-y-1">
-        <div><span className="text-[var(--text-secondary)]">Endpoint{' '}</span>{'  '}<span className="text-[var(--accent-teal)]">https://mitre-explorer.org/api/mcp</span></div>
-        <div><span className="text-[var(--text-secondary)]">Transport</span>{'  '}Streamable HTTP · stateless</div>
-        <div><span className="text-[var(--text-secondary)]">Tools{'    '}</span>{'  '}{AGENT_TOOL_COUNT} · ATT&amp;CK, CVE, CAPEC, advisories, ICS/Purdue</div>
-        <div><span className="text-[var(--text-secondary)]">Auth{'     '}</span>{'  '}none — anonymous, unmetered</div>
-      </div>
-
-      <div>
-        <div className="text-[11px] font-bold uppercase tracking-wider text-[var(--accent-teal)] mb-1">Add it to Claude Code</div>
-        <div className="rounded-md border border-[var(--border-color)] bg-[var(--surface-card)] px-4 py-3 font-mono text-[11px] overflow-x-auto whitespace-nowrap">
-          claude mcp add --transport http mitre https://mitre-explorer.org/api/mcp
-        </div>
-      </div>
-
-      <div>
-        <div className="text-[11px] font-bold uppercase tracking-wider text-[var(--accent-teal)] mb-1">Or any client that takes a config file</div>
-        <pre className="rounded-md border border-[var(--border-color)] bg-[var(--surface-card)] px-4 py-3 font-mono text-[11px] overflow-x-auto whitespace-pre">{`{
-  "mcpServers": {
-    "mitre": {
-      "type": "http",
-      "url": "https://mitre-explorer.org/api/mcp"
-    }
-  }
-}`}</pre>
-      </div>
-
-      <div>
-        <div className="text-[11px] font-bold uppercase tracking-wider text-[var(--accent-teal)] mb-1">What you can ask once connected</div>
-        <ul className="rounded-md border border-[var(--border-color)] bg-[var(--surface-card)] divide-y divide-[var(--border-color)] text-xs italic text-[var(--text-secondary)]">
-          <li className="px-4 py-2">&ldquo;Which ATT&amp;CK techniques target a safety instrumented system, and where does it sit in the Purdue model?&rdquo;</li>
-          <li className="px-4 py-2">&ldquo;Show critical CVEs affecting nginx published this month, with their EPSS scores.&rdquo;</li>
-          <li className="px-4 py-2">&ldquo;Which assets sit on the IT/OT boundary, and what reaches them?&rdquo;</li>
-        </ul>
-      </div>
-
-      <p className="text-[11px] text-[var(--text-secondary)] pt-2 border-t border-[var(--border-color)]">
-        MCP and <strong className="text-[var(--text-primary)]">A2A</strong> serve the same tool catalogue — MCP for
-        interactive clients, A2A for agent-to-agent calls (50 req/day). Everything bottoms out in the
-        REST API on the other tab, so results are identical whichever door you use.
-      </p>
-    </div>
-  );
-}
-
-function ApiReference() {
-  return (
-    <div className="px-6 py-5 space-y-4 text-sm text-[var(--text-primary)] leading-relaxed">
-      <p>
-        <strong>Open REST API.</strong> Every page on this site is backed by a public, keyless JSON API —
-        you can query the same data directly. No auth, no sign-up, open CORS.
-      </p>
-      <div className="rounded-md border border-[var(--border-color)] bg-[var(--surface-card)] px-4 py-3 font-mono text-xs space-y-1">
-        <div><span className="text-[var(--text-secondary)]">Base URL</span>{'  '}<span className="text-[var(--accent-teal)]">https://mitre-explorer.org/api/v1</span></div>
-        <div><span className="text-[var(--text-secondary)]">Format{'   '}</span>{'  '}JSON · open CORS · cache-friendly (CDN-cached)</div>
-        <div><span className="text-[var(--text-secondary)]">Auth{'     '}</span>{'  '}none — keyless</div>
-      </div>
-
-      <p className="text-xs text-[var(--text-secondary)]">
-        Lists return <code className="text-[var(--accent-teal)]">{`{ data: [...], pagination: {...} }`}</code>;
-        detail routes return the entity object. Paginate with <code>page</code> + <code>limit</code>; filter with query params.
-      </p>
-
-      {/* curl examples */}
-      <div className="rounded-md border border-[var(--border-color)] bg-[var(--surface-card)] px-4 py-3 font-mono text-[11px] space-y-1.5 overflow-x-auto">
-        <div className="text-[var(--text-secondary)]"># technique detail</div>
-        <div>curl https://mitre-explorer.org/api/v1/techniques/T1059</div>
-        <div className="text-[var(--text-secondary)] pt-1"># critical CVEs, newest first</div>
-        <div>curl &apos;https://mitre-explorer.org/api/v1/cves?severity=CRITICAL&amp;limit=5&apos;</div>
-        <div className="text-[var(--text-secondary)] pt-1"># cross-domain search</div>
-        <div>curl &apos;https://mitre-explorer.org/api/v1/search?q=lazarus&apos;</div>
-      </div>
-
-      {/* endpoint groups */}
-      <div className="space-y-3">
-        {API_GROUPS.map((g) => (
-          <div key={g.label}>
-            <div className="text-[11px] font-bold uppercase tracking-wider text-[var(--accent-teal)] mb-1">{g.label}</div>
-            <ul className="space-y-0.5">
-              {g.routes.map((r) => (
-                <li key={r.path} className="flex flex-wrap items-baseline gap-x-2 text-xs">
-                  <code className="font-mono text-[var(--text-primary)]">{r.path}</code>
-                  <span className="text-[var(--text-secondary)]">{r.desc}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </div>
-
-      <p className="text-xs text-[var(--text-secondary)] pt-2 border-t border-[var(--border-color)]">
-        <strong className="text-[var(--text-primary)]">Fair use.</strong> Open and unmetered for normal use; heavy automated
-        traffic is rate-limited per IP at the edge. For programmatic AI-agent access use the{' '}
-        <a href="/.well-known/agent-card.json" target="_blank" rel="noopener noreferrer" className="text-[var(--accent-teal)] hover:underline">A2A Agent Card</a>{' '}
-        (50 req/day) or the <strong className="text-[var(--text-primary)]">MCP</strong> endpoint on the next tab
-        (unmetered). Bulk users: contact us for a static data dump rather than crawling.
-      </p>
-    </div>
-  );
-}
+/** Host without the scheme, for the print watermark and the contact line. */
+const SITE_HOST = SITE_URL.replace(/^https?:\/\//, '');
 
 /** Root layout shell — sidebar + top bar + page content */
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -355,7 +107,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [helpOpen, setHelpOpen] = useState(false);
   const [helpTab, setHelpTab] = useState<'about' | 'api' | 'a2a' | 'mcp'>('about');
   const [apisOpen, setApisOpen] = useState(false);
-  const [apisTab, setApisTab] = useState<'rest' | 'mcp'>('rest');
+  const [apisTab, setApisTab] = useState<'rest' | 'mcp' | 'a2a'>('rest');
+  /** Focus goes back here when the APIs dialog closes. */
+  const apisButtonRef = useRef<HTMLButtonElement | null>(null);
 
   return (
     /* The Threat Profile controller lives here, not on the homepage, so the
@@ -411,6 +165,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
           <button
             type="button"
+            ref={apisButtonRef}
             onClick={() => {
               track('apis_open');
               setApisOpen(true);
@@ -459,7 +214,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </g>
           </svg>
           <span style={{ fontSize: '10px', color: '#64748b', fontWeight: 600, letterSpacing: '0.03em' }}>
-            mitre-explorer.org
+            {SITE_HOST}
           </span>
         </div>
       </div>
@@ -510,10 +265,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 </svg>
               </button>
             </div>
-            {helpTab === 'api' && <ApiSummary />}
-            {helpTab === 'a2a' && <AgentToAgent />}
-            {/* Same component the APIs / MCP modal uses — one source of truth. */}
-            {helpTab === 'mcp' && <McpReference />}
+            {/* The same panel the APIs / MCP modal renders — one catalogue, one copy
+                of every connection fact. */}
+            {helpTab === 'api' && <ApiPanel tab="rest" />}
+            {helpTab === 'a2a' && <ApiPanel tab="a2a" />}
+            {helpTab === 'mcp' && <ApiPanel tab="mcp" />}
             <div className={`px-6 py-5 space-y-4 text-sm text-[var(--text-primary)] leading-relaxed ${helpTab === 'about' ? '' : 'hidden'}`}>
               <div className="flex justify-center pb-2">
                 <img src="/diamond-favicon.svg" alt="MITRE Explorer Plus" className="w-12 h-12" />
@@ -542,7 +298,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <li><strong>Diamond Model</strong> — Adversary (Threat Actors) | Victim (Sectors) | Infrastructure (Applications) | Capability (Techniques)</li>
               </ul>
               <p className="text-[var(--text-secondary)] text-xs pt-2 border-t border-[var(--border-color)]">
-                <span className="text-[var(--accent-teal)]">contact @ mitre-explorer.org</span>
+                <span className="text-[var(--accent-teal)]">contact @ {SITE_HOST}</span>
                 {' · '}<a href="/about/attributions" className="text-[var(--accent-teal)] hover:underline">Data attributions</a>
                 {' — '}Not affiliated with or endorsed by MITRE Corporation.
               </p>
@@ -551,40 +307,27 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       )}
 
-      {/* APIs — comprehensive endpoint catalog (opened from the top-bar "APIs" button) */}
-      {apisOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setApisOpen(false)}>
-          <div
-            className="bg-[var(--surface-deep)] border border-[var(--border-color)] rounded-xl shadow-2xl w-[95vw] max-w-[720px] max-h-[85vh] overflow-y-auto"
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border-color)]">
-              <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={() => setApisTab('rest')}
-                  className={`px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${apisTab === 'rest' ? 'text-[var(--accent-teal)] bg-[var(--teal-faint)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
-                >
-                  REST API
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setApisTab('mcp')}
-                  className={`px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${apisTab === 'mcp' ? 'text-[var(--accent-teal)] bg-[var(--teal-faint)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
-                >
-                  MCP
-                </button>
-              </div>
-              <button onClick={() => setApisOpen(false)} className="p-2 rounded-md text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--hover-overlay)]">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            {apisTab === 'rest' ? <ApiReference /> : <McpReference />}
-          </div>
-        </div>
-      )}
+      {/* APIs / MCP — the shared catalogue, quick-reference role.
+          Now a real dialog: role, aria-modal, focus moved in and trapped, the
+          background inert, Escape, and focus handed back to the top-bar button.
+          It had none of that when it owned its own endpoint list. */}
+      <Dialog
+        open={apisOpen}
+        onClose={() => setApisOpen(false)}
+        title="Open APIs · MCP · A2A"
+        subtitle="Public, keyless, unmetered. Three doors onto the same data."
+        returnFocusTo={apisButtonRef}
+        maxWidth="820px"
+        tabs={
+          <>
+            <DialogTab active={apisTab === 'rest'} onClick={() => setApisTab('rest')}>REST API</DialogTab>
+            <DialogTab active={apisTab === 'a2a'} onClick={() => setApisTab('a2a')}>A2A</DialogTab>
+            <DialogTab active={apisTab === 'mcp'} onClick={() => setApisTab('mcp')}>MCP</DialogTab>
+          </>
+        }
+      >
+        <ApiPanel tab={apisTab} />
+      </Dialog>
 
       {/* The sidebar entry's presentation. Portals to <body>, renders only
           when the sidebar opened it, and is inert otherwise — the diamonds'

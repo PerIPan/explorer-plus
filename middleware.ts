@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { DOCS_PROBE_HEADER } from './src/lib/site';
 
 // ---------------------------------------------------------------------------
 // API usage counting (part 1 of 2)
@@ -56,9 +57,13 @@ export function middleware(request: NextRequest) {
   // normalized endpoint so the origin can count it. No DB work here.
   if (request.nextUrl.pathname.startsWith('/api/')) {
     const method = request.method;
-    // Skip CORS preflights / HEAD probes — not real data reads.
+    // Skip CORS preflights / HEAD probes — not real data reads. And skip the
+    // documentation pages' own live-Run calls (/open-apis' Run button): they are
+    // a reader pressing a button in our docs, not API consumption, and 61 of
+    // these routes set no cacheTtl, so counting them would make the docs page
+    // the top endpoint in our own analytics.
     const endpoint =
-      method === 'OPTIONS' || method === 'HEAD'
+      method === 'OPTIONS' || method === 'HEAD' || request.headers.get(DOCS_PROBE_HEADER)
         ? null
         : normalizeEndpoint(request.nextUrl.pathname);
     if (endpoint && !EXCLUDED_ENDPOINTS.has(endpoint)) {

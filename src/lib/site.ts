@@ -17,3 +17,17 @@ export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://mitre-explo
  * bundle. Keep in sync when adding or removing a tool.
  */
 export const AGENT_TOOL_COUNT = 43;
+
+/**
+ * Marker header the API documentation pages set on every live-Run fetch.
+ *
+ * `middleware.ts` skips the `api_usage` tag when it is present. 61 of the 86
+ * routes under /api/v1 set no `cacheTtl`, so every Run is a CDN miss — a Neon
+ * wake plus an `api_usage` UPSERT — and without this the docs page would become
+ * the top endpoint in our own API analytics within a day.
+ *
+ * Declared here rather than in `src/lib/api-catalog.ts` so `middleware.ts` can
+ * import one constant instead of the whole catalogue (this module has no
+ * imports; the catalogue is ~700 lines and runs on the edge for every request).
+ */
+export const DOCS_PROBE_HEADER = 'x-mitre-docs-probe';
