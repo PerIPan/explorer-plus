@@ -11,10 +11,10 @@ import { DiamondLoader } from '../components/shared/FoldingDiamond';
 import { ErrorState } from '../components/shared/ErrorState';
 import { MultiSelect, type MultiSelectOption } from '../components/profile/MultiSelect';
 // Value imports come from the zod-free shared module, NOT from ProfilePanel:
-// that module also builds a picker from `SCF_FRAMEWORK_REGISTRY` (254 entries)
-// and importing it here for two arrays pulled the whole registry into this
-// page's bundle. `ProfileVariant` is a type-only import below, which is erased
-// at compile time and costs nothing.
+// that module also builds a picker from `SCF_FRAMEWORK_REGISTRY` (32 entries,
+// not the 254 this comment used to claim) and importing it here for two arrays
+// pulled the whole registry into this page's bundle. `ProfileVariant` is a
+// type-only import below, which is erased at compile time and costs nothing.
 import { SECTOR_OPTIONS, PLATFORMS, platformsForDomain } from '../lib/profile-options';
 import { buildProfileUrl } from '../lib/profile-url.mjs';
 import {
@@ -642,7 +642,12 @@ export function ThreatProfile() {
             id="profile-sector"
             value={sector ?? ''}
             onChange={(e) => onSectorChange(e.target.value || null)}
-            className="mt-1.5 w-full appearance-none rounded-md border border-[var(--border-color)] bg-[var(--surface-base)] px-2.5 py-1.5 text-sm text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-teal)]"
+            /* `min-h-[44px]` rather than a pseudo-element: a <select> is a
+               replaced control, so a ::before on it is not reliably rendered
+               and could not be the hit region anyway. The panel's own sector
+               <select> is already 44px, so this matches it rather than
+               inventing a second size. */
+            className="mt-1.5 w-full min-h-[44px] appearance-none rounded-md border border-[var(--border-color)] bg-[var(--surface-base)] px-2.5 py-1.5 text-sm text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-teal)]"
           >
             <option value="">— none chosen —</option>
             {SECTOR_OPTIONS.map((o) => (
@@ -669,7 +674,12 @@ export function ThreatProfile() {
         <legend className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
           Rank the evidence band by
         </legend>
-        <div className="mt-1.5 flex flex-wrap gap-2">
+        {/* `gap-y-5`, not `gap-y-2`: each pill carries a 44px-tall hit region
+            as a pseudo-element (below), which bleeds ~9px above and below a
+            26px pill. Two wrapped rows 8px apart would have overlapping
+            targets, so a press near the edge could fire the row above. 20px
+            of vertical gap keeps every target to its own pill. */}
+        <div className="mt-1.5 flex flex-wrap gap-x-2 gap-y-5">
           {SORT_OPTIONS.map((o) => {
             const active = o.value === sortKey;
             const tone = scoreTone(o.score);
@@ -680,7 +690,14 @@ export function ThreatProfile() {
                 onClick={() => navigate({ sort: o.value })}
                 aria-pressed={active}
                 title={o.blurb}
-                className={`inline-flex items-center gap-2 rounded-md border px-2.5 py-1 text-xs transition-colors ${
+                /* Same pattern as MultiSelect's chip "x": the 44px target is
+                   an absolutely-positioned pseudo-element, so the pill keeps
+                   its own compact box and the control row does not become a
+                   stack of 44px buttons. `inset-x-0` confines it to this
+                   pill's own width, so a stray press can only ever hit the
+                   sort you aimed at. */
+                className={`relative inline-flex items-center gap-2 rounded-md border px-2.5 py-1 text-xs transition-colors
+                            before:content-[''] before:absolute before:inset-x-0 before:top-1/2 before:h-11 before:-translate-y-1/2 ${
                   active
                     ? 'border-[var(--accent-teal)] bg-[var(--teal-ghost)] font-semibold text-[var(--accent-teal)]'
                     : 'border-[var(--border-color)] text-[var(--text-primary)] hover:border-[var(--border-hover)]'

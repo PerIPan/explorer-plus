@@ -17,10 +17,12 @@ interface MultiSelectProps {
   placeholder?: string;
 }
 
-// Cap on rendered rows once options are filtered. The framework picker alone
-// carries 254 entries — filter the full array first, then slice for render
-// so the DOM never has to hold more than this many rows. No virtualisation
-// library is warranted at this size.
+// Cap on rendered rows once options are filtered. The longest list here is the
+// framework picker at 32 entries (this comment claimed 254 for a while; it was
+// never true) — so filter the full array first, then slice for render, and the
+// DOM never holds more than this many rows. The cap is kept because it is the
+// list length that must not matter, not because 32 needs it, and no
+// virtualisation library is warranted at any size these reach.
 const MAX_VISIBLE = 60;
 
 // DOM ids only ever need to be unique and attribute-safe — the option's own
@@ -225,7 +227,11 @@ export function MultiSelect({ id, label, options, selected, onChange, placeholde
           role="combobox"
           aria-expanded={open}
           aria-autocomplete="list"
-          aria-controls={listboxId}
+          // Only while the list EXISTS. The <ul id={listboxId}> is rendered
+          // under `open` below, so an unconditional aria-controls is a
+          // dangling IDREF for most of this control's life — assistive tech is
+          // pointed at an element that is not in the document.
+          aria-controls={open ? listboxId : undefined}
           aria-activedescendant={open && activeOption ? `${id}-option-${domSafe(activeOption.value)}` : undefined}
           value={query}
           placeholder={placeholder}
@@ -257,7 +263,8 @@ export function MultiSelect({ id, label, options, selected, onChange, placeholde
           type="button"
           aria-label={open ? `Hide ${label} options` : `Show ${label} options`}
           aria-expanded={open}
-          aria-controls={listboxId}
+          // Conditional for the same reason as the input's, above.
+          aria-controls={open ? listboxId : undefined}
           onMouseDown={(e) => e.preventDefault()}
           onClick={() => {
             setOpen((wasOpen) => !wasOpen);

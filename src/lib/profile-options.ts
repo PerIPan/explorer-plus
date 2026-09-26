@@ -130,10 +130,13 @@ export type SectorSlug = (typeof SECTOR_SLUGS)[number];
  *
  * These lived in src/components/profile/ProfilePanel.tsx until the briefing
  * page needed them too. That module also builds a framework picker from
- * `SCF_FRAMEWORK_REGISTRY` (254 entries), so importing it purely to read two
- * option arrays dragged the whole registry into /profile's bundle — the same
- * class of cost this module was created to avoid for zod. ProfilePanel now
- * imports and re-exports them, so its public surface is unchanged.
+ * `SCF_FRAMEWORK_REGISTRY` (32 entries — not the 254 this comment claimed for
+ * a while; `grep -c framework_key` on src/lib/scf-framework-registry.ts is
+ * 32), so importing it purely to read two option arrays dragged the whole
+ * registry into /profile's bundle — the same class of cost this module was
+ * created to avoid for zod. ProfilePanel now imports and re-exports them, so
+ * its public surface is unchanged, and the registry itself sits behind a
+ * `next/dynamic` boundary there.
  * ──────────────────────────────────────────────────────────────────────────── */
 
 /** Presentation only: the 12 slugs come from `SECTOR_SLUGS`, these are the

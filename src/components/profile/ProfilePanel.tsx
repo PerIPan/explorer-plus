@@ -16,13 +16,57 @@ import {
   type RefObject,
 } from 'react';
 import { createPortal } from 'react-dom';
+import dynamic from 'next/dynamic';
 
 import { MultiSelect, type MultiSelectOption } from './MultiSelect';
-import { PurdueAssetPickerLoader } from './PurdueAssetPicker';
 import { useProfileState, type ProfileAnswers } from './useProfileState';
 import { DEFAULT_DOMAIN } from '../../contexts/DomainContext';
-import { SCF_FRAMEWORK_REGISTRY } from '../../lib/scf-framework-registry';
 import { SECTOR_OPTIONS, ICS_PLATFORMS, IT_PLATFORMS } from '../../lib/profile-options';
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * Two questions that load on demand
+ *
+ * This module is statically imported by `AppShell`, so whatever it statically
+ * imports lands in the client chunk EVERY route downloads — the homepage, and
+ * the ~8,000 indexed deep-link pages where the panel is an unclicked sidebar
+ * entry. Two of its option sources have no business being there:
+ *
+ *   • the Purdue picker (`PurdueAssetPicker` -> `profile-ot.mjs`, `Badge`),
+ *     which renders only after the visitor switches the mode radio to OT;
+ *   • the framework registry (16 KB of source for 32 name/key pairs), read by
+ *     one multi-select.
+ *
+ * `PurdueAssetPicker` already defers its FETCH and says so in its own header;
+ * the CODE was still eager. Both now cross a `next/dynamic` boundary, so the
+ * chunk arrives on first open (and, for the plant picker, only in OT mode)
+ * rather than on first page view. `ssr: false` because neither can render on
+ * the server: `open` starts false, so no presentation renders during SSR.
+ *
+ * The fallbacks are text, not spinners, and they are `aria-live` for the same
+ * reason the pickers' own loading states are: a question that is still
+ * arriving must say so rather than look like a question with no answers.
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+const PurdueAssetPickerLoader = dynamic(
+  () => import('./PurdueAssetPicker').then((m) => m.PurdueAssetPickerLoader),
+  {
+    ssr: false,
+    loading: () => (
+      <p className="text-xs text-[var(--text-secondary)]" aria-live="polite">
+        Loading the plant picker…
+      </p>
+    ),
+  },
+);
+
+const FrameworkPicker = dynamic(() => import('./FrameworkPicker'), {
+  ssr: false,
+  loading: () => (
+    <p className="text-xs text-[var(--text-secondary)]" aria-live="polite">
+      Loading the compliance regimes…
+    </p>
+  ),
+});
 
 /* ─────────────────────────────────────────────────────────────────────────────
  * Option sources
@@ -40,8 +84,10 @@ import { SECTOR_OPTIONS, ICS_PLATFORMS, IT_PLATFORMS } from '../../lib/profile-o
  * so there is still exactly one source of truth.
  *
  * They were DEFINED here until /profile needed them as well. Importing this
- * module to read them pulled `SCF_FRAMEWORK_REGISTRY` (254 entries, below)
- * into that page's bundle for nothing, so the definitions moved down to
+ * module to read them pulled `SCF_FRAMEWORK_REGISTRY` (32 entries — the
+ * "254" these comments used to claim was never true; `grep -c framework_key`
+ * on src/lib/scf-framework-registry.ts is 32) into that page's bundle for
+ * nothing, so the definitions moved down to
  * profile-options.ts — which is exactly the module for plain shared value
  * lists — and are re-exported here unchanged. Every existing importer of
  * `SECTOR_OPTIONS`/`ICS_PLATFORMS`/`IT_PLATFORMS` from this file keeps
@@ -69,18 +115,6 @@ export const ROLE_OPTIONS: MultiSelectOption[] = [
   { value: 'red-team', label: 'Red team / offensive security' },
   { value: 'ot-engineering', label: 'OT / engineering' },
 ];
-
-/**
- * Framework NAMES ONLY. The registry also carries `short_blurb`, `scope` and
- * friends, and none of it goes in here as `meta`: this list includes ISO, PCI
- * DSS, SOC 2, IEC 62443 and CIS Controls, whose text this project may not
- * reproduce. A picker label is a name, not licensed section text — so nothing
- * from `src/lib/framework-section-text.ts` is imported here, on purpose.
- */
-const FRAMEWORK_OPTIONS: MultiSelectOption[] = SCF_FRAMEWORK_REGISTRY.map((f) => ({
-  value: f.framework_key,
-  label: f.name,
-}));
 
 /* ────────────────────────────────────────────────────────────────────────────
  * Telemetry
@@ -1427,13 +1461,10 @@ export function ProfilePanel({
               placeholder="Search roles…"
             />
 
-            <MultiSelect
+            <FrameworkPicker
               id={`${baseId}-frameworks`}
-              label="Compliance regime"
-              options={FRAMEWORK_OPTIONS}
               selected={answers.frameworks ?? EMPTY_SELECTION}
               onChange={(next) => setAnswer('frameworks', next)}
-              placeholder="Search frameworks…"
             />
           </div>
         </div>

@@ -197,7 +197,14 @@ export function PurdueAssetPicker({
           <button
             type="button"
             onClick={() => emit({ type: 'clear' })}
-            className="shrink-0 text-[11px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-teal)] rounded"
+            /* 11px text with a 44x44 target, the way MultiSelect's chip "x"
+               does it: an absolutely-positioned pseudo-element, so the hit
+               region is 44x44 without the link laying out at 44px and pushing
+               this header row open. Anchored to the RIGHT edge so the extra
+               width falls back over this button's own label and the heading
+               beside it, never past the container. */
+            className="relative shrink-0 text-[11px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-teal)] rounded
+                       before:content-[''] before:absolute before:right-0 before:top-1/2 before:h-11 before:w-11 before:-translate-y-1/2"
           >
             Clear
           </button>
