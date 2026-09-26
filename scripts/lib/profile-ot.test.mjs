@@ -8,6 +8,7 @@ import {
   describeSelection,
   emptyLevelKeys,
   levelDisplay,
+  nextOtSelection,
   OT_ZONE_ORDER,
 } from '../../src/lib/profile-ot.mjs';
 
@@ -182,4 +183,72 @@ test('levelDisplay: the database key is not what anyone says out loud', () => {
   assert.equal(levelDisplay('l3'), 'L3');
   assert.equal(levelDisplay('l3_5'), 'L3.5');
   assert.equal(levelDisplay('l5'), 'L5');
+});
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * nextOtSelection — one gesture, one whole selection
+ *
+ * The regression these pin is not a formatting detail. The picker used to
+ * report its two halves through two callbacks, and on the briefing page each
+ * half was its own `router.replace` built from a render-time closure. "Clear"
+ * therefore navigated twice in one tick, and the second call — still holding
+ * the pre-clear levels — won: Clear removed the ticked assets and put the
+ * levels back. Reproduced on
+ * `/profile?assets=A0003&purdue_levels=l2&domain=ics-attack`.
+ * ──────────────────────────────────────────────────────────────────────────── */
+
+test('nextOtSelection: clear empties BOTH halves in one value', () => {
+  assert.deepEqual(nextOtSelection({ assets: ['A0003'], levels: ['l2'] }, { type: 'clear' }), {
+    assets: [],
+    levels: [],
+  });
+});
+
+test('nextOtSelection: a gesture always reports the untouched half as it was', () => {
+  // The whole point: the caller never has to supply the other half, so there
+  // is nothing for a stale closure to fill in with an old value.
+  assert.deepEqual(
+    nextOtSelection({ assets: ['A0003'], levels: ['l2'] }, { type: 'toggle-level', id: 'l3' }),
+    { assets: ['A0003'], levels: ['l2', 'l3'] },
+  );
+  assert.deepEqual(
+    nextOtSelection({ assets: ['A0003'], levels: ['l2'] }, { type: 'toggle-asset', id: 'A0006' }),
+    { assets: ['A0003', 'A0006'], levels: ['l2'] },
+  );
+});
+
+test('nextOtSelection: toggling off removes only that value', () => {
+  assert.deepEqual(
+    nextOtSelection({ assets: ['A0003', 'A0006'], levels: ['l2', 'l3'] }, { type: 'toggle-asset', id: 'A0003' }),
+    { assets: ['A0006'], levels: ['l2', 'l3'] },
+  );
+  assert.deepEqual(
+    nextOtSelection({ assets: ['A0003'], levels: ['l2', 'l3'] }, { type: 'toggle-level', id: 'l2' }),
+    { assets: ['A0003'], levels: ['l3'] },
+  );
+});
+
+test('nextOtSelection: ticking order is preserved, not sorted', () => {
+  // The URL should read back in the order the visitor ticked; re-sorting under
+  // them would churn the address bar for nothing.
+  let sel = { assets: [], levels: [] };
+  sel = nextOtSelection(sel, { type: 'toggle-level', id: 'l3' });
+  sel = nextOtSelection(sel, { type: 'toggle-level', id: 'l1' });
+  sel = nextOtSelection(sel, { type: 'toggle-asset', id: 'A0010' });
+  sel = nextOtSelection(sel, { type: 'toggle-asset', id: 'A0003' });
+  assert.deepEqual(sel, { assets: ['A0010', 'A0003'], levels: ['l3', 'l1'] });
+});
+
+test('nextOtSelection: never mutates the selection it was given', () => {
+  const current = { assets: ['A0003'], levels: ['l2'] };
+  nextOtSelection(current, { type: 'toggle-asset', id: 'A0006' });
+  nextOtSelection(current, { type: 'clear' });
+  assert.deepEqual(current, { assets: ['A0003'], levels: ['l2'] });
+});
+
+test('nextOtSelection: missing halves are treated as empty, not undefined', () => {
+  assert.deepEqual(nextOtSelection({}, { type: 'toggle-asset', id: 'A0001' }), {
+    assets: ['A0001'],
+    levels: [],
+  });
 });

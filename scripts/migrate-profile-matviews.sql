@@ -2,6 +2,82 @@
 --   psql "$DATABASE_URL" -f scripts/migrate-profile-matviews.sql
 -- Both are refreshed CONCURRENTLY by app/api/cron/refresh-matviews/route.ts,
 -- which requires the unique indexes below.
+--
+-- ═══════════════════════════════════════════════════════════════════════════
+-- ORDERING REQUIREMENT (fresh provision): run scripts/migrate-applications.sql
+-- FIRST, then REFRESH catchall_cwes, then this file.
+--
+-- `technique_cve_evidence` below reads the `catchall_cwes` MATVIEW. It is the
+-- only matview in the repo that reads another one, and it therefore breaks the
+-- convention the other build matviews follow deliberately (they recompute the
+-- `> 10` catch-all exclusion inline precisely to avoid matview-on-matview
+-- ordering). Two failure modes follow from that, and the guard below turns
+-- both into a loud abort instead of silence:
+--
+--   catchall_cwes MISSING   -> CREATE MATERIALIZED VIEW errors mid-run, after
+--                              the DROP above it has already committed under
+--                              psql autocommit. Fixed by the transaction.
+--   catchall_cwes EMPTY     -> the CREATE SUCCEEDS and bakes in UNFILTERED
+--     (created WITH NO DATA,   counts (measured: T1574.007 reports 12,511 CVEs
+--      or never refreshed)      unfiltered vs 8,862 filtered — a 41% inflation
+--                              on the evidence columns Band A is SORTED by)
+--                              and stays wrong until the next cron refresh.
+--                              This is the one that has to fail loudly; it
+--                              produces a plausible page, not an error.
+--
+-- BEGIN/COMMIT (fix round 2): `DROP` and `CREATE MATERIALIZED VIEW` are two
+-- statements and psql autocommits each one, so re-running this against live
+-- production left `/api/v1/profile` 500ing for the whole rebuild window
+-- (seconds to minutes on technique_cve_evidence). Wrapped, readers keep the
+-- old definition until COMMIT swaps it. `\set ON_ERROR_STOP on` is what makes
+-- the wrapper mean anything: without it psql plays on through a failed
+-- statement to the COMMIT and commits a half-built pair.
+-- ═══════════════════════════════════════════════════════════════════════════
+\set ON_ERROR_STOP on
+
+BEGIN;
+
+DO $guard$
+DECLARE
+  populated boolean;
+  n         bigint;
+BEGIN
+  SELECT c.relispopulated INTO populated
+  FROM pg_class c
+  JOIN pg_namespace ns ON ns.oid = c.relnamespace
+  WHERE c.relname = 'catchall_cwes'
+    AND c.relkind = 'm'
+    AND ns.nspname = ANY (current_schemas(false));
+
+  IF populated IS NULL THEN
+    RAISE EXCEPTION
+      'migrate-profile-matviews.sql: the catchall_cwes matview does not exist. '
+      'Run scripts/migrate-applications.sql first, then REFRESH MATERIALIZED '
+      'VIEW catchall_cwes, then re-run this file. technique_cve_evidence reads '
+      'it and would otherwise be built with an unfiltered CWE->CAPEC chain.';
+  END IF;
+
+  IF NOT populated THEN
+    RAISE EXCEPTION
+      'migrate-profile-matviews.sql: catchall_cwes exists but is unpopulated '
+      '(created WITH NO DATA). Run REFRESH MATERIALIZED VIEW catchall_cwes '
+      'first -- building technique_cve_evidence against it now would bake in '
+      'UNFILTERED CVE counts (T1574.007: 12,511 instead of 8,862).';
+  END IF;
+
+  EXECUTE 'SELECT count(*) FROM catchall_cwes' INTO n;
+  IF n = 0 THEN
+    RAISE EXCEPTION
+      'migrate-profile-matviews.sql: catchall_cwes is EMPTY (0 rows), so the '
+      'NOT IN exclusion below would be a no-op and technique_cve_evidence '
+      'would bake in UNFILTERED CVE counts (T1574.007: 12,511 instead of '
+      '8,862). Load capec_mappings and REFRESH MATERIALIZED VIEW '
+      'catchall_cwes first. Expected ~10 rows.';
+  END IF;
+
+  RAISE NOTICE 'catchall_cwes: % rows, populated -- ok to build technique_cve_evidence', n;
+END
+$guard$;
 
 -- Lift = how much more a sector's groups use a technique than all groups do.
 -- Both numerator and denominator count only groups with >=1 group_techniques
@@ -50,7 +126,9 @@ CREATE UNIQUE INDEX sector_technique_lift_pk
 
 -- KEV/EPSS/CVE evidence per technique. The CWE->CAPEC chain is coarse (one
 -- broad CWE fans out to thousands of CVEs), so notCatchallCwe is mandatory:
--- unfiltered, T1574.007 reports 12,511 CVEs; filtered, 8,862.
+-- unfiltered, T1574.007 reports 12,511 CVEs; filtered, 8,862. The
+-- `catchall_cwes` read below is the matview-on-matview dependency the guard at
+-- the top of this file asserts -- see the ORDERING REQUIREMENT block.
 DROP MATERIALIZED VIEW IF EXISTS technique_cve_evidence;
 CREATE MATERIALIZED VIEW technique_cve_evidence AS
 WITH chain AS (
@@ -70,3 +148,5 @@ GROUP BY 1;
 
 CREATE UNIQUE INDEX technique_cve_evidence_pk
   ON technique_cve_evidence (attack_id);
+
+COMMIT;

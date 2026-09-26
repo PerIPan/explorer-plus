@@ -8,8 +8,11 @@ import {
   groupLevelsByZone,
   describeSelection,
   levelDisplay,
+  nextOtSelection,
   type PurdueLevel,
   type PlacedAsset,
+  type OtSelection,
+  type OtSelectionAction,
 } from '../../lib/profile-ot.mjs';
 
 /* ────────────────────────────────────────────────────────────────────────────
@@ -80,8 +83,19 @@ export interface PurdueAssetPickerProps {
   selectedAssets: string[];
   /** Ticked Purdue level keys. */
   selectedLevels: string[];
-  onAssetsChange: (next: string[]) => void;
-  onLevelsChange: (next: string[]) => void;
+  /**
+   * ONE callback for the WHOLE selection, not one per half.
+   *
+   * "Clear" is a single gesture that empties both halves, and two callbacks
+   * meant two updates in one tick. On the briefing page, where each half was
+   * wired to its own `router.replace` built from a render-time closure, the
+   * second navigation carried the pre-clear value of the half the first had
+   * just emptied and won — so Clear dropped the ticked assets and put the
+   * levels back. Reporting the whole selection is what makes "one action, one
+   * navigation" structural: there is no half left for a stale closure to fill
+   * in. `nextOtSelection` (src/lib/profile-ot.mjs, fixture-tested) computes it.
+   */
+  onSelectionChange: (next: OtSelection) => void;
   /** Any interaction at all — the panel uses this to cancel its peek timer. */
   onInteract?: () => void;
   /**
@@ -122,8 +136,7 @@ export function PurdueAssetPicker({
   assets,
   selectedAssets,
   selectedLevels,
-  onAssetsChange,
-  onLevelsChange,
+  onSelectionChange,
   onInteract,
   compact = false,
 }: PurdueAssetPickerProps) {
@@ -147,22 +160,21 @@ export function PurdueAssetPicker({
     [summary],
   );
 
-  function toggleLevel(levelKey: string) {
+  /** Every gesture, through one place: the next WHOLE selection, reported once.
+   *  See `onSelectionChange` above for why this is not two callbacks. */
+  function emit(action: OtSelectionAction) {
     onInteract?.();
-    onLevelsChange(
-      levelSet.has(levelKey)
-        ? selectedLevels.filter((l) => l !== levelKey)
-        : [...selectedLevels, levelKey],
+    onSelectionChange(
+      nextOtSelection({ assets: selectedAssets, levels: selectedLevels }, action),
     );
   }
 
+  function toggleLevel(levelKey: string) {
+    emit({ type: 'toggle-level', id: levelKey });
+  }
+
   function toggleAsset(attackId: string) {
-    onInteract?.();
-    onAssetsChange(
-      assetSet.has(attackId)
-        ? selectedAssets.filter((a) => a !== attackId)
-        : [...selectedAssets, attackId],
-    );
+    emit({ type: 'toggle-asset', id: attackId });
   }
 
   function toggleOpen(levelKey: string) {
@@ -184,11 +196,7 @@ export function PurdueAssetPicker({
         {(selectedLevels.length > 0 || selectedAssets.length > 0) && (
           <button
             type="button"
-            onClick={() => {
-              onInteract?.();
-              onLevelsChange([]);
-              onAssetsChange([]);
-            }}
+            onClick={() => emit({ type: 'clear' })}
             className="shrink-0 text-[11px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-teal)] rounded"
           >
             Clear

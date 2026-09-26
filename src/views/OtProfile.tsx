@@ -14,7 +14,7 @@ import { Card, Notice, Metric, num } from '../components/profile/BriefingPrimiti
 import { PurdueAssetPickerLoader } from '../components/profile/PurdueAssetPicker';
 import { buildProfileUrl } from '../lib/profile-url.mjs';
 import { buildProfileApiQuery, parseCsvParam } from '../lib/profile-query.mjs';
-import { levelDisplay } from '../lib/profile-ot.mjs';
+import { levelDisplay, type OtSelection } from '../lib/profile-ot.mjs';
 
 /* ════════════════════════════════════════════════════════════════════════════
  * The OT (ICS) briefing.
@@ -520,22 +520,29 @@ export function OtProfile() {
    * query string, so `domain` is written unconditionally — on `/profile` an
    * absent domain is no filter at all, which would rank enterprise, mobile, ICS
    * and ATLAS techniques together under a plant heading.
+   *
+   * It takes the WHOLE selection, and therefore closes over neither half. It
+   * used to take a patch (`{ assets }` or `{ levels }`) and fill the other half
+   * from this render's parsed values, which made a two-half gesture two
+   * navigations racing off one stale closure: "Clear" replaced twice in a tick
+   * and the second call put the levels it had captured straight back. The
+   * picker now reports one selection per gesture (`nextOtSelection`), so this is
+   * one action, one navigation — the same ruling `applyProfile`'s single
+   * `router.push` exists for. `[router]` alone as the dependency list is the
+   * structural proof there is nothing stale left to capture.
    */
   const navigate = useCallback(
-    (next: { assets?: string[]; levels?: string[] }) => {
+    (next: OtSelection) => {
       router.replace(
         buildProfileUrl({
           sector: null,
           domain: ICS_DOMAIN,
-          params: {
-            assets: next.assets ?? assets,
-            purdue_levels: next.levels ?? levels,
-          },
+          params: { assets: next.assets, purdue_levels: next.levels },
         }),
         { scroll: false },
       );
     },
-    [router, assets, levels],
+    [router],
   );
 
   /* ── Controls, rendered in every state including the failures, so a bad
@@ -546,8 +553,7 @@ export function OtProfile() {
         id="ot-profile-plant"
         selectedAssets={assets}
         selectedLevels={levels}
-        onAssetsChange={(next) => navigate({ assets: next })}
-        onLevelsChange={(next) => navigate({ levels: next })}
+        onSelectionChange={navigate}
       />
       <p className="mt-3 text-xs text-[var(--text-secondary)]">
         Asking about the corporate network instead?{' '}

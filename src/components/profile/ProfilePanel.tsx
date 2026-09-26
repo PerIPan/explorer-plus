@@ -1269,8 +1269,14 @@ export function ProfilePanel({
               id={`${baseId}-plant`}
               selectedAssets={answers.assets ?? EMPTY_SELECTION}
               selectedLevels={answers.purdue_levels ?? EMPTY_SELECTION}
-              onAssetsChange={(next) => setAnswer('assets', next)}
-              onLevelsChange={(next) => setAnswer('purdue_levels', next)}
+              // One gesture, one selection. Both keys are written from the
+              // same reported value, and `setAnswer` is a functional
+              // `setState`, so neither call can read a stale `answers` — the
+              // race the briefing page's two `router.replace` calls had.
+              onSelectionChange={(next) => {
+                setAnswer('assets', next.assets);
+                setAnswer('purdue_levels', next.levels);
+              }}
               onInteract={onInteract}
               compact={!large}
             />

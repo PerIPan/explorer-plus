@@ -231,3 +231,70 @@ export function describeSelection(assets, selectedAssets, selectedLevels, levels
 export function emptyLevelKeys(levels, assets) {
   return levels.filter((l) => assetsAtLevel(assets, l.levelKey).length === 0).map((l) => l.levelKey);
 }
+
+/**
+ * The OT answer as ONE value: the explicitly ticked assets and the ticked
+ * levels together.
+ *
+ * @typedef {Object} OtSelection
+ * @property {string[]} assets explicitly ticked asset ids (A0001-A0018)
+ * @property {string[]} levels ticked Purdue level keys
+ */
+
+/**
+ * One gesture in the picker.
+ *
+ * @typedef {{ type: 'toggle-asset' | 'toggle-level', id: string } | { type: 'clear' }} OtSelectionAction
+ */
+
+/**
+ * The WHOLE selection after one gesture.
+ *
+ * This exists because the picker used to report its two halves through two
+ * separate callbacks, and "Clear" is one gesture that changes both. On the
+ * briefing page each half was wired to its own `router.replace` built from a
+ * render-time closure, so Clear fired two navigations in one tick: the first
+ * emptied the levels while still carrying the old assets, the second emptied
+ * the assets while still carrying the old levels — and the second won, so
+ * Clear removed the ticked assets and put the levels straight back. Reproduced
+ * on `/profile?assets=A0003&purdue_levels=l2&domain=ics-attack`.
+ *
+ * Returning the whole selection is what makes "one action, one navigation"
+ * structural rather than a rule to remember: there is no half for a stale
+ * closure to fill in. It is the same reason src/lib/profile-url.mjs builds
+ * Apply's URL from one input object rather than patching the current query
+ * string, and the same race app/providers.tsx documents for the two context
+ * setters.
+ *
+ * Pure, and order-preserving: a toggled-on value is appended, so the URL keeps
+ * the order the visitor ticked in rather than re-sorting under them.
+ *
+ * @param {{ assets?: readonly string[], levels?: readonly string[] }} current
+ * @param {OtSelectionAction} action
+ * @returns {OtSelection}
+ */
+export function nextOtSelection(current, action) {
+  const assets = [...(current.assets ?? [])];
+  const levels = [...(current.levels ?? [])];
+
+  switch (action.type) {
+    case 'clear':
+      return { assets: [], levels: [] };
+    case 'toggle-asset':
+      return {
+        assets: assets.includes(action.id)
+          ? assets.filter((a) => a !== action.id)
+          : [...assets, action.id],
+        levels,
+      };
+    case 'toggle-level':
+      return {
+        assets,
+        levels: levels.includes(action.id)
+          ? levels.filter((l) => l !== action.id)
+          : [...levels, action.id],
+      };
+    default:
+      return { assets, levels };
+  }
+}
