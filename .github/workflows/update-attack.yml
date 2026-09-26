@@ -56,3 +56,15 @@ jobs:
           if [ "${{ github.event.inputs.force }}" = "true" ]; then ARGS+=(--force); fi
           ARGS+=(--domains="${{ github.event.inputs.domains }}")
           node scripts/update-attack.mjs "${ARGS[@]}"
+
+      # scf_technique_heat caches group_count per technique, and an ATT&CK
+      # rotation is the only thing that moves it. On a monthly cron alone it
+      # went wrong on 2026-09-21 and stayed wrong: 69 of 1,295 rows carried a
+      # stale group_count for ten days, on the badges the compliance page
+      # shows. A calendar cannot know when a rotation happened; this step can.
+      # TRUNCATE + rebuild inside one transaction, measured at 190ms.
+      - name: Rebuild CTI heat badges
+        if: ${{ github.event.inputs.dry-run != 'true' }}
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: node scripts/refresh-cti-heat.mjs

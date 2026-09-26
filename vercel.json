@@ -23,7 +23,7 @@
     },
     {
       "path": "/api/cron/enrich-vt",
-      "schedule": "0 8 * * *"
+      "schedule": "0 0,8,16 * * *"
     },
     {
       "path": "/api/cron/scan-site-health",
@@ -67,7 +67,7 @@
     },
     {
       "path": "/api/cron/refresh-matviews?mv=osv_advisory_rank",
-      "schedule": "45 6 * * *"
+      "schedule": "0 19 * * *"
     }
   ],
   "headers": [
