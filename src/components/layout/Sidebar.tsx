@@ -6,7 +6,8 @@ import { usePathname } from 'next/navigation';
 import { DomainDropdown } from './DomainDropdown';
 import { SectorDropdown } from './SectorDropdown';
 import { ProfileSidebarTrigger } from '../profile/ProfilePanel';
-import { AGENT_TOOL_COUNT } from '../../lib/site';
+import { AGENT_TOOL_COUNT, API_ENDPOINT_COUNT } from '../../lib/site';
+import { FEED_SOURCES } from '../../lib/feeds';
 
 
 interface SidebarProps {
@@ -20,6 +21,12 @@ interface NavItem {
   tooltip?: string;
   /** Renders the label one step heavier than its siblings (semibold vs medium). */
   emphasis?: boolean;
+  /**
+   * How many things the page lists, shown as `Open APIs (81)`. Only for pages
+   * whose size is the reason to visit and whose count comes from a constant the
+   * page itself uses — never a number typed twice.
+   */
+  count?: number;
 }
 
 interface NavSection {
@@ -32,9 +39,9 @@ const topNav: NavItem[] = [
   { path: '/matrix', label: 'Matrix', tooltip: 'att&ck technique matrix heatmap — tactics vs techniques' },
   { path: '/dashboard', label: 'Overview', tooltip: 'summary stats, charts, and top threat groups' },
   { path: '/compliance', label: 'Compliance', emphasis: true, tooltip: 'regulatory and audit frameworks (NIS2, DORA, PCI DSS, NIST 800-53, HIPAA, GDPR, CMMC, ...) bridged to ATT&CK Enterprise via the Secure Controls Framework (SCF)' },
-  { path: '/cti/feed-status', label: 'Feed Status', tooltip: 'CTI feed ingestion health and manual sync controls' },
-  { path: '/open-apis', label: 'Open APIs', tooltip: 'the public REST API behind every page here — no key, no sign-up, no rate limit. every endpoint with its parameters, and a button that calls it' },
-  { path: '/open-mcp', label: 'Open MCP', tooltip: `point claude, cursor or any MCP client at this knowledge base — ${AGENT_TOOL_COUNT} tools over streamable http, anonymous. also covers the A2A endpoint` },
+  { path: '/cti/feed-status', label: 'Feed Status', count: FEED_SOURCES.length, tooltip: 'CTI feed ingestion health and manual sync controls' },
+  { path: '/open-apis', label: 'Open APIs', count: API_ENDPOINT_COUNT, tooltip: 'the public REST API behind every page here — no key, no sign-up, no rate limit. every endpoint with its parameters, and a button that calls it' },
+  { path: '/open-mcp', label: 'Open MCP', count: AGENT_TOOL_COUNT, tooltip: `point claude, cursor or any MCP client at this knowledge base — ${AGENT_TOOL_COUNT} tools over streamable http, anonymous. also covers the A2A endpoint` },
 ];
 
 const attackNav: NavItem[] = [
@@ -97,7 +104,7 @@ const NAV_ROW_CLASS = 'block px-3 py-2.5 rounded-md text-sm transition-colors du
 const NAV_ROW_IDLE_CLASS =
   'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--hover-overlay)]';
 
-function NavItemLink({ path, label, tooltip, end, emphasis }: NavItem & { end?: boolean }) {
+function NavItemLink({ path, label, tooltip, end, emphasis, count }: NavItem & { end?: boolean }) {
   const pathname = usePathname();
   const isActive = end
     ? pathname === path
@@ -115,6 +122,9 @@ function NavItemLink({ path, label, tooltip, end, emphasis }: NavItem & { end?: 
       ].join(' ')}
     >
       {label}
+      {count !== undefined && (
+        <span className="ml-1 font-normal text-[var(--text-secondary)]">({count})</span>
+      )}
     </Link>
   );
 }

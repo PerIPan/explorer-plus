@@ -19,6 +19,18 @@ export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://mitre-explo
 export const AGENT_TOOL_COUNT = 43;
 
 /**
+ * Size of the public REST catalogue (src/lib/api-catalog.ts), quoted in the
+ * sidebar as `Open APIs (81)`.
+ *
+ * A constant for the same reason as AGENT_TOOL_COUNT: the catalogue is ~700
+ * lines of endpoint descriptions, and importing it into the sidebar would put
+ * all of it in the shell chunk on every page — /open-apis loads it, nothing
+ * else needs to. `scripts/check-api-catalog.mjs` fails the build when this
+ * number and API_CATALOG.length disagree, so it cannot drift silently.
+ */
+export const API_ENDPOINT_COUNT = 81;
+
+/**
  * Marker header the API documentation pages set on every live-Run fetch.
  *
  * `middleware.ts` skips the `api_usage` tag when it is present. 61 of the 86

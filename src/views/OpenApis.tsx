@@ -168,7 +168,11 @@ curl '${API_FACTS.baseUrl}/sectors/financial/relationships'`}</CodeBlock>
                         <MethodPill method={e.method} />
                         <code className="font-mono text-xs text-[var(--text-primary)]">{e.path}</code>
                         <span className="text-xs text-[var(--text-secondary)]">{e.summary}</span>
-                        <span className="ml-auto shrink-0 text-[10px] font-medium uppercase tracking-wider text-[var(--text-secondary)] opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                        {/* Persistent, not hover-revealed: an affordance nobody can see is one
+                            nobody uses, and on a touch screen there is no hover at all. Orange on
+                            row hover because it is the one thing here that leaves the page and
+                            makes a real request. */}
+                        <span className="ml-auto shrink-0 text-[10px] font-semibold uppercase tracking-wider text-[var(--text-secondary)] transition-colors group-hover:text-[var(--accent-orange)] group-focus-visible:text-[var(--accent-orange)]">
                           {e.executable ? 'run it →' : 'details →'}
                         </span>
                       </button>

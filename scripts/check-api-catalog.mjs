@@ -6,12 +6,13 @@
 // routes, while the agent tool count read 43 in two places, 42 in llms.txt and
 // 47 in a task brief. Nothing failed. This is what fails.
 //
-// It enforces four things:
+// It enforces five things:
 //   1. every route under app/api/v1 is either CATALOGUED or in EXCLUDED below;
 //   2. every catalogue entry resolves to a real route, with a matching method;
 //   3. AGENT_TOOL_COUNT === TOOL_DECLARATIONS.length, and every declared tool is
 //      grouped exactly once and has an endpoint mapping;
-//   4. public/llms.txt quotes the same tool count and the same origin.
+//   4. public/llms.txt quotes the same tool count and the same origin;
+//   5. API_ENDPOINT_COUNT === API_CATALOG.length (the sidebar quotes it).
 //
 // It parses TEXT rather than importing, because `npm test` runs
 // `node --test "scripts/**/*.test.mjs"` and node cannot import a .ts module.
@@ -144,6 +145,18 @@ export function diffMethods({ entries, routeMethods }) {
   return failures;
 }
 
+/**
+ * The sidebar quotes the endpoint count as a constant, because importing the
+ * catalogue into the shell would ship all 81 descriptions on every page. That
+ * constant is exactly the kind of hand-maintained number this guard exists for.
+ */
+export function checkEndpointCount({ apiEndpointCount, entries }) {
+  if (apiEndpointCount === entries.length) return [];
+  return [
+    `API_ENDPOINT_COUNT in src/lib/site.ts is ${apiEndpointCount} but API_CATALOG has ${entries.length} entries`,
+  ];
+}
+
 /** The drift this guard was written for: four surfaces, three numbers. */
 export function checkTools({ declared, agentToolCount, grouped, endpointKeys }) {
   const failures = [];
@@ -257,13 +270,16 @@ export function run() {
   const declared = [...read('src/lib/tools/declarations.ts').matchAll(/^\s{4}name: '([a-z0-9_]+)',$/gm)].map((m) => m[1]);
   const siteSrc = read('src/lib/site.ts');
   const countMatch = siteSrc.match(/AGENT_TOOL_COUNT\s*=\s*(\d+)/);
+  const endpointCountMatch = siteSrc.match(/API_ENDPOINT_COUNT\s*=\s*(\d+)/);
   const originMatch = siteSrc.match(/NEXT_PUBLIC_SITE_URL\s*\|\|\s*'([^']+)'/);
   if (!countMatch) throw new Error('check-api-catalog: AGENT_TOOL_COUNT not found in src/lib/site.ts');
+  if (!endpointCountMatch) throw new Error('check-api-catalog: API_ENDPOINT_COUNT not found in src/lib/site.ts');
   if (!originMatch) throw new Error('check-api-catalog: SITE_URL default not found in src/lib/site.ts');
 
   const failures = [
     ...diffCatalogue({ routePaths: paths, entries, excluded: EXCLUDED }),
     ...diffMethods({ entries, routeMethods: methods }),
+    ...checkEndpointCount({ apiEndpointCount: Number(endpointCountMatch[1]), entries }),
     ...checkTools({ declared, agentToolCount: Number(countMatch[1]), grouped, endpointKeys }),
     ...checkLlmsTxt(read('public/llms.txt'), { toolCount: declared.length, origin: originMatch[1] }),
   ];

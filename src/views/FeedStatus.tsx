@@ -5,6 +5,7 @@ import { useFeedStatus } from '../hooks/useApi';
 import { apiFetch } from '../lib/api';
 import { PageHeader } from '../components/layout/PageHeader';
 import type { FeedSyncStatus } from '../lib/types';
+import { FEED_SOURCES } from '../lib/feeds';
 
 const SOURCE_LABELS: Record<string, string> = {
   otx: 'AlienVault OTX',
@@ -161,16 +162,6 @@ function EmptyFeedCard({ source }: { source: string }) {
   );
 }
 
-const ALL_SOURCES = [
-  'otx', 'abuse_ch', 'cisa_kev', 'rss',
-  'nvd', 'virustotal',
-  'cve_delta', 'cve_products',
-  'epss', 'osv', 'csf',
-  'ghsa', 'ghsa_delta', 'sigma', 'atomic',
-  'matview_refresh', 'd3fend',
-  'site_health', 'scf', 'cti_heat_refresh',
-];
-
 export function FeedStatus() {
 
   const { data, refetch } = useFeedStatus();
@@ -196,7 +187,7 @@ export function FeedStatus() {
       />
 
       <div className="space-y-2">
-        {ALL_SOURCES.map((source) => {
+        {FEED_SOURCES.map((source) => {
           const feed = feedMap.get(source);
           return feed
             ? <FeedCard key={source} feed={feed} />
