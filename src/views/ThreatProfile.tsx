@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 
 import { PageHeader } from '../components/layout/PageHeader';
+import { Card, Notice, Metric, num } from '../components/profile/BriefingPrimitives';
 import { EntityLink } from '../components/shared/EntityLink';
 import { DiamondLoader } from '../components/shared/FoldingDiamond';
 import { ErrorState } from '../components/shared/ErrorState';
@@ -242,85 +243,15 @@ const SECTOR_NAME_BY_SLUG: ReadonlyMap<string, string> = new Map(
 
 /* ────────────────────────────────────────────────────────────────────────────
  * Small presentational pieces
+ *
+ * `Card`, `Notice`, `Metric` and `num` live in
+ * src/components/profile/BriefingPrimitives.tsx: the OT briefing renders the
+ * same cards, the same notices and the same right-aligned labelled cells, and
+ * two copies of them would have drifted the first time either page was
+ * restyled. `epss` stays here — the OT path has no EPSS to format, measured
+ * zero for every live ICS technique.
  * ──────────────────────────────────────────────────────────────────────────── */
 
-function Card({ children, className = '' }: { children: ReactNode; className?: string }) {
-  return (
-    <div
-      className={`bg-[var(--surface-card)] border border-[var(--border-color)] rounded-lg ${className}`.trim()}
-    >
-      {children}
-    </div>
-  );
-}
-
-function Notice({
-  tone,
-  title,
-  children,
-}: {
-  tone: 'warn' | 'info';
-  title: string;
-  children: ReactNode;
-}) {
-  const styles =
-    tone === 'warn'
-      ? 'border-[var(--orange-dim)] bg-[var(--orange-faint)] text-[var(--accent-orange)]'
-      : 'border-[var(--border-color)] bg-[var(--hover-overlay)] text-[var(--text-secondary)]';
-  return (
-    <div className={`rounded-lg border px-4 py-3 ${styles}`} role="note">
-      <p className="text-xs font-semibold uppercase tracking-wider">{title}</p>
-      <div className="mt-1 text-sm text-[var(--text-primary)]">{children}</div>
-    </div>
-  );
-}
-
-/**
- * One evidence cell. The label ships with every row rather than living in a
- * header the phone layout would have to drop — six labelled cells wrap
- * cleanly, a headerless six-column table does not.
- */
-function Metric({
-  label,
-  value,
-  emphasis = false,
-  title,
-}: {
-  label: string;
-  value: string;
-  emphasis?: boolean;
-  title?: string;
-}) {
-  return (
-    <div className="flex flex-col items-end min-w-[3.25rem]" title={title}>
-      <dt
-        className={`text-[9px] font-semibold uppercase tracking-wider ${
-          emphasis ? 'text-[var(--accent-teal)]' : 'text-[var(--text-secondary)]'
-        }`}
-      >
-        {label}
-      </dt>
-      <dd
-        className={`text-sm tabular-nums leading-tight ${
-          emphasis
-            ? 'font-semibold text-[var(--accent-teal)]'
-            : value === '—'
-              ? 'text-[var(--text-secondary)] opacity-60'
-              : 'text-[var(--text-primary)]'
-        }`}
-      >
-        {value}
-      </dd>
-    </div>
-  );
-}
-
-function num(n: number): string {
-  return n > 0 ? n.toLocaleString() : '—';
-}
-
-/** EPSS is a probability of exploitation in the next 30 days — a percentage
- *  reads more honestly than a raw 0.99999. */
 function epss(v: number | null): string {
   if (v === null) return '—';
   return `${Math.round(v * 100)}%`;
