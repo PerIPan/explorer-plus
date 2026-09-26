@@ -1446,8 +1446,7 @@ export function ProfilePanel({
             >
               The next two are{' '}
               <span className="font-semibold text-[var(--text-primary)]">context, not ranking</span>
-              : they tell us which briefing to build next. Neither reaches the results page, so
-              neither changes a row of it.
+              : they tell us which briefing to build next.
             </p>
 
             <MultiSelect
