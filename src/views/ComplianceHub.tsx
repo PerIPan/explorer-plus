@@ -193,6 +193,33 @@ export function ComplianceHub() {
         )}
       </div>
 
+      {/* The bridge itself. SCF was named in the subtitle, counted in the strip
+          above and credited in the footer, and was still not a place you could
+          go — the one thing doing the work had no destination. It is not one of
+          the frameworks below, so it gets its own block rather than a row among
+          peers. */}
+      <Link
+        href="/frameworks/scf"
+        className="group mb-5 block rounded-lg border border-[var(--teal-dim)] bg-[var(--teal-faint)] px-4 py-3.5 transition-colors hover:border-[var(--accent-teal)]"
+      >
+        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--accent-teal)]">
+            The bridge
+          </span>
+          <span className="text-sm font-semibold text-[var(--text-primary)]">
+            Secure Controls Framework
+          </span>
+          <span className="ml-auto text-xs font-semibold text-[var(--accent-teal)] group-hover:underline">
+            Browse {data.meta.control_count.toLocaleString()} controls →
+          </span>
+        </div>
+        <p className="mt-1 text-xs leading-relaxed text-[var(--text-secondary)]">
+          Every framework below is crosswalked through one common control catalogue — which is what
+          lets a single control satisfy NIS2, DORA and PCI DSS at once, and what the ATT&amp;CK
+          coverage figures are computed over.
+        </p>
+      </Link>
+
       {/* Filter bar */}
       <div className="mb-5 flex flex-wrap items-center gap-2 text-xs">
         <label className="text-[var(--text-secondary)] mr-1">Region:</label>
@@ -239,6 +266,26 @@ export function ComplianceHub() {
 
       {/* Global Tier 1 opens by default so the page lands on content; the rest
           stay closed — the hub is dense, let users open what matters. */}
+      {/* Same row shape as a framework, marked so it does not read as a peer of
+          the regulations it maps. Here because this is where people scan. */}
+      <Link
+        href="/frameworks/scf"
+        className="mb-4 grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-md border border-[var(--teal-dim)] bg-[var(--surface-card)] px-3 py-2.5 transition-colors hover:bg-[var(--hover-overlay)]"
+      >
+        <span className="rounded bg-[var(--teal-faint)] px-1.5 py-px text-[10px] font-bold uppercase tracking-wider text-[var(--accent-teal)]">
+          bridge
+        </span>
+        <span className="min-w-0">
+          <span className="block truncate text-sm text-[var(--text-primary)]">
+            Secure Controls Framework (SCF)
+          </span>
+          <span className="block truncate text-[11px] text-[var(--text-secondary)]">
+            The control catalogue the {data.meta.framework_count} frameworks here map through
+          </span>
+        </span>
+        <span className="text-xs text-[var(--accent-teal)]">→</span>
+      </Link>
+
       <Section title="Global — Tier 1" rows={sections.tier1Global} defaultOpen />
       <Section title="EU regulatory — Tier 1" rows={sections.tier1Eu} defaultOpen={false} />
       <Section title="US regulatory — Tier 1" rows={sections.tier1Us} defaultOpen={false} />

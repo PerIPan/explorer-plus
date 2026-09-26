@@ -517,6 +517,16 @@ export const API_CATALOG: readonly ApiEntry[] = [
     example: '/frameworks/nist/AC-2/techniques',
   },
   {
+    path: '/frameworks/scf', method: 'GET', group: 'compliance', paginated: true, executable: true,
+    summary: 'The Secure Controls Framework catalogue — 1,534 controls, the spine every compliance framework here is crosswalked through.',
+    params: [
+      { name: 'search', type: 'string', note: 'Matches control id, name or description.' },
+      { name: 'domain', type: 'string', note: 'One of the 34 SCF domains, e.g. Network Security.' },
+      { name: 'mapped', type: 'string', values: ['1', 'true'], note: 'Only controls carrying an ATT&CK mapping — 108 of 1,534.' },
+    ],
+    example: '/frameworks/scf?mapped=1&limit=5',
+  },
+  {
     path: '/frameworks/iso27001', method: 'GET', group: 'frameworks', executable: true,
     summary: 'ISO/IEC 27001:2022 Annex A controls and clauses, reached via the CSF v2 crosswalk.',
     example: '/frameworks/iso27001',

@@ -84,6 +84,7 @@ const frameworksNav: NavItem[] = [
   { path: '/frameworks/owasp', label: 'OWASP Top 10', tooltip: 'web, ML, and LLM security risks mapped to ATT&CK + ATLAS via CWE' },
   { path: '/frameworks/csf', label: 'NIST CSF v2', tooltip: 'NIST Cybersecurity Framework v2 subcategories (GV/ID/PR/DE/RS/RC) mapped to ATT&CK techniques' },
   { path: '/frameworks/nist', label: 'NIST 800-53', tooltip: 'compliance controls mapped to techniques' },
+  { path: '/frameworks/scf', label: 'Secure Controls (SCF)', tooltip: 'the 1,534-control catalogue that NIS2, DORA, PCI DSS, ISO 27001, HIPAA and ~250 other frameworks are crosswalked through — the spine behind the Compliance pages, with the ATT&CK techniques its mapped controls bridge to' },
   { path: '/frameworks/iso27001', label: 'ISO/IEC 27001:2022', tooltip: 'ISO 27001:2022 Annex A controls + mandatory clauses mapped to ATT&CK via the NIST CSF v2 crosswalk' },
   { path: '/frameworks/d3fend', label: 'D3FEND', tooltip: 'MITRE D3FEND countermeasures grouped by defensive tactic (Model/Harden/Detect/Isolate/Deceive/Evict/Restore), each mapped to the ATT&CK techniques it counters. Enterprise + ICS.' },
   { path: '/frameworks/react', label: 'RE&CT', tooltip: 'incident response actions and playbooks' },
