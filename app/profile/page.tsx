@@ -4,15 +4,37 @@ import { DiamondLoader } from '../../src/components/shared/FoldingDiamond';
 import { ThreatProfile } from '../../src/views/ThreatProfile';
 import { OtProfile } from '../../src/views/OtProfile';
 
-export const metadata: Metadata = {
-  title: 'Threat Profile',
-  description:
-    'Techniques ranked for one sector: reach by CTI evidence, and sector fit by lift over the threat groups attributed to that sector.',
-};
-
+/**
+ * Branches on the same `domain` param the render branch below uses. A static
+ * export here described the IT briefing only, which stopped being true the
+ * moment this route started serving both engines — an OT visitor's shared link
+ * previewed as a sector briefing they never saw.
+ */
 /** The one domain that routes to the OT engine. Mirrors the branch in
  * app/api/v1/profile/route.ts, which switches on `domain=ics-attack` alone. */
 const OT_DOMAIN = 'ics-attack';
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}): Promise<Metadata> {
+  const raw = (await searchParams).domain;
+  const domain = Array.isArray(raw) ? raw[0] : raw;
+
+  if (domain === OT_DOMAIN) {
+    return {
+      title: 'Threat Profile — OT plant',
+      description:
+        'ATT&CK for ICS techniques ranked for one plant: exposure across your asset surface, and lift over how far each technique reaches across all ATT&CK ICS assets.',
+    };
+  }
+  return {
+    title: 'Threat Profile',
+    description:
+      'Techniques ranked for one sector: reach by CTI evidence, and sector fit by lift over the threat groups attributed to that sector.',
+  };
+}
 
 /**
  * Two briefings live at this one route because they answer the same question
