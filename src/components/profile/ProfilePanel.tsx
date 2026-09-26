@@ -765,10 +765,17 @@ export function ProfileLargeModal() {
 export function ProfileSidebarTrigger({
   className,
   label = 'Threat Profile',
+  /**
+   * Rendered in the same dim parenthetical the counted nav rows use, so this
+   * row reads as one of them. It is a word rather than a number on purpose:
+   * the other rows say how much is behind them, and this one says whose.
+   */
+  suffix,
   title,
 }: {
   className?: string;
   label?: string;
+  suffix?: string;
   title?: string;
 }) {
   const ctl = useController();
@@ -786,6 +793,7 @@ export function ProfileSidebarTrigger({
       className={className}
     >
       {label}
+      {suffix && <span className="ml-1 font-normal text-[var(--text-secondary)]">({suffix})</span>}
     </button>
   );
 }

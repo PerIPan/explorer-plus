@@ -282,6 +282,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                 you are on, and only Apply navigates (to /profile). */}
             {item.path === '/compliance' && (
               <ProfileSidebarTrigger
+                suffix="user"
                 // Says what the answers DO. The old wording promised that all
                 // four questions "rank techniques, actors and controls", but
                 // role and compliance regime are collected for context and
