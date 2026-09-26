@@ -129,11 +129,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         />
       )}
 
-      <Sidebar
-        open={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        onOpenMcp={() => { setHelpTab('mcp'); setHelpOpen(true); setSidebarOpen(false); }}
-      />
+      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       {/* Main area pushed right of the fixed sidebar on lg+ */}
       <div className="flex-1 flex flex-col lg:ml-52 min-h-screen min-w-0">

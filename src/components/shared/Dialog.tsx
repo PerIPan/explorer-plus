@@ -49,7 +49,19 @@ export function Dialog({
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  const { dialogProps } = useDialog({ open, onClose, returnFocusTo, labelledBy: titleId });
+  /**
+   * `open && mounted`, not `open`.
+   *
+   * The portal cannot render until after the first client commit, so on the
+   * render where `open` first becomes true this component returns null and the
+   * dialog element does not exist yet. Handing `open` straight to the hook ran
+   * its focus and `inert` effects against a null ref, and they never re-ran —
+   * `open` had not changed — so a dialog MOUNTED in the open state (the endpoint
+   * and tool modals, which are created on click) got no focus move and left the
+   * background live, while one whose `open` prop merely flipped (the header
+   * modal, always mounted) worked. Caught by driving both in a browser.
+   */
+  const { dialogProps } = useDialog({ open: open && mounted, onClose, returnFocusTo, labelledBy: titleId });
 
   if (!open || !mounted) return null;
 

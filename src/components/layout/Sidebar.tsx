@@ -6,14 +6,12 @@ import { usePathname } from 'next/navigation';
 import { DomainDropdown } from './DomainDropdown';
 import { SectorDropdown } from './SectorDropdown';
 import { ProfileSidebarTrigger } from '../profile/ProfilePanel';
+import { AGENT_TOOL_COUNT } from '../../lib/site';
 
 
 interface SidebarProps {
   open: boolean;
   onClose: () => void;
-  /** Opens the info modal on its MCP tab. Optional so the sidebar still
-   *  renders standalone (e.g. in isolation) without the modal wired up. */
-  onOpenMcp?: () => void;
 }
 
 interface NavItem {
@@ -33,13 +31,17 @@ const topNav: NavItem[] = [
   { path: '/', label: '360 Views', tooltip: 'explore entity connections — graph and dedicated map views for every entity type' },
   { path: '/matrix', label: 'Matrix', tooltip: 'att&ck technique matrix heatmap — tactics vs techniques' },
   { path: '/dashboard', label: 'Overview', tooltip: 'summary stats, charts, and top threat groups' },
-  { path: '/sectors', label: 'Sectors', tooltip: 'industry sectors targeted by threat groups — click any sector for its 360 view' },
   { path: '/compliance', label: 'Compliance', emphasis: true, tooltip: 'regulatory and audit frameworks (NIS2, DORA, PCI DSS, NIST 800-53, HIPAA, GDPR, CMMC, ...) bridged to ATT&CK Enterprise via the Secure Controls Framework (SCF)' },
   { path: '/cti/feed-status', label: 'Feed Status', tooltip: 'CTI feed ingestion health and manual sync controls' },
+  { path: '/open-apis', label: 'Open APIs', tooltip: 'the public REST API behind every page here — no key, no sign-up, no rate limit. every endpoint with its parameters, and a button that calls it' },
+  { path: '/open-mcp', label: 'Open MCP', tooltip: `point claude, cursor or any MCP client at this knowledge base — ${AGENT_TOOL_COUNT} tools over streamable http, anonymous. also covers the A2A endpoint` },
 ];
 
 const attackNav: NavItem[] = [
   { path: '/groups', label: 'Groups', tooltip: 'tracked threat actor groups (APT29, Lazarus, etc.)' },
+  // Sectors are ATT&CK-derived (group_sectors), not a top-level concept — they
+  // were in topNav until the two API entries needed that space.
+  { path: '/sectors', label: 'Sectors', tooltip: 'industry sectors targeted by threat groups — click any sector for its 360 view' },
   { path: '/campaigns', label: 'Campaigns', tooltip: 'named intrusion campaigns with timelines' },
   { path: '/tactics', label: 'Tactics', tooltip: 'kill chain phases: recon → impact' },
   { path: '/techniques', label: 'Techniques', tooltip: 'attack techniques and sub-techniques used by adversaries' },
@@ -163,7 +165,7 @@ function CollapsibleNavSection({ label, items, defaultOpen = false, title }: { l
   );
 }
 
-export function Sidebar({ open, onClose, onOpenMcp }: SidebarProps) {
+export function Sidebar({ open, onClose }: SidebarProps) {
   return (
     <aside
       className={[
@@ -312,13 +314,12 @@ export function Sidebar({ open, onClose, onOpenMcp }: SidebarProps) {
           <span className="ml-auto text-[9px] opacity-50">v1.0</span>
         </a>
         {/* Deliberately NOT a link to /api/mcp: that endpoint is POST-only and
-            answers GET with a raw 405 JSON-RPC blob. Clicking opens the info
-            modal's MCP tab instead, which is what a reader actually wants. */}
-        <button
-          type="button"
-          onClick={onOpenMcp}
+            answers GET with a raw 405 JSON-RPC blob. It used to open the info
+            modal's MCP tab; /open-mcp is the page that tab was standing in for. */}
+        <Link
+          href="/open-mcp"
           className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[10px] font-medium text-[var(--text-secondary)] hover:text-[var(--accent-teal)] hover:bg-[var(--hover-overlay)] transition-colors text-left"
-          title="MCP server — connect Claude, Cursor or any MCP client. Click for setup instructions."
+          title="MCP server — connect Claude, Cursor or any MCP client. Setup, every tool, and the A2A endpoint."
         >
           <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M2 11.5 7 6.5a2 2 0 0 1 2.8 0L11 7.7" />
@@ -327,11 +328,9 @@ export function Sidebar({ open, onClose, onOpenMcp }: SidebarProps) {
           </svg>
           <span>MCP Server</span>
           <svg viewBox="0 0 16 16" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="1.5" className="ml-auto opacity-60" aria-hidden="true">
-            <circle cx="8" cy="8" r="6.5" />
-            <path d="M8 7.2v4" />
-            <circle cx="8" cy="4.9" r="0.6" fill="currentColor" stroke="none" />
+            <path d="M6 3.5 10.5 8 6 12.5" />
           </svg>
-        </button>
+        </Link>
       </div>
     </aside>
   );

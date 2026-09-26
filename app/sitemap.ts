@@ -26,6 +26,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     '/frameworks/cloud', '/frameworks/atomic', '/frameworks/detection', '/frameworks/d3fend',
     '/frameworks/purdue', '/frameworks/cra', '/frameworks/owasp-ai',
     '/compliance', '/external-actors', '/data-sources', '/about/attributions',
+    '/open-apis', '/open-mcp',
   ].map((path) => ({ url: `${BASE_URL}${path}`, changeFrequency: 'weekly' as const }));
 
   try {
