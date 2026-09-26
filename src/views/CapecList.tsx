@@ -1,5 +1,6 @@
 'use client';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useDebouncedSearchParam } from '../hooks/useDebouncedSearchParam';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useUpdateParams } from '../hooks/useUpdateParams';
 import { useCapecPatterns } from '../hooks/useApi';
@@ -100,10 +101,7 @@ export function CapecList() {
     [updateParams],
   );
 
-  const [qInput, setQInput] = useState(q);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-  useEffect(() => { setQInput(q); }, [q]);
-  useEffect(() => () => clearTimeout(debounceRef.current), []);
+  const searchBox = useDebouncedSearchParam('q');
 
   const params = useMemo(() => {
     const p: Record<string, string> = { page: String(page), limit: '50' };
@@ -127,13 +125,9 @@ export function CapecList() {
         <input
           type="search"
           placeholder="Search pattern name or CAPEC ID..."
-          value={qInput}
+          value={searchBox.value}
           aria-label="Search CAPEC patterns"
-          onChange={(e) => {
-            setQInput(e.target.value);
-            clearTimeout(debounceRef.current);
-            debounceRef.current = setTimeout(() => setParam('q', e.target.value), 300);
-          }}
+          onChange={(e) => searchBox.onChange(e.target.value)}
           className="min-w-[260px] px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent-teal)]"
         />
         <select

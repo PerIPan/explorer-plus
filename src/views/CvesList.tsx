@@ -1,5 +1,6 @@
 'use client';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useDebouncedSearchParam } from '../hooks/useDebouncedSearchParam';
 import { createPortal } from 'react-dom';
 import { useSearchParams } from 'next/navigation';
 import { useUpdateParams } from '../hooks/useUpdateParams';
@@ -318,31 +319,11 @@ export function CvesList() {
     [updateParams],
   );
 
-  const [qInput, setQInput] = useState(q);
-  const [techInput, setTechInput] = useState(technique);
-  const [appInput, setAppInput] = useState(app);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const techDebounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-  useEffect(() => { setQInput(q); }, [q]);
-  useEffect(() => { setTechInput(technique); }, [technique]);
-  useEffect(() => { setAppInput(app); }, [app]);
-  const handleQChange = useCallback((value: string) => {
-    setQInput(value);
-    clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => setParam('q', value), 300);
-  }, [setParam]);
-  const handleTechChange = useCallback((value: string) => {
-    setTechInput(value);
-    clearTimeout(techDebounceRef.current);
-    techDebounceRef.current = setTimeout(() => setParam('technique', value.trim()), 500);
-  }, [setParam]);
-  const appDebounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const handleAppChange = useCallback((value: string) => {
-    setAppInput(value);
-    clearTimeout(appDebounceRef.current);
-    appDebounceRef.current = setTimeout(() => setParam('app', value.trim()), 500);
-  }, [setParam]);
-  useEffect(() => () => { clearTimeout(debounceRef.current); clearTimeout(techDebounceRef.current); clearTimeout(appDebounceRef.current); }, []);
+  const qBox = useDebouncedSearchParam('q');
+  // 500ms on the two identifier fields: a partial 'T10' or a half-typed
+  // vendor matches far too much, and each keystroke is a real query.
+  const techBox = useDebouncedSearchParam('technique', 500);
+  const appBox = useDebouncedSearchParam('app', 500);
 
   const params = useMemo(() => {
     const p: Record<string, string> = { page: String(page), limit: '100', ...sectorParam };
@@ -381,22 +362,22 @@ export function CvesList() {
         <input
           type="search"
           placeholder="Search CVEs..."
-          value={qInput}
-          onChange={(e) => handleQChange(e.target.value)}
+          value={qBox.value}
+          onChange={(e) => qBox.onChange(e.target.value)}
           className="min-w-[200px] px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent-teal)]"
         />
         <input
           type="text"
           placeholder="Technique"
-          value={techInput}
-          onChange={(e) => handleTechChange(e.target.value)}
+          value={techBox.value}
+          onChange={(e) => techBox.onChange(e.target.value)}
           className="min-w-[120px] max-w-[140px] px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent-teal)]"
         />
         <input
           type="text"
           placeholder="Application"
-          value={appInput}
-          onChange={(e) => handleAppChange(e.target.value)}
+          value={appBox.value}
+          onChange={(e) => appBox.onChange(e.target.value)}
           className="min-w-[140px] px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent-teal)]"
         />
         <select

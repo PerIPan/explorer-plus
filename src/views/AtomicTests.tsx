@@ -1,5 +1,6 @@
 'use client';
 import { useCallback } from 'react';
+import { useDebouncedSearchParam } from '../hooks/useDebouncedSearchParam';
 import { useSearchParams } from 'next/navigation';
 import { useUpdateParams } from '../hooks/useUpdateParams';
 import { useQuery } from '@tanstack/react-query';
@@ -44,6 +45,7 @@ export function AtomicTests() {
   const q = searchParams.get('q') ?? '';
   const platform = searchParams.get('platform') ?? '';
   const page = parseInt(searchParams.get('page') ?? '1', 10) || 1;
+  const searchBox = useDebouncedSearchParam('q');
 
   const setParam = useCallback(
     (key: string, value: string) => {
@@ -84,8 +86,8 @@ export function AtomicTests() {
         <input
           type="search"
           placeholder="Search tests or technique IDs..."
-          value={q}
-          onChange={(e) => setParam('q', e.target.value)}
+          value={searchBox.value}
+          onChange={(e) => searchBox.onChange(e.target.value)}
           className="min-w-[200px] px-3 py-2 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent-teal)] focus:ring-1 focus:ring-[var(--accent-teal)]"
         />
         <select

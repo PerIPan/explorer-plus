@@ -1,5 +1,6 @@
 'use client';
 import { useCallback } from 'react';
+import { useDebouncedSearchParam } from '../hooks/useDebouncedSearchParam';
 import { useSearchParams } from 'next/navigation';
 import { useUpdateParams } from '../hooks/useUpdateParams';
 import { useQuery } from '@tanstack/react-query';
@@ -34,6 +35,7 @@ export function DetectionStrategies() {
   const page = parseInt(searchParams.get('page') ?? '1', 10);
   const search = searchParams.get('search') ?? '';
   const technique = searchParams.get('technique') ?? '';
+  const searchBox = useDebouncedSearchParam('search');
 
   const setParam = useCallback(
     (key: string, value: string) => {
@@ -69,8 +71,8 @@ export function DetectionStrategies() {
         <input
           type="search"
           placeholder="Search strategies..."
-          value={search}
-          onChange={(e) => setParam('search', e.target.value)}
+          value={searchBox.value}
+          onChange={(e) => searchBox.onChange(e.target.value)}
           className="min-w-[200px] px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent-teal)]"
         />
         {technique && (

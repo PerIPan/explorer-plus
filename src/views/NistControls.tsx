@@ -1,5 +1,6 @@
 'use client';
 import { useCallback, useState } from 'react';
+import { useDebouncedSearchParam } from '../hooks/useDebouncedSearchParam';
 import { useSearchParams } from 'next/navigation';
 import { useUpdateParams } from '../hooks/useUpdateParams';
 import { useQuery } from '@tanstack/react-query';
@@ -137,6 +138,7 @@ export function NistControls() {
   const search = searchParams.get('search') ?? '';
   const family = searchParams.get('family') ?? '';
   const page = parseInt(searchParams.get('page') ?? '1', 10);
+  const searchBox = useDebouncedSearchParam('search');
 
   const params: Record<string, string> = { page: String(page), limit: '50' };
   if (search) params.search = search;
@@ -168,8 +170,8 @@ export function NistControls() {
         <input
           type="search"
           placeholder="Search controls..."
-          value={search}
-          onChange={(e) => setParam('search', e.target.value)}
+          value={searchBox.value}
+          onChange={(e) => searchBox.onChange(e.target.value)}
           className="
             flex-1 min-w-[200px] max-w-sm px-3 py-2 rounded-md text-sm
             bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)]

@@ -1,5 +1,6 @@
 'use client';
 import { useCallback } from 'react';
+import { useDebouncedSearchParam } from '../hooks/useDebouncedSearchParam';
 import { useSearchParams } from 'next/navigation';
 import { useUpdateParams } from '../hooks/useUpdateParams';
 import { useSigmaRules } from '../hooks/useApi';
@@ -94,6 +95,8 @@ export function SigmaList() {
   const level = searchParams.get('level') ?? '';
   const technique = searchParams.get('technique') ?? '';
   const q = searchParams.get('q') ?? '';
+  const searchBox = useDebouncedSearchParam('q');
+  const techniqueBox = useDebouncedSearchParam('technique');
 
   const setParam = useCallback(
     (key: string, value: string) => {
@@ -125,16 +128,16 @@ export function SigmaList() {
         <input
           type="search"
           placeholder="Search rules..."
-          value={q}
-          onChange={(e) => setParam('q', e.target.value)}
+          value={searchBox.value}
+          onChange={(e) => searchBox.onChange(e.target.value)}
           className="min-w-[200px] px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent-teal)]"
         />
         <div className="flex flex-col gap-1">
           <input
             type="text"
             placeholder="Technique ID (e.g. T1059)"
-            value={technique}
-            onChange={(e) => setParam('technique', e.target.value)}
+            value={techniqueBox.value}
+            onChange={(e) => techniqueBox.onChange(e.target.value)}
             className="min-w-[200px] px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent-teal)]"
           />
           <span className="text-[10px] text-[var(--text-secondary)]">Enter exact ID, e.g. T1059.001</span>

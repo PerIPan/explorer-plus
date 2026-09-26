@@ -1,5 +1,6 @@
 'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useDebouncedSearchParam } from '../hooks/useDebouncedSearchParam';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useUpdateParams } from '../hooks/useUpdateParams';
 import { useQuery } from '@tanstack/react-query';
@@ -107,10 +108,7 @@ export function ApplicationsList() {
   const updateParams = useUpdateParams();
   const page = parseInt(searchParams.get('page') ?? '1', 10);
   const search = searchParams.get('search') ?? '';
-  const [searchInput, setSearchInput] = useState(search);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-  useEffect(() => { setSearchInput(search); }, [search]);
-  useEffect(() => () => clearTimeout(debounceRef.current), []);
+  const searchBox = useDebouncedSearchParam('search');
 
   const setParam = useCallback(
     (key: string, value: string) => {
@@ -142,13 +140,9 @@ export function ApplicationsList() {
         <input
           type="search"
           placeholder="Search vendor or product..."
-          value={searchInput}
+          value={searchBox.value}
           aria-label="Search vendor or product"
-          onChange={(e) => {
-            setSearchInput(e.target.value);
-            clearTimeout(debounceRef.current);
-            debounceRef.current = setTimeout(() => setParam('search', e.target.value), 300);
-          }}
+          onChange={(e) => searchBox.onChange(e.target.value)}
           className="min-w-[250px] px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent-teal)]"
         />
       </div>
