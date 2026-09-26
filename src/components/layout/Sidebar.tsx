@@ -231,11 +231,17 @@ export function Sidebar({ open, onClose, onOpenMcp }: SidebarProps) {
           <Fragment key={item.path}>
             <NavItemLink {...item} end={item.path === '/'} />
             {/* Directly after Compliance. Not a NavItem: it has no route —
-                it opens the four questions in a modal over whatever page you
-                are on, and only Apply navigates (to /profile). */}
+                it opens the profile questions in a modal over whatever page
+                you are on, and only Apply navigates (to /profile). */}
             {item.path === '/compliance' && (
               <ProfileSidebarTrigger
-                title="tailor this to what you defend — four questions (sector, environment, role, compliance regime) that rank techniques, actors and controls for your organisation"
+                // Says what the answers DO. The old wording promised that all
+                // four questions "rank techniques, actors and controls", but
+                // role and compliance regime are collected for context and
+                // reach nothing on /profile — and "four questions" stopped
+                // being true when the OT set (plant surface, role, regime)
+                // shipped. Neither a count nor an unearned promise now.
+                title="tailor this to what you defend — an IT sector and environment, or an OT plant surface, and the briefing ranks techniques, actors and controls on that"
                 className={[
                   NAV_ROW_CLASS,
                   'w-full text-left font-medium',

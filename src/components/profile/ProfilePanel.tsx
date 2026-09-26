@@ -106,7 +106,8 @@ export type ProfileMode = 'it' | 'ot';
 /**
  * The telemetry variant string for a mode.
  *
- * `'v1-6q-ot'` keeps its digit even though the OT panel asks FOUR questions.
+ * `'v1-6q-ot'` keeps its digit even though the OT panel renders THREE controls
+ * (plant surface, role, compliance regime).
  * It is a CHECK-constraint value on `profile_submissions.variant`; migrating a
  * constraint for a cosmetic digit would be a schema change to make a string
  * read nicer. Treat it as an opaque id.
@@ -821,6 +822,8 @@ export function ProfilePanel({
   const titleId = `${baseId}-title`;
   const statusId = `${baseId}-status`;
   const sectorId = `${baseId}-sector`;
+  // Describes the two questions that are collected but never ranked.
+  const contextNoteId = `${baseId}-context-note`;
   const isOt = mode === 'ot';
 
   /**
@@ -1169,9 +1172,20 @@ export function ProfilePanel({
             <h2 id={titleId} className="text-sm font-semibold text-[var(--text-primary)]">
               Tailor this to what you defend
             </h2>
-            <p className="mt-0.5 text-xs text-[var(--text-secondary)]">
-              Four questions. Only the {isOt ? 'plant surface is' : 'sector is'} required — nothing
-              is answered for you.
+            {/* What each answer DOES, stated rather than implied. This used to
+                read "Four questions. Only the sector is required" — which
+                implied all four feed the ranking, when role and compliance
+                regime are collected for context and are deliberately kept out
+                of the URL because nothing on /profile reads them. "Four" was
+                also wrong the moment the OT set (plant surface, role, regime)
+                shipped. The count is now derived from the mode rather than
+                written down, so it cannot go stale again. */}
+            <p className="mt-0.5 text-xs leading-snug text-[var(--text-secondary)]">
+              {isOt
+                ? 'One question ranks your briefing: the plant surface, which is required. '
+                : 'Two questions rank your briefing: sector — the only required one — and environment. '}
+              Role and compliance regime are context for us and change nothing in the ranking.
+              Nothing is answered for you.
             </p>
           </div>
           <button
@@ -1319,23 +1333,44 @@ export function ProfilePanel({
             </>
           )}
 
-          <MultiSelect
-            id={`${baseId}-roles`}
-            label="Your role"
-            options={ROLE_OPTIONS}
-            selected={answers.roles ?? EMPTY_SELECTION}
-            onChange={(next) => setAnswer('roles', next)}
-            placeholder="Search roles…"
-          />
+          {/* ── The two questions that are collected but never ranked ─────
+              Asked in BOTH modes, and in neither does anything on /profile
+              read them: `onApply` keeps both out of the URL on purpose, and
+              the two briefings have no notion of either. That is a settled
+              decision — it is the copy that had to change. The note is placed
+              BEFORE the fields, not after, so it is read while deciding
+              whether to answer, and it is wired with `aria-describedby` so a
+              screen-reader visitor is told the same thing at the same point
+              rather than meeting it after the fact. */}
+          <div role="group" aria-describedby={contextNoteId} className="flex flex-col gap-4">
+            <p
+              id={contextNoteId}
+              className="text-[11px] leading-snug text-[var(--text-secondary)] border-t border-[var(--border-color)] pt-3"
+            >
+              The next two are{' '}
+              <span className="font-semibold text-[var(--text-primary)]">context, not ranking</span>
+              : they tell us which briefing to build next. Neither reaches the results page, so
+              neither changes a row of it.
+            </p>
 
-          <MultiSelect
-            id={`${baseId}-frameworks`}
-            label="Compliance regime"
-            options={FRAMEWORK_OPTIONS}
-            selected={answers.frameworks ?? EMPTY_SELECTION}
-            onChange={(next) => setAnswer('frameworks', next)}
-            placeholder="Search frameworks…"
-          />
+            <MultiSelect
+              id={`${baseId}-roles`}
+              label="Your role"
+              options={ROLE_OPTIONS}
+              selected={answers.roles ?? EMPTY_SELECTION}
+              onChange={(next) => setAnswer('roles', next)}
+              placeholder="Search roles…"
+            />
+
+            <MultiSelect
+              id={`${baseId}-frameworks`}
+              label="Compliance regime"
+              options={FRAMEWORK_OPTIONS}
+              selected={answers.frameworks ?? EMPTY_SELECTION}
+              onChange={(next) => setAnswer('frameworks', next)}
+              placeholder="Search frameworks…"
+            />
+          </div>
         </div>
 
         <div className="flex items-center justify-between gap-3 border-t border-[var(--border-color)] px-4 py-3">
