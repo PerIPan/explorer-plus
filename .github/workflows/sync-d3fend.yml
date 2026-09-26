@@ -1,0 +1,69 @@
+name: Sync D3FEND Mappings
+
+# Moved from Vercel cron to GitHub Actions, for the same reason as OSV: Vercel
+# caps a cron invocation at 300s regardless of the route's `maxDuration`, and a
+# full sweep of the 794 live Enterprise + ICS techniques costs ~4.5 minutes
+# (one D3FEND API call per technique plus a 200ms courtesy delay). It did not
+# fit, so the route carried a 300-technique cursor and swept the corpus over
+# several weekly runs -- and when a run overran anyway it logged
+# `Soft timeout: exceeded 270000ms budget before Vercel hard kill`, which is
+# what it last did on 2026-09-22.
+#
+# With no cap, every run is a complete refresh, so the schedule can simply
+# match how often D3FEND publishes -- two or three releases a year -- instead
+# of being paced by how much fits in five minutes.
+#
+# app/api/cron/sync-d3fend/route.ts stays for manual, auth-gated runs, exactly
+# as the sync-osv route did. It is no longer scheduled in vercel.json.
+
+on:
+  schedule:
+    # Twice a year, 06:00 UTC on 10 Jan and 10 Jul — alongside SCF, which runs
+    # the same days. D3FEND ships two or three releases a year and a run is a
+    # complete refresh, so a quarterly clock was just extra Neon wakes.
+    - cron: '0 6 10 1,7 *'
+  workflow_dispatch:
+    inputs:
+      domain:
+        description: 'Limit to one ATT&CK domain'
+        required: false
+        default: ''
+        type: choice
+        options:
+          - ''
+          - enterprise-attack
+          - ics-attack
+      from:
+        description: 'Start at this attack_id (e.g. T0800) — for a targeted rescan'
+        required: false
+        default: ''
+        type: string
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    # A full sweep is ~4.5 min. 30 covers a slow day at the D3FEND API without
+    # letting a hung run sit for an hour.
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+
+      - name: Install deps
+        run: npm install pg
+
+      - name: Run D3FEND sync
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          ARGS=""
+          if [ -n "${{ github.event.inputs.domain }}" ]; then
+            ARGS="$ARGS --domain=${{ github.event.inputs.domain }}"
+          fi
+          if [ -n "${{ github.event.inputs.from }}" ]; then
+            ARGS="$ARGS --from=${{ github.event.inputs.from }}"
+          fi
+          node scripts/sync-d3fend.mjs $ARGS

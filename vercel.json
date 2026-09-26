@@ -18,10 +18,6 @@
       "schedule": "15 6 * * *"
     },
     {
-      "path": "/api/cron/sync-d3fend",
-      "schedule": "0 6 1 */3 *"
-    },
-    {
       "path": "/api/cron/enrich-nvd",
       "schedule": "0 */4 * * *"
     },
@@ -35,7 +31,7 @@
     },
     {
       "path": "/api/cron/sync-csf",
-      "schedule": "0 5 1 */3 *"
+      "schedule": "0 5 10 1,7 *"
     },
     {
       "path": "/api/cron/sync-epss",
