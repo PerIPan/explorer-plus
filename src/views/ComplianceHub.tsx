@@ -130,7 +130,7 @@ export function ComplianceHub() {
   if (error) {
     return (
       <div className="p-6 max-w-5xl">
-        <PageHeader title="Compliance" />
+        <PageHeader title="Compliance on confirmed facts" />
         <div className="rounded-md border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-300">
           Failed to load compliance frameworks: {error}
         </div>
@@ -141,7 +141,7 @@ export function ComplianceHub() {
   if (!data) {
     return (
       <div className="p-6 max-w-5xl">
-        <PageHeader title="Compliance" />
+        <PageHeader title="Compliance on confirmed facts" />
         <div className="text-sm text-[var(--text-secondary)]">Loading frameworks...</div>
       </div>
     );
@@ -152,8 +152,8 @@ export function ComplianceHub() {
   return (
     <div className="p-6 max-w-6xl">
       <PageHeader
-        title="Compliance"
-        subtitle="Regulatory and audit frameworks bridged to MITRE ATT&CK Enterprise via the Secure Controls Framework (SCF). ATLAS, ICS, and Mobile have their own compliance ecosystems and are not covered here."
+        title="Compliance on confirmed facts"
+        subtitle="Regulatory and audit frameworks bridged to MITRE ATT&CK Enterprise via the Secure Controls Framework (SCF). The KEV and CVE signals on every framework are grounded on curated, analyst-mapped CVE→technique links — not CWE→CAPEC inference. ATLAS, ICS, and Mobile have their own compliance ecosystems and are not covered here."
       />
 
       {/* Meta strip */}
