@@ -12,6 +12,8 @@
 //   - orphanSubtechniques: count of techniques marked is_subtechnique with
 //             a NULL parent_technique_id (must be zero)
 //   - perDomainTechniqueCounts: techniques grouped by domain
+//   - sectorCoverage: linked / live group COVERAGE, not a row count (class D
+//             invariant — must not decay materially; see attack-diff.mjs)
 //
 // Why no FK-dangling check: every FK column has a real Postgres FOREIGN KEY
 // constraint, so dangling references are physically impossible — the DB
@@ -41,9 +43,9 @@ const RELATION_TABLES = [
   'group_campaigns',
   'technique_data_components',
   // Not written by update-attack.mjs — extract_sectors lives only in the
-  // destructive seed. Snapshotted so an ATT&CK release that adds groups
-  // without sector links shows up as coverage decay in the diff instead of
-  // silently thinning sector_technique_lift.
+  // destructive seed. Snapshotted for the delta summary only: the ROW COUNT
+  // cannot detect the failure mode that matters here (see `sectorCoverage`
+  // below, and the coverage rule in attack-diff.mjs).
   'group_sectors',
 ];
 
@@ -71,6 +73,46 @@ export async function captureSnapshot(pool) {
     `SELECT domain, COUNT(*)::int AS n FROM techniques WHERE domain IS NOT NULL GROUP BY domain ORDER BY domain`,
   );
   for (const row of dom.rows) snap.perDomainTechniqueCounts[row.domain] = row.n;
+
+  /* ──────────────────────────────────────────────────────────────────────────
+   * Sector COVERAGE, not group_sectors row count.
+   *
+   * The named failure mode is an ATT&CK release that adds threat groups WITHOUT
+   * sector links. `group_sectors` is written ONLY by extract_sectors in the
+   * destructive seed, never by update-attack.mjs, so such a release leaves the
+   * table at exactly its pre-run row count — 396 today. A row-count rule (even
+   * the 50% relation_count_collapsed rule) can never fire on it: nothing was
+   * lost, the denominator simply grew underneath.
+   *
+   * What moves is the sector_technique_lift matview. Measured 2026-09-26:
+   * coverage is 149 linked / 180 live groups = 82.8%. Fifteen unlinked new
+   * groups take the lift denominator `all_n` from 180 to 195 — and because the
+   * new groups DO carry group_techniques rows, the global `glob.c` per technique
+   * rises only for the techniques THEY use. The result is not a uniform rescale
+   * that leaves the order alone: it is real re-ranking inside every sector,
+   * ungated and invisible.
+   *
+   * Definitions, both scoped to LIVE groups so a release that merely revokes a
+   * group does not read as decay:
+   *   liveGroups   = non-revoked, non-deprecated threat_groups
+   *   linkedGroups = of those, the ones with >= 1 group_sectors row
+   * ────────────────────────────────────────────────────────────────────────── */
+  const coverage = await pool.query(
+    `WITH live AS (
+       SELECT id FROM threat_groups WHERE is_revoked = false AND is_deprecated = false
+     ),
+     linked AS (
+       SELECT DISTINCT gs.group_id FROM group_sectors gs JOIN live l ON l.id = gs.group_id
+     )
+     SELECT (SELECT count(*)::int FROM live)   AS live_groups,
+            (SELECT count(*)::int FROM linked) AS linked_groups`,
+  );
+  const { live_groups: liveGroups, linked_groups: linkedGroups } = coverage.rows[0];
+  snap.sectorCoverage = {
+    liveGroups,
+    linkedGroups,
+    ratio: liveGroups > 0 ? linkedGroups / liveGroups : 0,
+  };
 
   // Sub-technique orphan invariant — every is_subtechnique=true row must
   // have a non-null parent_technique_id.

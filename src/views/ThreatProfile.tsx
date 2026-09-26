@@ -71,6 +71,23 @@ interface ProfileResponse {
     platformDropped: boolean;
     /** Present ONLY on the valid, non-error "no sector chosen" response. */
     reason?: string;
+    /**
+     * The chosen sort key's evidence column is entirely ZERO across the pool,
+     * so Band A is not a ranking — it is a stable-sort slice of an all-zero
+     * column. True for every non-enterprise domain on every evidence sort
+     * (measured: no live ICS, mobile or ATLAS technique carries KEV, CVE, EPSS,
+     * report or IOC evidence), which is exactly the case that used to render
+     * "Most KEV evidence" over six zeroes. Optional on the wire so an older
+     * deployment of the route degrades to the previous rendering rather than
+     * crashing on a missing field.
+     */
+    evidenceUnavailable?: boolean;
+    /** An explicit `domain=all` request: the ranked pool spans domains. The
+     *  server's confirmation of what this page already infers from the URL. */
+    mixedDomain?: boolean;
+    /** The platform selection matched NO technique, so the empty pool below is
+     *  the platform answer's doing and not a statement about the sector. */
+    platformPoolEmpty?: boolean;
   };
 }
 
@@ -727,7 +744,14 @@ export function ThreatProfile() {
     </>
   );
 
-  const allDomainsNotice = allDomains ? (
+  /**
+   * Takes the flag rather than reading `allDomains` directly, so the server's
+   * own `meta.mixedDomain` can raise it too. The page infers the mixed pool
+   * from the URL; the response confirms it from the pool actually ranked, and
+   * either is enough to say so.
+   */
+  const mixedDomainNotice = (mixed: boolean) =>
+    mixed ? (
     <Notice tone="warn" title="All domains — the pool is mixed">
       You have the site-wide domain filter on <span className="font-semibold">All Domains</span>, so
       enterprise, mobile, ICS and ATLAS techniques are ranked together under one sector heading.
@@ -735,7 +759,7 @@ export function ThreatProfile() {
       zero in every evidence column while still occupying band slots and still diluting lift. Pick a
       single domain in the sidebar for a briefing that compares like with like.
     </Notice>
-  ) : null;
+    ) : null;
 
   /* ── Failure states ───────────────────────────────────────────────────── */
 
@@ -858,6 +882,26 @@ export function ThreatProfile() {
   const moreGroups = Math.max(0, meta.groupCount - groupsShown);
   const platformList = (appliedPlatforms.length > 0 ? appliedPlatforms : platforms).join(', ');
 
+  /**
+   * Three states that the previous rendering explained as something they are
+   * not. Each is read defensively (`=== true`) because the flags are optional
+   * on the wire.
+   *
+   *   • `emptyPool` — nothing was ranked AT ALL. The degeneracy and Band-B
+   *     notices below both describe a pool that exists and is thin, so over an
+   *     empty pool they said "fewer than six distinct lift values exist across
+   *     the 0 techniques in this pool" and "no technique carries any KEV
+   *     evidence": an evidence-spread explanation for a missing pool. They are
+   *     suppressed here and replaced by the one that is true.
+   *   • `platformPoolEmpty` — that empty pool is the platform answer's doing,
+   *     which is a different sentence from "this sector has no techniques".
+   *   • `evidenceUnavailable` — the pool is fine but the sort column is all
+   *     zero, so Band A is an arbitrary slice presented as "most evidence".
+   */
+  const emptyPool = meta.poolSize === 0;
+  const platformPoolEmpty = meta.platformPoolEmpty === true;
+  const evidenceUnavailable = meta.evidenceUnavailable === true;
+
   return shell(
     <span>
       <span className="font-semibold text-[var(--text-primary)] tabular-nums">
@@ -877,14 +921,64 @@ export function ThreatProfile() {
       {domainLine}
     </span>,
     <>
-      {allDomainsNotice}
+      {mixedDomainNotice(allDomains || meta.mixedDomain === true)}
 
-      {/* Each of these four conditions is rendered independently. They are not
+      {/* An empty pool is its own state and gets its own sentence. Everything
+          below it that explains a THIN pool is suppressed while it is up —
+          two explanations of the same absence, one of them false, is worse
+          than one. */}
+      {emptyPool && (
+        <Notice
+          tone="warn"
+          title={
+            platformPoolEmpty
+              ? 'Your platform selection matched nothing'
+              : 'There is no pool to rank'
+          }
+        >
+          {platformPoolEmpty ? (
+            <p>
+              No technique attributed to {sectorName} runs on{' '}
+              {platforms.length > 0 ? (
+                <span className="font-semibold">{platformList}</span>
+              ) : (
+                'the platforms you picked'
+              )}
+              , so the ranked pool is empty and both bands below are empty with it. Nothing about
+              this says the evidence is thin or that {sectorName} is not targeted — it says the
+              platform answer ruled every technique out. Widen it, or clear it, above.
+            </p>
+          ) : (
+            <p>
+              {sectorName} resolved to <span className="font-semibold tabular-nums">0</span>{' '}
+              techniques in {domainLabel}, so nothing was ranked and no evidence, lift or band
+              figure below was computed over anything. This is a gap in the data behind the sector
+              — no rows for it in the lift matview yet, or an empty attribution set feeding it —
+              not a finding about the sector. Try another sector or another domain; the numbers
+              below are zeroes because the pool is empty, not because the threat is low.
+            </p>
+          )}
+        </Notice>
+      )}
+
+      {/* Each of these conditions is rendered independently. They are not
           mutually exclusive — `bandBShort` is recomputed AFTER the platform
           widening, so it and `platformDropped` are routinely true together,
           and suppressing one of them left a short Band B on screen with
           nothing at all saying why. */}
-      {meta.degenerate && (
+      {evidenceUnavailable && !emptyPool && (
+        <Notice tone="warn" title={`Nothing in this pool carries ${sortOption.column} evidence`}>
+          Every one of the {meta.poolSize.toLocaleString()}{' '}
+          {meta.poolSize === 1 ? 'technique' : 'techniques'} in this pool sits at zero{' '}
+          <span className="font-semibold">{sortOption.column}</span>, so Band A below is{' '}
+          <span className="font-semibold">not</span> ranked by it — six of an all-zero column in
+          whatever order the pool arrived in. {domainLabel} carries close to no CVE, KEV, EPSS,
+          report or IOC evidence at all, so every evidence sort reads the same way here. Band B,
+          which is always lift-ranked, is the half of this page that still says something.
+        </Notice>
+      )}
+
+      {meta.degenerate && !emptyPool && (
         <Notice tone="warn" title="Lift cannot rank this selection">
           Fewer than six distinct lift values exist across the {meta.poolSize.toLocaleString()}{' '}
           {meta.poolSize === 1 ? 'technique' : 'techniques'} in this pool, so Band B below is ordered
@@ -904,7 +998,7 @@ export function ThreatProfile() {
         </Notice>
       )}
 
-      {meta.bandBShort && (
+      {meta.bandBShort && !emptyPool && (
         <Notice tone="info" title={bandB.length === 0 ? 'Band B is empty' : 'Band B is short'}>
           Band B holds {bandB.length === 0 ? 'no technique' : `only ${bandB.length} of six`}
           {meta.platformDropped ? ', even after the platform filter was dropped' : ''}. It draws only
@@ -919,22 +1013,49 @@ export function ThreatProfile() {
       <div className="grid gap-6 lg:grid-cols-2">
         <BandCard
           eyebrow="Band A · reach"
-          title={`Most ${sortOption.label.toLowerCase()} evidence`}
+          // The heading must not claim a ranking the column cannot support.
+          // With an all-zero sort column "Most KEV evidence" over six zeroes
+          // is the single most misleading thing this page could say.
+          title={
+            evidenceUnavailable
+              ? `No ${sortOption.label.toLowerCase()} evidence to rank by`
+              : `Most ${sortOption.label.toLowerCase()} evidence`
+          }
           explain={
-            <>
-              Top six by <span className="font-semibold">{sortOption.column}</span> across the whole{' '}
-              {sectorName} pool, with no group-count floor. This is what is loudest — reach, not
-              sector fit — and at {sortOption.score}/12 differentiation it is{' '}
-              {sortOption.score <= 2
-                ? 'very nearly the list every other sector sees'
-                : 'largely specific to this sector'}
-              .
-            </>
+            evidenceUnavailable ? (
+              <>
+                Every technique in this pool sits at zero{' '}
+                <span className="font-semibold">{sortOption.column}</span>, so these six are{' '}
+                <span className="font-semibold">not</span> the top six by anything — they are the
+                pool&apos;s own incoming order, shown so the band is not silently empty. Read them
+                as &ldquo;in this pool&rdquo;, nothing more.
+              </>
+            ) : (
+              <>
+                Top six by <span className="font-semibold">{sortOption.column}</span> across the
+                whole {sectorName} pool, with no group-count floor. This is what is loudest —
+                reach, not sector fit — and at {sortOption.score}/12 differentiation it is{' '}
+                {sortOption.score <= 2
+                  ? 'very nearly the list every other sector sees'
+                  : 'largely specific to this sector'}
+                .
+              </>
+            )
           }
           items={bandA}
           sortKey={sortKey}
           showLift={false}
-          empty={<>No technique in this pool carries any {sortOption.column.toLowerCase()} evidence.</>}
+          empty={
+            emptyPool ? (
+              <>
+                <span className="font-semibold">The pool is empty.</span> There is no technique here
+                to rank — see above for why. This is not &ldquo;no evidence found&rdquo;; it is
+                &ldquo;nothing was searched&rdquo;.
+              </>
+            ) : (
+              <>No technique in this pool carries any {sortOption.column.toLowerCase()} evidence.</>
+            )
+          }
         />
 
         <BandCard
@@ -951,12 +1072,20 @@ export function ThreatProfile() {
           sortKey={sortKey}
           showLift
           empty={
-            <>
-              <span className="font-semibold">Band B is absent.</span> Nothing in this pool is both
-              attributed to at least three of {sectorName}&apos;s groups and absent from Band A, so
-              there is nothing that can honestly be called disproportionately aimed at this sector.
-              Nothing has been substituted in its place.
-            </>
+            emptyPool ? (
+              <>
+                <span className="font-semibold">The pool is empty.</span> No technique reached
+                either band, so there is nothing here to be disproportionate about — see above.
+                Nothing has been substituted in its place.
+              </>
+            ) : (
+              <>
+                <span className="font-semibold">Band B is absent.</span> Nothing in this pool is
+                both attributed to at least three of {sectorName}&apos;s groups and absent from
+                Band A, so there is nothing that can honestly be called disproportionately aimed at
+                this sector. Nothing has been substituted in its place.
+              </>
+            )
           }
         />
       </div>
