@@ -62,16 +62,31 @@ export function middleware(request: NextRequest) {
     // a reader pressing a button in our docs, not API consumption, and 61 of
     // these routes set no cacheTtl, so counting them would make the docs page
     // the top endpoint in our own analytics.
+    /**
+     * `x-usage-endpoint` is a TRUSTED header: handler.ts writes it verbatim into
+     * api_usage(endpoint, day), where `endpoint` is half the primary key and an
+     * unbounded `text` column. So every path out of this branch has to hand the
+     * route a value the CLIENT did not choose — which means deleting any copy
+     * they sent UP FRONT, before the skip conditions, because three of them
+     * return without setting one: the docs probe, OPTIONS/HEAD, and anything in
+     * EXCLUDED_ENDPOINTS.
+     *
+     * Left unstripped, `curl -H 'x-usage-endpoint: <anything>' .../site-health`
+     * inserts <anything> as a new primary-key row on the repo's only
+     * unauthenticated write — precisely the unbounded cardinality that
+     * normalizeEndpoint() exists to prevent, reached by skipping it.
+     */
+    const headers = new Headers(request.headers);
+    headers.delete('x-usage-endpoint');
+
     const endpoint =
       method === 'OPTIONS' || method === 'HEAD' || request.headers.get(DOCS_PROBE_HEADER)
         ? null
         : normalizeEndpoint(request.nextUrl.pathname);
     if (endpoint && !EXCLUDED_ENDPOINTS.has(endpoint)) {
-      const headers = new Headers(request.headers);
       headers.set('x-usage-endpoint', endpoint);
-      return NextResponse.next({ request: { headers } });
     }
-    return NextResponse.next();
+    return NextResponse.next({ request: { headers } });
   }
 
   // Page routes: attach the per-request CSP nonce.

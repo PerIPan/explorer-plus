@@ -10,12 +10,20 @@ import { query } from '../v1/lib/db';
 // never counted and never wake Neon. after() defers the UPSERT until the
 // response has flushed, so it never blocks or breaks the API response, and it
 // reuses the node `pg` pool the route already used for its data query.
+/** The exact shape middleware.ts's normalizeEndpoint() emits, and nothing else. */
+const USAGE_ENDPOINT_KEY = /^\/api\/v1(\/[a-z0-9-]+(\/(:id|[a-z0-9-]+))?)?$/;
+
 function recordUsage(): void {
   try {
     after(async () => {
       try {
         const endpoint = (await headers()).get('x-usage-endpoint');
-        if (!endpoint) return;
+        // Defence in depth. middleware.ts strips any client-supplied copy of
+        // this header, so a value reaching here should always be one
+        // normalizeEndpoint() produced — but this is the only unauthenticated
+        // write in the API and the column is half a primary key, so it refuses
+        // anything not shaped like such a key rather than trusting the hop.
+        if (!endpoint || !USAGE_ENDPOINT_KEY.test(endpoint)) return;
         await query(
           `INSERT INTO api_usage (endpoint, day, count)
            VALUES ($1, (now() AT TIME ZONE 'utc')::date, 1)
