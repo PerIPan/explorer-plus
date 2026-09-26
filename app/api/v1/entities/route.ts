@@ -4,6 +4,8 @@ import { jsonResponse } from '../../lib/handler';
 import { withCors, corsOptions as OPTIONS } from '../../lib/cors';
 import { domainSchema } from '../lib/validate';
 import { z } from 'zod';
+import { ECOSYSTEM_REGISTRY } from '../../../../src/lib/ecosystems';
+import { SCF_FRAMEWORK_REGISTRY } from '../../../../src/lib/scf-framework-registry';
 
 export { OPTIONS };
 
@@ -31,7 +33,7 @@ export async function GET(req: NextRequest) {
   const domainArrayWhere = domain ? ` AND $1 = ANY(domain)` : '';
   const domainParams = domain ? [domain] : [];
 
-  const [techniques, groups, software, campaigns, mitigations, tactics, externalActors, sectors, applications, owaspCategories, csfSubcategories, assets] = await Promise.all([
+  const [techniques, groups, software, campaigns, mitigations, tactics, externalActors, sectors, applications, owaspCategories, csfSubcategories, dataSources, assets] = await Promise.all([
     query<{ attackId: string; name: string; domain: string | null }>(
       `SELECT attack_id AS "attackId", name, domain FROM techniques
        WHERE is_revoked = false AND is_deprecated = false AND is_subtechnique = false${domainWhere}
@@ -90,6 +92,15 @@ export async function GET(req: NextRequest) {
       SELECT subcategory_id AS "attackId", subcategory_id || ' ' || name AS name, NULL as domain
       FROM csf_subcategories WHERE version = '2.0' ORDER BY function, subcategory_id
     `),
+    // Data sources. These have a detail page and the server-side /search
+    // endpoint already returns them, so their absence here meant the header
+    // dropdown and the full search page disagreed about what exists.
+    // `data_sources.domain` is a scalar varchar, like techniques.
+    query<{ attackId: string; name: string; domain: string | null }>(
+      `SELECT attack_id AS "attackId", name, domain FROM data_sources${domainWhere}
+       ORDER BY name`,
+      domainParams,
+    ),
     // ATT&CK for ICS assets (A0001-A0018). Carries the ics-attack domain so the
     // domain filter treats them like any other ICS entity.
     query<{ attackId: string; name: string; domain: string | null }>(`
@@ -113,6 +124,17 @@ export async function GET(req: NextRequest) {
     ...owaspCategories.rows.map(r => ({ ...r, type: 'owasp' })),
     ...csfSubcategories.rows.map(r => ({ ...r, type: 'csf' })),
     ...assets.rows.map(r => ({ ...r, type: 'asset' })),
+    ...dataSources.rows.map(r => ({ ...r, type: 'data_source' })),
+    // Not domain-scoped: an ecosystem (npm, PyPI) and a compliance framework
+    // are properties of the software supply chain and of governance, not of an
+    // ATT&CK matrix. Sourced from the registries the detail routes resolve
+    // through, so a hit here can never 404.
+    ...Array.from(ECOSYSTEM_REGISTRY.values()).map(e => ({
+      attackId: e.slug, name: e.displayName, domain: null, type: 'ecosystem',
+    })),
+    ...SCF_FRAMEWORK_REGISTRY.map(f => ({
+      attackId: f.framework_key, name: f.name, domain: null, type: 'compliance',
+    })),
   ];
 
   return withCors(jsonResponse({ data: entities, total: entities.length }, 86400));

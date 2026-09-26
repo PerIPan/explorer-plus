@@ -33,6 +33,8 @@ const TYPE_VARIANT: Record<string, 'teal' | 'orange' | 'purple' | 'blue' | 'gree
   sector: 'neutral',
   application: 'blue',
   asset: 'purple',
+  ecosystem: 'blue',
+  compliance: 'green',
 };
 
 export function SearchBar() {
@@ -136,6 +138,8 @@ export function SearchBar() {
         mitigation: 'mitigations',
         tactic: 'tactics',
         data_source: 'data-sources',
+        ecosystem: 'ecosystems',
+        compliance: 'compliance',
       };
       const route = typeRoutes[entity.type] ?? 'techniques';
       router.push(`/${route}/${entity.attackId}`);
