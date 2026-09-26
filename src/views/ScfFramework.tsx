@@ -94,7 +94,17 @@ export function ScfFramework() {
   const updateParams = useUpdateParams();
   const search = searchParams.get('search') ?? '';
   const domain = searchParams.get('domain') ?? '';
-  const mapped = searchParams.get('mapped') ?? '';
+  /**
+   * ATT&CK-mapped is ON unless the URL says otherwise.
+   *
+   * 1,426 of the 1,534 controls have no ATT&CK counterpart, so an unfiltered
+   * first page is 50 rows of em dashes — technically the whole catalogue,
+   * practically a wall of nothing for anyone who arrived from Compliance.
+   * `?mapped=0` turns it off; the param is never FORWARDED as 0, because the
+   * route's enum accepts only 1 or true and would 400 on it.
+   */
+  const mappedParam = searchParams.get('mapped');
+  const mappedOnly = mappedParam === null ? true : mappedParam !== '0';
   const page = parseInt(searchParams.get('page') ?? '1', 10);
   const searchBox = useDebouncedSearchParam('search');
 
@@ -102,9 +112,9 @@ export function ScfFramework() {
     const p: Record<string, string> = { page: String(page), limit: '50' };
     if (search) p.search = search;
     if (domain) p.domain = domain;
-    if (mapped) p.mapped = '1';
+    if (mappedOnly) p.mapped = '1';
     return p;
-  }, [page, search, domain, mapped]);
+  }, [page, search, domain, mappedOnly]);
 
   const { data, isLoading } = useQuery({
     queryKey: ['scf-controls', params],
@@ -171,10 +181,12 @@ export function ScfFramework() {
           reading: the narrow ATT&CK coverage is a property of the source, not a
           hole in the ingest, and the page should not let anyone assume either. */}
       <p className="rounded-md border border-[var(--border-color)] bg-[var(--surface-card)] px-3 py-2.5 text-xs leading-relaxed text-[var(--text-secondary)]">
-        Most SCF controls have no ATT&amp;CK counterpart, and that is correct rather than missing —
-        governance, privacy, procurement and personnel controls describe obligations, not adversary
-        behaviour. Use <span className="font-mono text-[var(--accent-teal)]">?mapped=1</span> below to
-        see only the controls that do bridge.
+        Showing the controls that bridge to ATT&amp;CK. The other{' '}
+        {meta ? (meta.controls - meta.mappedControls).toLocaleString() : '1,426'} have no ATT&amp;CK
+        counterpart, and that is correct rather than missing — governance, privacy, procurement and
+        personnel controls describe obligations, not adversary behaviour. Switch off{' '}
+        <strong className="font-semibold text-[var(--text-primary)]">ATT&amp;CK-mapped only</strong> to
+        browse the whole catalogue.
       </p>
 
       <div className="flex flex-wrap gap-3">
@@ -197,10 +209,10 @@ export function ScfFramework() {
         </select>
         <button
           type="button"
-          onClick={() => setParam('mapped', mapped ? '' : '1')}
-          aria-pressed={Boolean(mapped)}
+          onClick={() => setParam('mapped', mappedOnly ? '0' : '')}
+          aria-pressed={mappedOnly}
           className={`rounded-md border px-3 py-2 text-sm transition-colors ${
-            mapped
+            mappedOnly
               ? 'border-[var(--accent-teal)] bg-[var(--teal-faint)] text-[var(--accent-teal)]'
               : 'border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
           }`}
