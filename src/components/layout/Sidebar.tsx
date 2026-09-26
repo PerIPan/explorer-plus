@@ -140,7 +140,7 @@ function NavItemLink({ path, label, tooltip, end, emphasis, count, countKey, cou
   );
 }
 
-function CollapsibleNavSection({ label, items, defaultOpen = false, title, counts }: { label: string; items: NavItem[]; defaultOpen?: boolean; title?: string; counts?: NavCounts }) {
+function CollapsibleNavSection({ label, items, defaultOpen = false, title, counts, sumItems = false }: { label: string; items: NavItem[]; defaultOpen?: boolean; title?: string; counts?: NavCounts; sumItems?: boolean }) {
   const pathname = usePathname();
   const isActiveRoute = items.some((item) => pathname.startsWith(item.path));
   const [open, setOpen] = useState(defaultOpen || isActiveRoute);
@@ -179,6 +179,15 @@ function CollapsibleNavSection({ label, items, defaultOpen = false, title, count
              only once every counted item has a number, so a partially loaded
              sum is never displayed as a total. */
           const keys = items.map((i) => i.countKey).filter((k): k is keyof NavCounts => Boolean(k));
+          /* `sumItems` counts the PAGES instead: a section whose children are
+             frameworks, not rows, has no row total worth summing — adding up
+             Sigma's rules and ISO's clauses would produce a number that means
+             nothing. How many frameworks are covered here does mean something. */
+          if (sumItems) return (
+            <span className="ml-auto font-medium normal-case tracking-normal text-[var(--text-secondary)]">
+              {items.length}
+            </span>
+          );
           if (!counts || keys.length === 0) return null;
           const total = keys.reduce((n, k) => n + (counts[k] ?? 0), 0);
           return (
@@ -312,7 +321,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
       {/* Frameworks Section */}
       <div className="px-2 py-3">
-        <CollapsibleNavSection counts={counts} label="Frameworks" items={frameworksNav} defaultOpen={false} title="Not filtered by sector" />
+        <CollapsibleNavSection counts={counts} label="Frameworks" items={frameworksNav} sumItems defaultOpen={false} title="Not filtered by sector" />
       </div>
 
       {/* Separator */}

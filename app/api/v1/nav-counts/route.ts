@@ -32,9 +32,15 @@ export async function GET(_req: NextRequest) {
        (SELECT count(*) FROM ecosystem_advisory_stats)::int            AS ecosystems,
        (SELECT count(*) FROM packages)::int                            AS packages,
        (SELECT count(*) FROM threat_reports)::int                      AS reports,
-       -- Tiers 1 and 2 are the curated set /compliance shows by default; tier 3
-       -- is the ~200-framework long tail behind ?include_all.
-       (SELECT count(*) FROM scf_frameworks WHERE tier <= 2)::int       AS frameworks,
+       -- Every framework /compliance can show: the curated tiers 1-2 plus the
+       -- tier-3 long tail that has at least one control reference. This is the
+       -- exact expression behind that page's own framework_count, and behind
+       -- ?include_all -- 224, against 21 for the default view. The nav badge is
+       -- what is COVERED, not what one filter happens to show.
+       (SELECT count(*) FROM scf_frameworks f
+          WHERE f.tier <= 2
+             OR EXISTS (SELECT 1 FROM scf_framework_refs r
+                         WHERE r.framework_key = f.framework_key))::int AS frameworks,
        ${ESTIMATE('cve_details')}::int                                 AS cves,
        ${ESTIMATE('ioc_entries')}::int                                 AS iocs,
        (COALESCE(${ESTIMATE('ghsa_advisories')}, 0)
