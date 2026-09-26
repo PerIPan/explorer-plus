@@ -153,7 +153,21 @@ export function ComplianceHub() {
     <div className="p-6 max-w-6xl">
       <PageHeader
         title="Compliance on confirmed facts"
-        subtitle="Regulatory and audit frameworks bridged to MITRE ATT&CK Enterprise via the Secure Controls Framework (SCF). The KEV and CVE signals on every framework are grounded on curated, analyst-mapped CVE→technique links — not CWE→CAPEC inference. ATLAS, ICS, and Mobile have their own compliance ecosystems and are not covered here."
+        subtitle={
+          <>
+            Regulatory and audit frameworks bridged to MITRE ATT&amp;CK Enterprise via the
+            Secure Controls Framework (SCF). The{' '}
+            <strong className="font-semibold text-[var(--text-primary)]">
+              KEV and CVE signals on every framework
+            </strong>{' '}
+            are grounded on{' '}
+            <strong className="font-semibold text-[var(--text-primary)]">
+              curated, analyst-mapped CVE→technique links
+            </strong>{' '}
+            — not CWE→CAPEC inference. ATLAS, ICS, and Mobile have their own compliance
+            ecosystems and are not covered here.
+          </>
+        }
       />
 
       {/* Meta strip */}
