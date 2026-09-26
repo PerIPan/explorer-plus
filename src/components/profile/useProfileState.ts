@@ -197,7 +197,12 @@ export function useProfileState(): UseProfileStateResult {
    * at once per page load however many times it is called.
    *
    * `readDismissed()` is re-read here rather than using the `dismissed` state
-   * above, so this cannot race the mount effect that sets it.
+   * above, so this cannot race the mount effect that sets it. That synchronous
+   * re-read is also what makes a pre-paint inline script unnecessary: nothing
+   * opens the panel except this call, so a returning dismisser has nothing to
+   * flash. app/layout.tsx used to carry one for this flag and it is gone —
+   * if this read ever becomes asynchronous, the flash comes back and the
+   * script (or an equivalent) has to come back with it.
    */
   const armPeek = useCallback(() => {
     if (peekArmedThisPageLoad) return;

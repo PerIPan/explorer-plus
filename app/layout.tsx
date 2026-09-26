@@ -18,19 +18,6 @@ const THEME_SCRIPT = `(function(){
   }
 })();`;
 
-// Mirrors THEME_SCRIPT's approach for the same reason: without this,
-// returning dismissers get a post-hydration panel flash on every cold load,
-// across every page AppShell wraps. Reads localStorage['mx-profile'] only —
-// it never writes it (see src/components/profile/useProfileState.ts, which
-// writes that key only on Apply or explicit close, never on mount).
-const PROFILE_SCRIPT = `(function(){
-  try {
-    if (localStorage.getItem('mx-profile')) {
-      document.documentElement.setAttribute('data-profile-seen','1');
-    }
-  } catch(e) {}
-})();`;
-
 const SITE_DESC =
   'Multi-domain threat intelligence platform built on MITRE ATT&CK — bridging techniques, threat groups, malware and campaigns to CVEs, advisories, detections and compliance frameworks.';
 
@@ -78,8 +65,21 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="icon" href="/diamond-favicon.svg" type="image/svg+xml" />
+        {/* Theme only. There was a second pre-paint script here for the
+            Threat Profile's dismissal flag, which set `data-profile-seen` on
+            <html> — an attribute nothing ever read: no CSS rule, no component,
+            no module. It ran on every page load of every route to set a
+            variable nobody consumed. The flash it was meant to prevent cannot
+            happen anyway: the panel is shown only by `peek.open`, and the only
+            thing that opens it is `armPeek`, which re-reads
+            localStorage['mx-profile'] SYNCHRONOUSLY before dispatching
+            (src/components/profile/useProfileState.ts), so a returning
+            dismisser never opens anything to flash. Removed rather than given
+            a reader, because the honest options were "make it load-bearing" or
+            "delete it", and the guarantee it duplicated is already structural.
+            The theme is a different case and still needs its script: it
+            decides a class the FIRST paint depends on. */}
         <script nonce={nonce} suppressHydrationWarning dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
-        <script nonce={nonce} suppressHydrationWarning dangerouslySetInnerHTML={{ __html: PROFILE_SCRIPT }} />
         <script
           type="application/ld+json"
           nonce={nonce}
