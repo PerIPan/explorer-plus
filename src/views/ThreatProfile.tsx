@@ -25,6 +25,7 @@ import {
 } from '../lib/profile-query.mjs';
 import { useSector } from '../contexts/SectorContext';
 import { DEFAULT_DOMAIN, useDomain } from '../contexts/DomainContext';
+import { ProfileMatrix } from '../components/profile/ProfileMatrix';
 
 /* ────────────────────────────────────────────────────────────────────────────
  * Wire types
@@ -1142,6 +1143,12 @@ export function ThreatProfile() {
           </p>
         )}
       </Card>
+
+      <ProfileMatrix
+        sectorName={profile.sectorName}
+        domain={profile.domain}
+        techniqueIds={[...bandA, ...bandB].map((t) => t.attackId)}
+      />
 
       <Provenance />
     </>,
