@@ -29,10 +29,19 @@ const MATVIEWS = [
   'sector_technique_lift',
   'technique_cve_evidence',
   // Public-API aggregates. See scripts/migrate-ecosystem-stats.sql and
-  // scripts/migrate-advisory-rank.sql. osv_advisory_rank is the expensive one
-  // in this list (1.9M rows built off a per-row cve_details LATERAL) and is
-  // listed LAST so a soft-timeout on it cannot starve the others.
+  // scripts/migrate-advisory-rank.sql.
+  //
+  // ecosystem_advisory_days MUST be here: /api/v1/ecosystems reads whole UTC
+  // days out of it and computes only the sub-day boundary remainder live, so a
+  // frozen day matview would make `last14dCount` shrink by one day, every day,
+  // reporting a window that ended whenever the migration ran. No ordering
+  // dependency between it and ecosystem_advisory_stats — neither reads the
+  // other — but they are the same endpoint so they are kept adjacent.
+  'ecosystem_advisory_days',
   'ecosystem_advisory_stats',
+  // Listed LAST because it is the expensive one: 1.9M rows built off a per-row
+  // cve_details LATERAL. If it ever overruns the soft timeout, everything
+  // before it has already been refreshed.
   'osv_advisory_rank',
 ];
 

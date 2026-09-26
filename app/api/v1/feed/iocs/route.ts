@@ -34,20 +34,28 @@ export async function GET(req: NextRequest) {
 
   // Sector filter: show IOCs linked to sector groups OR IOCs with no technique links.
   //
-  // PERF: the inner semi-join is nested rather than flattened on purpose. The
-  // flat form (technique_iocs JOIN group_techniques JOIN group_sectors JOIN
-  // sectors) materialises one row per (ioc, technique, group) triple before the
-  // IN dedupes it — 681k technique_iocs fanned out over 5k group_techniques.
-  // Measured on Neon: the COUNT(*) below ran >12 min without finishing.
-  // Resolving `sector -> technique_id` FIRST (a few hundred ids from three tiny
-  // tables) turns the outer half into indexed lookups on
-  // idx_technique_iocs_technique_id. Same semantics: `IN` is a semi-join in
-  // both forms, so the duplicate ioc_ids the flat version produced were never
-  // observable.
+  // PERF, two separate fixes. Both were needed; the second is the one that made
+  // this endpoint return at all.
+  //
+  // 1. The inner semi-join is nested rather than flattened. The flat form
+  //    (technique_iocs JOIN group_techniques JOIN group_sectors JOIN sectors)
+  //    materialises one row per (ioc, technique, group) triple before the IN
+  //    dedupes it — 681k technique_iocs fanned out over 5k group_techniques.
+  //    Resolving `sector -> technique_id` FIRST turns the outer half into
+  //    indexed lookups on idx_technique_iocs_technique_id.
+  //
+  // 2. The two halves are UNIONed INSIDE one IN, not OR'd outside it. Under
+  //    `<semi-join> OR NOT EXISTS(...)` the planner can use neither index path
+  //    and evaluates both subqueries per row across all 163,514 ioc_entries.
+  //    Measured on Neon: each half ALONE is fast (27,015 and 135,999 rows), but
+  //    OR'd together COUNT(*) did not finish inside 90 s. As a UNION inside the
+  //    IN it is 1,926 ms and returns 163,014 — exactly 27,015 + 135,999, so the
+  //    two sets are disjoint and the rewrite preserves semantics. They must be
+  //    disjoint: an IOC with sector-linked techniques cannot also have zero
+  //    technique links.
   if (sector) {
     params.push(sector);
-    conditions.push(`(
-      i.id IN (
+    conditions.push(`i.id IN (
         SELECT ti2.ioc_id FROM technique_iocs ti2
         WHERE ti2.technique_id IN (
           SELECT gt.technique_id FROM group_techniques gt
@@ -55,9 +63,10 @@ export async function GET(req: NextRequest) {
           JOIN sectors s ON s.id = gs.sector_id
           WHERE s.slug = $${params.length}
         )
-      )
-      OR NOT EXISTS (SELECT 1 FROM technique_iocs ti3 WHERE ti3.ioc_id = i.id)
-    )`);
+        UNION
+        SELECT i2.id FROM ioc_entries i2
+        WHERE NOT EXISTS (SELECT 1 FROM technique_iocs ti3 WHERE ti3.ioc_id = i2.id)
+      )`);
   }
 
   if (type) {

@@ -196,9 +196,14 @@ CREATE INDEX IF NOT EXISTS idx_osv_published_ecosystem
 -- is arithmetically identical to the old FILTER clause — not an approximation,
 -- and not frozen at refresh time.
 --
--- `day` is NULL for advisories with a NULL published date. Those rows are kept
--- (they belong in `total`) and `day >= …` excludes them from the window, which
--- is exactly what `published_at >= NOW() - INTERVAL '14 days'` did.
+-- Rows with a NULL published date are EXCLUDED. They can never fall inside the
+-- window (`published >= …` is false for NULL), and this matview feeds nothing
+-- but the window — `total` comes from ecosystem_advisory_stats. Excluding them
+-- keeps `day` NOT NULL, which in turn keeps the unique index below a plain one:
+-- REFRESH … CONCURRENTLY matches old and new rows with `=` on the key columns,
+-- and a NULL key never equals itself, so a nullable key column would make
+-- those rows churn as delete+insert on every refresh. Measured: 0 such rows in
+-- either table today, so this is a guard, not a filter that does work.
 --
 -- Summing per-day COUNT(DISTINCT g.ghsa_id) across days is safe: published_at
 -- is a single timestamp, so every advisory falls in exactly one bucket. The
@@ -219,6 +224,7 @@ FROM ghsa_advisories g
 JOIN ghsa_packages gp ON gp.ghsa_id = g.ghsa_id
 JOIN packages p ON p.id = gp.package_id
 WHERE g.withdrawn_at IS NULL
+  AND g.published_at IS NOT NULL
 GROUP BY LOWER(p.ecosystem), date_trunc('day', g.published_at, 'UTC')
 UNION ALL
 SELECT
@@ -227,14 +233,13 @@ SELECT
   date_trunc('day', o.published, 'UTC') AS day,
   COUNT(*)::int AS n
 FROM osv_advisories o
+WHERE o.published IS NOT NULL
 GROUP BY o.ecosystem, date_trunc('day', o.published, 'UTC');
 
--- Required by REFRESH MATERIALIZED VIEW CONCURRENTLY. `day` is nullable, and a
--- UNIQUE index treats NULLs as distinct — which would let duplicate NULL-day
--- rows through. There can only ever be one per (src, canonical) by
--- construction, but NULLS NOT DISTINCT makes the index enforce it.
+-- Required by REFRESH MATERIALIZED VIEW CONCURRENTLY. All three columns are
+-- NOT NULL by construction (see the NULL-published note in the header).
 CREATE UNIQUE INDEX ecosystem_advisory_days_key_idx
-  ON ecosystem_advisory_days (src, canonical, day) NULLS NOT DISTINCT;
+  ON ecosystem_advisory_days (src, canonical, day);
 
 -- The route filters `day >= date_trunc('day', NOW() - INTERVAL '14 days')`.
 CREATE INDEX ecosystem_advisory_days_day_idx
