@@ -3,8 +3,9 @@
 import type { RefObject } from 'react';
 import { Dialog } from '../shared/Dialog';
 import { Notice } from '../profile/BriefingPrimitives';
-import { CopyButton, MethodPill, ParamTable, Section } from './primitives';
+import { CopyButton, MethodPill, Section } from './primitives';
 import { LiveRun } from './LiveRun';
+import { RequestFields, useRequestBuilder } from './RequestBuilder';
 import { API_FACTS, absoluteUrl } from '../../lib/api-catalog';
 import type { ApiEntry } from '../../lib/api-catalog';
 
@@ -19,7 +20,26 @@ export function EndpointModal({
   returnFocusTo?: RefObject<HTMLElement | null>;
 }) {
   if (!entry) return null;
-  const url = absoluteUrl(entry.path);
+  return <EndpointBody entry={entry} onClose={onClose} returnFocusTo={returnFocusTo} />;
+}
+
+/**
+ * Split from the exported component so the builder's hooks are never called
+ * conditionally: `EndpointModal` returns null when nothing is selected, and a
+ * hook above that early return would break the rules of hooks the moment the
+ * modal closed.
+ */
+function EndpointBody({
+  entry,
+  onClose,
+  returnFocusTo,
+}: {
+  entry: ApiEntry;
+  onClose: () => void;
+  returnFocusTo?: RefObject<HTMLElement | null>;
+}) {
+  const builder = useRequestBuilder(entry);
+  const url = absoluteUrl(builder.composed);
   const takesVersion = (entry.params ?? []).some((p) => p.name === 'version');
 
   return (
@@ -40,7 +60,7 @@ export function EndpointModal({
               <code className="min-w-0 break-all font-mono text-xs text-[var(--text-primary)]">{url}</code>
               <CopyButton value={url} label="copy URL" />
             </div>
-            <ParamTable entry={entry} />
+            <RequestFields entry={entry} builder={builder} />
           </div>
         </Section>
 
@@ -61,7 +81,7 @@ export function EndpointModal({
 
         <Section title="Output">
           {entry.executable && entry.example ? (
-            <LiveRun example={entry.example} />
+            <LiveRun path={builder.composed} />
           ) : (
             <Notice tone="info" title="No live call for this one">
               {entry.why}

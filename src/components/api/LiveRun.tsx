@@ -46,6 +46,9 @@ async function runEndpoint(example: string, signal: AbortSignal): Promise<RunRes
   });
   const raw = await res.text();
   const ms = Date.now() - started;
+  // String.length counts UTF-16 code units, not bytes — a page that labels its
+  // own output "KB" should not be off by every non-ASCII character in it.
+  const byteLength = new TextEncoder().encode(raw).length;
 
   let text = raw;
   let pretty = false;
@@ -61,7 +64,7 @@ async function runEndpoint(example: string, signal: AbortSignal): Promise<RunRes
   return {
     status: res.status,
     ok: res.ok,
-    bytes: raw.length,
+    bytes: byteLength,
     text: dropped > 0 ? text.slice(0, MAX_RENDER) : text,
     dropped,
     pretty,
@@ -80,14 +83,16 @@ function bytes(n: number): string {
  * A pasted sample response goes stale in silence, and this repo's whole posture
  * is that a claim should be checkable; so the page checks it in front of you.
  */
-export function LiveRun({ example }: { example: string }) {
+export function LiveRun({ path }: { path: string }) {
   const queryClient = useQueryClient();
-  const queryKey = useMemo(() => ['api-docs-run', example] as const, [example]);
+  // Keyed by the COMPOSED path, so editing a parameter is a different
+  // request with its own cached result, not a stale hit from the last one.
+  const queryKey = useMemo(() => ['api-docs-run', path] as const, [path]);
   const [started, setStarted] = useState(false);
 
   const { data, error, isFetching, refetch, dataUpdatedAt } = useQuery({
     queryKey,
-    queryFn: ({ signal }) => runEndpoint(example, signal),
+    queryFn: ({ signal }) => runEndpoint(path, signal),
     // Fires only from the button below. React Query's own dedupe means reopening
     // the same endpoint inside the stale window costs nothing.
     enabled: false,
@@ -100,24 +105,33 @@ export function LiveRun({ example }: { example: string }) {
      it handed the queryFn, so the request is really cancelled, not just ignored. */
   useEffect(() => () => { void queryClient.cancelQueries({ queryKey }); }, [queryClient, queryKey]);
 
-  const absolute = absoluteUrl(example);
+  const absolute = absoluteUrl(path);
 
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"
-          onClick={() => { setStarted(true); void refetch(); }}
-          disabled={isFetching}
-          className="rounded-md border border-[var(--teal-dim)] bg-[var(--teal-faint)] px-3 py-1.5 text-xs font-semibold text-[var(--accent-teal)] transition-colors hover:border-[var(--accent-teal)] disabled:opacity-50"
+          onClick={() => {
+            // aria-disabled, not `disabled`: a button that disables itself while
+            // it is the focused element drops focus to <body>, so a keyboard or
+            // screen-reader user loses their place exactly when the result they
+            // asked for arrives. It stays focusable and refuses the click instead.
+            if (isFetching) return;
+            setStarted(true);
+            void refetch();
+          }}
+          aria-disabled={isFetching}
+          aria-busy={isFetching}
+          className="rounded-md border border-[var(--teal-dim)] bg-[var(--teal-faint)] px-3 py-1.5 text-xs font-semibold text-[var(--accent-teal)] transition-colors hover:border-[var(--accent-teal)] aria-disabled:opacity-50"
         >
           {isFetching ? 'running…' : data ? 'run again' : 'Run it'}
         </button>
-        <code className="min-w-0 break-all font-mono text-[11px] text-[var(--text-secondary)]">GET {example}</code>
+        <code className="min-w-0 break-all font-mono text-[11px] text-[var(--text-secondary)]">GET {path}</code>
         <CopyButton value={`curl '${absolute}'`} label="copy curl" />
       </div>
 
-      {isFetching && <DiamondLoader text={`calling ${example}`} />}
+      {isFetching && <DiamondLoader text={`calling ${path}`} />}
 
       {!isFetching && error && (
         <div className="rounded-md border border-[var(--orange-dim)] bg-[var(--orange-faint)] px-3 py-2 text-xs text-[var(--accent-orange)]">
@@ -128,7 +142,11 @@ export function LiveRun({ example }: { example: string }) {
 
       {!isFetching && data && (
         <div className="space-y-1.5">
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-[var(--text-secondary)]">
+          <div
+            role="status"
+            aria-live="polite"
+            className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-[var(--text-secondary)]"
+          >
             <span className={data.ok ? 'font-semibold text-[var(--accent-green)]' : 'font-semibold text-[var(--accent-orange)]'}>
               HTTP {data.status}
             </span>
@@ -144,8 +162,9 @@ export function LiveRun({ example }: { example: string }) {
           </pre>
           {data.dropped > 0 && (
             <p className="text-[11px] text-[var(--text-secondary)]">
-              Truncated for display — {data.dropped.toLocaleString()} more characters were returned. Run the curl
-              above for the whole thing.
+              Truncated for display — {data.dropped.toLocaleString()} more characters of the{' '}
+              {data.pretty ? 'formatted' : 'raw'} view are hidden. The response itself was {bytes(data.bytes)}; run the
+              curl above for all of it.
             </p>
           )}
         </div>
@@ -153,8 +172,8 @@ export function LiveRun({ example }: { example: string }) {
 
       {!started && !data && (
         <p className="text-[11px] text-[var(--text-secondary)]">
-          Nothing is fetched until you press Run. The example sends a small <code>limit</code> where the endpoint
-          paginates.
+          Nothing is fetched until you press Run. Edit anything above first — the call sends exactly the URL shown
+          here, so a rejected value returns the real error envelope rather than a note about it.
         </p>
       )}
     </div>

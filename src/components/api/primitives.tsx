@@ -3,8 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Badge } from '../shared/Badge';
-import { PAGINATION_PARAMS } from '../../lib/api-catalog';
-import type { ApiEntry, ApiParam } from '../../lib/api-catalog';
 
 /** Method pill in the house style — faint fill, accent text, dim border. */
 export function MethodPill({ method }: { method: 'GET' | 'POST' }) {
@@ -77,48 +75,6 @@ export function CodeBlock({ children, wrap = false }: { children: string; wrap?:
     >
       {children}
     </pre>
-  );
-}
-
-/**
- * Parameters, with the shared pagination set folded in for a paginated route so
- * `page`/`limit` are documented once in the catalogue and shown on every list
- * endpoint that accepts them.
- */
-export function ParamTable({ entry }: { entry: ApiEntry }) {
-  const own = entry.params ?? [];
-  const shared = entry.paginated ? PAGINATION_PARAMS : [];
-  // A route that names `page`/`limit` itself (it validates them without the
-  // shared schema) must not be listed twice.
-  const ownNames = new Set(own.map((p) => p.name));
-  const rows: ApiParam[] = [...own, ...shared.filter((p) => !ownNames.has(p.name))];
-
-  if (rows.length === 0) {
-    return <p className="text-xs text-[var(--text-secondary)]">No parameters. Unknown query parameters are ignored, never rejected.</p>;
-  }
-
-  return (
-    <ul className="divide-y divide-[var(--border-color)] rounded-md border border-[var(--border-color)]">
-      {rows.map((p) => (
-        <li key={p.name} className="px-3 py-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <code className="font-mono text-xs text-[var(--text-primary)]">{p.name}</code>
-            <Badge label={p.type} variant="neutral" />
-            {p.required ? <Badge label="required" variant="orange" /> : null}
-          </div>
-          {p.values && (
-            <div className="mt-1 flex flex-wrap gap-1">
-              {p.values.map((v) => (
-                <code key={v} className="rounded bg-[var(--hover-overlay)] px-1 py-px font-mono text-[10px] text-[var(--text-secondary)]">
-                  {v}
-                </code>
-              ))}
-            </div>
-          )}
-          {p.note && <p className="mt-1 text-[11px] leading-snug text-[var(--text-secondary)]">{p.note}</p>}
-        </li>
-      ))}
-    </ul>
   );
 }
 
