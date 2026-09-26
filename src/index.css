@@ -267,3 +267,35 @@ body {
 .profile-diamond-img.profile-diamond-nudge {
   animation: profile-diamond-nudge 260ms ease-out 1;
 }
+
+/* ── The 360 View link on entity detail pages ────────────────────────────────
+   Visitors arriving from a search engine land on a detail page and routinely
+   miss the 360 View, which is the better presentation of the same entity — so
+   the link asks for attention once, on arrival.
+
+   It PULSES A FIXED NUMBER OF TIMES and then rests. It is deliberately not an
+   indefinite blink: WCAG 2.2.2 requires a pause/stop control for anything that
+   moves for more than five seconds, and an animation that never ends is a real
+   problem for vestibular and photosensitivity conditions. Three cycles is
+   ~2.1s — under that threshold, so no control is required — at ~1.4 flashes
+   per second, well under the three-per-second ceiling in WCAG 2.3.1.
+
+   `opacity` only. Do NOT add `transform: none` to the reduced-motion rule
+   below: lightningcss collapses translate/scale/rotate into it and deletes
+   them, which already shipped an inert reduced-motion rule to production once
+   in this repo. Verified against the BUILT css, not the source. */
+@keyframes link-360-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.4; }
+}
+
+.link-360-pulse {
+  animation: link-360-pulse 700ms ease-in-out 3;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .link-360-pulse {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+}

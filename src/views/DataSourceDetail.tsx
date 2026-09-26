@@ -35,7 +35,7 @@ export function DataSourceDetail() {
           { label: data.attackId },
         ]}
         titleAction={
-          <Link href={`/?entity=${data.attackId}&tab=data-source-map`} className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-bold text-[var(--accent-orange)] underline underline-offset-2 hover:decoration-2 transition-all" title="View in 360 Views">360 View →</Link>
+          <Link href={`/?entity=${data.attackId}&tab=data-source-map`} className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-bold text-[var(--accent-orange)] underline underline-offset-2 hover:decoration-2 transition-all link-360-pulse" title="View in 360 Views">360 View →</Link>
         }
         actions={
           <span className="font-mono text-xs text-[var(--accent-pink)] bg-[var(--pink-faint)] border border-[var(--pink-dim)] px-2 py-1 rounded">{data.attackId}</span>
