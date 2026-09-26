@@ -76,7 +76,7 @@ export function MitigationDetail() {
           </h3>
           <Link
             href={`/?entity=${data.attackId}&tab=mitigation-map`}
-            className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-bold text-[var(--accent-orange)] underline underline-offset-2 hover:decoration-2 transition-all"
+            className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-bold text-[var(--accent-orange)] underline underline-offset-2 hover:decoration-2 transition-all link-360-pulse"
           >
             view map →
           </Link>
