@@ -201,6 +201,12 @@ export interface ThreatProfileController {
   onTriggerClick: (event: ReactMouseEvent<HTMLButtonElement>) => void;
   /** The sidebar entry. Same questions, same telemetry, larger modal. */
   onSidebarTriggerClick: (event: ReactMouseEvent<HTMLButtonElement>) => void;
+  /**
+   * Called by each NON-LARGE presentation for as long as it is mounted, and
+   * returns its own unregister. When the last one goes, an open non-large
+   * panel is closed silently — see `registerPresentation` in the controller.
+   */
+  registerPresentation: () => () => void;
   panelProps: Omit<ProfilePanelProps, 'anchored' | 'large'>;
 }
 
@@ -264,6 +270,47 @@ function useThreatProfile(defaultVariant: ProfileVariant): ThreatProfileControll
       setLarge(false);
     }
   }, [open]);
+
+  /**
+   * Presentation presence, and the silent close that follows it.
+   *
+   * The two non-large presentations (`ProfileAnchoredPanel`, `ProfileSheet`)
+   * are mounted by the homepage's landing branch, while this controller lives
+   * in AppShell and survives it. Selecting an entity mid-peek therefore took
+   * the panel off the screen while leaving `open` and `modal` true, with two
+   * visible consequences: the peek timer ran on and `EXPIRE` still posted an
+   * `auto_close` row for a panel that had left the screen after ~1s, and the
+   * next click on the sidebar entry hit `openFromTrigger`'s `if (modal)`
+   * branch and did nothing at all, so the visitor had to click it twice.
+   *
+   * A counter rather than a boolean because both presentations are mounted
+   * together on the homepage (only one renders non-null, by breakpoint), and
+   * only when the LAST of them goes has the state lost its presentation.
+   *
+   * `TOGGLE_CLOSE`, not `CLOSE`: nobody rejected anything, so this must not
+   * write a telemetry row and must not set the dismissal flag — the same
+   * reasoning the diamond's second click already gets. `large` is checked
+   * because `ProfileLargeModal` is mounted app-wide in AppShell and does not
+   * register here: a sidebar-opened modal is not affected by the homepage's
+   * branch unmounting underneath it.
+   */
+  const presentationsRef = useRef(0);
+  const openRef = useRef(open);
+  const largeRef = useRef(large);
+  useEffect(() => {
+    openRef.current = open;
+    largeRef.current = large;
+  }, [open, large]);
+
+  const registerPresentation = useCallback(() => {
+    presentationsRef.current += 1;
+    return () => {
+      presentationsRef.current = Math.max(0, presentationsRef.current - 1);
+      if (presentationsRef.current === 0 && openRef.current && !largeRef.current) {
+        dispatch({ type: 'TOGGLE_CLOSE' });
+      }
+    };
+  }, [dispatch]);
 
   // Latest payload, kept in a ref so the outcome effect below depends only on
   // `report` and therefore cannot re-fire when an answer changes.
@@ -466,6 +513,7 @@ function useThreatProfile(defaultVariant: ProfileVariant): ThreatProfileControll
     armPeek,
     onTriggerClick,
     onSidebarTriggerClick,
+    registerPresentation,
     panelProps,
   };
 }
@@ -601,12 +649,28 @@ export function ProfilePeekArmer() {
   return null;
 }
 
+/**
+ * Registers this component as a mounted non-large presentation for its whole
+ * lifetime — whether or not it currently renders anything.
+ *
+ * "Mounted" has to mean "in the tree", not "rendering": both presentations
+ * return null most of the time (wrong breakpoint, panel shut), and the state
+ * this guards is exactly the state where one of them WOULD render. So the
+ * hook runs before any early return, which is also the only place a hook can
+ * run.
+ */
+function useNonLargePresence(ctl: ThreatProfileController | null) {
+  const register = ctl?.registerPresentation;
+  useEffect(() => register?.(), [register]);
+}
+
 /** Place inside the xl diamond's existing `relative` wrapper. Renders nothing
  *  below xl, where `ProfileSheet` takes over, and nothing while the sidebar's
  *  large modal is up — that presentation replaces this one rather than
  *  stacking with it. */
 export function ProfileAnchoredPanel() {
   const ctl = useController();
+  useNonLargePresence(ctl);
   if (!ctl || !ctl.open || !ctl.anchored || ctl.large) return null;
   return <ProfilePanel anchored large={false} {...ctl.panelProps} />;
 }
@@ -616,6 +680,7 @@ export function ProfileAnchoredPanel() {
  *  fixed positioning. */
 export function ProfileSheet() {
   const ctl = useController();
+  useNonLargePresence(ctl);
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   if (!mounted || !ctl || !ctl.open || ctl.anchored || ctl.large) return null;
