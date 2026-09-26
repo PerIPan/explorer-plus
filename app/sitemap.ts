@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { query } from './api/v1/lib/db';
 import { SITE_URL as BASE_URL } from '../src/lib/site';
+import { ECOSYSTEM_REGISTRY } from '../src/lib/ecosystems';
 
 // Force dynamic rendering so the sitemap hits the DB at request time, not at
 // build time (when POSTGRES_URL may be unavailable — building static here would
@@ -10,18 +11,25 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  // '/search' is deliberately ABSENT: app/robots.ts disallows it, and a URL that
+  // is both submitted and blocked is reported by Search Console as an error.
+  // '/relationships' is absent too — it is a redirect to '/', and sitemaps
+  // should list destinations, not hops.
   const staticPages = [
     '', '/dashboard', '/matrix', '/techniques', '/groups', '/campaigns',
     '/software', '/mitigations', '/tactics', '/sectors', '/applications',
-    '/search', '/cti/cves', '/cti/reports', '/cti/iocs', '/cti/sigma',
+    '/assets', '/packages', '/ecosystems', '/profile',
+    '/cti/cves', '/cti/reports', '/cti/iocs', '/cti/sigma',
+    '/cti/advisories', '/cti/ghsa', '/cti/capec',
     '/cti/feed-status', '/frameworks/owasp', '/frameworks/csf', '/frameworks/nist',
     '/frameworks/iso27001', '/frameworks/engage', '/frameworks/react', '/frameworks/veris',
     '/frameworks/cloud', '/frameworks/atomic', '/frameworks/detection', '/frameworks/d3fend',
-    '/compliance', '/external-actors', '/data-sources',
+    '/frameworks/purdue', '/frameworks/cra', '/frameworks/owasp-ai',
+    '/compliance', '/external-actors', '/data-sources', '/about/attributions',
   ].map((path) => ({ url: `${BASE_URL}${path}`, changeFrequency: 'weekly' as const }));
 
   try {
-    const [techniques, groups, cves, owasp, csf, frameworks, software, campaigns, mitigations] = await Promise.all([
+    const [techniques, groups, cves, owasp, csf, frameworks, software, campaigns, mitigations, dataSources, assets, tactics, sectors, capec] = await Promise.all([
       query<{ attack_id: string }>('SELECT attack_id FROM techniques WHERE attack_id IS NOT NULL'),
       query<{ attack_id: string }>('SELECT attack_id FROM threat_groups WHERE attack_id IS NOT NULL'),
       query<{ cve_id: string }>("SELECT cve_id FROM cve_details WHERE cve_id IS NOT NULL ORDER BY published_at DESC NULLS LAST LIMIT 5000"),
@@ -31,6 +39,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       query<{ attack_id: string }>('SELECT attack_id FROM attack_software WHERE attack_id IS NOT NULL'),
       query<{ attack_id: string }>('SELECT attack_id FROM campaigns WHERE attack_id IS NOT NULL'),
       query<{ attack_id: string }>('SELECT attack_id FROM mitigations WHERE attack_id IS NOT NULL'),
+      query<{ attack_id: string }>('SELECT attack_id FROM data_sources WHERE attack_id IS NOT NULL'),
+      query<{ attack_id: string }>('SELECT attack_id FROM attack_assets WHERE attack_id IS NOT NULL'),
+      query<{ attack_id: string }>('SELECT attack_id FROM tactics WHERE attack_id IS NOT NULL'),
+      query<{ slug: string }>('SELECT slug FROM sectors WHERE slug IS NOT NULL'),
+      query<{ id: number }>('SELECT id FROM capec_patterns'),
     ]);
 
     const techniqueUrls = techniques.rows.map((t) => ({
@@ -78,9 +91,42 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'monthly' as const,
     }));
 
+    // Entity types that had list pages in the sitemap but whose DETAIL pages were
+    // never listed — every one of these is a real, linked, indexable page that
+    // Google could only find by crawling, not by submission.
+    const simple = (rows: { attack_id: string }[], seg: string) =>
+      rows.map((r) => ({
+        url: `${BASE_URL}/${seg}/${r.attack_id}`,
+        changeFrequency: 'monthly' as const,
+      }));
+
+    const dataSourceUrls = simple(dataSources.rows, 'data-sources');
+    const assetUrls = simple(assets.rows, 'assets');
+    const tacticUrls = simple(tactics.rows, 'tactics');
+
+    const sectorUrls = sectors.rows.map((s) => ({
+      url: `${BASE_URL}/sectors/${s.slug}`,
+      changeFrequency: 'monthly' as const,
+    }));
+
+    // CAPEC's canonical URL form is the prefixed id the API returns.
+    const capecUrls = capec.rows.map((c) => ({
+      url: `${BASE_URL}/cti/capec/CAPEC-${c.id}`,
+      changeFrequency: 'monthly' as const,
+    }));
+
+    // From the registry the /ecosystems/<slug> route itself resolves through,
+    // so a listed URL cannot 404.
+    const ecosystemUrls = Array.from(ECOSYSTEM_REGISTRY.keys()).map((slug) => ({
+      url: `${BASE_URL}/ecosystems/${slug}`,
+      changeFrequency: 'weekly' as const,
+    }));
+
     return [
       ...staticPages, ...techniqueUrls, ...groupUrls, ...cveUrls, ...owaspUrls,
       ...csfUrls, ...complianceUrls, ...softwareUrls, ...campaignUrls, ...mitigationUrls,
+      ...dataSourceUrls, ...assetUrls, ...tacticUrls, ...sectorUrls, ...capecUrls,
+      ...ecosystemUrls,
     ];
   } catch (err) {
     // If DB is not available (e.g., build time), return static pages only
