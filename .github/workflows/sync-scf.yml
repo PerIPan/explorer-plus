@@ -3,7 +3,12 @@ name: sync-scf
 # Twice-yearly + manual. SCF ships quarterly but our review cadence is 6-monthly.
 on:
   schedule:
-    - cron: '0 0 10 1,7 *'  # 10 Jan + 10 Jul at 00:00 UTC
+    # SCF ships quarterly with patches (2026.1 Apr 2, 2026.1.1 Apr 22, 2026.2 Jul 8,
+    # 2026.3 Sep 21 — verified against the GitHub releases API). Twice a year would
+    # have left 2026.3 uningested until 2027, superseded before it ever landed.
+    # Monthly on the 10th catches each release within ~30 days; the script no-ops
+    # when the version tag has not moved.
+    - cron: '0 0 10 * *'  # 10 Jan + 10 Jul at 00:00 UTC
   workflow_dispatch:
     inputs:
       version:

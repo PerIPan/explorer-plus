@@ -1,7 +1,10 @@
 name: Sync Atomic Red Team
 on:
   schedule:
-    - cron: '0 5 * * 0'
+    # Monthly. Upstream is bursty (57 tests landed in one run, 163 in another, with
+    # dead weeks between) and the script does a full clone and full sweep with no
+    # per-run cap, so one monthly pass still captures a whole burst.
+    - cron: '0 5 1 * *'
   workflow_dispatch: {}
 
 jobs:

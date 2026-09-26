@@ -1,7 +1,11 @@
 name: Sync Sigma Rules
 on:
   schedule:
-    - cron: '0 4 * * 0'
+    # Monthly. 15 new rules in 90 days against a 3,146-row table, and 7 of 13 weekly
+    # runs inserted nothing. The script has no batch cap — it clones the repo and
+    # sweeps the whole tree — so a monthly run collects a month of upstream in one
+    # pass rather than falling behind.
+    - cron: '0 4 1 * *'
   workflow_dispatch: {}
 
 jobs:

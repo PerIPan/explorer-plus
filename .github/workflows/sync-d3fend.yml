@@ -21,7 +21,10 @@ on:
     # Twice a year, 06:00 UTC on 10 Jan and 10 Jul — alongside SCF, which runs
     # the same days. D3FEND ships two or three releases a year and a run is a
     # complete refresh, so a quarterly clock was just extra Neon wakes.
-    - cron: '0 6 10 1,7 *'
+    # Quarterly. D3FEND ships 2-3 ontology releases a year (current 1.6.0, 2026-08-31),
+    # and a sweep is 794 calls to a public MITRE endpoint, so this is the cadence that
+    # catches a release within three months without hammering them monthly.
+    - cron: '0 6 10 1,4,7,10 *'
   workflow_dispatch:
     inputs:
       domain:
