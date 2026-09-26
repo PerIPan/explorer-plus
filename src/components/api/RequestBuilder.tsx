@@ -71,7 +71,7 @@ export function useRequestBuilder(entry: ApiEntry) {
     [values, seed],
   );
 
-  return { fields, values, setValue, reset, composed, dirty };
+  return { fields, values, setValue, reset, composed, dirty, seed };
 }
 
 const INPUT_CLASS =
@@ -83,13 +83,22 @@ function Field({
   value,
   onChange,
   id,
+  isExample,
 }: {
   field: BuilderField;
   value: string;
   onChange: (value: string) => void;
   id: string;
+  /** Still holding the catalogue's worked value, untouched by the reader. */
+  isExample: boolean;
 }) {
   const options = field.values ?? (field.type === 'boolean' ? (['true', 'false'] as const) : undefined);
+  /* Bold italic while a value is still ours rather than yours. Every runnable
+     endpoint opens pre-filled with a request that really returns 200, so the
+     Run button gives a result on the first press — but a reader cannot tell a
+     prefilled id from one they typed, and would not know it is theirs to edit.
+     The styling drops the moment the value changes. */
+  const exampleClass = isExample ? ' font-bold italic' : '';
 
   return (
     <li className="px-3 py-2">
@@ -100,10 +109,11 @@ function Field({
         <Badge label={field.type} variant="neutral" />
         {field.required ? <Badge label="required" variant="orange" /> : null}
         {field.kind === 'path' && <Badge label="path" variant="teal" />}
+        {isExample && <Badge label="example" variant="neutral" />}
       </div>
       <div className="mt-1.5">
         {options ? (
-          <select id={id} value={value} onChange={(e) => onChange(e.target.value)} className={INPUT_CLASS}>
+          <select id={id} value={value} onChange={(e) => onChange(e.target.value)} className={INPUT_CLASS + exampleClass}>
             {/* An unset optional filter must stay unset — see composePath. */}
             <option value="">{field.required ? '— choose —' : '— not set —'}</option>
             {options.map((v) => (
@@ -119,7 +129,7 @@ function Field({
             value={value}
             onChange={(e) => onChange(e.target.value)}
             placeholder={field.required ? 'required' : 'optional'}
-            className={INPUT_CLASS}
+            className={INPUT_CLASS + exampleClass}
           />
         )}
       </div>
@@ -151,17 +161,24 @@ export function RequestFields({
       <ul className="divide-y divide-[var(--border-color)] rounded-md border border-[var(--border-color)]">
         {fields.map((f) => {
           const id = `req-${entry.method}-${entry.path}-${f.kind}-${f.name}`.replace(/[^a-zA-Z0-9-]/g, '_');
+          const value = values[f.kind][f.name] ?? '';
           return (
             <Field
               key={`${f.kind}:${f.name}`}
               id={id}
               field={f}
-              value={values[f.kind][f.name] ?? ''}
+              value={value}
+              isExample={value !== '' && value === (builder.seed[f.kind][f.name] ?? '')}
               onChange={(v) => setValue(f.kind, f.name, v)}
             />
           );
         })}
       </ul>
+      <p className="text-[11px] leading-snug text-[var(--text-secondary)]">
+        Values in <span className="font-bold italic">bold italic</span> are our worked example, chosen so the call
+        returns 200 on the first press. Edit any of them — the URL, the curl and the request all follow what you type.
+      </p>
+
       {dirty && (
         <button
           type="button"
