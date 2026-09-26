@@ -1,6 +1,7 @@
 'use client';
 
-import { Suspense, lazy, useRef, useState } from 'react';
+import { Suspense, lazy, useEffect, useRef, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { AGENT_TOOL_COUNT, SITE_URL } from '../../lib/site';
 import { track } from '@vercel/analytics';
 import { useQuery } from '@tanstack/react-query';
@@ -105,6 +106,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [modelOpen, setModelOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
+  /* The info modal is hand-rolled (no Dialog, so no useDialog contract) and
+     AppShell is in the root layout, so it too survived a route change while the
+     API panel inside it links to /open-apis. Closing on navigation is the half
+     of the fix that matters to a reader; the full port to <Dialog> — role,
+     trap, Escape — is still outstanding. */
+  const helpPathname = usePathname();
+  useEffect(() => setHelpOpen(false), [helpPathname]);
   const [helpTab, setHelpTab] = useState<'about' | 'api' | 'a2a' | 'mcp'>('about');
   const [apisOpen, setApisOpen] = useState(false);
   const [apisTab, setApisTab] = useState<'rest' | 'mcp' | 'a2a'>('rest');

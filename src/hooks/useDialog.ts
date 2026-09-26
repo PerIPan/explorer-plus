@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef } from 'react';
+import { usePathname } from 'next/navigation';
 import type { KeyboardEvent as ReactKeyboardEvent, RefObject } from 'react';
 
 /**
@@ -37,6 +38,15 @@ const FOCUSABLE_SELECTOR = [
   'textarea:not([disabled])',
   '[tabindex]:not([tabindex="-1"])',
 ].join(',');
+
+/**
+ * Scroll-lock depth, module-level so two dialogs open at once (a tool modal over
+ * the header modal) cannot have the inner one's cleanup unlock the page while
+ * the outer is still up. Only the transition 0->1 writes the body style, and
+ * only 1->0 restores exactly what was there before.
+ */
+let scrollLocks = 0;
+let savedBodyStyle: { overflow: string; paddingRight: string } | null = null;
 
 function hasLayoutBox(el: unknown): el is HTMLElement {
   return el instanceof HTMLElement && el.isConnected && el.getClientRects().length > 0;
@@ -138,6 +148,57 @@ export function useDialog({ open, onClose, returnFocusTo, labelledBy }: UseDialo
     }
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
+  }, [open]);
+
+  /**
+   * Close on client-side navigation.
+   *
+   * AppShell sits in the root layout, so a dialog it owns keeps its `open` state
+   * across a route change — and the API panel inside it links out to /open-apis
+   * and /open-mcp. Clicking one navigated the page UNDERNEATH while the dialog
+   * stayed on screen with the background still marked `inert`, so the link read
+   * as broken. Modals that unmount with their page never had the problem; they
+   * get the guarantee anyway.
+   *
+   * Compares against the path the dialog OPENED on rather than closing on every
+   * pathname effect run, so opening a dialog does not immediately close it.
+   */
+  const pathname = usePathname();
+  const openedOn = useRef<string | null>(null);
+  useEffect(() => {
+    if (!open) {
+      openedOn.current = null;
+      return;
+    }
+    if (openedOn.current === null) {
+      openedOn.current = pathname;
+      return;
+    }
+    if (openedOn.current !== pathname) onCloseRef.current();
+  }, [open, pathname]);
+
+  /* The page behind a modal must not scroll. Compensates for the scrollbar it
+     removes, so locking does not shift the layout under the scrim. */
+  useEffect(() => {
+    if (!open) return undefined;
+    if (scrollLocks === 0) {
+      const gap = window.innerWidth - document.documentElement.clientWidth;
+      savedBodyStyle = {
+        overflow: document.body.style.overflow,
+        paddingRight: document.body.style.paddingRight,
+      };
+      document.body.style.overflow = 'hidden';
+      if (gap > 0) document.body.style.paddingRight = `${gap}px`;
+    }
+    scrollLocks += 1;
+    return () => {
+      scrollLocks -= 1;
+      if (scrollLocks === 0 && savedBodyStyle) {
+        document.body.style.overflow = savedBodyStyle.overflow;
+        document.body.style.paddingRight = savedBodyStyle.paddingRight;
+        savedBodyStyle = null;
+      }
+    };
   }, [open]);
 
   const handleKeyDown = useCallback(

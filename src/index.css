@@ -17,6 +17,11 @@
 
   --accent-teal: #0d9488;
   --accent-orange: #ea580c;
+  /* Orange dark enough for SMALL text on a light surface. --accent-orange is
+     3.56:1 on white and 3.18:1 on --surface-deep, so 10px labels in it fail
+     WCAG AA (4.5:1); this is 5.18:1 and 4.63:1 on the same two. Fills and
+     borders keep --accent-orange, which they may: AA's ratio is for text. */
+  --accent-orange-strong: #c2410c;
   --accent-purple: #8b5cf6;
   --accent-blue: #3b82f6;
   --accent-green: #059669;
@@ -64,6 +69,8 @@
 
   --accent-teal: #64ffda;
   --accent-orange: #f97316;
+  /* Dark theme needs no darkening — #f97316 is already 5.67:1 on --surface-card. */
+  --accent-orange-strong: #f97316;
   --accent-purple: #c4b5fd;
   --accent-blue: #93c5fd;
   --accent-green: #34d399;

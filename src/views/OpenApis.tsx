@@ -172,7 +172,7 @@ curl '${API_FACTS.baseUrl}/sectors/financial/relationships'`}</CodeBlock>
                             nobody uses, and on a touch screen there is no hover at all. Orange on
                             row hover because it is the one thing here that leaves the page and
                             makes a real request. */}
-                        <span className="ml-auto shrink-0 text-[10px] font-semibold uppercase tracking-wider text-[var(--text-secondary)] transition-colors group-hover:text-[var(--accent-orange)] group-focus-visible:text-[var(--accent-orange)]">
+                        <span className="ml-auto shrink-0 text-[10px] font-semibold uppercase tracking-wider text-[var(--text-secondary)] transition-colors group-hover:text-[var(--accent-orange-strong)] group-focus-visible:text-[var(--accent-orange-strong)]">
                           {e.executable ? 'run it →' : 'details →'}
                         </span>
                       </button>
