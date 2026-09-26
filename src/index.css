@@ -7,6 +7,12 @@
   --surface-card: #ffffff;
   --surface-alt: #f5f6fa;
   --border-color: #c9cfe0;
+  /* Boundary of an interactive control — a field, a toggle, a combobox.
+     WCAG 1.4.11 asks 3:1 for those against their background, where
+     --border-color is decorative and sits far below it: it is 1.56:1 on white
+     here and 1.16:1 on the dark card, which is why the form fields in the
+     profile modal read as borderless in dark mode. 3.09:1 / 3.17:1. */
+  --border-input: #8892b0;
   --border-faint: rgba(160, 170, 200, 0.35);
   --border-hover: #8892b0;
   --hover-overlay: rgba(0, 0, 0, 0.04);
@@ -59,6 +65,7 @@
   --surface-card: #16213e;
   --surface-alt: #0d1526;
   --border-color: #2a2a4a;
+  --border-input: #6b6b99;
   --border-faint: rgba(42, 42, 74, 0.4);
   --border-hover: #4a4a6a;
   --hover-overlay: rgba(255, 255, 255, 0.03);

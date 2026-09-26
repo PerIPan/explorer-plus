@@ -212,7 +212,7 @@ export function PurdueAssetPicker({
       </div>
 
       <div
-        className={`rounded-md border border-[var(--border-color)] bg-[var(--surface-card)] overflow-y-auto ${
+        className={`rounded-md border border-[var(--border-input)] bg-[var(--surface-card)] overflow-y-auto ${
           compact ? 'max-h-[11rem]' : 'max-h-[22rem]'
         }`}
       >

@@ -1201,10 +1201,10 @@ export function ProfilePanel({
    * z-index and sitting one above the shared scrim at z-60.
    */
   const shellClass = large
-    ? 'pointer-events-auto select-text fixed left-1/2 top-1/2 z-[61] -translate-x-1/2 -translate-y-1/2 flex w-[calc(100%-2rem)] max-w-[620px] max-h-[85vh] flex-col rounded-2xl border border-[var(--border-color)] bg-[var(--surface-card)] shadow-2xl focus:outline-none'
+    ? 'pointer-events-auto select-text fixed left-1/2 top-1/2 z-[61] -translate-x-1/2 -translate-y-1/2 flex w-[calc(100%-2rem)] max-w-[760px] max-h-[90vh] flex-col rounded-2xl border border-[var(--border-color)] bg-[var(--surface-card)] shadow-2xl focus:outline-none'
     : anchored
       ? 'pointer-events-auto select-text flex flex-col rounded-xl border border-[var(--border-color)] bg-[var(--surface-card)] shadow-2xl focus:outline-none'
-      : 'pointer-events-auto select-text fixed inset-x-0 bottom-0 z-[61] mx-auto flex w-full max-h-[85vh] flex-col rounded-t-2xl border-t border-x border-[var(--border-color)] bg-[var(--surface-card)] shadow-2xl focus:outline-none sm:max-w-[560px]';
+      : 'pointer-events-auto select-text fixed inset-x-0 bottom-0 z-[61] mx-auto flex w-full max-h-[85vh] flex-col rounded-t-2xl border-t border-x border-[var(--border-color)] bg-[var(--surface-card)] shadow-2xl focus:outline-none sm:max-w-[640px]';
 
   return (
     <>
@@ -1327,7 +1327,7 @@ export function ProfilePanel({
             <legend className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
               Which estate are you asking about?
             </legend>
-            <div className="flex w-full rounded-md border border-[var(--border-color)] p-0.5 gap-0.5">
+            <div className="flex w-full rounded-md border border-[var(--border-input)] p-0.5 gap-0.5">
               {(
                 [
                   { value: 'it', label: 'IT estate', hint: 'ATT&CK Enterprise — ranked on your sector and platforms.' },
@@ -1408,7 +1408,7 @@ export function ProfilePanel({
               value={sector ?? ''}
               onChange={(e) => onSectorChange(e.target.value || null)}
               aria-describedby={statusId}
-              className="w-full min-h-[44px] px-2 rounded-md border border-[var(--border-color)] bg-[var(--surface-card)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-teal)] focus-visible:ring-2 focus-visible:ring-[var(--accent-teal)] transition-colors"
+              className="w-full min-h-[44px] px-2 rounded-md border border-[var(--border-input)] bg-[var(--surface-card)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-teal)] focus-visible:ring-2 focus-visible:ring-[var(--accent-teal)] transition-colors"
             >
               <option value="">Select a sector…</option>
               {SECTOR_OPTIONS.map((o) => (
@@ -1442,7 +1442,7 @@ export function ProfilePanel({
           <div role="group" aria-describedby={contextNoteId} className="flex flex-col gap-4">
             <p
               id={contextNoteId}
-              className="text-[11px] leading-snug text-[var(--text-secondary)] border-t border-[var(--border-color)] pt-3"
+              className="text-[11px] leading-snug text-[var(--text-secondary)] border-t border-[var(--border-input)] pt-3"
             >
               The next two are{' '}
               <span className="font-semibold text-[var(--text-primary)]">context, not ranking</span>
@@ -1466,7 +1466,7 @@ export function ProfilePanel({
           </div>
         </div>
 
-        <div className="flex items-center justify-between gap-3 border-t border-[var(--border-color)] px-4 py-3">
+        <div className="flex items-center justify-between gap-3 border-t border-[var(--border-input)] px-4 py-3">
           <p
             id={statusId}
             aria-live="polite"

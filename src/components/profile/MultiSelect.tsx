@@ -181,7 +181,7 @@ export function MultiSelect({ id, label, options, selected, onChange, placeholde
         {label}
       </label>
 
-      <div className="flex flex-wrap items-center gap-1.5 min-h-[44px] px-2 py-1 rounded-md border border-[var(--border-color)] bg-[var(--surface-card)] focus-within:border-[var(--accent-teal)] transition-colors">
+      <div className="flex flex-wrap items-center gap-1.5 min-h-[44px] px-2 py-1 rounded-md border border-[var(--border-input)] bg-[var(--surface-card)] focus-within:border-[var(--accent-teal)] transition-colors">
         {selected.map((value) => {
           const chipLabel = optionByValue.get(value)?.label ?? value;
           return (
@@ -308,7 +308,7 @@ export function MultiSelect({ id, label, options, selected, onChange, placeholde
           role="listbox"
           aria-label={label}
           aria-multiselectable="true"
-          className={`absolute z-50 mt-1 w-full ${LISTBOX_MAX_H} overflow-y-auto rounded-md border border-[var(--border-color)] bg-[var(--surface-card)] shadow-xl`}
+          className={`absolute z-50 mt-1 w-full ${LISTBOX_MAX_H} overflow-y-auto rounded-md border border-[var(--border-input)] bg-[var(--surface-card)] shadow-xl`}
         >
           {visible.length === 0 && (
             <li className="px-3 py-2.5 text-xs text-[var(--text-secondary)] italic">No matches</li>
