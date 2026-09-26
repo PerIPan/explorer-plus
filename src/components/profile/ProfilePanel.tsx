@@ -645,7 +645,7 @@ export function ProfileDiamondTrigger({ size }: { size: number }) {
       // control. Claiming otherwise would point a screen reader at the wrong
       // trigger.
       aria-expanded={ctl.open && !ctl.large}
-      aria-label="Tailor this to what you defend"
+      aria-label="Tailor the explorer to what you defend"
       className="block pointer-events-auto group rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--accent-teal)]"
     >
       <img
@@ -823,7 +823,7 @@ export interface ProfilePanelProps {
   returnFocusRef: RefObject<HTMLElement | null>;
 }
 
-const ANCHORED_WIDTH = 380;
+const ANCHORED_WIDTH = 420;
 const ANCHOR_GAP = 16;
 
 const FOCUSABLE_SELECTOR = [
@@ -1269,7 +1269,7 @@ export function ProfilePanel({
         <div className="flex items-start justify-between gap-3 px-4 pt-4 pb-2">
           <div className="min-w-0">
             <h2 id={titleId} className="text-sm font-semibold text-[var(--text-primary)]">
-              Tailor this to what you defend
+              Tailor the explorer to what you defend
             </h2>
             {/* What each answer DOES, stated rather than implied. This used to
                 read "Four questions. Only the sector is required" — which
