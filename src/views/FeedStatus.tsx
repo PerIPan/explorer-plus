@@ -5,7 +5,7 @@ import { useFeedStatus } from '../hooks/useApi';
 import { apiFetch } from '../lib/api';
 import { PageHeader } from '../components/layout/PageHeader';
 import type { FeedSyncStatus } from '../lib/types';
-import { FEED_SOURCES, AUTOMATED_TABLES, REFERENCE_TABLES } from '../lib/feeds';
+import { FEED_SOURCES, MANUAL_SOURCES, AUTOMATED_TABLES, REFERENCE_TABLES } from '../lib/feeds';
 import type { FrameworkTable } from '../lib/feeds';
 
 const SOURCE_LABELS: Record<string, string> = {
@@ -126,6 +126,14 @@ function FeedCard({ feed }: FeedCardProps) {
           )}
         </div>
         <span className="text-xs text-[var(--text-secondary)] whitespace-nowrap">
+          {MANUAL_SOURCES.has(feed.source) && (
+            <span
+              className="mr-2 rounded border border-[var(--border-color)] px-1.5 py-px text-[10px] font-medium uppercase tracking-wider"
+              title="Run by hand — no schedule. An old timestamp here is not a missed run."
+            >
+              manual
+            </span>
+          )}
           {formatTimeAgo(feed.lastSync)}
         </span>
         <StatusBadge status={feed.status} />
@@ -160,7 +168,7 @@ function EmptyFeedCard({ source }: { source: string }) {
         </div>
         <span className="text-xs text-[var(--text-secondary)] whitespace-nowrap">—</span>
         <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border bg-[var(--hover-overlay)] text-[var(--text-secondary)] border-[var(--border-color)]">
-          {AUTO_ONLY_SOURCES.has(source) ? 'scheduled' : 'pending'}
+          {MANUAL_SOURCES.has(source) ? 'manual' : AUTO_ONLY_SOURCES.has(source) ? 'scheduled' : 'pending'}
         </span>
       </div>
     </div>

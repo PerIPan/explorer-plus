@@ -14,6 +14,22 @@
  * SUPPOSED to run, so a source that has never logged a sync still shows up as
  * pending instead of silently vanishing from the list.
  */
+/**
+ * Sources with no schedule — run by hand, on purpose.
+ *
+ * `attack_update` rotates the ATT&CK corpus underneath every page on the site,
+ * so its workflow is dispatch-only with a version guard and a snapshot diff for
+ * a human to read. `ics_assets` is a backfill. Neither is late when it is old,
+ * and without saying so a reader has to assume every row here is a cron that
+ * has stopped firing.
+ *
+ * They stay in THIS list rather than moving to the manual table section below,
+ * because that section shows row counts for tables, and these are sync runs:
+ * moving them would drop the status, the last run and the error text, which is
+ * the only reason they are worth showing at all.
+ */
+export const MANUAL_SOURCES: ReadonlySet<string> = new Set(['attack_update', 'ics_assets']);
+
 export const FEED_SOURCES = [
   // The ATT&CK corpus itself and the ICS asset catalogue. Both log to
   // feed_sync_log and neither was listed here, so neither could ever show a
