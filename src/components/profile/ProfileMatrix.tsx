@@ -116,7 +116,15 @@ export function ProfileMatrix({
               The matrix did not load. The briefing above is unaffected.
             </p>
           )}
-          {!isLoading && !error && data && (
+          {/* An empty grid is the silent-empty state this codebase keeps meeting:
+              it looks like a render bug rather than an answer. Say it instead. */}
+          {!isLoading && !error && data && data.length === 0 && (
+            <p className="rounded-md border border-[var(--border-color)] bg-[var(--surface-card)] px-3 py-2.5 text-xs text-[var(--text-secondary)]">
+              No matrix is published for this combination of sector and domain, so there is nothing
+              to place these techniques on. The ranking above is unaffected.
+            </p>
+          )}
+          {!isLoading && !error && data && data.length > 0 && (
             <div className="overflow-x-auto">
               <MatrixGrid data={data} highlightIds={highlightIds} />
             </div>
