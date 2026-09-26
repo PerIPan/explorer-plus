@@ -65,7 +65,20 @@ test('profile query: the API query always carries a domain unless all-domains', 
   const r = new URLSearchParams(
     buildProfileApiQuery({ sector: 'energy', sort: 'kev', domain: all.domain }),
   );
-  assert.equal(r.has('domain'), false, 'only an explicit "all" omits it');
+  // An explicit all-domains request is now SENT as `domain=all`, not omitted.
+  // The assembler defaults an absent domain to enterprise-attack, so omitting it
+  // would silently convert "every domain" into "enterprise only" while the page
+  // went on disclosing a mixed pool. `all` is a value the API accepts, and it
+  // answers with meta.mixedDomain set.
+  assert.equal(r.get('domain'), ALL_DOMAINS, 'all-domains must be stated, not implied');
+});
+
+test('profile query: an unresolved (undefined) domain is still omitted', () => {
+  // Only the `null` that resolveProfileDomain returns for an explicit "all"
+  // becomes `domain=all`. A caller that never resolved a domain omits the
+  // parameter and picks up the assembler's enterprise-attack default.
+  const q = new URLSearchParams(buildProfileApiQuery({ sector: 'energy', sort: 'kev' }));
+  assert.equal(q.has('domain'), false);
 });
 
 test('profile query: carries nothing the assembler does not read', () => {

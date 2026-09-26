@@ -88,8 +88,19 @@ export function parsePlatforms(rawPlatforms) {
  * carries around (`entity`, `tab`, …) neither reach the API nor fragment the
  * react-query cache key.
  *
- * `domain` is written whenever it is non-null — i.e. always, except for the
- * explicit all-domains case above.
+ * `domain` is ALWAYS written. A non-null value goes through as itself; the
+ * `null` that `resolveProfileDomain` returns for an explicit all-domains request
+ * is written as the literal `all`, which is now what the assembler's
+ * `profileDomainSchema` expects for that case.
+ *
+ * It used to be OMITTED for all-domains, which worked only because an absent
+ * `?domain=` happened to mean "no filter" at the API. It no longer does: the
+ * assembler DEFAULTS an absent domain to enterprise-attack (a public v1 API must
+ * not hand out a silently mixed pool). Omitting it would therefore have quietly
+ * converted the visitor's explicit "all domains" into "enterprise only" while
+ * the page went on disclosing a mixed pool — a worse lie than the one the
+ * default was added to fix. `undefined`, meaning a caller that never resolved a
+ * domain at all, is still omitted and still picks up the API's default.
  *
  * `assets` and `levels` are the OT path's answers. Note the NAME CHANGE across
  * the boundary: the page URL carries `?purdue_levels=` (which is what the
@@ -124,5 +135,6 @@ export function buildProfileApiQuery({ sector, platforms = [], assets = [], leve
   if (levels.length > 0) p.set('levels', levels.join(','));
   if (sort) p.set('sort', sort);
   if (domain) p.set('domain', domain);
+  else if (domain === null) p.set('domain', ALL_DOMAINS);
   return p.toString();
 }

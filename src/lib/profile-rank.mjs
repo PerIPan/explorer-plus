@@ -75,14 +75,69 @@ export function splitBands(pool, sortKey, n = 6, minGroups = MIN_GROUPS, minReac
   const field = METRIC[sortKey] ?? 'kevCount';
   const bandA = [...pool].sort((a, b) => (b[field] ?? 0) - (a[field] ?? 0)).slice(0, n);
   const taken = new Set(bandA.map(t => t.attackId));
+  return { bandA, ...selectBandB(pool, taken, n, minGroups, minReach) };
+}
+
+/**
+ * Band B alone, over an arbitrary pool, excluding an arbitrary set of ids.
+ *
+ * Extracted from `splitBands` for the IT path's platform fallback. The spec
+ * (design doc line 120) frames that fallback as filling BAND B, but the route
+ * implemented it by re-running `splitBands` over the widened pool and taking
+ * BOTH bands from it — so a narrow platform pick produced a briefing identical
+ * in both bands to answering nothing at all, and the visitor's environment
+ * answer was discarded entirely and silently. Band A must stay on the
+ * platform-filtered pool so the answer still shows somewhere, which means Band B
+ * has to be selectable over a DIFFERENT pool from the Band A it excludes — and
+ * that is exactly what `splitBands` cannot express, because it always excludes
+ * the Band A it just computed from the same pool.
+ *
+ * The exclusion is BY ID, so it works across pools: Band A's ids come from the
+ * platform pool, the candidates come from the full sector pool, and the six
+ * Band A techniques are still kept out of Band B.
+ *
+ * @param {Array<object>} pool        candidates
+ * @param {Set<string>} excludeIds    attackIds to keep out (normally Band A's)
+ * @param {number} [n=6]              band size
+ * @param {number} [minGroups=MIN_GROUPS] group-attribution floor
+ * @param {number} [minReach=0]       reach floor (inert on the IT path)
+ */
+export function selectBandB(pool, excludeIds, n = 6, minGroups = MIN_GROUPS, minReach = 0) {
   const eligible = pool.filter(t =>
-    !taken.has(t.attackId)
+    !excludeIds.has(t.attackId)
     && (t.groupCount ?? 0) >= minGroups
     && (t.reach ?? 0) >= minReach);
   const bandB = eligible
     .sort((a, b) => (b.lift ?? 0) - (a.lift ?? 0) || (a.attackId < b.attackId ? -1 : 1))
     .slice(0, n);
-  return { bandA, bandB, bandBShort: bandB.length < n };
+  return { bandB, bandBShort: bandB.length < n };
+}
+
+/**
+ * True when the column Band A is SORTED BY is entirely zero across the pool —
+ * i.e. the band is an arbitrary stable-sort slice of nothing, presented under a
+ * heading that names evidence.
+ *
+ * This is the generalisation of the ICS problem the OT engine exists for.
+ * Measured 2026-09-26, the same shape holds elsewhere: all 155 live ATLAS
+ * techniques and every live mobile technique carry no CVE/KEV/EPSS evidence at
+ * all, so `?domain=atlas-attack&sort=kev` ranks a column of zeroes under "Most
+ * KEV evidence" and nothing in the response says so. The route surfaces this as
+ * `meta.evidenceUnavailable` so the page can say it instead of implying the
+ * opposite.
+ *
+ * An EMPTY pool returns false, deliberately: there is no column to make a claim
+ * about, and the empty-pool states already carry their own `reason`. Only a
+ * populated pool whose metric is uniformly zero is a silent wrong answer.
+ *
+ * @param {Array<object>} pool
+ * @param {string} sortKey a key of METRIC; anything else resolves to kevCount,
+ *   matching `splitBands`, so the flag describes the column actually sorted on.
+ */
+export function isEvidenceUnavailable(pool, sortKey) {
+  if (pool.length === 0) return false;
+  const field = METRIC[sortKey] ?? 'kevCount';
+  return pool.every(t => !(t[field] > 0));
 }
 
 /**

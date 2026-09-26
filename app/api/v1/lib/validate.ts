@@ -4,6 +4,38 @@ import { PLATFORMS, SECTOR_SLUGS } from '../../../../src/lib/profile-options';
 export const VALID_DOMAINS = ['enterprise-attack', 'mobile-attack', 'ics-attack', 'atlas-attack'] as const;
 export const domainSchema = z.enum(VALID_DOMAINS).optional();
 
+/**
+ * The Threat Profile assembler's `domain`, which differs from `domainSchema`
+ * above in exactly two ways, both of them to stop a silently mixed pool.
+ *
+ * 1. It DEFAULTS instead of being optional. `domainSchema` is `.optional()`,
+ *    and the assembler reads `AND ($2::text IS NULL OR t.domain = $2)`, so an
+ *    absent `?domain=` was not "enterprise" — it was NO FILTER AT ALL, over a
+ *    matview that holds ICS, mobile and ATLAS rows. Measured live 2026-09-26,
+ *    `?sector=energy&sort=lift` returned a Band A of T0829, T0852, T0869, T0883
+ *    — four ICS techniques out of six slots, in a band sorted by CTI EVIDENCE,
+ *    for techniques that carry none of it (pool 219 vs 205 when filtered).
+ *    `meta` said nothing and `profile.domain` came back null. The UI was
+ *    protected by `resolveProfileDomain`, but this is a public v1 API with a
+ *    real external consumer, so the default belongs at the edge as well.
+ *
+ * 2. It accepts `'all'`, which the other domain-filtered routes do not. That is
+ *    the ONE legitimate no-filter case: it is what the site-wide domain
+ *    dropdown means, and coercing it to the default would overrule a choice the
+ *    visitor actually made. The route turns it into a null filter AND sets
+ *    `meta.mixedDomain`, so a caller asking for a mixed pool is told it is one
+ *    rather than left to infer it.
+ *
+ * Deliberately NOT folded into `domainSchema`: `/search` and `/dashboard` share
+ * that one, where an absent domain means "every domain" as a matter of design
+ * and `'all'` is not a value they know.
+ */
+export const PROFILE_DOMAIN_ALL = 'all';
+export const PROFILE_DOMAIN_DEFAULT = 'enterprise-attack';
+export const PROFILE_DOMAINS = [...VALID_DOMAINS, PROFILE_DOMAIN_ALL] as const;
+export const profileDomainSchema = z.enum(PROFILE_DOMAINS).default(PROFILE_DOMAIN_DEFAULT);
+export type ProfileDomain = z.infer<typeof profileDomainSchema>;
+
 export const attackIdSchema = z.string().regex(/^(AML\.)?(TA|T|G|S|M|C|DS)\d{4}(\.\d{3})?$/);
 export const slugSchema = z.string().regex(/^[a-z0-9-]+$/);
 export const searchSchema = z.string().min(3).max(200);

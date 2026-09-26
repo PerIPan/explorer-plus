@@ -1,7 +1,9 @@
 // scripts/lib/profile-rank.test.mjs — run with `npm test`
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { splitBands, isDegenerate, otLift, MIN_GROUPS, MIN_REACH } from '../../src/lib/profile-rank.mjs';
+import {
+  splitBands, selectBandB, isDegenerate, isEvidenceUnavailable, otLift, MIN_GROUPS, MIN_REACH,
+} from '../../src/lib/profile-rank.mjs';
 
 // groupCount defaults to MIN_GROUPS so every pre-existing fixture clears the Band B
 // floor unless a test overrides it to specifically exercise that floor.
@@ -219,4 +221,79 @@ test('IT path is untouched by the OT parameters', () => {
   const { bandA, bandB } = splitBands(pool, 'kev', 2);
   assert.deepEqual(bandA.map(t => t.attackId), ['T4', 'T2']);
   assert.deepEqual(bandB.map(t => t.attackId), ['T1', 'T3']);
+});
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * selectBandB — the Band-B-only platform fallback (M2)
+ * ──────────────────────────────────────────────────────────────────────────── */
+
+test('selectBandB: splitBands is exactly bandA + selectBandB over its own ids', () => {
+  // The refactor must be behaviour-preserving for every existing caller.
+  const pool = [T('T1', 9, 1), T('T2', 2, 50), T('T3', 5, 20), T('T4', 1, 99)];
+  const split = splitBands(pool, 'kev', 2);
+  const manual = selectBandB(pool, new Set(split.bandA.map(t => t.attackId)), 2);
+  assert.deepEqual(split.bandB, manual.bandB);
+  assert.equal(split.bandBShort, manual.bandBShort);
+});
+
+test('selectBandB: Band A from a NARROW pool, Band B from a WIDE one, no overlap', () => {
+  // The shape the route's fallback needs and splitBands cannot express. `narrow`
+  // is the platform-filtered pool; `wide` is the full sector pool.
+  const narrow = [T('W1', 3, 90), T('W2', 2, 80)];
+  const wide = [...narrow, T('X1', 99, 0), T('X2', 50, 0), T('X3', 40, 0)];
+  const { bandA } = splitBands(narrow, 'kev', 6);
+  assert.deepEqual(bandA.map(t => t.attackId), ['W1', 'W2'],
+    'Band A must stay on the platform answer, not be replaced by the wide pool');
+  const { bandB } = selectBandB(wide, new Set(bandA.map(t => t.attackId)), 6);
+  assert.deepEqual(bandB.map(t => t.attackId), ['X1', 'X2', 'X3'],
+    'Band B widens, and the Band A ids are excluded ACROSS pools by id');
+  for (const t of bandB) assert.ok(!bandA.some(a => a.attackId === t.attackId));
+});
+
+test('selectBandB: the floors still apply to the widened pool', () => {
+  const wide = [T('A1', 99, 0, MIN_GROUPS - 1), T('A2', 50, 0, MIN_GROUPS)];
+  const { bandB, bandBShort } = selectBandB(wide, new Set(), 6);
+  assert.deepEqual(bandB.map(t => t.attackId), ['A2'], 'the group floor is not bypassed');
+  assert.equal(bandBShort, true);
+});
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * isEvidenceUnavailable — the all-zero sort column (M5)
+ * ──────────────────────────────────────────────────────────────────────────── */
+
+test('isEvidenceUnavailable: true when the SORTED column is all zero', () => {
+  // The live case: a mobile-attack or atlas-attack pool under `sort=kev`, whose
+  // kevCount is 0 for every technique, presented as "Most KEV evidence".
+  const pool = [T('T1', 9, 0), T('T2', 2, 0), T('T3', 5, 0)];
+  assert.equal(isEvidenceUnavailable(pool, 'kev'), true);
+  assert.equal(isEvidenceUnavailable(pool, 'cv'), true, 'cveCount is absent → treated as zero');
+  assert.equal(isEvidenceUnavailable(pool, 'lift'), false, 'lift is non-zero on the same pool');
+});
+
+test('isEvidenceUnavailable: false as soon as ONE technique carries the metric', () => {
+  const pool = [T('T1', 9, 0), T('T2', 2, 1), T('T3', 5, 0)];
+  assert.equal(isEvidenceUnavailable(pool, 'kev'), false);
+});
+
+test('isEvidenceUnavailable: an empty pool makes no claim', () => {
+  // `[].every()` is true, which would report "no evidence" for a pool that has
+  // no column at all. The empty states carry their own `reason` instead.
+  assert.equal(isEvidenceUnavailable([], 'kev'), false);
+});
+
+test('isEvidenceUnavailable: an unknown sort key resolves like splitBands does', () => {
+  // Both fall back to kevCount, so the flag always describes the column that was
+  // actually sorted on rather than the one that was asked for.
+  const pool = [T('T1', 9, 0), T('T2', 2, 0)];
+  assert.equal(isEvidenceUnavailable(pool, 'nonsense'), true);
+  assert.equal(isEvidenceUnavailable([T('T1', 9, 4)], 'nonsense'), false);
+});
+
+test('isEvidenceUnavailable: the OT path reads exposure, not kevCount', () => {
+  // OT items carry honest CVE/KEV zeros, so reading kevCount would always say
+  // "no evidence" for a briefing whose Band A is a real exposure count.
+  const ot = [1, 2, 3].map((e, i) => ({ attackId: `T${i}`, exposure: e, reach: 4, lift: 1, kevCount: 0 }));
+  assert.equal(isEvidenceUnavailable(ot, 'exposure'), false);
+  const none = ot.map(t => ({ ...t, exposure: 0 }));
+  assert.equal(isEvidenceUnavailable(none, 'exposure'), true);
 });

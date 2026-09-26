@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '../lib/db';
 import { jsonResponse, errorResponse } from '../../lib/handler';
 import { withCors, corsOptions as OPTIONS } from '../../lib/cors';
-import { profileQuerySchema, domainSchema } from '../lib/validate';
-import { splitBands, isDegenerate, otLift, MIN_REACH } from '../../../../src/lib/profile-rank.mjs';
+import { profileQuerySchema, profileDomainSchema, PROFILE_DOMAIN_ALL } from '../lib/validate';
+import {
+  splitBands, selectBandB, isDegenerate, isEvidenceUnavailable, otLift, MIN_REACH,
+} from '../../../../src/lib/profile-rank.mjs';
 
 export { OPTIONS };
 
@@ -11,8 +13,14 @@ export { OPTIONS };
 // platform/sort only — a later task owns widening the schema). It is still a
 // legitimate filter for this assembler, so it is composed on locally, the
 // same way app/api/v1/search/route.ts and app/api/v1/dashboard/route.ts pull
-// in the shared `domainSchema` piece rather than duplicating the enum.
-const querySchema = profileQuerySchema.extend({ domain: domainSchema });
+// in the shared domain piece rather than duplicating the enum.
+//
+// `profileDomainSchema`, NOT the shared `domainSchema`: it DEFAULTS to
+// enterprise-attack instead of being `.optional()`, and it accepts the explicit
+// `all`. See its doc comment in app/api/v1/lib/validate.ts — an absent
+// `?domain=` used to mean no filter at all, and four of six Band A slots for
+// `?sector=energy&sort=lift` came back ICS.
+const querySchema = profileQuerySchema.extend({ domain: profileDomainSchema });
 
 // Raw shape straight off the wire. `numeric` columns (lift, max_epss) come back
 // from node-postgres as strings, not numbers -- coerced below before anything
@@ -202,7 +210,18 @@ const IMPACT_SQL = `
   LEFT JOIN technique_tactics tt ON tt.technique_id = t.id
   LEFT JOIN tactics ta           ON ta.id = tt.tactic_id
   WHERE t.domain = $1 AND NOT t.is_revoked AND NOT t.is_deprecated
-    AND NOT EXISTS (SELECT 1 FROM asset_techniques at WHERE at.technique_id = t.id)
+    -- "No LIVE, PLACED asset targets this" -- the exact complement of the
+    -- JOIN live_assets in OT_POOL_SQL. A bare EXISTS over asset_techniques
+    -- alone would let a technique mapped only to a deprecated asset fall out of
+    -- BOTH collections and vanish from the briefing without a trace.
+    AND NOT EXISTS (
+      SELECT 1
+      FROM asset_techniques at
+      JOIN attack_assets a            ON a.id = at.asset_id
+      JOIN asset_purdue_placement p   ON p.asset_id = a.id
+      WHERE at.technique_id = t.id
+        AND NOT a.is_revoked AND NOT a.is_deprecated
+    )
   GROUP BY t.id, t.attack_id, t.name
   ORDER BY t.attack_id ASC`;
 
@@ -252,18 +271,35 @@ const EFFECTIVE_ASSETS_SQL = `
  * times. With it: T0821, T0835, T0843, T0845, T0858, T0860 — six distinct
  * techniques. The IT path is untouched.
  *
+ * `JOIN live_assets` is what makes `reach` mean the same thing as the other two
+ * terms of the lift ratio. It is the LIVENESS/PLACEMENT filter the numerator
+ * (`sel`) and the denominator (`nAll`) already applied and `reach` did not:
+ * `count(DISTINCT at.asset_id)` over raw `asset_techniques` counts a deprecated
+ * or unplaced asset as reachable surface. Zero impact today — all 18 assets are
+ * live and all 18 are placed — but it is the kind of inconsistency that only
+ * shows up as wrong numbers: a deprecated asset inflates `reach` and therefore
+ * DEFLATES every lift that touches it, and it would do so with no error
+ * anywhere. The join is an inner one, so a technique whose only asset mappings
+ * are to non-live assets leaves the pool entirely rather than arriving with
+ * reach = 0 (which `otLift` throws on, by design). `IMPACT_SQL` uses the same
+ * definition, so the two collections stay an exhaustive partition.
+ *
  * `ORDER BY exposure DESC, attack_id ASC` is what makes Band A deterministic:
  * `splitBands` sorts stably and deliberately carries no tie-break of its own
  * (adding one would re-order the IT path's production Band A), and exposure
  * ties are the common case here, not the exception.
  */
 const OT_POOL_SQL = `
-  WITH sel AS (
-    SELECT a.id AS asset_id
+  WITH live_assets AS (
+    SELECT a.id, a.attack_id, p.spans_levels
     FROM attack_assets a
     JOIN asset_purdue_placement p ON p.asset_id = a.id
     WHERE NOT a.is_revoked AND NOT a.is_deprecated
-      AND (a.attack_id = ANY($1::text[]) OR p.spans_levels && $2::text[])
+  ),
+  sel AS (
+    SELECT id AS asset_id
+    FROM live_assets
+    WHERE attack_id = ANY($1::text[]) OR spans_levels && $2::text[]
   )
   SELECT t.attack_id AS "attackId",
          t.name,
@@ -279,6 +315,7 @@ const OT_POOL_SQL = `
            AS "d3fendCount"
   FROM techniques t
   JOIN asset_techniques at ON at.technique_id = t.id
+  JOIN live_assets la      ON la.id = at.asset_id
   WHERE t.domain = $3 AND NOT t.is_revoked AND NOT t.is_deprecated
     AND NOT t.is_subtechnique
   GROUP BY t.id, t.attack_id, t.name
@@ -307,9 +344,17 @@ async function otHandler(
     query<EffectiveAsset>(EFFECTIVE_ASSETS_SQL, [assetList, levelList]),
     query<RawOtRow>(OT_POOL_SQL, [assetList, levelList, ICS_DOMAIN]),
     query<ImpactRow>(IMPACT_SQL, [ICS_DOMAIN]),
+    // The lift DENOMINATOR's asset count. Joined to `asset_purdue_placement`
+    // for the same reason `reach` now is: an asset with no placement is not part
+    // of the surface either query can see, so counting it here would shift every
+    // lift by 1/nAll (a new unplaced A0019 alone: +5.6%) while changing no
+    // technique's exposure or reach. All three terms of the ratio — `sel`,
+    // `reach`, `nAll` — are now live AND placed.
     query<{ totalAssets: number }>(
-      `SELECT count(*)::int AS "totalAssets" FROM attack_assets
-       WHERE NOT is_revoked AND NOT is_deprecated`,
+      `SELECT count(*)::int AS "totalAssets"
+       FROM attack_assets a
+       JOIN asset_purdue_placement p ON p.asset_id = a.id
+       WHERE NOT a.is_revoked AND NOT a.is_deprecated`,
     ),
   ]);
 
@@ -357,6 +402,14 @@ async function otHandler(
         bandBShort: true,
         bandBSuppressed: true,
         platformDropped: false,
+        // Carried on every response shape, always. The OT path never filters by
+        // platform (there is nothing to filter on) and is pinned to one domain
+        // by definition, so these two are structurally false here rather than
+        // merely happening to be.
+        platformPoolEmpty: false,
+        mixedDomain: false,
+        // No pool, so no column to make a claim about — see isEvidenceUnavailable.
+        evidenceUnavailable: false,
         subTechniquesExcluded: true,
         minReach: MIN_REACH,
         ignoredParams: ['sector', 'platforms'],
@@ -399,6 +452,14 @@ async function otHandler(
       bandBShort: degenerate ? true : bandBShort,
       bandBSuppressed: degenerate,
       platformDropped: false,
+      platformPoolEmpty: false,
+      mixedDomain: false,
+      // Computed, not hardcoded false. Band A here is sorted on `exposure`, and
+      // an all-zero exposure column is the same silent wrong answer the IT path
+      // gets from `sort=kev` over mobile or ATLAS: it would mean the visitor's
+      // asset selection touches nothing in the pool, and the band would be an
+      // arbitrary slice presented as "your top exposure".
+      evidenceUnavailable: isEvidenceUnavailable(pool, 'exposure'),
       subTechniquesExcluded: true,
       minReach: MIN_REACH,
       ignoredParams: ['sector', 'platforms'],
@@ -423,6 +484,13 @@ async function handler(req: NextRequest): Promise<NextResponse> {
 
   const { sector, platforms, assets, levels, sort, domain } = parsed.data;
 
+  // `domain` is now ALWAYS a value: `profileDomainSchema` defaults it to
+  // enterprise-attack, so the old "absent means no filter" hole is closed at
+  // the schema. `all` is the one remaining no-filter case, and it is explicit —
+  // so it is allowed to produce a mixed pool, but never a silent one.
+  const mixedDomain = domain === PROFILE_DOMAIN_ALL;
+  const domainFilter: string | null = mixedDomain ? null : domain;
+
   // ICS gets its own engine, unconditionally on the domain rather than on
   // "were assets supplied". The IT engine cannot answer an ICS question: it
   // sorts Band A on kevCount, which is 0 for every live ICS technique, so
@@ -439,7 +507,7 @@ async function handler(req: NextRequest): Promise<NextResponse> {
   // a valid, non-error state (Optionality table: "Sector empty (IT)").
   if (!sector) {
     return withCors(jsonResponse({
-      profile: { sector: null, platforms: platforms ?? null, domain: domain ?? null, sort },
+      profile: { sector: null, platforms: platforms ?? null, domain, sort },
       groups: [],
       bandA: [],
       bandB: [],
@@ -449,6 +517,9 @@ async function handler(req: NextRequest): Promise<NextResponse> {
         degenerate: true,
         bandBShort: true,
         platformDropped: false,
+        platformPoolEmpty: false,
+        mixedDomain,
+        evidenceUnavailable: false,
         reason: 'no-sector',
       },
     }, 3600));
@@ -457,7 +528,22 @@ async function handler(req: NextRequest): Promise<NextResponse> {
   const [poolResult, groupsResult, sectorResult] = await Promise.all([
     // Technique pool for this sector: lift + group_count from the
     // precomputed matview, joined against live evidence (IOC sightings, CTI
-    // report mentions, CVE/KEV/EPSS). `platforms` rides along unfiltered --
+    // report mentions, CVE/KEV/EPSS).
+    //
+    // `iocs` and `reports` are CORRELATED subqueries, not LEFT JOINed derived
+    // tables. The derived-table form aggregated the WHOLE of `technique_iocs`
+    // -- 681,122 rows -- on every single request, for the ~205 technique_ids
+    // this sector actually needs: measured 493ms cold / 175-196ms warm, of which
+    // 170-193ms was that one node (a parallel seq scan, three workers). The
+    // correlated form does 205 index-only probes of the ALREADY EXISTING
+    // idx_technique_iocs_technique_id and comes in at 94ms warm. No index was
+    // added and none is warranted -- both indexes this plan uses were already
+    // there. `report_techniques` moves with it for symmetry (it is only 5,155
+    // rows and cost 1.4ms either way; two different idioms for the same shape is
+    // how one of them rots). A count subquery returns 0 for no rows, so the
+    // COALESCE the LEFT JOINs needed is gone rather than merely unused.
+    //
+    // `platforms` rides along unfiltered --
     // the platform constraint is applied in JS below, not in SQL, so that the
     // documented Band-B fallback ("drop the platform constraint and
     // re-select") can re-run splitBands() over the same fetched pool instead
@@ -472,8 +558,10 @@ async function handler(req: NextRequest): Promise<NextResponse> {
          t.name,
          stl.lift,
          stl.group_count AS "groupCount",
-         COALESCE(io.iocs, 0)::int AS iocs,
-         COALESCE(rp.reports, 0)::int AS reports,
+         (SELECT count(*) FROM technique_iocs ti
+           WHERE ti.technique_id = stl.technique_id)::int AS iocs,
+         (SELECT count(*) FROM report_techniques rt
+           WHERE rt.technique_id = stl.technique_id)::int AS reports,
          COALESCE(ev.cve_count, 0)::int AS "cveCount",
          COALESCE(ev.kev_count, 0)::int AS "kevCount",
          ev.max_epss AS "maxEpss",
@@ -481,19 +569,11 @@ async function handler(req: NextRequest): Promise<NextResponse> {
        FROM sector_technique_lift stl
        JOIN techniques t ON t.id = stl.technique_id
        LEFT JOIN technique_cve_evidence ev ON ev.attack_id = t.attack_id
-       LEFT JOIN (
-         SELECT technique_id, count(*)::int AS iocs
-         FROM technique_iocs GROUP BY 1
-       ) io ON io.technique_id = stl.technique_id
-       LEFT JOIN (
-         SELECT technique_id, count(*)::int AS reports
-         FROM report_techniques GROUP BY 1
-       ) rp ON rp.technique_id = stl.technique_id
        WHERE stl.sector_slug = $1
          AND t.is_revoked = false AND t.is_deprecated = false
          AND ($2::text IS NULL OR t.domain = $2)
        ORDER BY stl.lift DESC, t.attack_id ASC`,
-      [sector, domain ?? null],
+      [sector, domainFilter],
     ),
 
     // Groups active in this sector. threat_groups.domain is text[] --
@@ -517,7 +597,7 @@ async function handler(req: NextRequest): Promise<NextResponse> {
          AND ($2::text IS NULL OR $2 = ANY(tg.domain))
        ORDER BY tg.name ASC, tg.attack_id ASC
        LIMIT 20`,
-      [sector, domain ?? null],
+      [sector, domainFilter],
     ),
 
     query<{ name: string }>(`SELECT name FROM sectors WHERE slug = $1`, [sector]),
@@ -538,22 +618,53 @@ async function handler(req: NextRequest): Promise<NextResponse> {
     : fullPool;
 
   let { bandA, bandB, bandBShort } = splitBands(platformPool, sort, 6);
-  let effectivePool = platformPool;
+  // The pool each band was actually drawn from. They can differ, which is the
+  // whole point of the fallback below.
+  let bandAPool = platformPool;
+  let bandBPool = platformPool;
   let platformDropped = false;
 
-  // Spec fallback: if Band B has fewer than 6 candidates, drop the platform
-  // constraint and re-select over the full sector pool, labelling the
-  // widening in `meta` so the UI can say so. `platformDropped` still means
-  // "the whole platform constraint was dropped" -- now for the set rather
-  // than for a single value; there is no partial widening. Only fires when a
-  // constraint was actually applied -- otherwise platformPool === fullPool
-  // already and re-selecting would be a no-op.
-  if (bandBShort && selected.size > 0) {
-    const widened = splitBands(fullPool, sort, 6);
-    bandA = widened.bandA;
-    bandB = widened.bandB;
-    bandBShort = widened.bandBShort;
-    effectivePool = fullPool;
+  // A platform constraint that matches NOTHING in this sector's pool. Distinct
+  // from "Band B came up short", and it must not be treated the same way: there
+  // is no platform-filtered Band A to keep, so the choice is between a blank
+  // briefing and a widened one. It widens -- but says so, via
+  // `meta.platformPoolEmpty`, instead of handing back a full-sector briefing
+  // that looks exactly like an unanswered one.
+  const platformPoolEmpty = selected.size > 0 && platformPool.length === 0;
+
+  // Spec fallback (design doc line 120): if Band B has fewer than 6 candidates,
+  // drop the platform constraint and re-select over the full sector pool,
+  // labelling the widening in `meta` so the UI can say so.
+  //
+  // BAND B ONLY. This previously re-ran `splitBands(fullPool, …)` and took BOTH
+  // bands from it, so a narrow platform pick produced a briefing identical in
+  // both bands to answering the environment question with nothing at all -- the
+  // visitor's answer was not widened, it was DISCARDED, silently. Band A now
+  // stays on the platform-filtered pool, so the answer still shows somewhere,
+  // and `selectBandB` takes the exclusion by id, which is what lets Band A come
+  // from one pool and Band B from another while the six Band A techniques are
+  // still kept out of Band B.
+  //
+  // `platformDropped` still means "the whole platform constraint was dropped"
+  // for the purpose it was dropped for -- there is no partial widening. Only
+  // fires when a constraint was actually applied; otherwise platformPool ===
+  // fullPool already and re-selecting would be a no-op.
+  if (selected.size > 0 && (bandBShort || platformPoolEmpty)) {
+    if (platformPoolEmpty) {
+      const widened = splitBands(fullPool, sort, 6);
+      bandA = widened.bandA;
+      bandB = widened.bandB;
+      bandBShort = widened.bandBShort;
+      bandAPool = fullPool;
+    } else {
+      // `splitBands` is JSDoc-typed over `Array<object>`, so `bandA` arrives
+      // here as `object[]`; the cast is to the shape this route put in.
+      const bandAIds = new Set((bandA as PoolItem[]).map((t) => t.attackId));
+      const widened = selectBandB(fullPool, bandAIds, 6);
+      bandB = widened.bandB;
+      bandBShort = widened.bandBShort;
+    }
+    bandBPool = fullPool;
     platformDropped = true;
   }
 
@@ -562,7 +673,11 @@ async function handler(req: NextRequest): Promise<NextResponse> {
       sector,
       sectorName: sectorResult.rows[0]?.name ?? null,
       platforms: platforms ?? null,
-      domain: domain ?? null,
+      // The RESOLVED domain, never null. It used to echo `domain ?? null`, so a
+      // caller who omitted the parameter was handed `null` alongside a pool that
+      // had silently been left unfiltered -- the one case where knowing the
+      // filter mattered most was the one case the response would not state.
+      domain,
       sort,
     },
     // `totalGroups` is a per-row artefact of the window function, not part of
@@ -571,13 +686,29 @@ async function handler(req: NextRequest): Promise<NextResponse> {
     bandA,
     bandB,
     meta: {
-      poolSize: effectivePool.length,
+      // The pool BAND B was selected from -- which is the full sector pool
+      // whenever `platformDropped`, exactly as before this change. Band A may
+      // now have come from a narrower pool; `platformDropped` is what says so.
+      poolSize: bandBPool.length,
       // Total groups attributed to this sector, NOT `groups.length` (capped
       // at 20 by the query's LIMIT).
       groupCount: groupsResult.rows[0]?.totalGroups ?? 0,
-      degenerate: isDegenerate(effectivePool),
+      degenerate: isDegenerate(bandBPool),
       bandBShort,
       platformDropped,
+      // No technique in this sector runs on the platforms the visitor named, so
+      // both bands were widened rather than returned blank.
+      platformPoolEmpty,
+      // `?domain=all` -- a deliberate cross-domain pool. The caller asked for
+      // it; this is how they can tell they got it, because a mixed pool ranks
+      // ICS and ATLAS techniques (which carry no CTI or CVE evidence at all)
+      // against enterprise ones in bands that are sorted by exactly that.
+      mixedDomain,
+      // The column Band A is sorted by is zero for every technique in the pool
+      // Band A was drawn from -- so the band is an arbitrary stable-sort slice
+      // under a heading that names evidence. `sort=kev` over mobile-attack or
+      // atlas-attack is the live case.
+      evidenceUnavailable: isEvidenceUnavailable(bandAPool, sort),
     },
   }, 3600));
 }
