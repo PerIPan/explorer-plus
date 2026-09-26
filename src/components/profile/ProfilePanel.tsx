@@ -1282,7 +1282,7 @@ export function ProfilePanel({
             <p className="mt-0.5 text-xs leading-snug text-[var(--text-secondary)]">
               {isOt
                 ? 'One question ranks your briefing: the plant surface, which is required.'
-                : 'Two questions rank your briefing: sector — the only required one — and environment.'}
+                : 'Two questions rank your briefing: sector (required) and infrastructure.'}
             </p>
           </div>
           <button
@@ -1421,7 +1421,7 @@ export function ProfilePanel({
 
           <MultiSelect
             id={`${baseId}-platforms`}
-            label="Environment"
+            label="Infrastructure"
             options={PLATFORM_OPTIONS}
             selected={answers.platforms ?? EMPTY_SELECTION}
             onChange={(next) => setAnswer('platforms', next)}
