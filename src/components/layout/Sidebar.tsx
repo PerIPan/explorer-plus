@@ -8,6 +8,8 @@ import { SectorDropdown } from './SectorDropdown';
 import { ProfileSidebarTrigger } from '../profile/ProfilePanel';
 import { AGENT_TOOL_COUNT, API_ENDPOINT_COUNT } from '../../lib/site';
 import { FEED_STATUS_ROW_COUNT } from '../../lib/feeds';
+import { useNavCounts, formatCount } from '../../hooks/useNavCounts';
+import type { NavCounts } from '../../hooks/useNavCounts';
 
 
 interface SidebarProps {
@@ -27,6 +29,11 @@ interface NavItem {
    * page itself uses — never a number typed twice.
    */
   count?: number;
+  /**
+   * A field of /api/v1/nav-counts, for a page whose size is a live number
+   * rather than a constant. `count` is for sizes the code already knows.
+   */
+  countKey?: keyof NavCounts;
 }
 
 interface NavSection {
@@ -38,7 +45,7 @@ const topNav: NavItem[] = [
   { path: '/', label: '360 Views', tooltip: 'explore entity connections — graph and dedicated map views for every entity type' },
   { path: '/matrix', label: 'Matrix', tooltip: 'att&ck technique matrix heatmap — tactics vs techniques' },
   { path: '/dashboard', label: 'Overview', tooltip: 'summary stats, charts, and top threat groups' },
-  { path: '/compliance', label: 'Compliance', emphasis: true, tooltip: 'regulatory and audit frameworks (NIS2, DORA, PCI DSS, NIST 800-53, HIPAA, GDPR, CMMC, ...) bridged to ATT&CK Enterprise via the Secure Controls Framework (SCF)' },
+  { path: '/compliance', label: 'Compliance', emphasis: true, countKey: 'frameworks', tooltip: 'regulatory and audit frameworks (NIS2, DORA, PCI DSS, NIST 800-53, HIPAA, GDPR, CMMC, ...) bridged to ATT&CK Enterprise via the Secure Controls Framework (SCF)' },
   { path: '/cti/feed-status', label: 'Feed Status', count: FEED_STATUS_ROW_COUNT, tooltip: 'CTI feed ingestion health and manual sync controls' },
   { path: '/open-apis', label: 'Open APIs', count: API_ENDPOINT_COUNT, tooltip: 'the public REST API behind every page here — no key, no sign-up, no rate limit. every endpoint with its parameters, and a button that calls it' },
   { path: '/open-mcp', label: 'Open MCP', count: AGENT_TOOL_COUNT, tooltip: `point claude, cursor or any MCP client at this knowledge base — ${AGENT_TOOL_COUNT} tools over streamable http, anonymous. also covers the A2A endpoint` },
@@ -60,17 +67,17 @@ const attackNav: NavItem[] = [
 ];
 
 const assetsNav: NavItem[] = [
-  { path: '/applications', label: 'Applications', tooltip: 'defender view — vendor products that get exploited (vs Malware which is attacker tools)' },
-  { path: '/assets', label: 'ICS Assets', tooltip: 'ATT&CK for ICS equipment — PLCs, RTUs, HMIs, historians, gateways — with the techniques targeting each and its Purdue level' },
-  { path: '/ecosystems', label: 'Ecosystems', tooltip: 'per-ecosystem advisory dashboards — npm, PyPI, Debian, Ubuntu, Alpine, Android, Linux kernel, Chainguard, OSS-Fuzz, and more. Severity breakdowns + top affected packages' },
-  { path: '/packages', label: 'Packages', tooltip: 'library/dependency packages with GHSA advisories (npm, PyPI, Go, Maven, RubyGems, NuGet, Composer, Rust)' },
+  { path: '/applications', label: 'Applications', countKey: 'applications', tooltip: 'defender view — vendor products that get exploited (vs Malware which is attacker tools)' },
+  { path: '/assets', label: 'ICS Assets', countKey: 'icsAssets', tooltip: 'ATT&CK for ICS equipment — PLCs, RTUs, HMIs, historians, gateways — with the techniques targeting each and its Purdue level' },
+  { path: '/ecosystems', label: 'Ecosystems', countKey: 'ecosystems', tooltip: 'per-ecosystem advisory dashboards — npm, PyPI, Debian, Ubuntu, Alpine, Android, Linux kernel, Chainguard, OSS-Fuzz, and more. Severity breakdowns + top affected packages' },
+  { path: '/packages', label: 'Packages', countKey: 'packages', tooltip: 'library/dependency packages with GHSA advisories (npm, PyPI, Go, Maven, RubyGems, NuGet, Composer, Rust)' },
 ];
 
 const ctiNav: NavItem[] = [
-  { path: '/cti/reports', label: 'Reports', tooltip: 'threat intelligence reports from OTX, RSS feeds' },
-  { path: '/cti/cves', label: 'CVEs', tooltip: 'known vulnerabilities from OTX, CISA KEV, enriched via NVD' },
-  { path: '/cti/advisories', label: 'Advisories', tooltip: 'unified advisories list — GHSA (OSS packages: npm/PyPI/Maven/Go/…) + OSV (OS & distros: Linux kernel, Debian, Ubuntu, Alpine, Android, OSS-Fuzz, …). Separate detail pages per source.' },
-  { path: '/cti/iocs', label: 'IOCs', tooltip: 'hashes, domains, IPs, URLs from AlienVault OTX, CISA KEV' },
+  { path: '/cti/reports', label: 'Reports', countKey: 'reports', tooltip: 'threat intelligence reports from OTX, RSS feeds' },
+  { path: '/cti/cves', label: 'CVEs', countKey: 'cves', tooltip: 'known vulnerabilities from OTX, CISA KEV, enriched via NVD' },
+  { path: '/cti/advisories', label: 'Advisories', countKey: 'advisories', tooltip: 'unified advisories list — GHSA (OSS packages: npm/PyPI/Maven/Go/…) + OSV (OS & distros: Linux kernel, Debian, Ubuntu, Alpine, Android, OSS-Fuzz, …). Separate detail pages per source.' },
+  { path: '/cti/iocs', label: 'IOCs', countKey: 'iocs', tooltip: 'hashes, domains, IPs, URLs from AlienVault OTX, CISA KEV' },
 ];
 
 const frameworksNav: NavItem[] = [
@@ -104,7 +111,7 @@ const NAV_ROW_CLASS = 'block px-3 py-2.5 rounded-md text-sm transition-colors du
 const NAV_ROW_IDLE_CLASS =
   'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--hover-overlay)]';
 
-function NavItemLink({ path, label, tooltip, end, emphasis, count }: NavItem & { end?: boolean }) {
+function NavItemLink({ path, label, tooltip, end, emphasis, count, countKey, counts }: NavItem & { end?: boolean; counts?: NavCounts }) {
   const pathname = usePathname();
   const isActive = end
     ? pathname === path
@@ -122,14 +129,18 @@ function NavItemLink({ path, label, tooltip, end, emphasis, count }: NavItem & {
       ].join(' ')}
     >
       {label}
-      {count !== undefined && (
-        <span className="ml-1 font-normal text-[var(--text-secondary)]">({count})</span>
-      )}
+      {(() => {
+        const n = count ?? (countKey && counts ? counts[countKey] : undefined);
+        // Renders nothing until the counts land, rather than flashing a (0).
+        return n === undefined ? null : (
+          <span className="ml-1 font-normal text-[var(--text-secondary)]">({formatCount(n)})</span>
+        );
+      })()}
     </Link>
   );
 }
 
-function CollapsibleNavSection({ label, items, defaultOpen = false, title }: { label: string; items: NavItem[]; defaultOpen?: boolean; title?: string }) {
+function CollapsibleNavSection({ label, items, defaultOpen = false, title, counts }: { label: string; items: NavItem[]; defaultOpen?: boolean; title?: string; counts?: NavCounts }) {
   const pathname = usePathname();
   const isActiveRoute = items.some((item) => pathname.startsWith(item.path));
   const [open, setOpen] = useState(defaultOpen || isActiveRoute);
@@ -163,11 +174,24 @@ function CollapsibleNavSection({ label, items, defaultOpen = false, title }: { l
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
         </svg>
         {label}
+        {(() => {
+          /* The section's own size: the sum of whatever its items count. Shown
+             only once every counted item has a number, so a partially loaded
+             sum is never displayed as a total. */
+          const keys = items.map((i) => i.countKey).filter((k): k is keyof NavCounts => Boolean(k));
+          if (!counts || keys.length === 0) return null;
+          const total = keys.reduce((n, k) => n + (counts[k] ?? 0), 0);
+          return (
+            <span className="ml-auto font-medium normal-case tracking-normal text-[var(--text-secondary)]">
+              {formatCount(total)}
+            </span>
+          );
+        })()}
       </button>
       {open && (
         <div className="space-y-0.5">
           {items.map((item) => (
-            <NavItemLink key={item.path} {...item} />
+            <NavItemLink key={item.path} {...item} counts={counts} />
           ))}
         </div>
       )}
@@ -176,6 +200,7 @@ function CollapsibleNavSection({ label, items, defaultOpen = false, title }: { l
 }
 
 export function Sidebar({ open, onClose }: SidebarProps) {
+  const counts = useNavCounts();
   return (
     <aside
       className={[
@@ -241,7 +266,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       >
         {topNav.map((item) => (
           <Fragment key={item.path}>
-            <NavItemLink {...item} end={item.path === '/'} />
+            <NavItemLink {...item} end={item.path === '/'} counts={counts} />
             {/* Directly after Compliance. Not a NavItem: it has no route —
                 it opens the profile questions in a modal over whatever page
                 you are on, and only Apply navigates (to /profile). */}
@@ -271,7 +296,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
       {/* Assets Section */}
       <div className="px-2 py-3">
-        <CollapsibleNavSection label="Assets" items={assetsNav} />
+        <CollapsibleNavSection counts={counts} label="Assets" items={assetsNav} />
       </div>
 
       {/* Separator */}
@@ -279,7 +304,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
       {/* CTI Section */}
       <div className="px-2 py-3">
-        <CollapsibleNavSection label="CTI" items={ctiNav} />
+        <CollapsibleNavSection counts={counts} label="CTI" items={ctiNav} />
       </div>
 
       {/* Separator */}
@@ -287,7 +312,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
       {/* Frameworks Section */}
       <div className="px-2 py-3">
-        <CollapsibleNavSection label="Frameworks" items={frameworksNav} defaultOpen={false} title="Not filtered by sector" />
+        <CollapsibleNavSection counts={counts} label="Frameworks" items={frameworksNav} defaultOpen={false} title="Not filtered by sector" />
       </div>
 
       {/* Separator */}
@@ -295,7 +320,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
       {/* ATT&CK Section — groups + campaigns + offensive/defensive taxonomy */}
       <div className="px-2 py-3">
-        <CollapsibleNavSection label="ATT&CK" items={attackNav} />
+        <CollapsibleNavSection counts={counts} label="ATT&CK" items={attackNav} />
       </div>
 
       {/* Separator */}
@@ -303,7 +328,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
       {/* Extended Intel Section */}
       <div className="px-2 py-3">
-        <CollapsibleNavSection label="Extended Intel" items={extendedIntelNav} defaultOpen={false} />
+        <CollapsibleNavSection counts={counts} label="Extended Intel" items={extendedIntelNav} defaultOpen={false} />
       </div>
 
       {/* Agent access — A2A + MCP both serve the same tool catalogue */}

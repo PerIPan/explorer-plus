@@ -277,6 +277,11 @@ export const API_CATALOG: readonly ApiEntry[] = [
     params: [P.sector, P.domain],
     example: '/dashboard',
   },
+  {
+    path: '/nav-counts', method: 'GET', group: 'attack', executable: true,
+    summary: 'How big each part of the corpus is. Exact where cheap; CVE, IOC and advisory totals are planner estimates, named in meta.estimated.',
+    example: '/nav-counts',
+  },
 
   /* ── Threat actors ── */
   {
