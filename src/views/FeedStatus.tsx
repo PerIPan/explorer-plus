@@ -5,9 +5,12 @@ import { useFeedStatus } from '../hooks/useApi';
 import { apiFetch } from '../lib/api';
 import { PageHeader } from '../components/layout/PageHeader';
 import type { FeedSyncStatus } from '../lib/types';
-import { FEED_SOURCES } from '../lib/feeds';
+import { FEED_SOURCES, AUTOMATED_TABLES, REFERENCE_TABLES } from '../lib/feeds';
+import type { FrameworkTable } from '../lib/feeds';
 
 const SOURCE_LABELS: Record<string, string> = {
+  attack_update: 'MITRE ATT&CK (STIX)',
+  ics_assets: 'ATT&CK for ICS assets',
   otx: 'AlienVault OTX',
   abuse_ch: 'abuse.ch',
   cisa_kev: 'CISA KEV',
@@ -36,6 +39,8 @@ const SOURCE_LABELS: Record<string, string> = {
  * than the label alone.
  */
 const SOURCE_DESCRIPTIONS: Record<string, string> = {
+  attack_update: 'Enterprise, ICS, Mobile and ATLAS objects from the MITRE STIX bundles',
+  ics_assets: 'The 18 ATT&CK for ICS assets and the techniques that target each',
   otx: 'AlienVault OTX pulses — threat reports + IOCs',
   abuse_ch: 'ThreatFox + MalwareBazaar — IP/domain/hash IOCs',
   cisa_kev: 'Known Exploited Vulnerabilities — CVE flagging',
@@ -201,52 +206,10 @@ export function FeedStatus() {
   );
 }
 
-interface FrameworkTable {
-  key: string;
-  label: string;
-  description: string;
-  /** If true, empty state is intentional — source data pending, not a sync failure */
-  expectedEmpty?: boolean;
-}
 
 /** Populated automatically by Vercel crons or GitHub Actions. */
-const AUTOMATED_TABLES: FrameworkTable[] = [
-  { key: 'cve_details', label: 'CVE Details', description: 'CVElistV5 corpus with CVSS, CWE, KEV flag, EPSS enrichment' },
-  { key: 'cve_weaknesses', label: 'CVE Weaknesses', description: 'CWE weakness categorisation per CVE' },
-  { key: 'affected_products', label: 'Affected Products', description: 'CVE ↔ application edges with version ranges' },
-  { key: 'applications', label: 'Applications (CVElistV5)', description: 'Vendor/product rows extracted from CVE CPE data' },
-  { key: 'ghsa_advisories', label: 'GitHub Security Advisories', description: 'Reviewed OSS package advisories — npm, PyPI, Maven, Go, …' },
-  { key: 'ghsa_weaknesses', label: 'GHSA CWE Mappings', description: 'CWE weakness categorisation per GHSA advisory' },
-  { key: 'ghsa_packages', label: 'GHSA Affected Packages', description: 'Per-package vulnerable/fixed version ranges' },
-  { key: 'packages', label: 'Packages (derived from GHSA)', description: 'Unique (ecosystem, package) pairs across 8 OSS ecosystems' },
-  { key: 'osv_advisories', label: 'OSV Advisories (OS, distro, kernel)', description: 'Non-GHSA ecosystems — Linux, Debian, Ubuntu, Alpine, Android, OSS-Fuzz, …' },
-  { key: 'osv_affected', label: 'OSV Affected Packages', description: 'Per-package version ranges for OSV advisories' },
-  { key: 'csf_subcategories', label: 'NIST CSF v2 Subcategories', description: 'GV/ID/PR/DE/RS/RC functions — 23 subcategories from the 2024 release' },
-  { key: 'csf_technique_mappings', label: 'NIST CSF v2 → ATT&CK', description: 'CRI Profile crosswalk: CSF subcategory → ATT&CK technique' },
-  { key: 'csf_implementation_examples', label: 'NIST CSF v2 Examples', description: 'One-line implementation examples per CSF subcategory' },
-  { key: 'csf_informative_references', label: 'NIST CSF v2 References', description: 'Informative references into NIST 800-53 r5 and ISO 27001:2022' },
-  { key: 'defensive_mappings', label: 'D3FEND', description: 'Defensive countermeasures from the MITRE D3FEND knowledge graph' },
-  { key: 'sigma_rules', label: 'Sigma Rules', description: '3,100+ detection rules from SigmaHQ with ATT&CK mappings' },
-  { key: 'atomic_tests', label: 'Atomic Red Team', description: '1,770+ adversary-emulation tests (PowerShell/bash/batch)' },
-];
 
 /** Loaded once via Node scripts. Refresh means re-running the script. */
-const REFERENCE_TABLES: FrameworkTable[] = [
-  { key: 'owasp_top10', label: 'OWASP Top 10 (Web, ML, LLM)', description: '30 categories across 3 frameworks — CWEs, ATT&CK techniques, ATLAS techniques' },
-  { key: 'nist_controls', label: 'NIST 800-53', description: '5,200+ security controls from NIST 800-53 r5 mapped to ATT&CK' },
-  { key: 'engage_mappings', label: 'MITRE Engage', description: 'Adversary engagement activities — deception and engagement mappings' },
-  { key: 'react_actions', label: 'RE&CT', description: 'ATC incident-response playbook actions — Identification, Containment, …' },
-  { key: 'veris_mappings', label: 'VERIS', description: 'Verizon DBIR incident classification (Actor/Action/Asset/Attribute)' },
-  { key: 'cloud_control_mappings', label: 'Cloud Controls (AWS + Azure + GCP)', description: 'Cloud provider security controls mapped to ATT&CK techniques' },
-  { key: 'capec_mappings', label: 'CAPEC → ATT&CK Bridge', description: 'CWE → CAPEC → ATT&CK pivot, powers CVE→technique chain' },
-  { key: 'capec_patterns', label: 'CAPEC Patterns (full taxonomy)', description: '615 attack patterns with prerequisites, skills, consequences, related patterns' },
-  { key: 'capec_mitigations', label: 'CAPEC Mitigations', description: 'Per-pattern mitigation guidance from the CAPEC taxonomy' },
-  { key: 'detection_strategies', label: 'Detection Strategies', description: 'ATT&CK v18 detection strategies — high-level detection intent' },
-  { key: 'detection_analytics', label: 'Detection Analytics', description: 'Concrete analytics (pseudo-code / query logic) per detection strategy' },
-  { key: 'external_actors', label: 'ETDA / ThaiCERT Actors', description: '514 external threat actors — country, motivation, MITRE group mapping' },
-  { key: 'atlas_xrefs', label: 'ATLAS Cross-References', description: 'ATT&CK ↔ ATLAS technique cross-walks (AI/ML adversary TTPs)' },
-  { key: 'ctid_mappings', label: 'CTID CVE → Technique', description: 'Hand-curated CVE to ATT&CK technique mappings from MITRE CTID' },
-];
 
 interface FrameworkStatusResponse {
   counts: Record<string, number>;
