@@ -28,6 +28,10 @@
      WCAG AA (4.5:1); this is 5.18:1 and 4.63:1 on the same two. Fills and
      borders keep --accent-orange, which they may: AA's ratio is for text. */
   --accent-orange-strong: #c2410c;
+  /* Teal dark enough for SMALL text on a light surface. --accent-teal is
+     3.35:1 on --surface-deep, below the 4.5:1 AA wants at 12px; this is
+     4.89:1. Fills and borders keep --accent-teal. */
+  --accent-teal-strong: #0f766e;
   --accent-purple: #8b5cf6;
   --accent-blue: #3b82f6;
   --accent-green: #059669;
@@ -78,6 +82,7 @@
   --accent-orange: #f97316;
   /* Dark theme needs no darkening — #f97316 is already 5.67:1 on --surface-card. */
   --accent-orange-strong: #f97316;
+  --accent-teal-strong: #64ffda;
   --accent-purple: #c4b5fd;
   --accent-blue: #93c5fd;
   --accent-green: #34d399;

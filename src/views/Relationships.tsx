@@ -31,7 +31,6 @@ import { RecentReportsCard } from '../components/home/RecentReportsCard';
 import type { GraphNode, GraphData } from '../lib/types';
 import { DiamondLoader } from '../components/shared/FoldingDiamond';
 import {
-  ProfilePeekArmer,
   ProfileDiamondTrigger,
   ProfileAnchoredPanel,
   ProfileSheet,
@@ -650,12 +649,19 @@ export function Relationships() {
       {/* Instructions when nothing selected */}
       {!selectedId && (
         <>
-          {/* The provider now lives in AppShell, so the panel is reachable
-              from the sidebar on every page. The unsolicited PEEK is not:
-              it is armed here and nowhere else, which is the homepage
-              landing state — exactly where it was armed before. Arming is
-              still capped at once per page load. */}
-          <ProfilePeekArmer />
+          {/* The unsolicited peek is NOT armed. It used to be, here and only
+              here, on the homepage landing state — and it opened the panel at
+              a visitor who had not asked for it, which below xl is a bottom
+              sheet over the whole screen. That is a poor first impression of
+              a feature whose entire pitch is that it answers a question you
+              chose to ask.
+
+              The panel is unchanged and fully reachable: the hero diamond and
+              the sidebar's "Threat Profile (user)" both open it. Only the
+              automatic opening is gone. `armPeek` and `ProfilePeekArmer` are
+              left in place, unmounted, so restoring the behaviour is one line
+              rather than a rebuild — but nothing calls them now, which also
+              means the `auto_close` telemetry outcome can no longer occur. */}
           <div className="mt-8 md:mt-12">
             <div className="flex items-start justify-between gap-8">
             <p className="text-sm md:text-base text-[var(--text-secondary)] leading-relaxed mb-12 md:mb-16 max-w-2xl">

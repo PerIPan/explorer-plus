@@ -175,7 +175,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               setApisOpen(true);
             }}
             data-print-hide
-            className="flex-shrink-0 px-3 h-8 inline-flex items-center justify-center rounded-md border border-[var(--border-color)] text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--accent-teal)] hover:border-[var(--teal-dim)] transition-colors"
+            /* Was styled exactly like the neutral chrome around it — same muted
+               text, same plain border — so the one control advertising that
+               this whole site has an open API read as furniture. Contrast was
+               never the problem (5.31:1 light, 6.33:1 dark); prominence was.
+               Accent fill and border make it an affordance, and
+               --accent-teal-strong keeps 12px text above AA in light theme,
+               where --accent-teal is 3.35:1. */
+            className="flex-shrink-0 px-3 h-8 inline-flex items-center justify-center rounded-md border border-[var(--teal-dim)] bg-[var(--teal-faint)] text-xs font-semibold text-[var(--accent-teal-strong)] hover:border-[var(--accent-teal)] hover:bg-[var(--hover-overlay)] transition-colors"
             title="Open REST API and MCP server — full endpoint catalog"
           >
             APIs / MCP
@@ -305,6 +312,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <span className="text-[var(--accent-teal)]">contact @ {SITE_HOST}</span>
                 {' · '}<a href="/about/attributions" className="text-[var(--accent-teal)] hover:underline">Data attributions</a>
                 {' — '}Not affiliated with or endorsed by MITRE Corporation.
+              </p>
+              <p className="text-[var(--text-secondary)] text-xs">
+                Grateful to the CLA executive.
               </p>
             </div>
           </div>
