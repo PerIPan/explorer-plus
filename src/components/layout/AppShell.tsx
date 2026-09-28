@@ -142,7 +142,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* Main area pushed right of the fixed sidebar on lg+ */}
       <div className="flex-1 flex flex-col lg:ml-52 min-h-screen min-w-0">
         {/* Top header bar */}
-        <header className="sticky top-0 z-30 flex items-center gap-2 md:gap-4 px-3 md:px-6 py-2 md:py-3 bg-[var(--surface-card)] shadow-sm border-b border-[var(--border-color)]">
+        {/* Wraps below md. On a phone the single no-wrap row had to hold the
+            hamburger, a search field, APIs / MCP, the theme toggle and info —
+            more than fits, so the search ended up drawn over the APIs / MCP
+            button. It now takes a full second row of its own, which is also
+            where a search field wants to be at that width. */}
+        <header className="sticky top-0 z-30 flex flex-wrap md:flex-nowrap items-center gap-2 md:gap-4 px-3 md:px-6 py-2 md:py-3 bg-[var(--surface-card)] shadow-sm border-b border-[var(--border-color)]">
           {/* Hamburger — visible only below lg */}
           <button
             type="button"
@@ -164,7 +169,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           {/* min-w-0 lets the search input shrink instead of forcing the row
               wider than the viewport — the header has no flex-wrap and the
               APIs / MCP button next to it must stay reachable. */}
-          <div className="flex-1 min-w-0">
+          <div className="order-last w-full min-w-0 md:order-none md:w-auto md:flex-1">
             <SearchBar />
           </div>
           <button
@@ -182,7 +187,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                Accent fill and border make it an affordance, and
                --accent-teal-strong keeps 12px text above AA in light theme,
                where --accent-teal is 3.35:1. */
-            className="flex-shrink-0 px-3 h-8 inline-flex items-center justify-center rounded-md border border-[var(--teal-dim)] bg-[var(--teal-faint)] text-xs font-semibold text-[var(--accent-teal-strong)] hover:border-[var(--accent-teal)] hover:bg-[var(--hover-overlay)] transition-colors"
+            className="flex-shrink-0 ml-auto md:ml-0 px-3 h-8 inline-flex items-center justify-center rounded-md border border-[var(--teal-dim)] bg-[var(--teal-faint)] text-xs font-semibold text-[var(--accent-teal-strong)] hover:border-[var(--accent-teal)] hover:bg-[var(--hover-overlay)] transition-colors"
             title="Open REST API and MCP server — full endpoint catalog"
           >
             APIs / MCP
@@ -195,7 +200,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           >
             Data Model
           </button>
-          <div className="flex-1" />
+          <div className="hidden md:block md:flex-1" />
           <div className="hidden md:block"><VtBadge /></div>
           <ThemeToggle />
           <button
