@@ -1,5 +1,6 @@
 {
   "framework": "nextjs",
+  "ignoreCommand": "if [ \"$VERCEL_ENV\" = \"preview\" ]; then exit 0; else exit 1; fi",
   "crons": [
     {
       "path": "/api/cron/ingest-otx",
