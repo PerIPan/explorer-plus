@@ -6,13 +6,14 @@
 // routes, while the agent tool count read 43 in two places, 42 in llms.txt and
 // 47 in a task brief. Nothing failed. This is what fails.
 //
-// It enforces five things:
+// It enforces six things:
 //   1. every route under app/api/v1 is either CATALOGUED or in EXCLUDED below;
 //   2. every catalogue entry resolves to a real route, with a matching method;
 //   3. AGENT_TOOL_COUNT === TOOL_DECLARATIONS.length, and every declared tool is
 //      grouped exactly once and has an endpoint mapping;
 //   4. public/llms.txt quotes the same tool count and the same origin;
-//   5. API_ENDPOINT_COUNT === API_CATALOG.length (the sidebar quotes it).
+//   5. API_ENDPOINT_COUNT === API_CATALOG.length (the sidebar quotes it);
+//   6. no route throws at IMPORT time, which would fail `next build` itself.
 //
 // It parses TEXT rather than importing, because `npm test` runs
 // `node --test "scripts/**/*.test.mjs"` and node cannot import a .ts module.
@@ -157,6 +158,36 @@ export function checkEndpointCount({ apiEndpointCount, entries }) {
   ];
 }
 
+/**
+ * No route may throw while being IMPORTED.
+ *
+ * `next build` imports every route to collect page data, with
+ * NODE_ENV=production. A module-scope `throw` therefore fails the BUILD, not
+ * the request — so a missing runtime secret takes down the entire deployment
+ * instead of the one endpoint that needs it. That is what
+ * /api/v1/profile/submit did with PROFILE_IP_SALT: the var is scoped to
+ * Production, so every preview build failed, and each Renovate dependency PR
+ * came back red for a reason unrelated to the dependency.
+ *
+ * Validate runtime config inside the handler and answer 503. Catching this
+ * here costs nothing; catching it in Vercel costs a deploy.
+ */
+export function checkNoImportTimeThrow(files) {
+  const failures = [];
+  for (const { path, src } of files) {
+    // A module-scope IIFE — `const X = (() => { … })();` anchored at column 0.
+    for (const m of src.matchAll(/^const\s+\w+\s*=\s*\((?:async\s*)?\(\)\s*=>\s*\{([\s\S]*?)^\}\)\(\);/gm)) {
+      if (/\bthrow\b/.test(m[1])) {
+        failures.push(`${path}: a module-scope IIFE throws, which fails \`next build\`, not the request. Validate inside the handler and return 503.`);
+      }
+    }
+    for (const _ of src.matchAll(/^throw\s/gm)) {
+      failures.push(`${path}: top-level \`throw\` runs at import time and fails \`next build\`.`);
+    }
+  }
+  return failures;
+}
+
 /** The drift this guard was written for: four surfaces, three numbers. */
 export function checkTools({ declared, agentToolCount, grouped, endpointKeys }) {
   const failures = [];
@@ -274,6 +305,12 @@ export function run() {
   const { entries, grouped, endpointKeys } = parseCatalog(catalogSrc);
   const { paths, methods } = collectRoutes();
 
+  const allRouteFiles = walkRoutes(join(ROOT, 'app/api')).map((f) => ({
+    path: relative(ROOT, f),
+    src: readFileSync(f, 'utf8'),
+  }));
+  allRouteFiles.push({ path: 'middleware.ts', src: read('middleware.ts') });
+
   const declared = [...read('src/lib/tools/declarations.ts').matchAll(/^\s{4}name: '([a-z0-9_]+)',$/gm)].map((m) => m[1]);
   const siteSrc = read('src/lib/site.ts');
   const countMatch = siteSrc.match(/AGENT_TOOL_COUNT\s*=\s*(\d+)/);
@@ -287,6 +324,7 @@ export function run() {
     ...diffCatalogue({ routePaths: paths, entries, excluded: EXCLUDED }),
     ...diffMethods({ entries, routeMethods: methods }),
     ...checkEndpointCount({ apiEndpointCount: Number(endpointCountMatch[1]), entries }),
+    ...checkNoImportTimeThrow(allRouteFiles),
     ...checkTools({ declared, agentToolCount: Number(countMatch[1]), grouped, endpointKeys }),
     ...checkLlmsTxt(read('public/llms.txt'), { toolCount: declared.length, origin: originMatch[1] }),
   ];

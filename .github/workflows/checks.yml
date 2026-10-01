@@ -1,7 +1,19 @@
 name: Checks
 
-# Lightweight code-consistency gate (no DB, no deps). Surfaces config drift on
-# every push/PR to main without blocking Vercel deploys.
+# Two gates, run in parallel:
+#   consistency — config drift, no deps, seconds
+#   build-gate  — typecheck + tests, the things that break `next build`
+#
+# build-gate exists because CI installed nothing, compiled nothing and ran no
+# tests, so Vercel was the first thing to build any branch — every compile
+# error and every failing test was discovered as a failed deployment.
+#
+# It would NOT have caught the deploy that prompted it: that was a module-scope
+# throw over a missing env var, which compiles fine. check-api-catalog.mjs in
+# the consistency job catches that one. These two gates cover different halves.
+#
+# Both jobs run without a database and without secrets — verified: 135 tests
+# pass and tsc is clean with DATABASE_URL and PROFILE_IP_SALT unset.
 on:
   push:
     branches: [main]
@@ -23,3 +35,18 @@ jobs:
       # nor the guard's EXCLUDED map, if an entry points at no route, or if the
       # agent tool count disagrees across site.ts, declarations.ts and llms.txt.
       - run: node scripts/check-api-catalog.mjs
+
+  build-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      # The compile step Vercel would otherwise be first to run.
+      - run: npx tsc --noEmit
+      # 135 tests, including scripts/lib/*.test.mjs — the guards' own tests,
+      # which until now ran nowhere in CI.
+      - run: npm test

@@ -39,23 +39,33 @@ const DAILY_LIMIT = 20;
  * does: the HMAC key changes once per UTC calendar day, deterministically,
  * no matter which lambda instance computes it.
  *
- * Set PROFILE_IP_SALT in the Vercel environment. Fix round 1: unlike
- * A2A_IP_SALT (app/api/a2a/route.ts:144-157), an unset salt in *production*
- * now throws at module load rather than silently degrading -- this endpoint
- * drives a go/no-go decision on the whole feature, and a hardcoded fallback
- * string sitting in the repo is not an acceptable production posture for it.
- * Local dev/test keep the warn-and-fallback behavior so nothing extra is
- * required to run `npm test` or `npm run dev`.
+ * Set PROFILE_IP_SALT in the Vercel environment.
+ *
+ * Resolved PER REQUEST, and never at module scope.
+ *
+ * This used to be a module-level IIFE that threw when the var was missing in
+ * production. `next build` imports every route to collect page data with
+ * NODE_ENV=production, so that threw during the BUILD: a missing runtime
+ * secret took down the whole deployment rather than the one endpoint that
+ * needs it. Every preview build failed on it — the var is scoped to
+ * Production — which meant each Renovate dependency PR came back red for a
+ * reason that had nothing to do with the dependency.
+ *
+ * The security posture is unchanged and still deliberate: production never
+ * hashes with the dev fallback. It now REFUSES THE REQUEST instead of
+ * refusing to build, which is the correct blast radius for a config problem.
+ * Local dev and test keep the warn-and-fallback so `npm test` and
+ * `npm run dev` need nothing extra.
+ *
+ * Returns null when production has no salt; the caller turns that into a 503.
  */
-const IP_SALT = (() => {
+function resolveIpSalt(): string | null {
   const salt = process.env.PROFILE_IP_SALT;
   if (salt) return salt;
-  if (process.env.NODE_ENV === 'production') {
-    throw new Error('[profile/submit] PROFILE_IP_SALT is required in production and is not set.');
-  }
+  if (process.env.NODE_ENV === 'production') return null;
   console.warn('[profile/submit] PROFILE_IP_SALT is not set — using insecure fallback. Set the env var in production.');
   return 'dev-only-insecure-salt';
-})();
+}
 
 function getRawClientIp(req: NextRequest): string {
   // Trust only infrastructure-set headers — never the user-supplied
@@ -103,9 +113,9 @@ function getRawClientIp(req: NextRequest): string {
  * separation behind shared NAT for THAT purpose -- but it must never again
  * be load-bearing for abuse resistance.
  */
-function computeVisitorHashes(req: NextRequest): { ipDay: string; visitorDay: string } {
+function computeVisitorHashes(req: NextRequest, salt: string): { ipDay: string; visitorDay: string } {
   const utcDate = new Date().toISOString().slice(0, 10); // YYYY-MM-DD, UTC
-  const dayKey = createHmac('sha256', IP_SALT).update(utcDate).digest('hex');
+  const dayKey = createHmac('sha256', salt).update(utcDate).digest('hex');
   const ip = getRawClientIp(req);
   const ua = req.headers.get('user-agent') ?? 'unknown';
   const ipDay = createHash('sha256').update(dayKey).update(ip).digest('hex');
@@ -149,7 +159,16 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return withCors(errorResponse(400, 'Invalid submission payload', 'VALIDATION_ERROR'));
   }
 
-  const { ipDay, visitorDay } = computeVisitorHashes(req);
+  /* Config problem, not a caller problem: 503 rather than 4xx, and the write
+     is refused rather than hashed with the dev fallback. Logged so it is
+     visible in the function logs instead of only in a missing metric. */
+  const salt = resolveIpSalt();
+  if (!salt) {
+    console.error('[profile/submit] PROFILE_IP_SALT is not set in production — refusing to record.');
+    return withCors(errorResponse(503, 'Telemetry is unavailable', 'CONFIG_ERROR'));
+  }
+
+  const { ipDay, visitorDay } = computeVisitorHashes(req, salt);
 
   // Fail CLOSED: an error while checking the cap rejects the write rather
   // than silently allowing it — same posture as a2a/route.ts:295-318.
