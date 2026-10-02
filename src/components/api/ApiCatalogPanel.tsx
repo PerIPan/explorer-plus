@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { AGENT_TOOL_COUNT } from '../../lib/site';
+import { AGENT_TOOL_COUNT, CLI_COMMAND_NAME } from '../../lib/site';
 import { API_CATALOG, API_FACTS, API_GROUP_META, entriesInGroup } from '../../lib/api-catalog';
 import { CodeBlock, FactRow, Section } from './primitives';
 
@@ -41,14 +41,14 @@ function CliReference() {
   return (
     <div className="space-y-5 px-4 py-4 text-sm leading-relaxed text-[var(--text-primary)] md:px-6 md:py-5">
       <p>
-        <strong>mitrex.</strong> The same REST surface as a command, for people who would rather
+        <strong>{CLI_COMMAND_NAME}.</strong> The same REST surface as a command, for people who would rather
         pipe than paste. {API_CATALOG.length} commands — one per endpoint, generated from the
         catalogue this modal renders, so the CLI cannot drift from the API. Read-only, no key,
         no account.
       </p>
 
       <div className="space-y-1.5 rounded-md border border-[var(--border-color)] bg-[var(--surface-card)] px-3 py-3">
-        <FactRow label="Command" value="mitrex" copy />
+        <FactRow label="Command" value={CLI_COMMAND_NAME} copy />
         <FactRow label="Commands" value={`${API_CATALOG.length} over 30 resources`} />
         <FactRow label="Runtime" value="Node 22.8+ · zero runtime dependencies" />
         <FactRow label="Scope" value="read-only — every command is a GET" />
@@ -67,15 +67,15 @@ function CliReference() {
       </div>
 
       <Section title="What it looks like">
-        <CodeBlock>{`mitrex techniques T1059
-mitrex groups --search lazarus
-mitrex cves --severity CRITICAL --limit 5 | jq '.data[].cveId'`}</CodeBlock>
+        <CodeBlock>{`${CLI_COMMAND_NAME} techniques T1059
+${CLI_COMMAND_NAME} groups --search lazarus
+${CLI_COMMAND_NAME} cves --severity CRITICAL --limit 5 | jq '.data[].cveId'`}</CodeBlock>
       </Section>
 
       <Section title="Finding your way around">
-        <CodeBlock>{`mitrex --help              30 resources, with examples
-mitrex help techniques     every command for one resource
-mitrex ls                  all ${API_CATALOG.length} commands, one per line`}</CodeBlock>
+        <CodeBlock>{`${CLI_COMMAND_NAME} --help              30 resources, with examples
+${CLI_COMMAND_NAME} help techniques     every command for one resource
+${CLI_COMMAND_NAME} ls                  all ${API_CATALOG.length} commands, one per line`}</CodeBlock>
       </Section>
 
       <p className="border-t border-[var(--border-color)] pt-3 text-xs text-[var(--text-secondary)]">

@@ -19,6 +19,9 @@ import { existsSync, readFileSync, writeFileSync, copyFileSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, join } from 'node:path';
 import { collisions } from './lib/cli-mirror.mjs';
+// The path -> command rule, shared with src/views/Cli.tsx so the /cli page
+// cannot document commands the generated table does not contain.
+import { commandFor } from '../src/lib/cli-command.mjs';
 import { TRANSFORM_NAMES, RESERVED_FLAGS } from '../cli/lib/contract.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -44,9 +47,6 @@ const { API_CATALOG, PAGINATION_PARAMS, API_FACTS } = await import(
   pathToFileURL(join(ROOT, 'src/lib/api-catalog.ts')).href
 );
 
-/** `{id}` is one segment, `{...slug}` swallows the rest. Mirrors api-request.mjs. */
-const PLACEHOLDER = /^\{(\.\.\.)?([^}]+)\}$/;
-
 /**
  * The full-text parameter is called `search` on 14 entries and `q` on 13, split
  * along no line a reader could learn. Every command therefore accepts
@@ -66,17 +66,6 @@ const FULLTEXT = new Set(['search', 'q']);
  */
 const POSITIONAL_TRANSFORMS = { '/applications/{vendor}/{product}': 'appSlug' };
 
-function commandFor(entry) {
-  const segs = entry.path.split('/').filter(Boolean);
-  const words = [];
-  const positionals = [];
-  segs.forEach((seg, i) => {
-    const m = PLACEHOLDER.exec(seg);
-    if (m) positionals.push({ name: m[2], catchAll: Boolean(m[1]), index: i + 1 });
-    else words.push(seg);
-  });
-  return { words, positionals };
-}
 
 const commands = API_CATALOG.filter((e) => e.method === 'GET').map((entry) => {
   const { words, positionals } = commandFor(entry);

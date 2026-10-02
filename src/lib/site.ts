@@ -31,6 +31,21 @@ export const AGENT_TOOL_COUNT = 43;
 export const API_ENDPOINT_COUNT = 83;
 
 /**
+ * The CLI's binary and package name, in ONE place.
+ *
+ * The name is not settled — the site itself is likely to be renamed — and the
+ * string appears in prose, in fact rows and inside copyable example commands
+ * on two surfaces (/cli and the APIs modal's CLI tab). Interpolating it from
+ * here makes a rename one edit instead of a hunt, and keeps the examples from
+ * disagreeing with the prose around them.
+ *
+ * `cli/package.json` holds the authoritative copy for the published artifact;
+ * these must match when the package ships. The CLI is not on npm yet, so there
+ * is nothing to break while they differ.
+ */
+export const CLI_COMMAND_NAME = 'mitrex';
+
+/**
  * Marker header the API documentation pages set on every live-Run fetch.
  *
  * `middleware.ts` skips the `api_usage` tag when it is present. 61 of the 86
