@@ -256,12 +256,15 @@ function OtBandCard({
     <Card>
       <section aria-labelledby={headingId}>
         <div className="px-4 py-3">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--accent-teal)]">
-            {eyebrow}
-          </p>
-          <h2 id={headingId} className="mt-0.5 text-base font-semibold text-[var(--text-primary)]">
-            {title}
-          </h2>
+          {/* Corner label, matching the IT card — see BandCard in ThreatProfile.tsx. */}
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 id={headingId} className="min-w-0 text-base font-semibold text-[var(--text-primary)]">
+              {title}
+            </h2>
+            <p className="shrink-0 text-[10px] font-semibold uppercase tracking-wider text-[var(--accent-teal)]">
+              {eyebrow}
+            </p>
+          </div>
           <p className="mt-1 text-xs leading-relaxed text-[var(--text-secondary)]">{explain}</p>
         </div>
         {items.length > 0 ? (
@@ -455,7 +458,8 @@ function OtProvenance({ minReach }: { minReach: number }) {
           ATT&amp;CK&apos;s own asset mappings. It is valid at any selection size.{' '}
           <span className="font-semibold text-[var(--text-primary)]">Lift is a ratio</span> and is
           not: selecting most of the catalogue makes exposure and reach move together and collapses
-          every lift toward 1.00x, which is why Band B is suppressed rather than shown meaningless.
+          every lift toward 1.00x, which is why concentration is suppressed rather than shown
+          meaningless.
         </li>
         <li>
           <span className="font-semibold text-[var(--text-primary)]">
@@ -463,8 +467,9 @@ function OtProvenance({ minReach }: { minReach: number }) {
           </span>{' '}
           In ICS a sub-technique&apos;s asset mappings are identical to its parent&apos;s, so it adds
           nothing to an engine whose only signal is that mapping — and without the exclusion one
-          finding fills four of six Band B slots as a parent plus its three children, all tied.
-          Band B also requires a reach of at least {minReach}, so a single asset mapping cannot mint
+          finding fills four of six concentration slots as a parent plus its three children, all
+          tied. Concentration also requires a reach of at least {minReach}, so a single asset
+          mapping cannot mint
           a top-six entry at maximum lift.
         </li>
         <li>
@@ -729,21 +734,22 @@ export function OtProfile() {
         <Notice tone="warn" title="Lift cannot rank this selection">
           <p>
             {meta.reasonDetail ??
-              'Every technique in this pool has the same lift, or nearly so, so Band B is suppressed.'}
+              'Every technique in this pool has the same lift, or nearly so, so concentration is suppressed.'}
           </p>
           <p className="mt-2">
-            Band B is <span className="font-semibold">absent, not empty</span>: a lift ordering that
-            means nothing would still look like a ranking. Band A below is unaffected — exposure is
+            Concentration is <span className="font-semibold">absent, not empty</span>: a lift
+            ordering that means nothing would still look like a ranking. Exposure below is
+            unaffected —
             a count, not a ratio, and stays valid at any selection size.
           </p>
         </Notice>
       )}
 
       {meta.bandBShort && !meta.bandBSuppressed && (
-        <Notice tone="info" title={bandB.length === 0 ? 'Band B is empty' : 'Band B is short'}>
-          Band B holds {bandB.length === 0 ? 'no technique' : `only ${bandB.length} of six`}. It
+        <Notice tone="info" title={bandB.length === 0 ? 'Concentration is empty' : 'Concentration is short'}>
+          Concentration holds {bandB.length === 0 ? 'no technique' : `only ${bandB.length} of six`}. It
           draws only from techniques that reach at least {meta.minReach} ICS assets{' '}
-          <span className="font-semibold">and are not already in Band A</span>. A technique with a
+          <span className="font-semibold">and are not already under exposure</span>. A technique with a
           single asset mapping would score maximum lift on a narrow selection while telling you
           almost nothing, so the floor is not lowered to pad the list.
         </Notice>
@@ -751,13 +757,13 @@ export function OtProfile() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <OtBandCard
-          eyebrow="Band A · exposure"
+          eyebrow="Exposure"
           title="Reaches most of what you run"
           explain={
             <>
               Top six by <span className="font-semibold">EXPOSURE</span> — how many of your{' '}
               {assetCount} selected assets each technique targets. This is the only ordering this
-              page offers, because on the OT path Band A <span className="font-semibold">is</span>{' '}
+              page offers, because on the OT path exposure <span className="font-semibold">is</span>{' '}
               exposure: there is no evidence column to sort by instead.
             </>
           }
@@ -774,12 +780,12 @@ export function OtProfile() {
         />
 
         <OtBandCard
-          eyebrow="Band B · concentration"
+          eyebrow="Concentration"
           title="Aimed at your surface more than at ICS generally"
           explain={
             <>
               Top six by <span className="font-semibold">LIFT</span>, among techniques reaching at
-              least {meta.minReach} assets, with Band A excluded. Lift compares the share of{' '}
+              least {meta.minReach} assets, with exposure excluded. Lift compares the share of{' '}
               <span className="font-semibold">your</span> surface a technique reaches against the
               share of all {totalAssets} ICS assets it reaches — 1.00x means it is no more
               concentrated on your plant than on anyone&apos;s.
@@ -792,13 +798,13 @@ export function OtProfile() {
           empty={
             meta.bandBSuppressed ? (
               <>
-                <span className="font-semibold">Band B is suppressed.</span> Lift cannot separate
+                <span className="font-semibold">Concentration is suppressed.</span> Lift cannot separate
                 this selection — see the notice above. Nothing has been ranked in its place.
               </>
             ) : (
               <>
-                <span className="font-semibold">Band B is absent.</span> Nothing in this pool both
-                reaches at least {meta.minReach} assets and is missing from Band A, so there is
+                <span className="font-semibold">Concentration is absent.</span> Nothing in this pool
+                both reaches at least {meta.minReach} assets and is missing from exposure, so there is
                 nothing that can honestly be called disproportionately aimed at your surface.
               </>
             )

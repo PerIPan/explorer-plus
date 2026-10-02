@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback, useMemo, type ReactNode } from 'react';
+import { Fragment, useCallback, useMemo, useState, type ReactNode } from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 
@@ -89,6 +90,18 @@ interface ProfileResponse {
     /** The platform selection matched NO technique, so the empty pool below is
      *  the platform answer's doing and not a statement about the sector. */
     platformPoolEmpty?: boolean;
+    /**
+     * How many techniques Band A was chosen from. Equals `poolSize` on every
+     * evidence sort; on `sort=lift` the three-group floor applies to Band A too
+     * (lift is a ratio over a sample — a single attributing group reaches its
+     * ceiling), so this is the smaller, honest denominator for that band.
+     * Optional on the wire: an older deployment of the route omits it and the
+     * notice below simply does not render.
+     */
+    bandAEligible?: number;
+    /** Candidates cut off while tying with Band A's last entry. 0 — or absent —
+     *  means the band's bottom edge is a real one. */
+    bandATied?: number;
   };
 }
 
@@ -162,35 +175,35 @@ const SORT_OPTIONS: readonly SortOption[] = [
     label: 'Lift',
     column: 'LIFT',
     score: 12,
-    blurb: 'All twelve sectors get a different top six. This is the only column that measures sector fit rather than volume.',
+    blurb: 'All twelve sectors rank a different top six — the only column that measures sector fit rather than volume.',
   },
   {
     value: 'kev',
     label: 'KEV',
     column: 'KEV',
     score: 10,
-    blurb: 'Ten of twelve sectors get a different top six.',
+    blurb: 'Ten of twelve sectors rank a different top six.',
   },
   {
     value: 'cv',
     label: 'CVEs',
     column: 'CVE',
     score: 8,
-    blurb: 'Eight of twelve sectors get a different top six.',
+    blurb: 'Eight of twelve sectors rank a different top six.',
   },
   {
     value: 'rp',
     label: 'Reports',
     column: 'REPORTS',
     score: 2,
-    blurb: 'Only two of twelve sectors get a different top six — CTI report volume is near-identical whoever you are.',
+    blurb: 'Two of twelve sectors rank a different top six. CTI report volume is near-identical across sectors.',
   },
   {
     value: 'io',
     label: 'Sightings',
     column: 'SIGHTINGS',
     score: 1,
-    blurb: 'One of twelve. Ordering by IOC sightings collapses the twelve sectors onto the same list; this tells you what is busy, not what is aimed at you.',
+    blurb: 'One of twelve. Ordering by IOC sightings collapses the twelve sectors onto a single list: it measures activity, not sector focus.',
   },
 ];
 
@@ -198,6 +211,9 @@ const SORT_BY_KEY: ReadonlyMap<SortKey, SortOption> = new Map(SORT_OPTIONS.map((
 
 /** Matches `sortKeySchema`'s own `.default('kev')` in app/api/v1/lib/validate.ts. */
 const DEFAULT_SORT: SortKey = 'kev';
+
+/** Ties the (i) beside the Lift pill to the panel it expands. */
+const LIFT_EXPLAINER_ID = 'profile-lift-explainer';
 
 /** Amber at <=2, green at >=8 — everything between stays neutral. */
 function scoreTone(score: number): { text: string; bg: string; border: string } {
@@ -367,7 +383,7 @@ function TechniqueRow({
             <Metric
               label="Groups"
               value={num(item.groupCount)}
-              title="Groups attributed to this sector that use this technique. Band B requires at least three."
+              title="Groups attributed to this sector that use this technique. Sector fit requires at least three."
             />
           </>
         )}
@@ -398,12 +414,19 @@ function BandCard({
     <Card>
       <section aria-labelledby={headingId}>
         <div className="px-4 py-3">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--accent-teal)]">
-            {eyebrow}
-          </p>
-          <h2 id={headingId} className="mt-0.5 text-base font-semibold text-[var(--text-primary)]">
-            {title}
-          </h2>
+          {/* The band's name sits in the top-right corner, on the title's own
+              line: it is a label for the card, not a heading above it, and the
+              two bands are read side by side so the names want to line up with
+              each other rather than with their own titles. `shrink-0` and
+              `min-w-0` keep "Sector fit" whole when a long title wraps. */}
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 id={headingId} className="min-w-0 text-base font-semibold text-[var(--text-primary)]">
+              {title}
+            </h2>
+            <p className="shrink-0 text-[10px] font-semibold uppercase tracking-wider text-[var(--accent-teal)]">
+              {eyebrow}
+            </p>
+          </div>
           <p className="mt-1 text-xs leading-relaxed text-[var(--text-secondary)]">{explain}</p>
         </div>
         {items.length > 0 ? (
@@ -462,8 +485,8 @@ function Provenance() {
           <span className="font-semibold text-[var(--text-primary)]">
             Sightings and reports are global CTI volume,
           </span>{' '}
-          not sector-specific. They say a technique is busy; they do not say it is aimed at you.
-          That is exactly why they score 1/12 and 2/12 on differentiation.
+          not sector-specific. They indicate that a technique is active, not that it is directed at
+          this sector — which is why they score 1/12 and 2/12 on differentiation.
         </li>
         <li>
           <span className="font-semibold text-[var(--text-primary)]">Lift</span> compares how often
@@ -485,6 +508,13 @@ export function ThreatProfile() {
   const searchParams = useSearchParams();
   const { syncStoredSector } = useSector();
   const { domains } = useDomain();
+
+  /**
+   * Local, NOT a URL param. The definition is a reading aid; putting it in the
+   * query string would make it part of every shared link and of the react-query
+   * key, re-fetching the briefing to open a paragraph.
+   */
+  const [liftOpen, setLiftOpen] = useState(false);
 
   /**
    * Read STRICTLY from the URL. Not from `useSector()`, not from
@@ -680,13 +710,13 @@ export function ThreatProfile() {
             26px pill. Two wrapped rows 8px apart would have overlapping
             targets, so a press near the edge could fire the row above. 20px
             of vertical gap keeps every target to its own pill. */}
-        <div className="mt-1.5 flex flex-wrap gap-x-2 gap-y-5">
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-5">
           {SORT_OPTIONS.map((o) => {
             const active = o.value === sortKey;
             const tone = scoreTone(o.score);
             return (
+              <Fragment key={o.value}>
               <button
-                key={o.value}
                 type="button"
                 onClick={() => navigate({ sort: o.value })}
                 aria-pressed={active}
@@ -711,6 +741,29 @@ export function ThreatProfile() {
                   {o.score}/12
                 </span>
               </button>
+              {/* Lift is the only column here that is a derived ratio rather
+                  than a count, and the only one whose number needs a sentence
+                  before it can be read. A SIBLING of the pill, not a child:
+                  nesting a button inside a button is invalid, and its click
+                  would race the sort it sits on. */}
+              {o.value === 'lift' && (
+                <button
+                  type="button"
+                  onClick={() => setLiftOpen((v) => !v)}
+                  aria-expanded={liftOpen}
+                  aria-controls={LIFT_EXPLAINER_ID}
+                  aria-label={liftOpen ? 'Hide what lift measures' : 'What lift measures'}
+                  className={`relative -ml-1 inline-flex h-5 w-5 items-center justify-center rounded-full border text-[10px] font-semibold transition-colors
+                              before:content-[''] before:absolute before:inset-0 before:-m-3 ${
+                    liftOpen
+                      ? 'border-[var(--accent-teal)] bg-[var(--teal-ghost)] text-[var(--accent-teal)]'
+                      : 'border-[var(--border-color)] text-[var(--text-secondary)] hover:border-[var(--border-hover)] hover:text-[var(--text-primary)]'
+                  }`}
+                >
+                  i
+                </button>
+              )}
+              </Fragment>
             );
           })}
         </div>
@@ -718,10 +771,25 @@ export function ThreatProfile() {
           <span className="font-semibold text-[var(--text-primary)]">
             {sortOption.score}/12 differentiation.
           </span>{' '}
-          {sortOption.blurb} The badge counts how many of the twelve sectors get a different top six
-          under that sort — it is a measure of how much the ranking distinguishes you from everyone
-          else, not of how dangerous anything is.
+          {sortOption.blurb} The badge counts how many of the twelve sectors rank a different top six
+          under that sort — a measure of how far the ranking separates one sector from the rest, not
+          of severity.
         </p>
+
+        {liftOpen && (
+          <div
+            id={LIFT_EXPLAINER_ID}
+            className="mt-2 rounded-md border border-[var(--border-color)] bg-[var(--surface-base)] p-3 text-xs leading-relaxed text-[var(--text-secondary)]"
+          >
+            <span className="font-semibold text-[var(--text-primary)]">Lift</span> compares how
+            often this sector&apos;s attributed groups use a technique with how often all tracked
+            groups use it. 1.00x is the dataset average; above 1.00x is over-represented in this
+            sector. It is a ratio over a small sample, and its ceiling is reached by any technique
+            with a single attributing group, so bands ranked by lift exclude techniques used by
+            fewer than three of the sector&apos;s groups. Sector attribution is automated, so every
+            lift figure inherits whatever that derivation got wrong.
+          </div>
+        )}
       </fieldset>
     </Card>
   );
@@ -872,17 +940,17 @@ export function ThreatProfile() {
     return shell(
       <span>No sector chosen — nothing has been ranked.{domainLine}</span>,
       <>
-        <Notice tone="info" title="Band A and Band B are absent, on purpose">
+        <Notice tone="info" title="Reach and sector fit are absent, on purpose">
           <p>
-            This page ranks techniques by how disproportionately{' '}
-            <span className="font-semibold">your</span> sector&apos;s attributed threat groups use
-            them. Without a sector there is no group set, no technique pool and no lift to rank by —
-            so there is nothing here rather than a guess.
+            This page ranks techniques by how disproportionately the{' '}
+            <span className="font-semibold">selected</span> sector&apos;s attributed threat groups
+            use them. Without a sector there is no group set, no technique pool and no lift to rank
+            by — so there is nothing here rather than a guess.
           </p>
           <p className="mt-2">
-            No sector has been substituted for you — not even one you picked elsewhere in the app.
-            A briefing headed &ldquo;most disproportionate for you&rdquo; over somebody else&apos;s
-            sector is worse than an empty page, so this one stays empty until you choose above.
+            No sector has been substituted — not even one selected elsewhere in the app. A briefing
+            headed &ldquo;most disproportionate&rdquo; over a sector nobody chose is worse than an
+            empty page, so this one stays empty until a sector is selected above.
           </p>
         </Notice>
         <Provenance />
@@ -920,16 +988,59 @@ export function ThreatProfile() {
   const platformPoolEmpty = meta.platformPoolEmpty === true;
   const evidenceUnavailable = meta.evidenceUnavailable === true;
 
+  /**
+   * Where the other 356 are.
+   *
+   * The briefing shows twelve techniques — six per band — out of a pool that is
+   * routinely in the hundreds, and until now it stated the pool size and then
+   * offered nothing to do with it. /techniques reproduces this pool EXACTLY,
+   * provided sub-techniques are switched on: same `group_sectors` join, same
+   * domain equality, same revoked/deprecated exclusion. Verified 2026-10-02
+   * against production for seven sectors — `meta.poolSize` equalled
+   * `pagination.total` on every one (financial 368, healthcare 300, energy 205,
+   * government 398, technology 432, defense 357, retail 211).
+   *
+   * `subs=1` is not optional: without it /techniques lists parent techniques
+   * only and financial comes back 130, so the link would land on a third of the
+   * number it was labelled with.
+   *
+   * The platform constraint is the one thing the destination cannot always
+   * carry. `platform` there is a single enum value and 400s on a comma-joined
+   * list (measured), while this page's answer is a SET tested for overlap. One
+   * platform passes through exactly; two or more would make the destination
+   * wider than the pool, so the count stops being a link and the offer below
+   * Band B drops its number rather than quoting one it cannot honour.
+   */
+  const linkPlatforms = meta.platformDropped ? [] : appliedPlatforms;
+  const poolExact = linkPlatforms.length <= 1;
+  const poolHref = profile.sector
+    ? `/techniques?${new URLSearchParams({
+        sector: profile.sector,
+        subs: '1',
+        ...(allDomains || !domain ? {} : { domain }),
+        ...(linkPlatforms.length === 1 ? { platform: linkPlatforms[0] } : {}),
+      }).toString()}`
+    : null;
+
   return shell(
     <span>
       <span className="font-semibold text-[var(--text-primary)] tabular-nums">
         {meta.groupCount.toLocaleString()}
       </span>{' '}
       threat {meta.groupCount === 1 ? 'group' : 'groups'} attributed to this sector ·{' '}
-      <span className="font-semibold text-[var(--text-primary)] tabular-nums">
-        {meta.poolSize.toLocaleString()}
-      </span>{' '}
-      techniques in the ranked pool
+      {poolHref && poolExact && !emptyPool ? (
+        <Link href={poolHref} className="text-[var(--accent-teal)] hover:underline">
+          <span className="font-semibold tabular-nums">{meta.poolSize.toLocaleString()}</span>{' '}
+          techniques in the ranked pool
+        </Link>
+      ) : (
+        <>
+          <span className="font-semibold text-[var(--text-primary)] tabular-nums">
+            {meta.poolSize.toLocaleString()}
+          </span>{' '}
+          techniques in the ranked pool
+        </>
+      )}
       {appliedPlatforms.length > 0 && !meta.platformDropped && (
         // The assembler keeps a technique if it runs on ANY selected platform.
         // "filtered to Windows, Linux" reads as a conjunction and would mean a
@@ -988,20 +1099,58 @@ export function ThreatProfile() {
         <Notice tone="warn" title={`Nothing in this pool carries ${sortOption.column} evidence`}>
           Every one of the {meta.poolSize.toLocaleString()}{' '}
           {meta.poolSize === 1 ? 'technique' : 'techniques'} in this pool sits at zero{' '}
-          <span className="font-semibold">{sortOption.column}</span>, so Band A below is{' '}
+          <span className="font-semibold">{sortOption.column}</span>, so reach below is{' '}
           <span className="font-semibold">not</span> ranked by it — six of an all-zero column in
           whatever order the pool arrived in. {domainLabel} carries close to no CVE, KEV, EPSS,
-          report or IOC evidence at all, so every evidence sort reads the same way here. Band B,
+          report or IOC evidence at all, so every evidence sort reads the same way here. Sector fit,
           which is always lift-ranked, is the half of this page that still says something.
+        </Notice>
+      )}
+
+      {/* How Band A was CUT — the ratio floor and a tie at the boundary. One
+          notice for both because under `sort=lift` both are usually true at
+          once, and they are the same kind of fact: a statement about the
+          selection rather than about the data.
+
+          The floor is gated on the sort key, not on `bandAEligible <
+          poolSize`: `poolSize` is the pool BAND B came from, which the platform
+          fallback widens to the full sector pool while Band A stays on the
+          narrow one — so that comparison is true for an evidence sort too
+          whenever `platformDropped` fired. The text quotes no second number for
+          the same reason. */}
+      {!emptyPool && sortKey === 'lift' && (meta.bandAEligible ?? 0) > 0
+        && (meta.bandAEligible as number) < meta.poolSize && (
+        <Notice tone="info" title="Lift needs a sample, so reach has a floor">
+          Lift is a ratio — this sector&apos;s share of a technique over every group&apos;s share —
+          and its ceiling is reached by <span className="font-semibold">any</span> technique used by
+          exactly one group that happens to be attributed here, with no evidence behind it at all.
+          Ranked raw, this band came back as six such techniques in alphabetical order. So on this
+          sort reach is chosen from the{' '}
+          <span className="font-semibold tabular-nums text-[var(--text-primary)]">
+            {(meta.bandAEligible as number).toLocaleString()}
+          </span>{' '}
+          techniques used by at least three of {sectorName}&apos;s groups — the same floor sector fit
+          has always applied. Switch the selector to an evidence column and reach uses the whole
+          pool: a KEV or CVE count is an absolute number and needs no floor.
+        </Notice>
+      )}
+
+      {!emptyPool && (meta.bandATied ?? 0) > 0 && (
+        <Notice tone="info" title="The last reach slot was a tie">
+          <span className="font-semibold tabular-nums">{meta.bandATied}</span> further{' '}
+          {meta.bandATied === 1 ? 'technique ties' : 'techniques tie'} with the sixth entry on{' '}
+          <span className="font-semibold">{sortOption.column}</span> and lost the slot to a stable
+          sort, not to a lower score. Read the bottom of the band as a boundary rather than a
+          ranking.
         </Notice>
       )}
 
       {meta.degenerate && !emptyPool && (
         <Notice tone="warn" title="Lift cannot rank this selection">
           Fewer than six distinct lift values exist across the {meta.poolSize.toLocaleString()}{' '}
-          {meta.poolSize === 1 ? 'technique' : 'techniques'} in this pool, so Band B below is ordered
+          {meta.poolSize === 1 ? 'technique' : 'techniques'} in this pool, so sector fit below is ordered
           but the order is close to arbitrary. Read it as &ldquo;these are attributed to your
-          sector&rdquo;, not as &ldquo;these are disproportionately aimed at you&rdquo;. Widening the
+          sector&rdquo;, not as &ldquo;these are disproportionately aimed at this sector&rdquo;. Widening the
           platform filter, or dropping it, usually restores a real spread.
         </Notice>
       )}
@@ -1010,19 +1159,21 @@ export function ThreatProfile() {
         <Notice tone="warn" title="Platform filter dropped">
           Fewer than six techniques cleared the three-group floor with{' '}
           {platforms.length > 0 ? platforms.join(', ') : 'the platform filter'} applied, so the{' '}
-          <span className="font-semibold">whole</span> platform constraint was removed and both bands
-          were re-selected over the full sector pool. The rows below are{' '}
-          <span className="font-semibold">not</span> filtered to your platforms.
+          <span className="font-semibold">whole</span> platform constraint was removed and{' '}
+          {platformPoolEmpty ? 'both bands were' : 'sector fit was'} re-selected over the full sector
+          pool. {platformPoolEmpty
+            ? 'The rows below are not filtered to the selected platforms.'
+            : 'Reach still reflects the platform selection; sector fit does not.'}
         </Notice>
       )}
 
       {meta.bandBShort && !emptyPool && (
-        <Notice tone="info" title={bandB.length === 0 ? 'Band B is empty' : 'Band B is short'}>
-          Band B holds {bandB.length === 0 ? 'no technique' : `only ${bandB.length} of six`}
+        <Notice tone="info" title={bandB.length === 0 ? 'Sector fit is empty' : 'Sector fit is short'}>
+          Sector fit holds {bandB.length === 0 ? 'no technique' : `only ${bandB.length} of six`}
           {meta.platformDropped ? ', even after the platform filter was dropped' : ''}. It draws only
           from techniques attributed to at least three of this sector&apos;s groups{' '}
-          <span className="font-semibold">and not already in Band A</span>, so either the pool holds
-          too few that clear the three-group floor, or Band A above has taken them. A technique used
+          <span className="font-semibold">and not already under reach</span>, so either the pool holds
+          too few that clear the three-group floor, or reach has taken them. A technique used
           by one or two groups is one sighting away from noise, so the floor is not lowered to pad
           the list.
         </Notice>
@@ -1030,14 +1181,18 @@ export function ThreatProfile() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <BandCard
-          eyebrow="Band A · reach"
+          eyebrow="Reach"
           // The heading must not claim a ranking the column cannot support.
           // With an all-zero sort column "Most KEV evidence" over six zeroes
           // is the single most misleading thing this page could say.
+          // Lift is not evidence, so it does not take the evidence wording —
+          // "Most lift evidence" was the literal output of the template.
           title={
             evidenceUnavailable
               ? `No ${sortOption.label.toLowerCase()} evidence to rank by`
-              : `Most ${sortOption.label.toLowerCase()} evidence`
+              : sortKey === 'lift'
+                ? 'Highest lift'
+                : `Most ${sortOption.label.toLowerCase()} evidence`
           }
           explain={
             evidenceUnavailable ? (
@@ -1077,13 +1232,13 @@ export function ThreatProfile() {
         />
 
         <BandCard
-          eyebrow="Band B · sector fit"
+          eyebrow="Sector fit"
           title={`Most disproportionate for ${sectorName}`}
           explain={
             <>
               Top six by <span className="font-semibold">lift</span> among techniques attributed to
-              at least three of this sector&apos;s groups, with Band A excluded. Always lift-ranked —
-              the selector above changes Band A only.
+              at least three of this sector&apos;s groups, with reach excluded. Always lift-ranked —
+              the selector above changes reach only.
             </>
           }
           items={bandB}
@@ -1098,15 +1253,47 @@ export function ThreatProfile() {
               </>
             ) : (
               <>
-                <span className="font-semibold">Band B is absent.</span> Nothing in this pool is
+                <span className="font-semibold">Sector fit is absent.</span> Nothing in this pool is
                 both attributed to at least three of {sectorName}&apos;s groups and absent from
-                Band A, so there is nothing that can honestly be called disproportionately aimed at
+                reach, so there is nothing that can honestly be called disproportionately aimed at
                 this sector. Nothing has been substituted in its place.
               </>
             )
           }
         />
       </div>
+
+      {/* The twelve are a briefing, not the pool. Stated HERE, at the bottom of
+          Band B, because that is where the question occurs to the reader — the
+          subtitle's count is the same link, but it is read before anyone knows
+          how many techniques the page is going to show them. */}
+      {poolHref && !emptyPool && (
+        <p className="text-xs text-[var(--text-secondary)]">
+          {bandA.length + bandB.length === meta.poolSize ? (
+            <>Those are every technique in the pool.</>
+          ) : (
+            <>
+              Those are{' '}
+              <span className="font-semibold tabular-nums text-[var(--text-primary)]">
+                {(bandA.length + bandB.length).toLocaleString()}
+              </span>{' '}
+              of{' '}
+              {poolExact ? (
+                <span className="font-semibold tabular-nums text-[var(--text-primary)]">
+                  {meta.poolSize.toLocaleString()}
+                </span>
+              ) : (
+                'the'
+              )}{' '}
+              techniques this sector&apos;s groups are on record using — the two bands rank the
+              pool, they do not bound it.
+            </>
+          )}{' '}
+          <Link href={poolHref} className="text-[var(--accent-teal)] hover:underline">
+            {poolExact ? 'Browse the whole pool' : "Browse this sector's techniques"} →
+          </Link>
+        </p>
+      )}
 
       <Card className="p-4">
         <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
