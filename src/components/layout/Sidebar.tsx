@@ -7,6 +7,7 @@ import { DomainDropdown } from './DomainDropdown';
 import { SectorDropdown } from './SectorDropdown';
 import { ProfileSidebarTrigger } from '../profile/ProfilePanel';
 import { AGENT_TOOL_COUNT, API_ENDPOINT_COUNT } from '../../lib/site';
+import { ENISA_SBD_COUNT } from '../../lib/enisa-sbd';
 import { FEED_STATUS_ROW_COUNT } from '../../lib/feeds';
 import { useNavCounts, formatCount } from '../../hooks/useNavCounts';
 import type { NavCounts } from '../../hooks/useNavCounts';
@@ -101,6 +102,12 @@ const frameworksNav: NavItem[] = [
   { path: '/cti/capec', label: 'CAPEC', tooltip: 'MITRE Common Attack Pattern Enumeration — 615 attack patterns with severity, likelihood, prerequisites, mitigations' },
   { path: '/frameworks/cra', label: 'CRA – wip', tooltip: 'EU Cyber Resilience Act (Regulation 2024/2847) — reference page covering key dates, Annex I essential requirements, Article 14 reporting cadence. Mappings to ATT&CK/CWE pending harmonised standards.' },
   { path: '/frameworks/owasp-ai', label: 'OWASP AI – wip', tooltip: 'OWASP AI Exchange — AI/ML threats, controls, and framework alignments (ISO 27090, EU AI Act). Structured JSON/ATLAS crosswalks on the 2026 roadmap; reference page for now.' },
+  // No count badge and no "wip": the page is complete, it simply has nothing to
+  // bridge to. Measured across all 22 playbooks — none cites an ATT&CK
+  // technique, CWE, CAPEC pattern, NIST control, ISO clause, IEC 62443, D3FEND
+  // or NIS2 — so the absence of a crosswalk is a property of the source, not
+  // work outstanding. The tooltip says so rather than implying a roadmap.
+  { path: '/frameworks/enisa-sbd', label: 'ENISA Playbooks', count: ENISA_SBD_COUNT, tooltip: 'ENISA Secure by Design and Default — 22 playbooks for SMEs, each with a principle, objective, checklist, minimum evidence and release gate. Reference list only: the source carries no ATT&CK, CWE or control identifiers, so no crosswalk is shown. CC BY 4.0.' },
 ];
 
 const extendedIntelNav: NavItem[] = [
