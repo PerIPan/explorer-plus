@@ -606,6 +606,30 @@ async function handler(req: NextRequest): Promise<NextResponse> {
   const rawPool = poolResult.rows;
   const fullPool = rawPool.map(toPoolItem);
 
+  /**
+   * How far each platform would narrow this sector's pool, so the picker can
+   * say so instead of being a blind multi-select. Measured for financial:
+   * Windows 271 of 368, Linux 211, macOS 209, ESXi 84, Network Devices 58,
+   * IaaS 57, PRE 56, Office Suite 46, SaaS 41, Identity Provider 31,
+   * Containers 30 — which is also the evidence that the control earns its
+   * place: the top six barely moves for Windows or Linux, but SaaS cuts the
+   * pool to a ninth and returns a genuinely different band.
+   *
+   * FREE. `t.platforms` is already selected (the Band-B platform fallback
+   * filters on it in JS), the assembler strips it before the response, and
+   * this is one pass over ~400 rows of ~3 values. No extra query.
+   *
+   * Counted over `rawPool` — the pool BEFORE any platform filter — because the
+   * number answers "what would this narrow to", which is meaningless against a
+   * pool already narrowed by the same answer. Derived from the data rather than
+   * from a platform list the route would have to keep in step with the UI's.
+   */
+  const platformCounts: Record<string, number> = {};
+  for (const r of rawPool) {
+    if (!Array.isArray(r.platforms)) continue;
+    for (const p of r.platforms) platformCounts[p] = (platformCounts[p] ?? 0) + 1;
+  }
+
   // Platforms are a SET, and the constraint is an INTERSECTION test: keep a
   // technique if it runs on ANY of the platforms the visitor named. A `Set`
   // rather than `selected.includes(p)` for two reasons -- it is O(1) per
@@ -727,6 +751,15 @@ async function handler(req: NextRequest): Promise<NextResponse> {
       // band's bottom edge is real. Anything else means a stable sort decided
       // the final slot, which the page says rather than presents as a ranking.
       bandATied,
+      // Per-platform size of the UNFILTERED sector pool, so the platform picker
+      // can show what each choice would narrow to. See its construction above.
+      platformCounts,
+      // The denominator those counts are against: the sector pool BEFORE the
+      // platform answer. Distinct from `poolSize`, which is the pool Band B was
+      // drawn from and therefore moves with the platform selection — using that
+      // as the denominator would render "271 of 271" as soon as Windows was
+      // picked.
+      poolTotal: fullPool.length,
     },
   }, 3600));
 }

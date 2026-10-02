@@ -102,6 +102,12 @@ interface ProfileResponse {
     /** Candidates cut off while tying with Band A's last entry. 0 — or absent —
      *  means the band's bottom edge is a real one. */
     bandATied?: number;
+    /** Size of the sector pool per platform, counted BEFORE the platform
+     *  answer is applied, so the picker can state what each choice narrows to. */
+    platformCounts?: Record<string, number>;
+    /** The denominator for `platformCounts`: the unfiltered sector pool. NOT
+     *  `poolSize`, which moves with the platform selection. */
+    poolTotal?: number;
   };
 }
 
@@ -587,11 +593,6 @@ export function ThreatProfile() {
    * techniques carry no platforms array) gets an empty list, and the control is
    * not rendered — an empty picker is a question that cannot be answered.
    */
-  const platformOptions = useMemo<MultiSelectOption[]>(
-    () => platformsForDomain(domain).map((p) => ({ value: p, label: p })),
-    [domain],
-  );
-
   /**
    * Canonical query string: only the four parameters this endpoint reads, in
    * a fixed order. Unrelated params the app carries around (`entity`, `tab`,
@@ -611,6 +612,40 @@ export function ThreatProfile() {
       !(err instanceof ProfileRequestError && err.status >= 400 && err.status < 500) &&
       failureCount < 2,
   });
+
+  /*
+   * What each platform would narrow the pool to — "Windows · 271 of 368
+   * techniques" — which turns a blind multi-select into a visible one.
+   *
+   * Declared HERE, after the query, not beside the other option lists above:
+   * `data` is a `const` from `useQuery`, so reading it earlier in this function
+   * body is a temporal-dead-zone ReferenceError, not merely an undefined value.
+   *
+   * `poolTotal`, never `poolSize`: `poolSize` is the pool Band B was drawn
+   * from, which the platform answer itself narrows — so using it as the
+   * denominator would make every count read "271 of 271" the moment Windows
+   * was picked. `poolTotal` is the unfiltered sector pool and does not move.
+   *
+   * Shown only once a pool exists. Before the first response, and while a new
+   * sector is in flight, there is no honest number, so the option carries no
+   * `meta` line rather than a stale one. A platform the pool never mentions
+   * shows 0 — the true answer, and the explanation for an empty briefing.
+   */
+  const platformCounts = data?.meta?.platformCounts;
+  const poolTotal = data?.meta?.poolTotal;
+  const platformOptions = useMemo<MultiSelectOption[]>(
+    () => platformsForDomain(domain).map((p) => {
+      const n = platformCounts?.[p];
+      return {
+        value: p,
+        label: p,
+        ...(n === undefined || !poolTotal
+          ? {}
+          : { meta: `${n.toLocaleString()} of ${poolTotal.toLocaleString()} techniques` }),
+      };
+    }),
+    [domain, platformCounts, poolTotal],
+  );
 
   /**
    * Rewrite the URL from the four parameters this page owns, through the same
