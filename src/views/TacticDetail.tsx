@@ -8,6 +8,7 @@ import { EntityLink } from '../components/shared/EntityLink';
 import { sanitize, sanitizeMarkdown } from '../lib/sanitize';
 import { DiamondLoader } from '../components/shared/FoldingDiamond';
 import { ComplianceEmphasisSection } from '../components/tactic/ComplianceEmphasisSection';
+import { IrStartingPoints } from '../components/tactic/IrStartingPoints';
 
 export function TacticDetail() {
   const { attackId } = useParams<{ attackId: string }>();
@@ -70,6 +71,16 @@ export function TacticDetail() {
             {description}
           </p>
         </div>
+      )}
+
+      {/* Above the technique list on purpose: TA0003 has 113 techniques in a
+          3-column grid, so anything below it is ~38 rows down and invisible on
+          exactly the tactic where "where do I start" matters most. Collapsed by
+          default so it does not push the list far. Passed the UNFILTERED list —
+          `techniques` is the filtered one, and CISA's picks must not vanish
+          while someone is typing in the filter box. */}
+      {data.attackId && (
+        <IrStartingPoints tacticId={data.attackId} techniques={allTechniques} />
       )}
 
       {data.attackId && <ComplianceEmphasisSection attackId={data.attackId} />}

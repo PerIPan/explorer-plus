@@ -4,9 +4,17 @@ import os
 import psycopg
 
 
+# Ranges wide enough to catch a broken seed, tight enough to catch a partial
+# one. `tactics` and `techniques` were written when this DB held enterprise
+# ATT&CK alone; it now holds four domains (enterprise 15 tactics, ICS 12,
+# mobile 14, ATLAS 16 = 57, and 1,295 techniques), so both bounds had been
+# WARNing on every run since. A harness that always says FAILED reports
+# nothing, which is why this is fixed here rather than left as noise.
+# A regression to a single domain (15 tactics) still trips the lower bound,
+# which is the case worth catching.
 EXPECTED_RANGES = {
-    'tactics': (10, 20),
-    'techniques': (600, 1200),
+    'tactics': (40, 80),
+    'techniques': (1000, 2000),
     'threat_groups': (100, 300),
     'attack_software': (500, 1200),
     'mitigations': (30, 400),
@@ -83,6 +91,43 @@ def verify(database_url: str | None = None) -> bool:
             if orphans > 0:
                 ok = False
             print(f'  {rel_table}.{fk_col} → {parent_table}: {orphans} orphans  [{status}]')
+
+        # Curated-reference check — src/lib/cisa-ir-playbook.ts hard-codes ATT&CK
+        # ids. It stores ids ONLY and resolves names at render time, so a rename
+        # is harmless; a REVOKE, a DEPRECATE or a deletion is not — the page
+        # would silently stop showing that technique. ATT&CK does all three:
+        # the last ingest renamed TA0005 to "Stealth" and added TA0112.
+        # Nothing else reads these ids, so without this they would drift
+        # unnoticed until someone looked at a tactic page.
+        print('\nCurated reference checks (CISA IR playbook):')
+        cisa_tactics = ['TA0001', 'TA0002', 'TA0003', 'TA0006', 'TA0008', 'TA0010', 'TA0011']
+        cisa_techniques = [
+            'T1041', 'T1048', 'T1053', 'T1059', 'T1071', 'T1072', 'T1078',
+            'T1098', 'T1110', 'T1133', 'T1189', 'T1190', 'T1203', 'T1210',
+            'T1556', 'T1557', 'T1563', 'T1566', 'T1572',
+        ]
+        # `tactics` carries no is_revoked / is_deprecated columns — only
+        # `techniques` does — so the predicate differs per table. Asking for
+        # them on tactics raises UndefinedColumn and fails the whole harness.
+        for label, table, ids, live_only in (
+            ('tactics', 'tactics', cisa_tactics, False),
+            ('techniques', 'techniques', cisa_techniques, True),
+        ):
+            predicate = (
+                'AND NOT is_revoked AND NOT is_deprecated' if live_only else ''
+            )
+            cur.execute(
+                f'SELECT attack_id FROM {table} '
+                f'WHERE attack_id = ANY(%s) {predicate}',
+                (ids,),
+            )
+            live = {r[0] for r in cur.fetchall()}
+            missing = sorted(set(ids) - live)
+            status = 'OK' if not missing else 'WARN'
+            if missing:
+                ok = False
+            detail = f' missing/revoked: {", ".join(missing)}' if missing else ''
+            print(f'  {label}: {len(live)}/{len(ids)} resolve  [{status}]{detail}')
 
         print(f'\n{"PASSED" if ok else "FAILED"}\n')
 
