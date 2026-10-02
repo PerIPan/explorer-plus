@@ -50,8 +50,10 @@ const topNav: NavItem[] = [
   { path: '/open-apis', label: 'Open APIs', count: API_ENDPOINT_COUNT, tooltip: 'the public REST API behind every page here — no key, no sign-up, no rate limit. every endpoint with its parameters, and a button that calls it' },
   { path: '/open-mcp', label: 'Open MCP', count: AGENT_TOOL_COUNT, tooltip: `point claude, cursor or any MCP client at this knowledge base — ${AGENT_TOOL_COUNT} tools over streamable http, anonymous. also covers the A2A endpoint` },
   // Same count as Open APIs on purpose: one command per endpoint, which is the
-  // property the page exists to demonstrate.
-  { path: '/cli', label: 'CLI', count: API_ENDPOINT_COUNT, tooltip: `the same ${API_ENDPOINT_COUNT} endpoints as a command line — tables in a terminal, json down a pipe, zero dependencies. not published to npm yet` },
+  // property the page exists to demonstrate. Named to match its two siblings
+  // above — all three are the same promise (public, keyless, unmetered) through
+  // a different door, and a bare "CLI" read as a different kind of entry.
+  { path: '/cli', label: 'Open CLI', count: API_ENDPOINT_COUNT, tooltip: `the same ${API_ENDPOINT_COUNT} endpoints as a command line — tables in a terminal, json down a pipe, zero dependencies. not published to npm yet` },
 ];
 
 const attackNav: NavItem[] = [
