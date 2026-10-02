@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '../../v1/lib/db';
+import { query, maintenanceQuery } from '../../v1/lib/db';
 import { verifyCronAuth } from '../lib/auth';
 import { withSoftTimeout, DEFAULT_SOFT_TIMEOUT_MS } from '../lib/softTimeout';
 
@@ -204,7 +204,10 @@ export async function GET(req: NextRequest) {
           // technique that legitimately has none takes the empty-bindings path
           // below, which does NOT prune -- otherwise one flaky response would
           // silently delete a technique's whole countermeasure set.
-          const pruned = await query(
+          // Unbounded pool: a full-sweep prune across defensive_mappings is one
+          // statement over the whole table and has no reason to fit the API
+          // request ceiling.
+          const pruned = await maintenanceQuery(
             `DELETE FROM defensive_mappings
               WHERE technique_id = $1 AND NOT (d3fend_id = ANY($2::text[]))`,
             [tech.id, [...seen]],

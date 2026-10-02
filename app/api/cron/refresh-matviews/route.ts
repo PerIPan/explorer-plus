@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '../../v1/lib/db';
+import { query, maintenanceQuery } from '../../v1/lib/db';
 import { verifyCronAuth } from '../lib/auth';
 import { withSoftTimeout, DEFAULT_SOFT_TIMEOUT_MS } from '../lib/softTimeout';
 
@@ -114,7 +114,12 @@ export async function GET(req: NextRequest) {
     for (const mv of targets) {
       const start = Date.now();
       try {
-        await query(`REFRESH MATERIALIZED VIEW CONCURRENTLY ${mv}`);
+        // maintenanceQuery, not query: the API pool carries a 30s client-side
+        // ceiling and these refreshes legitimately exceed it —
+        // ecosystem_advisory_stats measured 57.9s, app_technique_groups 30.2s.
+        // The feed_sync_log writes around this loop stay on query(); they are
+        // sub-millisecond and want the ceiling.
+        await maintenanceQuery(`REFRESH MATERIALIZED VIEW CONCURRENTLY ${mv}`);
         const durationMs = Date.now() - start;
         results[mv] = { ok: true, durationMs };
         refreshed++;

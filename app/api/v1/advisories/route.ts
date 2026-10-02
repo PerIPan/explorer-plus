@@ -443,10 +443,30 @@ export async function GET(req: NextRequest) {
   // used across other endpoints.
   let total = 0;
   let rows: { rows: UnifiedRow[] } = { rows: [] };
+  // This is the one route that gets a real server-side statement_timeout.
+  //
+  // Measured on 2026-10-02 against production, every other candidate answers
+  // well inside the pool's client ceiling on a cold CDN — export?format=csv
+  // 3.3s, /ecosystems 1.6s, /packages 0.4s, /search 1.1s — so paying +36ms of
+  // round trips there would buy nothing. This route is different: `?limit=5000`
+  // is 17.5s on a cache MISS and legal per the documented contract, and
+  // `?q=<term>` with no narrowing filter measured >70s with 0 bytes returned.
+  //
+  // The pool's query_timeout would only stop Node waiting; the backend keeps
+  // scanning (verified: still `active` 9s after the client gave up). A
+  // transaction-scoped statement_timeout actually cancels it, so Neon stops
+  // spending compute on a query nobody is waiting for.
+  //
+  // 25s sits above the 17.5s legitimate worst case with headroom and well
+  // below the >70s pathological one. Once scripts/migrate-osv-search.sql is
+  // applied the `?q=` path should fall far below this and the budget becomes a
+  // backstop rather than the thing doing the work.
+  const SLOW_QUERY_BUDGET_MS = 25_000;
+  const opts = { statementTimeoutMs: SLOW_QUERY_BUDGET_MS };
   try {
-    const countRes = await query<{ total: string }>(plan.countSql, plan.countParams);
+    const countRes = await query<{ total: string }>(plan.countSql, plan.countParams, opts);
     total = parseInt(countRes.rows[0].total, 10);
-    rows = await query<UnifiedRow>(plan.dataSql, plan.dataParams);
+    rows = await query<UnifiedRow>(plan.dataSql, plan.dataParams, opts);
   } catch (err) {
     const msg = err instanceof Error ? err.message : '';
     const missingOsv =
@@ -457,9 +477,9 @@ export async function GET(req: NextRequest) {
 
     plan = compose(false);
     if (plan.empty) return emptyPage();
-    const countRes = await query<{ total: string }>(plan.countSql, plan.countParams);
+    const countRes = await query<{ total: string }>(plan.countSql, plan.countParams, opts);
     total = parseInt(countRes.rows[0].total, 10);
-    rows = await query<UnifiedRow>(plan.dataSql, plan.dataParams);
+    rows = await query<UnifiedRow>(plan.dataSql, plan.dataParams, opts);
   }
 
   const data = rows.rows.map((r) => ({
