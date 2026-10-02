@@ -9,6 +9,38 @@ const THREATFOX_API = 'https://threatfox-api.abuse.ch/api/v1/';
 const MALWAREBAZAAR_API = 'https://mb-api.abuse.ch/api/v1/';
 const BATCH_SIZE = 200;
 
+/**
+ * Hard bounds on the two fields that arrive from a self-serve third party.
+ *
+ * ThreatFox and MalwareBazaar submissions reach ioc_entries with no human
+ * review, and `value` / `malware_family` are unbounded `text`. They are also
+ * the fields most likely to be read back by a model, through the MCP tools and
+ * the A2A endpoint — so an unbounded, unreviewed string is both a storage
+ * concern and the carrier for anything someone wants an agent to read.
+ *
+ * Measured against production 2026-10-02 over 174,803 rows: longest `value`
+ * 489 characters (a genuine phishing URL with a long query string), longest
+ * `malware_family` 25, and zero rows containing a control character. These
+ * caps are therefore set above every real observation and reject nothing that
+ * exists today; they exist so that stays true.
+ *
+ * Over-long rows are SKIPPED, never truncated. A truncated indicator is wrong
+ * data that still looks plausible — a half URL or a clipped hash would be
+ * matched against, reported, and believed.
+ */
+const MAX_IOC_VALUE_LEN = 1024;
+const MAX_MALWARE_FAMILY_LEN = 128;
+
+/** Control characters have never appeared in this feed; refuse them if they start. */
+const CONTROL_CHARS = /[\u0000-\u001f\u007f-\u009f]/;
+
+function iocWithinBounds(value: string, malware: string | null): boolean {
+  if (!value || value.length > MAX_IOC_VALUE_LEN) return false;
+  if (CONTROL_CHARS.test(value)) return false;
+  if (malware && (malware.length > MAX_MALWARE_FAMILY_LEN || CONTROL_CHARS.test(malware))) return false;
+  return true;
+}
+
 // abuse.ch IP-blocks GitHub Actions runners with 403 even when the Auth-Key
 // is valid (verified: same key returns 200 from a laptop, 403 from GH). So
 // unlike OSV / cve-products / cve-delta, we cannot migrate this off Vercel.
@@ -187,12 +219,14 @@ export async function GET(req: NextRequest) {
           for (const ioc of tfData.data) {
             const iocType = mapThreatFoxType(ioc.ioc_type);
             if (!iocType) { recordsSkipped++; continue; }
-            tfRows.push({
-              type: iocType,
-              value: normalizeIocValue(ioc.ioc_type, ioc.ioc),
-              malware: ioc.malware || null,
-              firstSeen: ioc.first_seen || null,
-            });
+            const value = normalizeIocValue(ioc.ioc_type, ioc.ioc);
+            const malware = ioc.malware || null;
+            if (!iocWithinBounds(value, malware)) {
+              console.warn(`[abuse_ch] skipped out-of-bounds ${iocType} (value ${value.length} chars)`);
+              recordsSkipped++;
+              continue;
+            }
+            tfRows.push({ type: iocType, value, malware, firstSeen: ioc.first_seen || null });
           }
 
           // Stage 2 — resolve every malware family in one query
@@ -241,10 +275,20 @@ export async function GET(req: NextRequest) {
           const mbRows: IocRow[] = [];
           for (const sample of mbData.data) {
             for (const hash of [sample.sha256_hash, sample.md5_hash].filter((h): h is string => Boolean(h))) {
+              const malware = sample.signature || null;
+              // Same bounds as the ThreatFox branch. `signature` is the
+              // submitter-supplied family label here, so it is the untrusted
+              // field; the hash itself is fixed-width in practice but is
+              // checked rather than assumed.
+              if (!iocWithinBounds(hash, malware)) {
+                console.warn(`[abuse_ch] skipped out-of-bounds hash (${hash.length} chars)`);
+                recordsSkipped++;
+                continue;
+              }
               mbRows.push({
                 type: 'hash',
                 value: hash,
-                malware: sample.signature || null,
+                malware,
                 firstSeen: sample.first_seen || null,
               });
             }

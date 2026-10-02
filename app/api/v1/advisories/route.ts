@@ -220,8 +220,29 @@ export async function GET(req: NextRequest) {
     if (q) {
       osvParams.push(`%${escapeLikePattern(q)}%`);
       const ph = `$${osvParams.length}`;
+      // All three arms must be indexable or none of them is: Postgres can only
+      // combine an OR into a BitmapOr when every branch has an index to scan,
+      // so one unindexable arm forces a sequential scan of the whole predicate
+      // across 1,972,497 rows / 1579 MB.
+      //
+      // osv_id and summary are served by GIN trigram indexes. The aliases arm
+      // cannot be — an element-wise `unnest(...) ILIKE` has nothing to index —
+      // so it is expressed as an indexable pre-filter on
+      // `array_to_string(aliases, ' ')` AND the exact element-wise test as a
+      // recheck. The joined string is a strict SUPERSET of the element-wise
+      // match (if any element contains the needle, so does the join), so the
+      // recheck only ever removes rows, never adds them, and it is what keeps
+      // a needle that straddles two elements from matching.
+      //
+      // Verified equivalent over 5 ecosystems and 6 terms (exact vs
+      // pre-filter+recheck): 270/778/1169/1962/0/0 rows, 0 mismatches.
+      //
+      // The indexes live in scripts/migrate-osv-search.sql and are NOT APPLIED
+      // yet. Until they are this predicate is no faster — a cache miss on
+      // `?q=<term>` with no narrowing filter measured >70s with 0 bytes
+      // returned — but it is already written in the form the indexes serve.
       osvConds.push(
-        `(o.osv_id ILIKE ${ph} OR o.summary ILIKE ${ph} OR EXISTS (SELECT 1 FROM unnest(o.aliases) a WHERE a ILIKE ${ph}))`,
+        `(o.osv_id ILIKE ${ph} OR o.summary ILIKE ${ph} OR (array_to_string(o.aliases, ' ') ILIKE ${ph} AND EXISTS (SELECT 1 FROM unnest(o.aliases) a WHERE a ILIKE ${ph})))`,
       );
       osvNeedsBase = true;
     }
