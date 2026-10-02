@@ -34,7 +34,7 @@
 --
 -- The endpoint response is a JSON array and the query it replaced had NO
 -- ORDER BY — the array order was the natural output of
--- `ghsa_agg UNION ALL osv_agg` LEFT JOINed to top3: the 12 GHSA ecosystems
+-- `ghsa_agg UNION ALL osv_agg` LEFT JOINed to top_n: the 12 GHSA ecosystems
 -- (alphabetical, from the grouped aggregate) followed by the 33 OSV ones in
 -- hash-aggregate order. External callers consume that array, so the order is
 -- part of the response.
@@ -91,10 +91,17 @@ top_pkgs AS (
          ROW_NUMBER() OVER (PARTITION BY eco ORDER BY n DESC, pkg ASC) AS rk
   FROM combined_pkg_counts
 ),
-top3 AS (
+-- 10, not 3, and named for it. app/api/v1/ecosystems/[slug] serves its
+-- `topPackages` from this array (TOP_PACKAGES = 10 there) because the live
+-- `GROUP BY package_name` it used to run has no index to use -- 19.0s for
+-- Alpine, no completion for Ubuntu, over 8.7M osv_affected rows. At 3 the
+-- detail page silently returned a third of its list, so the cap here is now
+-- the route's cap. The list route only ever reads the first 3 and is
+-- unaffected.
+top_n AS (
   SELECT eco,
-         ARRAY_AGG(pkg ORDER BY rk) FILTER (WHERE rk <= 3)  AS top_packages,
-         ARRAY_AGG(n   ORDER BY rk) FILTER (WHERE rk <= 3)  AS top_counts
+         ARRAY_AGG(pkg ORDER BY rk) FILTER (WHERE rk <= 10)  AS top_packages,
+         ARRAY_AGG(n   ORDER BY rk) FILTER (WHERE rk <= 10)  AS top_counts
   FROM top_pkgs
   GROUP BY eco
 ),
@@ -149,7 +156,7 @@ SELECT
   t.top_packages,
   t.top_counts
 FROM all_agg a
-LEFT JOIN top3 t ON t.eco = a.canonical;
+LEFT JOIN top_n t ON t.eco = a.canonical;
 
 -- Required by REFRESH MATERIALIZED VIEW CONCURRENTLY. See the header for why
 -- the key is `ord` rather than `canonical`.

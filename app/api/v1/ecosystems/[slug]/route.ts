@@ -76,23 +76,40 @@ export async function GET(
          WHERE g.withdrawn_at IS NULL AND LOWER(p.ecosystem) = $1`,
         [meta.canonical],
       )
-    : query<StatsRow>(
+    : // Read from osv_advisory_rank, not osv_advisories. `sev_rank` there IS
+      // `COALESCE(o.cvss_severity, cve.cvss_severity)` already materialised
+      // (scripts/migrate-advisory-rank.sql), so this drops the per-row LATERAL
+      // into cve_details that made the old version scan the whole ecosystem.
+      // osv_advisory_rank_eco_order_idx leads on `ecosystem`, so all nine
+      // counts come from one index scan of this ecosystem's slice.
+      //
+      // Measured 2026-10-02, this query vs the LATERAL version it replaces:
+      // Julia 0.15s · Alpine 0.05s · Linux 0.18s · Ubuntu 0.38s · Debian 0.41s,
+      // against 16-43s end-to-end for the route before the change (Ubuntu's
+      // old top-packages query could not complete at all).
+      //
+      // Verified equal to the live LATERAL counts for Julia:
+      // 1717/158/653/754/110/42 from both.
+      //
+      // sev_rank is as of the last refresh of osv_advisory_rank (daily, see
+      // .github/workflows/refresh-matview.yml) while `recentAdvisories` below
+      // still reports live severity, so a row whose cve_details severity moved
+      // since the refresh can be counted in one bucket and displayed as
+      // another. That trade is already made and documented in
+      // scripts/migrate-advisory-rank.sql; it is not new here.
+      query<StatsRow>(
         `SELECT
            COUNT(*)::text AS total,
-           COUNT(*) FILTER (WHERE o.published >= NOW() - INTERVAL '14 days')::text AS last14d,
-           COUNT(*) FILTER (WHERE o.published >= NOW() - INTERVAL '30 days')::text AS last30d,
-           COUNT(*) FILTER (WHERE o.published >= NOW() - INTERVAL '30 days' AND COALESCE(o.cvss_severity, cve.cvss_severity) = 'CRITICAL')::text AS "critLast30d",
-           COUNT(*) FILTER (WHERE COALESCE(o.cvss_severity, cve.cvss_severity) = 'CRITICAL')::text AS crit,
-           COUNT(*) FILTER (WHERE COALESCE(o.cvss_severity, cve.cvss_severity) = 'HIGH')::text AS high,
-           COUNT(*) FILTER (WHERE COALESCE(o.cvss_severity, cve.cvss_severity) = 'MEDIUM')::text AS med,
-           COUNT(*) FILTER (WHERE COALESCE(o.cvss_severity, cve.cvss_severity) = 'LOW')::text AS low,
-           COUNT(*) FILTER (WHERE COALESCE(o.cvss_severity, cve.cvss_severity) IS NULL)::text AS unrated
-         FROM osv_advisories o
-         LEFT JOIN LATERAL (
-           SELECT cd.cvss_severity FROM cve_details cd
-           WHERE cd.cve_id = ANY(o.aliases) LIMIT 1
-         ) cve ON true
-         WHERE o.ecosystem = $1`,
+           COUNT(*) FILTER (WHERE r.published >= NOW() - INTERVAL '14 days')::text AS last14d,
+           COUNT(*) FILTER (WHERE r.published >= NOW() - INTERVAL '30 days')::text AS last30d,
+           COUNT(*) FILTER (WHERE r.published >= NOW() - INTERVAL '30 days' AND r.sev_rank = 4)::text AS "critLast30d",
+           COUNT(*) FILTER (WHERE r.sev_rank = 4)::text AS crit,
+           COUNT(*) FILTER (WHERE r.sev_rank = 3)::text AS high,
+           COUNT(*) FILTER (WHERE r.sev_rank = 2)::text AS med,
+           COUNT(*) FILTER (WHERE r.sev_rank = 1)::text AS low,
+           COUNT(*) FILTER (WHERE r.sev_rank = 0)::text AS unrated
+         FROM osv_advisory_rank r
+         WHERE r.ecosystem = $1`,
         [meta.canonical],
       );
 
@@ -116,13 +133,27 @@ export async function GET(
          LIMIT ${TOP_PACKAGES}`,
         [meta.canonical],
       )
-    : query<TopPkgRow>(
-        `SELECT oa.package_name AS "packageName",
-                COUNT(*)::text AS "advisoryCount"
-         FROM osv_affected oa
-         WHERE oa.ecosystem = $1
-         GROUP BY oa.package_name
-         ORDER BY COUNT(*) DESC, oa.package_name ASC
+    : // `GROUP BY package_name` over osv_affected has no index to use:
+      // idx_osv_affected_pkg leads on `package_ecosystem`, which is a DIFFERENT
+      // taxonomy from `ecosystem` (169,525 of 200,000 sampled rows differ, and
+      // `package_ecosystem = 'Ubuntu'` matches nothing). So the old query was a
+      // full aggregate over 8.7M rows: measured 19.0s for Alpine and no
+      // completion at all for Ubuntu.
+      //
+      // ecosystem_advisory_stats already materialises this exact ranking. Two
+      // caveats, both deliberate:
+      //   - it currently stores the top 3, not TOP_PACKAGES; raising it is a
+      //     one-line change in scripts/migrate-ecosystem-stats.sql, and until
+      //     that migration runs this returns 3. Fewer rows, not wrong rows.
+      //   - it refreshes weekly (vercel.json, `0 3 * * 0`), so the counts lag
+      //     the stats strip above, which reads the daily osv_advisory_rank.
+      // Both beat an endpoint that cannot answer.
+      query<TopPkgRow>(
+        `SELECT pkg AS "packageName", n::text AS "advisoryCount"
+         FROM ecosystem_advisory_stats s
+         CROSS JOIN LATERAL unnest(s.top_packages, s.top_counts) AS u(pkg, n)
+         WHERE s.src = 'OSV' AND s.canonical = $1
+         ORDER BY n DESC, pkg ASC
          LIMIT ${TOP_PACKAGES}`,
         [meta.canonical],
       );
@@ -163,10 +194,33 @@ export async function GET(
          LIMIT ${RECENT_ADVISORIES}`,
         [meta.canonical],
       )
-    : query<RecentRow>(
-        // Ubuntu/distro OSV rows often have a NULL summary; fall back to the
-        // first 240 chars of details so the inline preview + tooltip have copy.
-        `SELECT
+    : // Two stages, for the same reason /api/v1/advisories uses them: the old
+      // single-stage query ORDER BY'd a value computed from a LATERAL, which is
+      // not an indexable sort key, so Postgres had to evaluate the lateral for
+      // every advisory in the ecosystem before it could apply LIMIT 20.
+      //
+      // Stage 1 takes the 20 keys straight off osv_advisory_rank_eco_order_idx
+      // -- (ecosystem, sev_rank DESC, published DESC NULLS LAST, osv_id DESC)
+      // is exactly this ORDER BY, so it is a 20-row index walk (0.01s measured
+      // for Ubuntu). Stage 2 joins back for the display columns and pays the
+      // LATERAL on 20 rows instead of ~69,000.
+      //
+      // osv_id DESC is a deliberate addition: the previous ORDER BY had no
+      // tiebreaker, so rows of equal severity and timestamp came back in an
+      // arbitrary order that could change between requests. Matching the index
+      // makes the page stable as well as fast.
+      //
+      // Ubuntu/distro OSV rows often have a NULL summary; fall back to the
+      // first 240 chars of details so the inline preview + tooltip have copy.
+      query<RecentRow>(
+        `WITH keys AS (
+           SELECT r.osv_id, r.ecosystem, r.sev_rank, r.published
+           FROM osv_advisory_rank r
+           WHERE r.ecosystem = $1
+           ORDER BY r.sev_rank DESC, r.published DESC NULLS LAST, r.osv_id DESC
+           LIMIT ${RECENT_ADVISORIES}
+         )
+         SELECT
            o.osv_id          AS "advisoryId",
            'OSV'::text       AS source,
            (SELECT a FROM unnest(o.aliases) a WHERE a LIKE 'CVE-%' LIMIT 1) AS "cveId",
@@ -174,18 +228,14 @@ export async function GET(
            COALESCE(o.cvss_severity, cve.cvss_severity) AS severity,
            COALESCE(o.cvss_score, cve.cvss_score)::text AS "cvssScore",
            o.published       AS "publishedAt"
-         FROM osv_advisories o
+         FROM keys k
+         JOIN osv_advisories o
+           ON o.osv_id = k.osv_id AND o.ecosystem = k.ecosystem
          LEFT JOIN LATERAL (
            SELECT cd.cvss_severity, cd.cvss_score FROM cve_details cd
            WHERE cd.cve_id = ANY(o.aliases) LIMIT 1
          ) cve ON true
-         WHERE o.ecosystem = $1
-         ORDER BY
-           CASE COALESCE(o.cvss_severity, cve.cvss_severity)
-             WHEN 'CRITICAL' THEN 4 WHEN 'HIGH' THEN 3
-             WHEN 'MEDIUM' THEN 2 WHEN 'LOW' THEN 1 ELSE 0 END DESC,
-           o.published DESC NULLS LAST
-         LIMIT ${RECENT_ADVISORIES}`,
+         ORDER BY k.sev_rank DESC, k.published DESC NULLS LAST, k.osv_id DESC`,
         [meta.canonical],
       );
 
