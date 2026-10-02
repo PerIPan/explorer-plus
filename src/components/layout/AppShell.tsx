@@ -88,7 +88,7 @@ const ApiCatalogPanel = lazy(() =>
   import('../api/ApiCatalogPanel').then((m) => ({ default: m.ApiCatalogPanel })),
 );
 
-function ApiPanel({ tab }: { tab: 'rest' | 'mcp' | 'a2a' }) {
+function ApiPanel({ tab }: { tab: 'rest' | 'mcp' | 'a2a' | 'cli' }) {
   return (
     <Suspense
       fallback={<div className="px-6 py-8 text-xs text-[var(--text-secondary)]">Loading the catalogue…</div>}
@@ -113,9 +113,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
      trap, Escape — is still outstanding. */
   const helpPathname = usePathname();
   useEffect(() => setHelpOpen(false), [helpPathname]);
-  const [helpTab, setHelpTab] = useState<'about' | 'api' | 'a2a' | 'mcp'>('about');
+  const [helpTab, setHelpTab] = useState<'about' | 'api' | 'a2a' | 'mcp' | 'cli'>('about');
   const [apisOpen, setApisOpen] = useState(false);
-  const [apisTab, setApisTab] = useState<'rest' | 'mcp' | 'a2a'>('rest');
+  const [apisTab, setApisTab] = useState<'rest' | 'mcp' | 'a2a' | 'cli'>('rest');
   /** Focus goes back here when the APIs dialog closes. */
   const apisButtonRef = useRef<HTMLButtonElement | null>(null);
 
@@ -188,9 +188,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                --accent-teal-strong keeps 12px text above AA in light theme,
                where --accent-teal is 3.35:1. */
             className="flex-shrink-0 ml-auto md:ml-0 px-3 h-8 inline-flex items-center justify-center rounded-md border border-[var(--teal-dim)] bg-[var(--teal-faint)] text-xs font-semibold text-[var(--accent-teal-strong)] hover:border-[var(--accent-teal)] hover:bg-[var(--hover-overlay)] transition-colors"
-            title="Open REST API and MCP server — full endpoint catalog"
+            title="Open REST API, MCP server, A2A and CLI — full endpoint catalog"
           >
-            APIs / MCP
+            APIs / MCP / CLI
           </button>
           <button
             type="button"
@@ -274,6 +274,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 >
                   MCP
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setHelpTab('cli')}
+                  className={`px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${helpTab === 'cli' ? 'text-[var(--accent-teal)] bg-[var(--teal-faint)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
+                >
+                  CLI
+                </button>
               </div>
               <button onClick={() => setHelpOpen(false)} className="p-2 rounded-md text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--hover-overlay)]">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -286,6 +293,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             {helpTab === 'api' && <ApiPanel tab="rest" />}
             {helpTab === 'a2a' && <ApiPanel tab="a2a" />}
             {helpTab === 'mcp' && <ApiPanel tab="mcp" />}
+            {helpTab === 'cli' && <ApiPanel tab="cli" />}
             <div className={`px-6 py-5 space-y-4 text-sm text-[var(--text-primary)] leading-relaxed ${helpTab === 'about' ? '' : 'hidden'}`}>
               <div className="flex justify-center pb-2">
                 <img src="/diamond-favicon.svg" alt="MITRE Explorer Plus" className="w-12 h-12" />
@@ -342,6 +350,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <DialogTab active={apisTab === 'rest'} onClick={() => setApisTab('rest')}>REST API</DialogTab>
             <DialogTab active={apisTab === 'a2a'} onClick={() => setApisTab('a2a')}>A2A</DialogTab>
             <DialogTab active={apisTab === 'mcp'} onClick={() => setApisTab('mcp')}>MCP</DialogTab>
+            <DialogTab active={apisTab === 'cli'} onClick={() => setApisTab('cli')}>CLI</DialogTab>
           </>
         }
       >

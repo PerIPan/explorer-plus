@@ -18,10 +18,78 @@ import { CodeBlock, FactRow, Section } from './primitives';
  * Loaded lazily by AppShell — a static import would put the catalogue in the
  * shell chunk on every page, for a panel almost nobody opens.
  */
-export function ApiCatalogPanel({ tab }: { tab: 'rest' | 'mcp' | 'a2a' }) {
+export function ApiCatalogPanel({ tab }: { tab: 'rest' | 'mcp' | 'a2a' | 'cli' }) {
   if (tab === 'rest') return <RestReference />;
   if (tab === 'a2a') return <AgentToAgentReference />;
+  if (tab === 'cli') return <CliReference />;
   return <McpReference />;
+}
+
+/**
+ * The CLI. One command per catalogue entry, so the count is API_CATALOG.length
+ * rather than a number typed here — the same reason the rest of this panel
+ * renders the catalogue instead of describing it.
+ *
+ * AVAILABILITY. `mitrex` is NOT on npm yet (registry returns 404 for the
+ * name). This tab therefore does not print an install line a visitor would
+ * copy and watch fail. What it can say honestly is that the CLI adds no
+ * capability over the REST tab — it is a thin client over the same GET routes —
+ * so nobody reading this is blocked on it. When the package ships, the
+ * `npm install` row below becomes the install line and this note comes out.
+ */
+function CliReference() {
+  return (
+    <div className="space-y-5 px-4 py-4 text-sm leading-relaxed text-[var(--text-primary)] md:px-6 md:py-5">
+      <p>
+        <strong>mitrex.</strong> The same REST surface as a command, for people who would rather
+        pipe than paste. {API_CATALOG.length} commands — one per endpoint, generated from the
+        catalogue this modal renders, so the CLI cannot drift from the API. Read-only, no key,
+        no account.
+      </p>
+
+      <div className="space-y-1.5 rounded-md border border-[var(--border-color)] bg-[var(--surface-card)] px-3 py-3">
+        <FactRow label="Command" value="mitrex" copy />
+        <FactRow label="Commands" value={`${API_CATALOG.length} over 30 resources`} />
+        <FactRow label="Runtime" value="Node 22.8+ · zero runtime dependencies" />
+        <FactRow label="Scope" value="read-only — every command is a GET" />
+        <FactRow label="Auth" value={API_FACTS.auth} />
+        <FactRow label="Output" value="aligned table in a terminal, JSON when piped" />
+      </div>
+
+      <div className="rounded-md border border-[var(--accent-yellow)]/40 bg-[var(--yellow-faint)] px-3 py-2.5 text-xs">
+        <strong className="text-[var(--text-primary)]">Not published yet.</strong>{' '}
+        <span className="text-[var(--text-secondary)]">
+          The package is not on npm, so there is nothing to install today. It is a convenience
+          wrapper and adds no capability over the REST tab — anything below can be done right now
+          with <code className="font-mono">curl</code> against{' '}
+          <code className="font-mono">{API_FACTS.baseUrl}</code>.
+        </span>
+      </div>
+
+      <Section title="What it looks like">
+        <CodeBlock>{`mitrex techniques T1059
+mitrex groups --search lazarus
+mitrex cves --severity CRITICAL --limit 5 | jq '.data[].cveId'`}</CodeBlock>
+      </Section>
+
+      <Section title="Finding your way around">
+        <CodeBlock>{`mitrex --help              30 resources, with examples
+mitrex help techniques     every command for one resource
+mitrex ls                  all ${API_CATALOG.length} commands, one per line`}</CodeBlock>
+      </Section>
+
+      <p className="border-t border-[var(--border-color)] pt-3 text-xs text-[var(--text-secondary)]">
+        Detects a terminal and renders a table; detects a pipe and emits JSON, so{' '}
+        <code className="font-mono">jq</code> works without a flag. Unknown commands suggest the
+        closest real one rather than listing all {API_CATALOG.length}. Shell completion for bash,
+        zsh and fish is generated from the same table.{' '}
+        <Link href="/open-apis" className="font-semibold text-[var(--accent-teal)] hover:underline">
+          Open APIs →
+        </Link>{' '}
+        the endpoints these commands wrap, with a Run button for each.
+      </p>
+    </div>
+  );
 }
 
 function RestReference() {
