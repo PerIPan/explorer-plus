@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useCallback, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useMemo, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
@@ -173,6 +173,17 @@ interface SortOption {
   column: string;
   score: number;
   blurb: string;
+  /**
+   * What the column actually measures, and what it is biased by — shown from
+   * the (i) inside each pill.
+   *
+   * Every one of these names its own weakness, because every one has a real
+   * one and the differentiation badge alone does not explain it: a reader
+   * seeing "Sightings 1/12" learns that the column barely separates sectors,
+   * not that 98.6% of the rows behind it are a cross-product. These are
+   * measured statements, not hedges.
+   */
+  explainer: ReactNode;
 }
 
 const SORT_OPTIONS: readonly SortOption[] = [
@@ -182,6 +193,16 @@ const SORT_OPTIONS: readonly SortOption[] = [
     column: 'LIFT',
     score: 12,
     blurb: 'All twelve sectors rank a different top six — the only column that measures sector fit rather than volume.',
+    explainer: (
+      <>
+        Lift compares how often this sector&apos;s attributed groups use a technique with how often
+        all tracked groups use it. 1.00x is the dataset average; above 1.00x is over-represented
+        here. It is a ratio over a small sample, and its ceiling is reached by any technique with a
+        single attributing group — so bands ranked by lift exclude techniques used by fewer than
+        three of the sector&apos;s groups. Sector attribution is automated, so every lift figure
+        inherits whatever that derivation got wrong.
+      </>
+    ),
   },
   {
     value: 'kev',
@@ -189,6 +210,14 @@ const SORT_OPTIONS: readonly SortOption[] = [
     column: 'KEV',
     score: 10,
     blurb: 'Ten of twelve sectors rank a different top six.',
+    explainer: (
+      <>
+        KEV counts the CVEs inferred for a technique that appear in CISA&apos;s Known Exploited
+        Vulnerabilities catalogue. The link is an inference along technique &rarr; CWE &rarr; CAPEC
+        &rarr; CVE, so it is a presence signal rather than a count of incidents in this sector, and
+        a technique with no CWE path carries zero however often it is used.
+      </>
+    ),
   },
   {
     value: 'cv',
@@ -196,6 +225,14 @@ const SORT_OPTIONS: readonly SortOption[] = [
     column: 'CVE',
     score: 8,
     blurb: 'Eight of twelve sectors rank a different top six.',
+    explainer: (
+      <>
+        CVEs counts every vulnerability inferred for a technique along the same technique &rarr; CWE
+        &rarr; CAPEC &rarr; CVE chain. It measures how much vulnerability surface maps to the
+        technique, not how often the technique is used, so broad generic weaknesses score far above
+        specific tradecraft.
+      </>
+    ),
   },
   {
     value: 'rp',
@@ -203,6 +240,14 @@ const SORT_OPTIONS: readonly SortOption[] = [
     column: 'REPORTS',
     score: 2,
     blurb: 'Two of twelve sectors rank a different top six. CTI report volume is near-identical across sectors.',
+    explainer: (
+      <>
+        Reports counts mentions of a technique across the CTI reporting held here. Every mapping
+        comes from AlienVault OTX pulse tags — the vendor blogs ingested alongside them publish no
+        machine-readable technique IDs and contribute none — and the count is corpus-wide rather
+        than sector-specific. It says what was written about, not what targeted this sector.
+      </>
+    ),
   },
   {
     value: 'io',
@@ -210,6 +255,14 @@ const SORT_OPTIONS: readonly SortOption[] = [
     column: 'SIGHTINGS',
     score: 1,
     blurb: 'One of twelve. Ordering by IOC sightings collapses the twelve sectors onto a single list: it measures activity, not sector focus.',
+    explainer: (
+      <>
+        Sightings counts indicators linked to a technique. That link is almost entirely inferred:
+        98.6% of these rows come from attributing every technique of a malware family to every
+        indicator of that family, so the number tracks feed volume for a handful of families rather
+        than observation of the technique itself. It is the weakest column here, and scores as such.
+      </>
+    ),
   },
 ];
 
@@ -218,8 +271,8 @@ const SORT_BY_KEY: ReadonlyMap<SortKey, SortOption> = new Map(SORT_OPTIONS.map((
 /** Matches `sortKeySchema`'s own `.default('kev')` in app/api/v1/lib/validate.ts. */
 const DEFAULT_SORT: SortKey = 'kev';
 
-/** Ties the (i) beside the Lift pill to the panel it expands. */
-const LIFT_EXPLAINER_ID = 'profile-lift-explainer';
+/** Ties every pill's (i) to the one panel it expands. */
+const EXPLAINER_ID = 'profile-sort-explainer';
 
 /** Amber at <=2, green at >=8 — everything between stays neutral. */
 function scoreTone(score: number): { text: string; bg: string; border: string } {
@@ -516,11 +569,18 @@ export function ThreatProfile() {
   const { domains } = useDomain();
 
   /**
+   * Which column's explainer is open, or null. One at a time: five panels
+   * stacked under the control row would push the briefing off the screen, and
+   * the question being answered is always "what is THIS column".
+   *
    * Local, NOT a URL param. The definition is a reading aid; putting it in the
    * query string would make it part of every shared link and of the react-query
    * key, re-fetching the briefing to open a paragraph.
    */
-  const [liftOpen, setLiftOpen] = useState(false);
+  const [openSort, setOpenSort] = useState<SortKey | null>(null);
+  /** The open column's definition, or null. Resolved once rather than in
+   *  both the panel's guard and its body. */
+  const openSortOption = openSort === null ? null : (SORT_BY_KEY.get(openSort) ?? null);
 
   /**
    * Read STRICTLY from the URL. Not from `useSector()`, not from
@@ -748,57 +808,68 @@ export function ThreatProfile() {
         <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-5">
           {SORT_OPTIONS.map((o) => {
             const active = o.value === sortKey;
+            const open = openSort === o.value;
             const tone = scoreTone(o.score);
             return (
-              <Fragment key={o.value}>
-              <button
-                type="button"
-                onClick={() => navigate({ sort: o.value })}
-                aria-pressed={active}
-                title={o.blurb}
-                /* Same pattern as MultiSelect's chip "x": the 44px target is
-                   an absolutely-positioned pseudo-element, so the pill keeps
-                   its own compact box and the control row does not become a
-                   stack of 44px buttons. `inset-x-0` confines it to this
-                   pill's own width, so a stray press can only ever hit the
-                   sort you aimed at. */
-                className={`relative inline-flex items-center gap-2 rounded-md border px-2.5 py-1 text-xs transition-colors
-                            before:content-[''] before:absolute before:inset-x-0 before:top-1/2 before:h-11 before:-translate-y-1/2 ${
+              /* The pill is a CONTAINER, not a button. It carries the border,
+                 the rounding and the active background, and holds two separate
+                 buttons: the sort itself, and the (i) that explains the column.
+                 A button cannot nest inside a button, and the (i) previously sat
+                 OUTSIDE the pill for that reason — which read as a stray circle
+                 belonging to nothing. Splitting the pill keeps the markup valid
+                 and puts the affordance where it belongs. */
+              <span
+                key={o.value}
+                className={`inline-flex items-stretch overflow-hidden rounded-md border text-xs transition-colors ${
                   active
                     ? 'border-[var(--accent-teal)] bg-[var(--teal-ghost)] font-semibold text-[var(--accent-teal)]'
                     : 'border-[var(--border-color)] text-[var(--text-primary)] hover:border-[var(--border-hover)]'
                 }`}
               >
-                {o.label}
-                <span
-                  className={`rounded-full border px-1.5 py-px text-[10px] font-semibold tabular-nums ${tone.text} ${tone.bg} ${tone.border}`}
-                >
-                  {o.score}/12
-                </span>
-              </button>
-              {/* Lift is the only column here that is a derived ratio rather
-                  than a count, and the only one whose number needs a sentence
-                  before it can be read. A SIBLING of the pill, not a child:
-                  nesting a button inside a button is invalid, and its click
-                  would race the sort it sits on. */}
-              {o.value === 'lift' && (
                 <button
                   type="button"
-                  onClick={() => setLiftOpen((v) => !v)}
-                  aria-expanded={liftOpen}
-                  aria-controls={LIFT_EXPLAINER_ID}
-                  aria-label={liftOpen ? 'Hide what lift measures' : 'What lift measures'}
-                  className={`relative -ml-1 inline-flex h-5 w-5 items-center justify-center rounded-full border text-[10px] font-semibold transition-colors
-                              before:content-[''] before:absolute before:inset-0 before:-m-3 ${
-                    liftOpen
-                      ? 'border-[var(--accent-teal)] bg-[var(--teal-ghost)] text-[var(--accent-teal)]'
-                      : 'border-[var(--border-color)] text-[var(--text-secondary)] hover:border-[var(--border-hover)] hover:text-[var(--text-primary)]'
+                  onClick={() => navigate({ sort: o.value })}
+                  aria-pressed={active}
+                  title={o.blurb}
+                  /* Same pattern as MultiSelect's chip "x": the 44px target is
+                     an absolutely-positioned pseudo-element, so the pill keeps
+                     its own compact box and the control row does not become a
+                     stack of 44px buttons. `inset-x-0` confines it to this
+                     button's own width, so a stray press can only ever hit the
+                     sort you aimed at — and never the (i) beside it. */
+                  className="relative inline-flex items-center gap-2 px-2.5 py-1
+                             before:content-[''] before:absolute before:inset-x-0 before:top-1/2 before:h-11 before:-translate-y-1/2"
+                >
+                  {o.label}
+                  <span
+                    className={`rounded-full border px-1.5 py-px text-[10px] font-semibold tabular-nums ${tone.text} ${tone.bg} ${tone.border}`}
+                  >
+                    {o.score}/12
+                  </span>
+                </button>
+                {/* Every column gets one, not just lift. Each names what it
+                    measures AND what biases it, because the differentiation
+                    badge does not: "Sightings 1/12" says the column barely
+                    separates sectors, not that 98.6% of the rows behind it are
+                    a cross-product. */}
+                <button
+                  type="button"
+                  onClick={() => setOpenSort(open ? null : o.value)}
+                  aria-expanded={open}
+                  aria-controls={EXPLAINER_ID}
+                  aria-label={open ? `Hide what ${o.label} measures` : `What ${o.label} measures`}
+                  className={`relative inline-flex w-6 items-center justify-center border-l text-[10px] font-semibold italic transition-colors
+                              before:content-[''] before:absolute before:inset-y-0 before:-inset-x-1 before:h-11 before:top-1/2 before:-translate-y-1/2 ${
+                    active ? 'border-[var(--accent-teal)]' : 'border-[var(--border-color)]'
+                  } ${
+                    open
+                      ? 'bg-[var(--accent-teal)] text-[var(--surface-card)]'
+                      : 'text-[var(--text-secondary)] hover:bg-[var(--hover-overlay)] hover:text-[var(--text-primary)]'
                   }`}
                 >
                   i
                 </button>
-              )}
-              </Fragment>
+              </span>
             );
           })}
         </div>
@@ -811,18 +882,15 @@ export function ThreatProfile() {
           of severity.
         </p>
 
-        {liftOpen && (
+        {openSortOption && (
           <div
-            id={LIFT_EXPLAINER_ID}
+            id={EXPLAINER_ID}
             className="mt-2 rounded-md border border-[var(--border-color)] bg-[var(--surface-base)] p-3 text-xs leading-relaxed text-[var(--text-secondary)]"
           >
-            <span className="font-semibold text-[var(--text-primary)]">Lift</span> compares how
-            often this sector&apos;s attributed groups use a technique with how often all tracked
-            groups use it. 1.00x is the dataset average; above 1.00x is over-represented in this
-            sector. It is a ratio over a small sample, and its ceiling is reached by any technique
-            with a single attributing group, so bands ranked by lift exclude techniques used by
-            fewer than three of the sector&apos;s groups. Sector attribution is automated, so every
-            lift figure inherits whatever that derivation got wrong.
+            <span className="font-semibold text-[var(--text-primary)]">
+              {openSortOption.label}
+            </span>{' '}
+            &middot; {openSortOption.explainer}
           </div>
         )}
       </fieldset>
