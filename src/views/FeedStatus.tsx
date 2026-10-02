@@ -48,7 +48,7 @@ const SOURCE_DESCRIPTIONS: Record<string, string> = {
   d3fend: 'Defensive countermeasure mappings to ATT&CK',
   nvd: 'CVSS + CWE enrichment from NVD API',
   virustotal: 'Sandbox verdicts + malware family for hashes',
-  matview_refresh: 'app_technique_groups + package_summary matviews',
+  matview_refresh: 'Rebuilds the precomputed aggregates the API reads — 8 matviews',
   cve_delta: 'CVElistV5 git repo — last-48h delta of new CVEs + CVSS + affected products',
   cve_products: 'Retries NVD for CVEs missing CPE (vendor/product) data',
   epss: 'First.org exploit-probability scoring, daily refreshed',

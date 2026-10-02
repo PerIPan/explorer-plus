@@ -39,13 +39,20 @@ const MATVIEWS = [
   // other — but they are the same endpoint so they are kept adjacent.
   'ecosystem_advisory_days',
   'ecosystem_advisory_stats',
-  // The expensive one: 1.9M rows built off a per-row cve_details LATERAL, 90.2s
-  // to refresh. It has its OWN daily cron slot at 06:45 — an hour after the OSV
-  // delta, which runs from GitHub Actions (.github/workflows/sync-osv.yml,
-  // every 2 days at 05:30 plus a monthly full), NOT from vercel.json. Commit
-  // 564d6e7 moved OSV and cve-products off Vercel deliberately, so an absence
-  // here does not mean the source is static: the 2026-09-25 delta inserted
-  // 82,948 rows.
+  // The expensive one: 1.97M rows built off a per-row cve_details LATERAL, 64s
+  // measured 2026-10-02. Kept here so `?mv=osv_advisory_rank` still works as a
+  // manual catch-up, but it NO LONGER HAS A VERCEL CRON SLOT — it is the one
+  // matview this route could not finish reliably. On its old 19:00 slot, 3 of 6
+  // daily attempts were cancelled at 15.8s with SQLSTATE 57014 while the others
+  // succeeded at 40-46s, so the bound was intermittent rather than a fixed
+  // ceiling, and it only ever landed here because this is the longest statement
+  // the route runs. .github/workflows/refresh-matview.yml owns the schedule now
+  // (daily 13:00 UTC); scripts/refresh-matview.mjs has the full failure record.
+  //
+  // Its source is also not static just because no OSV entry appears in
+  // vercel.json: OSV ingests from GitHub Actions
+  // (.github/workflows/sync-osv.yml, every 2 days at 05:30 plus a monthly
+  // full), and the 2026-09-25 delta inserted 82,948 rows.
   'osv_advisory_rank',
 ];
 
@@ -60,6 +67,11 @@ export async function GET(req: NextRequest) {
    *   catchall_cwes 0.3 · sector_technique_lift 0.2 · technique_cve_evidence 4.2
    *   package_summary 2.3 · app_technique_groups 28.1 · ecosystem_advisory_days 10.9
    *   ecosystem_advisory_stats 86.5 · osv_advisory_rank 90.2     TOTAL ~222.6
+   *
+   * Worst case observed since, per matview, from feed_sync_log over 60 days:
+   * ecosystem_advisory_stats 57.9 · app_technique_groups 30.2 (115/115 runs
+   * clean) · everything else under 9. osv_advisory_rank is no longer scheduled
+   * here, which is what took the remaining long pole out of this route.
    *
    * All eight in one invocation is 222.6s against `maxDuration = 300` — 74% of
    * budget, measured from a low-latency connection with no concurrent load, so

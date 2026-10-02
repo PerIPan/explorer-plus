@@ -10,6 +10,16 @@ name: Sync OSV Advisories
 #   - 05:30 UTC every 2 days → delta (records modified in the last 7 days —
 #     window comfortably covers the 48h cadence; halves Neon compute, ~10 h/mo)
 #   - 04:00 UTC on the 1st of each month → full (no cutoff, reconciles drift)
+#
+# `*/2` on day-of-month means days 1, 3, 5 … so on the 1st of every month BOTH
+# schedules fire. That used to produce two runs that each picked mode=full (the
+# mode step only checked the date, so it could not tell them apart) and then
+# raced each other through 33 ecosystems of UPSERTs against one database. On
+# 2026-10-01 both were cancelled at the 2h ceiling, 1h15m after the last clean
+# run; 2026-09-23 had already been cancelled the same way. The mode now comes
+# from `github.event.schedule` — the cron expression that actually triggered
+# the run — so the two are distinguishable, and the concurrency group below
+# serialises them instead of letting them contend.
 
 on:
   schedule:
@@ -26,35 +36,68 @@ on:
           - delta
           - full
 
+permissions:
+  contents: read
+
+# A full ingest and a delta must never overlap: they UPSERT the same
+# osv_advisories rows across 33 ecosystems, and two at once is what pushed both
+# 2026-10-01 runs past `timeout-minutes`. Queue rather than cancel — a
+# half-finished ingest is not a state worth preserving, but neither is dropping
+# the run that was already doing useful work.
+concurrency:
+  group: sync-osv
+  cancel-in-progress: false
+
 jobs:
   sync:
     runs-on: ubuntu-latest
-    # Wall-clock ceiling. Full ingest has observed ~90 min; 2h is safe.
-    timeout-minutes: 120
+    # Wall-clock ceiling. Clean runs measured 1h08m / 1h15m / 1h19m, so 2h left
+    # under 40 minutes of headroom on a corpus that grows every month — and
+    # 2026-09-23's delta hit it with no competing run at all. 3h restores real
+    # margin; the concurrency group above removes the overlap that made 2h bite.
+    timeout-minutes: 180
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: '24'
 
       - name: Install deps
-        run: npm install pg jszip cvss
+        run: npm install pg@8.23.0 jszip@3.10.2 cvss@1.0.5 --ignore-scripts --no-audit --no-fund
 
       - name: Determine mode
         id: mode
+        env:
+          IN_MODE: ${{ github.event.inputs.mode }}
+          EVENT_NAME: ${{ github.event_name }}
+          # The cron expression that triggered this run. Present only on
+          # `schedule` events, and it is what makes the two schedules
+          # distinguishable — checking the date could not, because both fire on
+          # the 1st and both then read '01'.
+          EVENT_SCHEDULE: ${{ github.event.schedule }}
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "mode=${{ github.event.inputs.mode }}" >> "$GITHUB_OUTPUT"
-          elif [ "$(date -u +'%d')" = "01" ]; then
-            # Monthly-full schedule runs alongside the daily on the 1st.
-            # When both fire, let the full one win.
-            echo "mode=full" >> "$GITHUB_OUTPUT"
+          # Inputs arrive via env, not interpolation: a `${{ }}` inside a
+          # `run:` block is substituted before the shell parses the line, so a
+          # value carrying a shell metacharacter becomes a command.
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            MODE="$IN_MODE"
+          elif [ "$EVENT_SCHEDULE" = "0 4 1 * *" ]; then
+            MODE="full"
           else
-            echo "mode=delta" >> "$GITHUB_OUTPUT"
+            # Covers the delta cron and anything that arrives without a
+            # recognised schedule: a delta is the cheaper thing to do twice.
+            MODE="delta"
           fi
+          echo "mode=$MODE" >> "$GITHUB_OUTPUT"
+          echo "Mode: $MODE (event=$EVENT_NAME schedule='$EVENT_SCHEDULE')"
 
-      - name: Run OSV sync (${{ steps.mode.outputs.mode }})
+      - name: Run OSV sync
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: node scripts/sync-osv.mjs --mode=${{ steps.mode.outputs.mode }}
+          # Via env for the same reason as above. A step OUTPUT interpolates
+          # into the shell exactly like a raw input, and this one is computed
+          # from `github.event.inputs.mode`, so it carries the same taint one
+          # hop further along.
+          MODE: ${{ steps.mode.outputs.mode }}
+        run: node scripts/sync-osv.mjs --mode="$MODE"

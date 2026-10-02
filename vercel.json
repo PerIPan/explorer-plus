@@ -65,10 +65,6 @@
     {
       "path": "/api/cron/refresh-matviews?mv=ecosystem_advisory_stats",
       "schedule": "0 3 * * 0"
-    },
-    {
-      "path": "/api/cron/refresh-matviews?mv=osv_advisory_rank",
-      "schedule": "0 19 * * *"
     }
   ],
   "headers": [

@@ -1,0 +1,70 @@
+name: Refresh matview
+
+# Owns the one matview refresh that does not fit a Vercel invocation:
+# osv_advisory_rank. See the header of scripts/refresh-matview.mjs for the
+# failure record that moved it here (3 of 6 daily attempts cancelled at 15.8s
+# while others succeeded at 40-46s) and for what was and was not established
+# about the cause.
+#
+# The other seven matviews stay on the Vercel cron slots in vercel.json --
+# their longest is ecosystem_advisory_stats at 57.9s and none has ever failed.
+#
+# app/api/cron/refresh-matviews/route.ts keeps osv_advisory_rank in MATVIEWS so
+# `?mv=osv_advisory_rank` remains available for a manual catch-up; it just has
+# no scheduled slot there any more.
+
+on:
+  schedule:
+    # Daily 13:00 UTC. Late enough to follow the OSV delta (scheduled 05:30
+    # every 2 days, but observed starting 10:30-11:30 and running up to 75
+    # minutes) and the daily cve-delta at 04:30, both of which feed this
+    # matview -- osv_advisories directly, cve_details through the LATERAL that
+    # sets sev_rank. Deliberately not the 19:00 slot it used to hold, which was
+    # the only matview slot at a busy hour.
+    - cron: '0 13 * * *'
+  workflow_dispatch:
+    inputs:
+      mv:
+        description: 'Matview to refresh (default osv_advisory_rank)'
+        required: false
+        default: 'osv_advisory_rank'
+        type: string
+
+permissions:
+  contents: read
+
+# Serialise with itself: REFRESH ... CONCURRENTLY takes an ExclusiveLock on the
+# matview at the swap, so an overlapping manual run would simply queue behind a
+# scheduled one and burn a runner waiting.
+concurrency:
+  group: refresh-matview
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    # The refresh measured 64s on 2026-10-02. 20 minutes covers a slow Neon
+    # compute and the matview's growth without letting a hung run idle.
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24'
+
+      - name: Install pg
+        run: npm install pg@8.23.0 --ignore-scripts --no-audit --no-fund
+
+      # Secret scoped to this step: at job level actions/checkout and
+      # actions/setup-node could both read DATABASE_URL, and neither needs it.
+      #
+      # The dispatch input arrives through env rather than being interpolated
+      # into the script. A `${{ }}` inside a `run:` block is substituted before
+      # the shell parses the line, so a value carrying a shell metacharacter
+      # would become a command in a job holding the production credential.
+      - name: Refresh matview
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          MATVIEW: ${{ github.event.inputs.mv || 'osv_advisory_rank' }}
+        run: node scripts/refresh-matview.mjs
