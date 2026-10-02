@@ -83,11 +83,13 @@ const querySchema = paginationSchema.extend({
  * The aliases pre-filter expression — ONE token to change when
  * scripts/migrate-osv-search.sql is applied.
  *
- * Today: `array_to_string(o.aliases, ' ')`. That is correct and works, but it
- * is UNINDEXED and cannot be indexed — array_to_string is STABLE
- * (pg_proc.provolatile = 's') and an index expression must be IMMUTABLE. The
- * migration therefore creates an IMMUTABLE wrapper, osv_aliases_text(), and
- * indexes THAT.
+ * SWITCHED 2026-10-02, after scripts/migrate-osv-search.sql was applied.
+ *
+ * It used to read `array_to_string(o.aliases, ' ')`, which is correct but
+ * cannot be indexed — array_to_string is STABLE (pg_proc.provolatile = 's')
+ * and an index expression must be IMMUTABLE. The migration creates an
+ * IMMUTABLE wrapper, osv_aliases_text(), and indexes THAT; this now calls the
+ * wrapper so the index is actually reachable.
  *
  * Postgres matches an expression index only when the query expression matches
  * it textually, and it will NOT inline an IMMUTABLE sql function whose body
@@ -96,16 +98,14 @@ const querySchema = paginationSchema.extend({
  * sequential scan of the whole OR, and the migration would cost 185 MB for no
  * speedup. That is the exact trap the migration's own header warns about.
  *
- * ORDER MATTERS, because this cannot be flipped early:
- *   1. apply scripts/migrate-osv-search.sql (creates osv_aliases_text + indexes)
- *   2. change the string below to `osv_aliases_text(o.aliases)`
- *   3. deploy
- *
- * Flipping it before step 1 makes every `?q=` request a 500 — a missing
- * function raises undefined_function, which does NOT match the
- * missing-relation fallback further down this file.
+ * DO NOT revert this without dropping the indexes: Postgres matches an
+ * expression index textually and will not inline an IMMUTABLE sql function
+ * whose body calls a STABLE one, so going back to array_to_string silently
+ * un-indexes the arm — and one unindexable arm forces a sequential scan of the
+ * whole OR. If the function is ever dropped, every `?q=` request becomes a 500:
+ * undefined_function does not match the missing-relation fallback below.
  */
-const ALIASES_TEXT_SQL = "array_to_string(o.aliases, ' ')";
+const ALIASES_TEXT_SQL = 'osv_aliases_text(o.aliases)';
 
 const SEVERITY_RANK: Record<string, number> = {
   CRITICAL: 4,
