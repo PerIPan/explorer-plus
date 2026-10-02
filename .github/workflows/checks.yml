@@ -12,8 +12,8 @@ name: Checks
 # throw over a missing env var, which compiles fine. check-api-catalog.mjs in
 # the consistency job catches that one. These two gates cover different halves.
 #
-# Both jobs run without a database and without secrets — verified: 135 tests
-# pass and tsc is clean with DATABASE_URL and PROFILE_IP_SALT unset.
+# Both jobs run without a database and without secrets — verified: the suite
+# passes and tsc is clean with DATABASE_URL and PROFILE_IP_SALT unset.
 on:
   push:
     branches: [main]
@@ -31,18 +31,22 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: '24'
-      # Fails if the catch-all CWE threshold drifts between inference.ts and the
-      # SQL/mjs build-time copies (see scripts/check-catchall-threshold.mjs).
-      - run: node scripts/check-catchall-threshold.mjs
-      # Fails if a route under app/api/v1 is in neither the open-API catalogue
-      # nor the guard's EXCLUDED map, if an entry points at no route, or if the
-      # agent tool count disagrees across site.ts, declarations.ts and llms.txt.
-      - run: node scripts/check-api-catalog.mjs
-      # Fails if cli/lib/commands.generated.mjs is stale against API_CATALOG, if
-      # the CLI's copy of api-request.mjs has diverged from src/lib's, or if the
-      # application-slug rule no longer matches the one in tools/execute.ts.
-      # The CLI's whole claim is that its commands ARE the REST surface.
-      - run: npm run check:cli
+      # `npm run check:consistency`, not three inlined commands, so this job and
+      # a developer typing `npm run lint` run the SAME set. They had no shared
+      # definition, which is how a gate ends up existing only in CI.
+      #
+      # It covers: the catch-all CWE threshold drifting between inference.ts and
+      # the SQL/mjs build-time copies; a route under app/api/v1 being in neither
+      # the open-API catalogue nor the guard's EXCLUDED map, an entry pointing at
+      # no route, or the agent tool count disagreeing across site.ts,
+      # declarations.ts and llms.txt; and cli/lib/commands.generated.mjs being
+      # stale against API_CATALOG, the CLI's copy of api-request.mjs diverging
+      # from src/lib's, or the application-slug rule no longer matching
+      # tools/execute.ts. The CLI's whole claim is that its commands ARE the
+      # REST surface.
+      #
+      # Still no `npm ci` above: none of these needs node_modules.
+      - run: npm run check:consistency
 
   build-gate:
     runs-on: ubuntu-latest
@@ -55,6 +59,8 @@ jobs:
       - run: npm ci
       # The compile step Vercel would otherwise be first to run.
       - run: npx tsc --noEmit
-      # 135 tests, including scripts/lib/*.test.mjs — the guards' own tests,
-      # which until now ran nowhere in CI.
+      # Includes scripts/lib/*.test.mjs — the guards' own tests, which until
+      # this job existed ran nowhere in CI. Deliberately no count here: the
+      # previous comment said 135 and the suite is well past that, and a number
+      # in a comment is a number nobody updates.
       - run: npm test

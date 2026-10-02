@@ -161,6 +161,33 @@ async function syncEcosystem(client, ecosystem, ghsaAliases, modifiedSince) {
   // zip can repeat an advisory across multiple JSON files, and Postgres
   // rejects ON CONFLICT DO UPDATE when the same key appears twice in one
   // INSERT ("command cannot affect row a second time").
+  /**
+   * Delta runs re-write rows that have not changed, and that is most of the work.
+   *
+   * The delta fetches a 7-day modified window on a 2-day cadence, so roughly
+   * 80% of every batch is an advisory whose `modified` is identical to the row
+   * already stored — and the unconditional `DO UPDATE ... updated_at = NOW()`
+   * rewrote all of them. Each rewrite is a new heap tuple plus an index entry
+   * in every index on the table, which is why prod's btrees are 1.2-2.4x a
+   * fresh build and the heap is ~25% larger than a fresh copy.
+   *
+   * Measured on a replayed 70,000-row delta (12k genuinely new, 58k unchanged):
+   *   without this guard   69.8 MB WAL   30.0 s
+   *   with it              17.5 MB WAL    6.9 s
+   *
+   * FULL mode deliberately does NOT get the guard. A full run exists to
+   * reconcile drift and to backfill parser changes — a field we started
+   * extracting, or a bug fixed in how we read one — and none of those bump
+   * `modified` upstream. Skipping unchanged rows there would make the
+   * reconcile a no-op, which is the one thing it must never be.
+   *
+   * `IS DISTINCT FROM` rather than `<>` so a NULL on either side compares
+   * correctly; `<>` would return NULL and the row would be skipped.
+   */
+  const UNCHANGED_GUARD = modifiedSince
+    ? 'WHERE osv_advisories.modified IS DISTINCT FROM EXCLUDED.modified'
+    : '';
+
   const flushAdv = async () => {
     if (advBatch.length === 0) return;
     const byKey = new Map();
@@ -187,7 +214,7 @@ async function syncEcosystem(client, ecosystem, ghsaAliases, modifiedSince) {
       r.published,
       r.modified,
     ]);
-    await client.query(
+    const res = await client.query(
       `INSERT INTO osv_advisories
          (osv_id, ecosystem, aliases, summary, details, severity_raw,
           cvss_vector, cvss_score, cvss_severity, published, modified)
@@ -202,10 +229,15 @@ async function syncEcosystem(client, ecosystem, ghsaAliases, modifiedSince) {
          cvss_severity = EXCLUDED.cvss_severity,
          published     = EXCLUDED.published,
          modified      = EXCLUDED.modified,
-         updated_at    = NOW()`,
+         updated_at    = NOW()
+       ${UNCHANGED_GUARD}`,
       params,
     );
-    upserted += rows.length;
+    // rowCount, not rows.length. With UNCHANGED_GUARD in play the two diverge:
+    // in delta mode most rows are deliberately skipped, and counting what was
+    // SENT would report ~5x the writes that happened and make feed_sync_log's
+    // records_inserted meaningless for every future delta.
+    upserted += res.rowCount ?? 0;
     advBatch = [];
   };
 

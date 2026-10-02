@@ -497,6 +497,26 @@ export async function GET(req: NextRequest) {
     rows = await query<UnifiedRow>(plan.dataSql, plan.dataParams, opts);
   } catch (err) {
     const msg = err instanceof Error ? err.message : '';
+    // A cancelled statement (SQLSTATE 57014) is the SLOW_QUERY_BUDGET_MS above
+    // doing its job, and it must not be re-thrown as a bare 500. An
+    // uncacheable 500 means the next caller of the same url pays another 25s at
+    // the origin, so a search that is too broad to answer becomes a retry
+    // storm. A 503 the CDN will hold for a minute absorbs that, and
+    // Retry-After tells a well-behaved client what to do.
+    //
+    // 57014 is also what a client-side AbortController would surface, so the
+    // code is checked rather than the message, which is localised.
+    const code = (err as { code?: string } | null)?.code;
+    if (code === '57014') {
+      const timeout = errorResponse(
+        503,
+        'This search was too broad to complete. Narrow it with a filter — source, severity, ecosystem or since.',
+        'QUERY_TIMEOUT',
+        60,
+      );
+      timeout.headers.set('Retry-After', '60');
+      return withCors(timeout);
+    }
     const missingOsv =
       msg.includes('does not exist') &&
       (msg.includes('osv_advisories') || msg.includes('osv_advisory_rank'));

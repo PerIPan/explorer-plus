@@ -161,6 +161,22 @@ ORDER BY c.relname;
 --       OR (osv_aliases_text(o.aliases) ILIKE '%log4j%'
 --           AND EXISTS (SELECT 1 FROM unnest(o.aliases) a WHERE a ILIKE '%log4j%'));
 --
+-- 8b. OPTIONAL, AND ONLY AFTER THE INDEXES EXIST: fence the keys CTE.
+--
+--     Even with all three arms indexed, the LIMIT in the route's keys CTE makes
+--     the planner prefer an ordered walk of osv_advisory_rank_order_idx with
+--     per-row probes over the bitmap path, for BROAD terms (`kernel`, `linux`,
+--     `CVE-2024`). Wrapping the candidate set in a MATERIALIZED CTE forces the
+--     bitmap path: measured kernel 4,536ms -> 570ms (348.8k -> 43.5k buffers),
+--     `a-1` 4,372ms -> 765ms (2.61M -> 93.9k).
+--
+--     DELIBERATELY NOT SHIPPED YET, because the trade inverts without the
+--     indexes. Today the ordered walk can stop as soon as it has limit+offset
+--     matches, which is FAST for a common term and slow only for a rare one. A
+--     MATERIALIZED fence always materialises every match, so adding it now
+--     would make common-term searches worse to make rare ones better. It is a
+--     win only once the bitmap path is available to force.
+--
 -- 9. ONLY NOW switch the route over, and deploy:
 --
 --      app/api/v1/advisories/route.ts

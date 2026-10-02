@@ -77,8 +77,22 @@ export function jsonResponse(data: unknown, cacheTtl?: number) {
   return NextResponse.json(data, { headers: respHeaders });
 }
 
-export function errorResponse(status: number, error: string, code: string) {
-  return NextResponse.json({ error, code }, { status });
+export function errorResponse(
+  status: number,
+  error: string,
+  code: string,
+  cacheTtl?: number,
+) {
+  const headers: Record<string, string> = {};
+  if (cacheTtl) {
+    // Errors are uncacheable by default, which is right for a 400 (the next
+    // caller's input differs) and wrong for an expensive timeout: a 500 with no
+    // Cache-Control means every retry of the SAME url re-runs the same
+    // multi-second query at the origin. Opt in per call site, only where the
+    // failure is a property of the request rather than of the client.
+    headers['Cache-Control'] = `public, s-maxage=${cacheTtl}, stale-while-revalidate=0`;
+  }
+  return NextResponse.json({ error, code }, { status, headers });
 }
 
 /**
