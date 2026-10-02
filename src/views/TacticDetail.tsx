@@ -9,6 +9,7 @@ import { sanitize, sanitizeMarkdown } from '../lib/sanitize';
 import { DiamondLoader } from '../components/shared/FoldingDiamond';
 import { ComplianceEmphasisSection } from '../components/tactic/ComplianceEmphasisSection';
 import { IrStartingPoints } from '../components/tactic/IrStartingPoints';
+import { TacticTelemetry } from '../components/tactic/TacticTelemetry';
 
 export function TacticDetail() {
   const { attackId } = useParams<{ attackId: string }>();
@@ -82,6 +83,13 @@ export function TacticDetail() {
       {data.attackId && (
         <IrStartingPoints tacticId={data.attackId} techniques={allTechniques} />
       )}
+
+      {/* Derived from our own data, so it shows on all 57 tactics rather than
+          CISA's 7. Counts come straight from the route, already ranked. */}
+      <TacticTelemetry
+        dataSources={data.dataSources ?? []}
+        techniqueCount={allTechniques.length}
+      />
 
       {data.attackId && <ComplianceEmphasisSection attackId={data.attackId} />}
 

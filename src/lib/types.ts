@@ -213,6 +213,12 @@ export interface Mitigation extends BaseEntity {
 export interface Tactic extends BaseEntity {
   sortOrder: number | null;
   techniques?: Array<{ attackId: string; name: string; description?: string | null }>;
+  /**
+   * ATT&CK data sources for this tactic, ranked by how many of its techniques
+   * each one covers — `techniquesCovered` is out of `techniques.length`.
+   * Ordered highest first by the route, so the UI must not re-sort.
+   */
+  dataSources?: Array<{ attackId: string; name: string; techniquesCovered: number }>;
 }
 
 export interface Sector {

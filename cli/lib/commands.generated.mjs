@@ -254,7 +254,7 @@ export const COMMANDS = [
         "index": 2
       }
     ],
-    "summary": "One tactic and every technique under it.",
+    "summary": "One tactic, every technique under it, and its ATT&CK data sources ranked by how many of those techniques each one covers.",
     "group": "attack",
     "paginated": false,
     "example": "/tactics/TA0001",

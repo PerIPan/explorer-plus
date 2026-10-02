@@ -205,7 +205,7 @@ export const API_CATALOG: readonly ApiEntry[] = [
   },
   {
     path: '/tactics/{attackId}', method: 'GET', group: 'attack', executable: true,
-    summary: 'One tactic and every technique under it.',
+    summary: 'One tactic, every technique under it, and its ATT&CK data sources ranked by how many of those techniques each one covers.',
     example: '/tactics/TA0001',
   },
   {
