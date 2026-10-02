@@ -3,7 +3,7 @@ import { query } from '../lib/db';
 import { jsonResponse, errorResponse } from '../../lib/handler';
 import { withCors, corsOptions as OPTIONS } from '../../lib/cors';
 import { buildSearchCondition, buildPaginationClause } from '../lib/queries';
-import { paginationSchema, platformSchema, domainSchema } from '../lib/validate';
+import { paginationSchema, platformSchema, domainSchema, boolQueryParam, sortColumn } from '../lib/validate';
 import { z } from 'zod';
 
 export { OPTIONS };
@@ -21,8 +21,8 @@ const querySchema = paginationSchema.extend({
   platform: platformSchema.optional(),
   sector: z.string().max(50).optional(),
   domain: domainSchema,
-  include_deprecated: z.coerce.boolean().default(false),
-  include_subtechniques: z.coerce.boolean().default(false),
+  include_deprecated: boolQueryParam,
+  include_subtechniques: boolQueryParam,
 });
 
 export async function GET(req: NextRequest) {
@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
   }
 
   const { page, limit, sort, order, search, tactic, platform, sector, domain, include_deprecated, include_subtechniques } = parsed.data;
-  const sortCol = SORT_MAP[sort ?? 'name'] ?? 't.name';
+  const sortCol = sortColumn(SORT_MAP, sort ?? 'name', 't.name');
   const sortDir = order === 'desc' ? 'DESC' : 'ASC';
   const sortClause = `ORDER BY ${sortCol} ${sortDir}`;
   const { offset } = buildPaginationClause(page, limit);

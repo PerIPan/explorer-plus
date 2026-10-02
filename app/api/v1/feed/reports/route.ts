@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { query } from '../../lib/db';
 import { jsonResponse, errorResponse } from '../../../lib/handler';
 import { withCors, corsOptions as OPTIONS } from '../../../lib/cors';
-import { paginationSchema } from '../../lib/validate';
+import { paginationSchema, sinceToIso, sortColumn } from '../../lib/validate';
 import { escapeLikePattern } from '../../lib/queries';
 import { z } from 'zod';
 
@@ -51,12 +51,10 @@ export async function GET(req: NextRequest) {
     conditions.push(`r.source = $${params.length}`);
   }
 
-  if (since) {
-    const d = new Date(since);
-    if (!isNaN(d.getTime())) {
-      params.push(d.toISOString());
-      conditions.push(`r.published_at >= $${params.length}`);
-    }
+  const sinceIso = sinceToIso(since);
+  if (sinceIso) {
+    params.push(sinceIso);
+    conditions.push(`r.published_at >= $${params.length}`);
   }
 
   if (q) {
@@ -74,7 +72,7 @@ export async function GET(req: NextRequest) {
     published_at: 'r.published_at',
     created_at: 'r.created_at',
   };
-  const sortCol = allowedSort[sortBy ?? 'published_at'] ?? 'r.published_at';
+  const sortCol = sortColumn(allowedSort, sortBy ?? 'published_at', 'r.published_at');
   // Default to DESC (latest first) when no explicit order given
   const effectiveOrder = rawParams.order ? order : 'desc';
   const sortDir = effectiveOrder === 'asc' ? 'ASC' : 'DESC';

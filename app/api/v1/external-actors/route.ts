@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { query } from '../lib/db';
 import { jsonResponse, errorResponse } from '../../lib/handler';
 import { withCors, corsOptions as OPTIONS } from '../../lib/cors';
-import { paginationSchema } from '../lib/validate';
+import { paginationSchema, sortColumn } from '../lib/validate';
 import { buildPaginationClause } from '../lib/queries';
 import { z } from 'zod';
 
@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
   const { page, limit, sort, order, search, country, category, source, mitre_group } = parsed.data;
   const sortCol = sort ?? 'name';
   const SORT_MAP: Record<string, string> = { name: "ea.name", country: "ea.country", category: "ea.category", source: "ea.source" };
-  const sortClause = `ORDER BY ${SORT_MAP[sortCol] ?? "ea.name"} ${order === "desc" ? "DESC" : "ASC"}`;
+  const sortClause = `ORDER BY ${sortColumn(SORT_MAP, sortCol, 'ea.name')} ${order === "desc" ? "DESC" : "ASC"}`;
   const { offset } = buildPaginationClause(page, limit);
 
   const params: unknown[] = [];

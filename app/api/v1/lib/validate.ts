@@ -183,3 +183,68 @@ export const profileQuerySchema = z.object({
 export function boolParam(value: string | null): boolean {
   return value === '1' || value === 'true';
 }
+
+/**
+ * The zod form of `boolParam`, for a route that validates with a schema.
+ *
+ * NOT `z.coerce.boolean()`. That is `Boolean(input)`, and every non-empty
+ * string is truthy — so `?include_deprecated=false`, `=0`, `=no` and `=off` all
+ * meant TRUE. On /techniques that turned a request to EXCLUDE revoked entries
+ * into one that included them: 475 techniques became 679, with a 200 and
+ * nothing to suggest the opposite of the request had been served. The site's own
+ * /open-apis Run button offers exactly two values for a boolean param, `true`
+ * and `false`, so picking `false` there was two clicks into the wrong answer.
+ *
+ * Deliberately a transform over an unconstrained string rather than an enum: an
+ * enum would 400 on `?include_deprecated=` (empty), which correctly returns the
+ * default today, and on any unknown value — a behaviour change for callers who
+ * are currently being served something, even if it is the wrong thing. This
+ * matches `boolParam` exactly, so the schema path and the raw-`.get()` path
+ * agree on what a boolean query parameter means.
+ */
+export const boolQueryParam = z
+  .string()
+  .optional()
+  .transform((v) => v === '1' || v === 'true');
+
+/**
+ * A `since=` filter as an ISO timestamp Postgres will accept, or null.
+ *
+ * `new Date(x)` guarded only by `isNaN` is not enough. `new Date('+275760-01-01')`
+ * is a VALID Date at the edge of the representable range, and its
+ * `toISOString()` is `+275760-01-01T00:00:00.000Z` — an extended-year literal
+ * that Postgres cannot parse, so it reached the driver and 500'd four routes
+ * (cves, advisories, ghsa, feed/reports) from an unauthenticated GET.
+ *
+ * Year is bounded to something a timestamp column can hold. An unparseable
+ * value still yields null and is ignored rather than rejected, which is the
+ * behaviour callers have today.
+ */
+export function sinceToIso(value: string | undefined | null): string | null {
+  if (!value) return null;
+  const d = new Date(value);
+  const t = d.getTime();
+  if (Number.isNaN(t)) return null;
+  const year = d.getUTCFullYear();
+  if (year < 1970 || year > 9999) return null;
+  return d.toISOString();
+}
+
+/**
+ * Look up a sort key in an allowlist WITHOUT inheriting Object.prototype.
+ *
+ * `SORT_MAP[sort] ?? 'default'` looks safe and is not: `SORT_MAP['constructor']`
+ * resolves up the prototype chain to a function, which is truthy, so `??` never
+ * fires and the function was interpolated into the ORDER BY text — an
+ * unauthenticated 500 on /techniques and /external-actors via
+ * `?sort=constructor`, `?sort=__proto__` or `?sort=toString`. No SQL injection
+ * (the value is a column name from a literal map, not caller text), but a
+ * trivially reachable error.
+ */
+export function sortColumn(
+  map: Record<string, string>,
+  key: string | undefined | null,
+  fallback: string,
+): string {
+  return key && Object.hasOwn(map, key) ? map[key] : fallback;
+}
