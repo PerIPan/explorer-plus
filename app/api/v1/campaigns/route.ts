@@ -3,7 +3,7 @@ import { query } from '../lib/db';
 import { jsonResponse, errorResponse } from '../../lib/handler';
 import { withCors, corsOptions as OPTIONS } from '../../lib/cors';
 import { buildSearchCondition, buildPaginationClause, buildSortClause } from '../lib/queries';
-import { paginationSchema, domainSchema } from '../lib/validate';
+import { paginationSchema, domainSchema, boolQueryParam } from '../lib/validate';
 import { z } from 'zod';
 
 export { OPTIONS };
@@ -14,7 +14,7 @@ const querySchema = paginationSchema.extend({
   search: z.string().min(3).max(200).optional(),
   sector: z.string().max(50).optional(),
   domain: domainSchema,
-  include_deprecated: z.coerce.boolean().default(false),
+  include_deprecated: boolQueryParam,
 });
 
 export async function GET(req: NextRequest) {

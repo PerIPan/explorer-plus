@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { query } from '../lib/db';
 import { jsonResponse, errorResponse } from '../../lib/handler';
 import { withCors, corsOptions as OPTIONS } from '../../lib/cors';
-import { paginationSchema } from '../lib/validate';
+import { paginationSchema, sinceToIso } from '../lib/validate';
 import { escapeLikePattern } from '../lib/queries';
 import { ADVISORY_ECOSYSTEM_CATEGORIES, ADVISORY_CATEGORY_KEYS } from '../../../../src/lib/advisoryEcosystems';
 import { z } from 'zod';
@@ -150,11 +150,7 @@ export async function GET(req: NextRequest) {
     advisory_id DESC
   `.trim();
 
-  const sinceIso = (() => {
-    if (!since) return null;
-    const d = new Date(since);
-    return isNaN(d.getTime()) ? null : d.toISOString();
-  })();
+  const sinceIso = sinceToIso(since);
 
   // Category is a convenience filter that also narrows source: `oss-packages`
   // implies GHSA only; the three OSV categories imply OSV only. Explicit

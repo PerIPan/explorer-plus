@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { query } from '../lib/db';
-import { jsonResponse } from '../../lib/handler';
+import { jsonResponse, errorResponse } from '../../lib/handler';
 import { withCors, corsOptions as OPTIONS } from '../../lib/cors';
 import { domainSchema } from '../lib/validate';
 import { z } from 'zod';
@@ -22,7 +22,15 @@ export async function GET(req: NextRequest) {
   req.nextUrl.searchParams.forEach((v, k) => { rawParams[k] = v; });
 
   const parsed = querySchema.safeParse(rawParams);
-  const domain = parsed.success ? parsed.data.domain ?? null : null;
+  /* Rejected rather than ignored. `?domain=ics` (the valid value is
+     `ics-attack`) used to fall through to `null` and return the UNFILTERED
+     superset with a 200, while /techniques returns 400 for the same input —
+     so the same typo was an error on one route and a silently wider answer on
+     another. */
+  if (!parsed.success) {
+    return withCors(errorResponse(400, 'Invalid query params', 'VALIDATION_ERROR'));
+  }
+  const domain = parsed.data.domain ?? null;
 
   // Two forms: techniques, mitigations and tactics hold domain as a scalar
   // varchar, while attack_software and campaigns hold text[] (an entity can

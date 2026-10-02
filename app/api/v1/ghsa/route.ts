@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { query } from '../lib/db';
 import { jsonResponse, errorResponse } from '../../lib/handler';
 import { withCors, corsOptions as OPTIONS } from '../../lib/cors';
-import { paginationSchema } from '../lib/validate';
+import { paginationSchema, sinceToIso } from '../lib/validate';
 import { escapeLikePattern } from '../lib/queries';
 import { notCatchallCwe, liveTechnique } from '../lib/inference';
 import { z } from 'zod';
@@ -52,12 +52,10 @@ export async function GET(req: NextRequest) {
   if (hasCve === 'true') conditions.push(`g.cve_id IS NOT NULL`);
   if (hasCve === 'false') conditions.push(`g.cve_id IS NULL`);
 
-  if (since) {
-    const d = new Date(since);
-    if (!isNaN(d.getTime())) {
-      params.push(d.toISOString());
-      conditions.push(`g.published_at >= $${params.length}`);
-    }
+  const sinceIso = sinceToIso(since);
+  if (sinceIso) {
+    params.push(sinceIso);
+    conditions.push(`g.published_at >= $${params.length}`);
   }
 
   if (q) {

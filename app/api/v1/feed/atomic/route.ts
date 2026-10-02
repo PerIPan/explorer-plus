@@ -40,7 +40,12 @@ export async function GET(req: NextRequest) {
   }
 
   if (platform) {
-    params.push(`{${platform}}`);
+    /* The driver serialises a JS array into a Postgres array literal itself.
+       Hand-building `{${platform}}` meant a caller-supplied `{` produced `{{}`,
+       which Postgres cannot parse — an unauthenticated 500 on `?platform={`.
+       Splitting on commas also makes `?platform=windows,linux` work, which the
+       concatenated form did by accident and only for values with no braces. */
+    params.push(platform.split(',').map((p) => p.trim()).filter(Boolean));
     conditions.push(`a.platforms && $${params.length}::text[]`);
   }
 

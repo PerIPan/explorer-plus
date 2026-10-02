@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { query } from '../../lib/db';
 import { jsonResponse, errorResponse } from '../../../lib/handler';
 import { withCors, corsOptions as OPTIONS } from '../../../lib/cors';
-import { paginationSchema } from '../../lib/validate';
+import { paginationSchema, sinceToIso } from '../../lib/validate';
 import { escapeLikePattern } from '../../lib/queries';
 import { z } from 'zod';
 
@@ -95,12 +95,10 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  if (since) {
-    const d = new Date(since);
-    if (!isNaN(d.getTime())) {
-      params.push(d.toISOString());
-      conditions.push(`i.first_seen >= $${params.length}`);
-    }
+  const sinceIso = sinceToIso(since);
+  if (sinceIso) {
+    params.push(sinceIso);
+    conditions.push(`i.first_seen >= $${params.length}`);
   }
 
   const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
