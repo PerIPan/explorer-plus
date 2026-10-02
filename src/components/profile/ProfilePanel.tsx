@@ -59,15 +59,6 @@ const PurdueAssetPickerLoader = dynamic(
   },
 );
 
-const FrameworkPicker = dynamic(() => import('./FrameworkPicker'), {
-  ssr: false,
-  loading: () => (
-    <p className="text-xs text-[var(--text-secondary)]" aria-live="polite">
-      Loading the compliance regimes…
-    </p>
-  ),
-});
-
 /* ─────────────────────────────────────────────────────────────────────────────
  * Option sources
  *
@@ -477,10 +468,13 @@ function useThreatProfile(defaultVariant: ProfileVariant): ThreatProfileControll
     // One action, one push — `applyProfile` owns the single router.push, to
     // the briefing at /profile.
     //
-    // Roles and frameworks are collected for the telemetry row and deliberately
-    // stay out of the URL in BOTH modes, since nothing on `/profile` consumes
-    // them. `domain` is passed explicitly and is written even when it equals
-    // the default — on `/profile` an absent `domain` is no filter at all, not
+    // Role is collected for the telemetry row and deliberately stays out of the
+    // URL in BOTH modes, since nothing on `/profile` consumes it. `frameworks`
+    // rides along as an empty array: the question that filled it is gone (see
+    // the render block below), and the key is kept so the telemetry row's shape
+    // and its CHECK-constrained `variant` do not change for a dropped field.
+    // `domain` is passed explicitly and is written even when it equals the
+    // default — on `/profile` an absent `domain` is no filter at all, not
     // "enterprise".
     //
     // OT sends NO sector and NO platforms. Not as an omission: the ICS engine
@@ -1429,7 +1423,11 @@ export function ProfilePanel({
 
           <MultiSelect
             id={`${baseId}-platforms`}
-            label="Infrastructure"
+            // "Platforms", not "Infrastructure": the answer maps straight onto
+            // ATT&CK's own `platforms` field and is matched against it, while
+            // "Infrastructure" reads as an on-prem-versus-cloud question that
+            // this control does not ask.
+            label="Platforms"
             options={PLATFORM_OPTIONS}
             selected={answers.platforms ?? EMPTY_SELECTION}
             onChange={(next) => setAnswer('platforms', next)}
@@ -1438,40 +1436,51 @@ export function ProfilePanel({
             </>
           )}
 
-          {/* ── The two questions that are collected but never ranked ─────
-              Asked in BOTH modes, and in neither does anything on /profile
-              read them: `onApply` keeps both out of the URL on purpose, and
-              the two briefings have no notion of either. That is a settled
-              decision — it is the copy that had to change. The note is placed
-              BEFORE the fields, not after, so it is read while deciding
-              whether to answer, and it is wired with `aria-describedby` so a
-              screen-reader visitor is told the same thing at the same point
-              rather than meeting it after the fact. */}
-          <div role="group" aria-describedby={contextNoteId} className="flex flex-col gap-4">
-            <p
-              id={contextNoteId}
-              className="text-[11px] leading-snug text-[var(--text-secondary)] border-t border-[var(--border-input)] pt-3"
-            >
-              The next two are{' '}
-              <span className="font-semibold text-[var(--text-primary)]">context, not ranking</span>
-              : they tell us which briefing to build next.
-            </p>
+          {/* ── Role: the one question still collected but not ranked ─────
+              The compliance-regime picker that used to sit beside it is GONE,
+              not hidden. It was asked in both modes, nothing on /profile read
+              it, and the measurement that would have given it a consumer
+              killed the idea instead: the SCF mapping reaches 160 frameworks
+              for EVERY sector (financial 5,153 controls, healthcare 5,160,
+              energy 5,127, transportation 5,043 — a 2% spread across pools
+              that differ by 154%). A regime answer cannot narrow a set that
+              does not vary, so the question could never have paid for itself.
+              `profile_submissions.frameworks` stays in the schema and simply
+              stops being written; the `variant` string is an opaque
+              CHECK-constraint value and is deliberately unchanged.
 
-            <MultiSelect
-              id={`${baseId}-roles`}
-              label="Your role"
-              options={ROLE_OPTIONS}
-              selected={answers.roles ?? EMPTY_SELECTION}
-              onChange={(next) => setAnswer('roles', next)}
-              placeholder="Search roles…"
-            />
+              Role survives, and only OUTSIDE the large modal. The modal is the
+              deliberate, sidebar-opened entry point and is kept to the two
+              questions that actually move the briefing — sector, which carries
+              the whole ranking engine, and infrastructure, which narrows the
+              pool. The diamond's lighter presentations still ask it, which is
+              where a one-line answer costs the visitor least.
 
-            <FrameworkPicker
-              id={`${baseId}-frameworks`}
-              selected={answers.frameworks ?? EMPTY_SELECTION}
-              onChange={(next) => setAnswer('frameworks', next)}
-            />
-          </div>
+              The note is placed BEFORE the field, not after, so it is read
+              while deciding whether to answer, and it is wired with
+              `aria-describedby` so a screen-reader visitor is told the same
+              thing at the same point rather than meeting it after the fact. */}
+          {!large && (
+            <div role="group" aria-describedby={contextNoteId} className="flex flex-col gap-4">
+              <p
+                id={contextNoteId}
+                className="text-[11px] leading-snug text-[var(--text-secondary)] border-t border-[var(--border-input)] pt-3"
+              >
+                The next one is{' '}
+                <span className="font-semibold text-[var(--text-primary)]">context, not ranking</span>
+                : it tells us which briefing to build next.
+              </p>
+
+              <MultiSelect
+                id={`${baseId}-roles`}
+                label="Your role"
+                options={ROLE_OPTIONS}
+                selected={answers.roles ?? EMPTY_SELECTION}
+                onChange={(next) => setAnswer('roles', next)}
+                placeholder="Search roles…"
+              />
+            </div>
+          )}
         </div>
 
         <div className="flex items-center justify-between gap-3 border-t border-[var(--border-input)] px-4 py-3">
