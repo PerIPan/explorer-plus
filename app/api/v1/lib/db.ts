@@ -155,8 +155,12 @@ export interface QueryOptions {
    * that takes 12ms. Use it where a query reads a large table or accepts
    * free-text search; leave it off for indexed lookups.
    *
-   * Runs on the maintenance pool, because the API pool's 30s client timeout
-   * would otherwise pre-empt any server-side budget above it.
+   * Runs on the API pool when the budget is under API_QUERY_TIMEOUT_MS, and
+   * only on the maintenance pool when it is not. The earlier version always
+   * used the maintenance pool, which was wrong for every current caller:
+   * `statement_timeout` bounds EXECUTION, so it does not cover time spent
+   * waiting in PgBouncer's queue or on a stalled socket. Dropping the client
+   * ceiling for a 25s budget therefore removed a backstop and bought nothing.
    */
   statementTimeoutMs?: number;
 }
@@ -201,8 +205,10 @@ export async function query<T extends QueryResultRow = QueryResultRow>(
  * ROLLBACK/COMMIT restores the session, so nothing leaks even if the statement
  * is cancelled — verified: `0` again afterwards.
  *
- * The transaction is committed rather than rolled back so a caller could use
- * this for a write; today every caller reads.
+ * READ-ONLY BY CONTRACT. The caller-level retry below replays the ENTIRE
+ * transaction on a transient connection error, so a write routed through here
+ * could be applied twice — and the worst case doubles the budget. Every
+ * current caller reads. Do not add a write without removing the retry.
  */
 async function queryWithStatementTimeout<T extends QueryResultRow = QueryResultRow>(
   text: string,
@@ -213,7 +219,10 @@ async function queryWithStatementTimeout<T extends QueryResultRow = QueryResultR
     throw new Error(`statementTimeoutMs must be a positive integer, got ${timeoutMs}`);
   }
   const run = async (): Promise<QueryResult<T>> => {
-    const client = await getMaintenancePool().connect();
+    const pool =
+      timeoutMs < API_QUERY_TIMEOUT_MS ? getPool() : getMaintenancePool();
+    const client = await pool.connect();
+    let released = false;
     try {
       await client.query('BEGIN');
       // set_config, not `SET LOCAL`, because SET cannot bind a parameter.
@@ -225,14 +234,26 @@ async function queryWithStatementTimeout<T extends QueryResultRow = QueryResultR
       await client.query('COMMIT');
       return result;
     } catch (err) {
+      let rolledBack = false;
       try {
         await client.query('ROLLBACK');
+        rolledBack = true;
       } catch {
-        // The original error is the useful one.
+        // The original error is the useful one; the client is destroyed below.
       }
+      // release(err) DESTROYS the connection instead of returning it. If the
+      // ROLLBACK did not land we do not know whether the transaction is still
+      // open or what statement_timeout the session carries, and handing that
+      // back to the pool is how a stray setting reaches an unrelated request.
+      //
+      // The flag matters: pg THROWS on a second release ("Release called on
+      // client which has already been released"), so the finally below must
+      // not release again. A plain no-op assumption here failed the harness.
+      released = true;
+      client.release(rolledBack ? undefined : new Error('ROLLBACK failed'));
       throw err;
     } finally {
-      client.release();
+      if (!released) client.release();
     }
   };
   try {

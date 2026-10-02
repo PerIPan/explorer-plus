@@ -1,98 +1,158 @@
 -- scripts/migrate-osv-search.sql
 --
--- Makes `/api/v1/advisories?q=` indexable.
+-- Makes `/api/v1/advisories?q=` indexable on osv_advisories.
 --
--- THE PROBLEM
---
--- `?q=` is the only filter that forces the OSV branch onto the base table
--- (`osvNeedsBase = true` in app/api/v1/advisories/route.ts), and the predicate
--- it adds was unindexable in all three arms:
---
---   (o.osv_id ILIKE $1 OR o.summary ILIKE $1
---    OR EXISTS (SELECT 1 FROM unnest(o.aliases) a WHERE a ILIKE $1))
---
--- idx_osv_id is a plain btree, which cannot serve `%term%`. idx_osv_aliases_gin
--- is a default array-ops GIN, which cannot serve `unnest(...) ILIKE` at all.
--- osv_advisories is 1,972,497 rows / 1579 MB, so each arm was a full scan.
---
--- Measured 2026-10-02 against production, each arm alone:
---   osv_id ILIKE 5.2s · summary ILIKE 5.1s · unnest(aliases) ILIKE 14.9s
---   all three OR'd 12.9s
---
--- The route evaluates that predicate TWICE per request — once in the COUNT
--- branch and once in the keys CTE — which is why an end-to-end request measured
--- 27s, 31s and >70s on different attempts rather than 13s.
---
--- WHY ALL THREE ARMS NEED AN INDEX
---
--- Postgres can combine OR'd arms into a BitmapOr, but only if EVERY arm is
--- indexable. One unindexable arm forces a sequential scan of the whole OR, so
--- indexing two of the three would have bought nothing.
---
--- WHY A TRIGRAM INDEX AND NOT FULL TEXT
---
--- tsvector/tsquery would be the better tool for prose, but it matches lexemes,
--- not substrings: `?q=log4` would stop finding `log4j`. That is a visible
--- behaviour change to a live search box, so it is not made here. pg_trgm
--- preserves `ILIKE '%term%'` semantics exactly. It is already installed
--- (idx_packages_name_trgm uses it).
---
--- Note `gin_trgm_ops` only helps patterns with a 3-character extractable
--- trigram; the route already requires q >= 3 characters.
---
--- THE ALIASES ARM
---
--- An element-wise `unnest(...) ILIKE` cannot be indexed directly, so the index
--- is on `array_to_string(aliases, ' ')`. That expression is a strict SUPERSET
--- of the element-wise test: if any element contains the needle, so does the
--- joined string. The route therefore uses it as an indexable pre-filter and
--- keeps the exact EXISTS as a recheck, so results are unchanged — the join
--- could otherwise match a needle straddling two elements.
+-- ⚠ REVISION 2. Revision 1 OF THIS FILE WOULD HAVE FAILED. Do not run an
+--   older copy. What was wrong, confirmed against production:
+--     1. `array_to_string(anyarray, text)` is STABLE, not IMMUTABLE
+--        (pg_proc.provolatile = 's'). An index expression must be IMMUTABLE,
+--        so the aliases statement errored. `concat_ws` is STABLE too, so the
+--        obvious rewrite has the same trap. Hence the wrapper below.
+--     2. With that statement failing, the other two bought NOTHING: one
+--        unindexable arm forces a sequential scan of the whole OR, so the
+--        money would have been spent for no speedup.
+--     3. `CREATE INDEX ... IF NOT EXISTS` SKIPS a leftover INVALID index and
+--        still prints `CREATE INDEX`. It reports success and leaves the arm
+--        unindexed. `IF NOT EXISTS` is gone from every statement here.
+--     4. The cleanup used a plain `DROP INDEX`, which takes ACCESS EXCLUSIVE
+--        on a 774 MB table that has 58s+ readers and a 64s matview refresh.
+--        Now CONCURRENTLY.
 --
 -- ═══════════════════════════════════════════════════════════════════════════
--- RUN THIS ON THE DIRECT ENDPOINT, NOT THE POOLER
+-- TWO DECISIONS TO MAKE BEFORE RUNNING THIS
 --
--- Use DATABASE_URL_UNPOOLED (no `-pooler` in the host). Two reasons, both
--- learned the hard way on 2026-10-02:
+-- (A) THERE IS A BETTER-SHAPED ALTERNATIVE. Putting a single `search_text`
+--     column on the osv_advisory_rank matview (osv_id, summary and aliases
+--     joined by an unprintable separator) and one GIN on that is better on
+--     most axes, because GIN maintenance then sees only real changes:
 --
--- 1. CONCURRENTLY needs a stable session for the whole build. PgBouncer's
---    transaction pooling does not guarantee one.
--- 2. A bare `SET statement_timeout` from ANY client persists on the pooled
---    server connection and is inherited by whoever gets that connection next.
---    A 25s value set by an unrelated script seconds earlier killed the
---    idx_osv_id_trgm build at exactly 25s and left a 144 MB INVALID index
---    behind. This is also the most likely explanation for the intermittent
---    ~15s cancels that pushed osv_advisory_rank off its Vercel cron slot
---    (see scripts/refresh-matview.mjs) — circumstantial, not proven.
+--                            this file          matview search_text
+--       new index bytes      185 MB             150-173 MB + ~60 MB heap
+--       WAL per delta        +70.7 MB           +20.7 MB (on refresh, not ingest)
+--       ingest wall time     +44%               unchanged
+--       IMMUTABLE wrapper    required           not needed (stored column)
+--       EXISTS recheck       required           not needed
+--       buffers, ?q=kernel   43.5k              11.2k
 --
--- CLEAN UP FIRST. The interrupted build left this behind; it is 144 MB of dead
--- disk and `IF NOT EXISTS` will NOT replace it, so the create below would
--- silently skip and leave the arm unindexed:
-
-DROP INDEX IF EXISTS idx_osv_id_trgm;
-
--- Verify nothing invalid remains before and after:
---   SELECT c.relname, i.indisvalid FROM pg_class c
---   JOIN pg_index i ON i.indexrelid = c.oid JOIN pg_class t ON t.oid = i.indrelid
---   WHERE t.relname = 'osv_advisories' AND NOT i.indisvalid;
+--     Its cost: a matview cannot ADD COLUMN, so it is DROP + CREATE. Doing
+--     that in one transaction (as scripts/migrate-advisory-rank.sql does)
+--     blocks the OSV branch for the whole build, and the route's
+--     missing-relation fallback would serve GHSA-only results as a 200 with a
+--     30-minute CDN TTL. Build aside and rename if you go this way.
 --
--- CONCURRENTLY: each statement must run outside a transaction block, so this
--- file deliberately has no BEGIN/COMMIT. If one is interrupted it leaves an
--- INVALID index; drop it and re-run that statement.
+-- (B) THE osv_id ARM COSTS 141 MB — 76% of the new bytes and 52% of the extra
+--     WAL — and earns it only for ID-shaped needles. The existing btree
+--     `idx_osv_id` already serves exact and prefix matches; the trigram index
+--     buys SUBSTRING matching, which is the current documented behaviour.
+--     Dropping that arm means `?q=` no longer finds `ebian` inside
+--     `DEBIAN-CVE-…`. Keeping substring semantics is the reason to pay.
+--     Measured alternatives, same semantics: GiST trigram 216 MB (worse),
+--     one combined GIN 178 MB (no saving), btree text_pattern_ops 69 MB
+--     (prefix only — a semantics change).
+-- ═══════════════════════════════════════════════════════════════════════════
 --
--- COST: measured 144 MB for a PARTIAL idx_osv_id_trgm build, so budget roughly
--- 400-500 MB of new index across the three on a 1579 MB table. If that is not
--- worth it, the summary index alone is the cheap majority of the value (only
--- 267,343 of 1,972,497 rows have a summary — 14 MB of text) but will NOT fix
--- the 14.9s aliases arm, and leaving any one arm unindexed forces a seq scan
--- of the whole OR.
+-- WHY ALL THREE ARMS OR NONE
+--
+-- The route's predicate is a three-way OR. Postgres can combine OR'd arms
+-- into a BitmapOr only if EVERY arm has an index; one unindexable arm forces a
+-- sequential scan of the whole predicate. Measured per arm before indexing,
+-- against production: osv_id ILIKE 5.2s, summary ILIKE 5.1s,
+-- unnest(aliases) ILIKE 14.9s, all three OR'd 12.9s.
+--
+-- SIZES, measured on a loaded copy (NOT the 400-500 MB revision 1 guessed):
+--   idx_osv_id_trgm 141 MB · idx_osv_summary_trgm 39 MB · aliases 5.4 MB
+--   = 185 MB. Net change on disk is about +41 MB once the dead 144 MB
+--   invalid index is dropped. Table today: 774 MB heap, 858 MB indexes.
+--
+-- Only 267,343 of 1,972,497 rows have a summary (14 MB of text), and `aliases`
+-- is empty on 1,945,471 rows (98.6%) — the aliases index is small because its
+-- population is small.
+--
+-- KNOWN LIMIT, NOT FIXED HERE: the keys CTE in the route carries a LIMIT, and
+-- for broad terms (`kernel`, `linux`, `CVE-2024`) the planner still prefers an
+-- ordered scan of osv_advisory_rank_order_idx with per-row probes over the
+-- bitmap path — so those stay slow and the route's 25s budget cancels them.
+-- Wrapping the candidate set in a MATERIALIZED CTE forces the bitmap path
+-- (measured: kernel 4,536ms -> 570ms, 348.8k -> 43.5k buffers). That is a
+-- route change, tracked separately; the indexes are a prerequisite either way.
+-- Also note `q >= 3 characters` is NOT sufficient for selectivity: `c++`
+-- extracts no usable trigram and scans essentially the whole index.
+--
+-- ═══════════════════════════════════════════════════════════════════════════
+-- RUN ORDER. Direct endpoint (DATABASE_URL_UNPOOLED), autocommit, NO
+-- BEGIN and NO --single-transaction: CONCURRENTLY cannot run in a transaction
+-- block, and the pooler neither gives a stable session for the build nor
+-- accepts `options=-c ...`.
+--
+-- DEPLOY THE ROUTE ONLY AFTER STEP 4. The route must call osv_aliases_text()
+-- by name; until that function exists, every `?q=` request is a 500, and the
+-- error does not match the route's missing-relation fallback.
 -- ═══════════════════════════════════════════════════════════════════════════
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_osv_summary_trgm
+-- 1. Preflight. Expect zero rows from both.
+SELECT c.relname, i.indisvalid
+FROM pg_class c
+JOIN pg_index i ON i.indexrelid = c.oid
+JOIN pg_class t ON t.oid = i.indrelid
+WHERE t.relname = 'osv_advisories' AND NOT i.indisvalid;
+
+SELECT pid, state, left(query, 60) AS query
+FROM pg_stat_activity
+WHERE query ILIKE '%osv_advisories%' AND pid <> pg_backend_pid();
+
+-- 2. Remove the 144 MB INVALID idx_osv_id_trgm left by a cancelled build.
+--    CONCURRENTLY: a plain DROP takes ACCESS EXCLUSIVE and stalls every reader
+--    behind the longest running one. Because the index is indisready = false,
+--    writes already ignore it, so there is no hurry — it is wasted disk only.
+DROP INDEX CONCURRENTLY IF EXISTS idx_osv_id_trgm;
+
+-- 3. Confirm it is gone before creating anything.
+SELECT to_regclass('idx_osv_id_trgm') AS should_be_null;
+
+-- 4. The IMMUTABLE wrapper. `array_to_string` is STABLE because in general it
+--    depends on type output functions; for text[] joined by a constant it is
+--    genuinely immutable, which is what this asserts. search_path is pinned so
+--    the body cannot be captured by a shadowing object.
+CREATE OR REPLACE FUNCTION osv_aliases_text(text[])
+  RETURNS text
+  LANGUAGE sql
+  IMMUTABLE
+  PARALLEL SAFE
+  RETURNS NULL ON NULL INPUT
+  SET search_path = pg_catalog
+AS $$ SELECT array_to_string($1, ' ') $$;
+
+-- 5. The indexes. Cheapest first, so a failure costs least. No IF NOT EXISTS:
+--    a leftover must error loudly rather than silently skip. Check indisvalid
+--    after each before starting the next.
+CREATE INDEX CONCURRENTLY idx_osv_summary_trgm
   ON osv_advisories USING gin (summary gin_trgm_ops);
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_osv_id_trgm
+CREATE INDEX CONCURRENTLY idx_osv_aliases_text_trgm
+  ON osv_advisories USING gin (osv_aliases_text(aliases) gin_trgm_ops);
+
+CREATE INDEX CONCURRENTLY idx_osv_id_trgm
   ON osv_advisories USING gin (osv_id gin_trgm_ops);
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_osv_aliases_text_trgm
-  ON osv_advisories USING gin (array_to_string(aliases, ' ') gin_trgm_ops);
+-- 6. Statistics for the expression index. Without this the planner still picks
+--    BitmapOr but estimates badly (1,852 rows against an actual 231).
+ANALYZE osv_advisories;
+
+-- 7. Verify all three are valid, and their sizes.
+SELECT c.relname, i.indisvalid, pg_size_pretty(pg_relation_size(c.oid)) AS size
+FROM pg_class c
+JOIN pg_index i ON i.indexrelid = c.oid
+JOIN pg_class t ON t.oid = i.indrelid
+WHERE t.relname = 'osv_advisories' AND c.relname LIKE '%trgm'
+ORDER BY c.relname;
+
+-- 8. Confirm the plan. A selective term should show BitmapOr over all three.
+--    EXPLAIN (ANALYZE, BUFFERS) SELECT 1 FROM osv_advisories o
+--    WHERE o.osv_id ILIKE '%log4j%' OR o.summary ILIKE '%log4j%'
+--       OR (osv_aliases_text(o.aliases) ILIKE '%log4j%'
+--           AND EXISTS (SELECT 1 FROM unnest(o.aliases) a WHERE a ILIKE '%log4j%'));
+--
+-- DO NOT set fastupdate=off (WAL per delta 140 MB -> 267 MB) and do not raise
+-- gin_pending_list_limit (every query scans the pending list; 64 MB costs
+-- +13-32ms hot per query). The real lever on ingest cost is not rewriting
+-- unchanged rows in scripts/sync-osv.mjs, which is a separate change.
