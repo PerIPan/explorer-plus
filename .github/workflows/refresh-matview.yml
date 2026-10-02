@@ -60,7 +60,9 @@ jobs:
       # actions/setup-node could both read DATABASE_URL, and neither needs it.
       #
       # The dispatch input arrives through env rather than being interpolated
-      # into the script. A `${{ }}` inside a `run:` block is substituted before
+      # into the script. A GitHub expression inside a `run:` block is substituted before
+      # the shell sees it. (NB: the literal two-brace token cannot be written in a
+      # `run:` comment — an empty expression is a parse error that fails the file.)
       # the shell parses the line, so a value carrying a shell metacharacter
       # would become a command in a job holding the production credential.
       - name: Refresh matview

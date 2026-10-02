@@ -45,6 +45,14 @@ jobs:
       # tools/execute.ts. The CLI's whole claim is that its commands ARE the
       # REST surface.
       #
+      # ...and scripts/check-workflows.mjs, which refuses an EMPTY GitHub
+      # expression anywhere (a parse error that kills the whole workflow file,
+      # not just a step) and any expression inside a `run:` block (the
+      # injection pattern these workflows were hardened against). On 2026-10-02
+      # the first of those shipped in seven files at once and left six
+      # scheduled syncs dead on main; `yaml.safe_load` had parsed them all
+      # happily, so YAML validity proves nothing.
+      #
       # Still no `npm ci` above: none of these needs node_modules.
       - run: npm run check:consistency
 

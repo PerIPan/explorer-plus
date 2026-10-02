@@ -33,7 +33,10 @@ jobs:
         env:
           IN_SINCE_DAYS: ${{ github.event.inputs.since_days }}
         run: |
-          # Inputs arrive via env, not interpolation: a `${{ }}` inside a
+          # Inputs arrive via env, not interpolation: a GitHub expression inside a
+          # (NB: the literal two-brace token cannot be written in this comment —
+          # GitHub evaluates expressions in a `run:` block before the shell sees
+          # them, and an EMPTY one is a parse error that fails the whole file.)
           # `run:` block is substituted before the shell parses the line, so a
           # value carrying a shell metacharacter becomes a command.
           DAYS="${IN_SINCE_DAYS:-2}"

@@ -57,8 +57,8 @@ jobs:
       # actions/setup-node could both read DATABASE_URL, and neither needs it.
       #
       # The workflow_dispatch inputs arrive through `env` rather than being
-      # interpolated into the script. `${{ github.event.inputs.version }}`
-      # inside a `run:` block is substituted BEFORE the shell sees it, so a
+      # interpolated into the script. A GitHub expression naming an input,
+      # written inside a `run:` block, is substituted BEFORE the shell sees it, so a
       # value containing a shell metacharacter becomes a command in a job that
       # holds the production credential. Triggering needs repo write access, so
       # this was never open to the public — but the fix costs nothing and the

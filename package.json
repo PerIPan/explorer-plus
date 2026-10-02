@@ -21,7 +21,8 @@
     "seed:update": "./venv/bin/python seed/seed.py --update",
     "seed:verify": "./venv/bin/python seed/verify.py",
     "test": "node --test \"scripts/**/*.test.mjs\"",
-    "check:consistency": "node scripts/check-catchall-threshold.mjs && node scripts/check-api-catalog.mjs && npm run check:cli"
+    "check:consistency": "node scripts/check-catchall-threshold.mjs && node scripts/check-api-catalog.mjs && npm run check:cli && npm run check:workflows",
+    "check:workflows": "node scripts/check-workflows.mjs"
   },
   "repository": {
     "type": "git",
