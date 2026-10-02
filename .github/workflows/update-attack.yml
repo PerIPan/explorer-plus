@@ -22,18 +22,21 @@ on:
         type: boolean
         default: false
 
+permissions:
+  contents: read
+
 jobs:
   update:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: '24'
 
-      - uses: actions/setup-python@v7
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.14'
 
@@ -45,16 +48,22 @@ jobs:
         run: pip install -r seed/requirements.txt
 
       - name: Install pg
-        run: npm install pg
+        run: npm install pg@8.23.0 --ignore-scripts --no-audit --no-fund
 
       - name: Run update-attack
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          IN_DRY_RUN: ${{ github.event.inputs.dry-run }}
+          IN_FORCE: ${{ github.event.inputs.force }}
+          IN_DOMAINS: ${{ github.event.inputs.domains }}
         run: |
+          # Inputs arrive via env, not interpolation: a `${{ }}` inside a
+          # `run:` block is substituted before the shell parses the line, so a
+          # value carrying a shell metacharacter becomes a command.
           ARGS=()
-          if [ "${{ github.event.inputs.dry-run }}" = "true" ]; then ARGS+=(--dry-run); fi
-          if [ "${{ github.event.inputs.force }}" = "true" ]; then ARGS+=(--force); fi
-          ARGS+=(--domains="${{ github.event.inputs.domains }}")
+          if [ "$IN_DRY_RUN" = "true" ]; then ARGS+=(--dry-run); fi
+          if [ "$IN_FORCE" = "true" ]; then ARGS+=(--force); fi
+          ARGS+=(--domains="$IN_DOMAINS")
           node scripts/update-attack.mjs "${ARGS[@]}"
 
       # scf_technique_heat caches group_count per technique, and an ATT&CK

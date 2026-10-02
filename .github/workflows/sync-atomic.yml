@@ -7,19 +7,22 @@ on:
     - cron: '0 5 1 * *'
   workflow_dispatch: {}
 
+permissions:
+  contents: read
+
 jobs:
   sync:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: '24'
       - name: Clone Atomic Red Team
         run: git clone --depth 1 https://github.com/redcanaryco/atomic-red-team.git /tmp/atomic-red-team
       - name: Install dependencies
-        run: npm install pg yaml
+        run: npm install pg@8.23.0 yaml@2.9.1 --ignore-scripts --no-audit --no-fund
       - name: Parse and sync
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}

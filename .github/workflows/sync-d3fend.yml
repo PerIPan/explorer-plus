@@ -42,6 +42,9 @@ on:
         default: ''
         type: string
 
+permissions:
+  contents: read
+
 jobs:
   sync:
     runs-on: ubuntu-latest
@@ -49,24 +52,29 @@ jobs:
     # letting a hung run sit for an hour.
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: '24'
 
       - name: Install deps
-        run: npm install pg
+        run: npm install pg@8.23.0 --ignore-scripts --no-audit --no-fund
 
       - name: Run D3FEND sync
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          IN_DOMAIN: ${{ github.event.inputs.domain }}
+          IN_FROM: ${{ github.event.inputs.from }}
         run: |
+          # Inputs arrive via env, not interpolation: a `${{ }}` inside a
+          # `run:` block is substituted before the shell parses the line, so a
+          # value carrying a shell metacharacter becomes a command.
           ARGS=""
-          if [ -n "${{ github.event.inputs.domain }}" ]; then
-            ARGS="$ARGS --domain=${{ github.event.inputs.domain }}"
+          if [ -n "$IN_DOMAIN" ]; then
+            ARGS="$ARGS --domain=$IN_DOMAIN"
           fi
-          if [ -n "${{ github.event.inputs.from }}" ]; then
-            ARGS="$ARGS --from=${{ github.event.inputs.from }}"
+          if [ -n "$IN_FROM" ]; then
+            ARGS="$ARGS --from=$IN_FROM"
           fi
           node scripts/sync-d3fend.mjs $ARGS

@@ -18,12 +18,10 @@ jobs:
   refresh:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    env:
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: '24'
           cache: 'npm'
@@ -31,5 +29,11 @@ jobs:
       - name: Install deps
         run: npm ci --omit=dev --include=optional || npm ci
 
+      # Scoped to this step, not the job. At job level every step shares it,
+      # including actions/checkout and actions/setup-node — so a moved upstream
+      # tag on either one could read the production credential with no PR and
+      # no review. Nothing above this line needs the database.
       - name: Refresh CTI heat
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: node scripts/refresh-cti-heat.mjs

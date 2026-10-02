@@ -14,21 +14,29 @@ concurrency:
   group: sync-ghsa
   cancel-in-progress: false
 
+permissions:
+  contents: read
+
 jobs:
   delta:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: '24'
       - name: Install pg
-        run: npm install pg
+        run: npm install pg@8.23.0 --ignore-scripts --no-audit --no-fund
       - name: Compute since date
         id: since
+        env:
+          IN_SINCE_DAYS: ${{ github.event.inputs.since_days }}
         run: |
-          DAYS="${{ github.event.inputs.since_days || '2' }}"
+          # Inputs arrive via env, not interpolation: a `${{ }}` inside a
+          # `run:` block is substituted before the shell parses the line, so a
+          # value carrying a shell metacharacter becomes a command.
+          DAYS="${IN_SINCE_DAYS:-2}"
           SINCE=$(date -u -d "$DAYS days ago" +%Y-%m-%d)
           echo "since=$SINCE" >> "$GITHUB_OUTPUT"
           echo "Looking up GHSAs updated since $SINCE"
@@ -36,8 +44,12 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.TOKEN_GHSA }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          # A step OUTPUT interpolates into the shell exactly like a raw input,
+          # and this one is computed from `since_days`, so it carries the same
+          # taint one hop further along.
+          SINCE: ${{ steps.since.outputs.since }}
         run: |
           set -euo pipefail
-          gh api "/advisories?per_page=100&type=reviewed&sort=updated&direction=desc&updated=>=${{ steps.since.outputs.since }}" \
+          gh api "/advisories?per_page=100&type=reviewed&sort=updated&direction=desc&updated=>=$SINCE" \
             --paginate --jq '.[]' \
             | node scripts/sync-ghsa-delta.mjs
