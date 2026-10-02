@@ -21,18 +21,64 @@ interface RssItem {
   description: string;
 }
 
+/**
+ * RSS `<item>` AND Atom `<entry>`.
+ *
+ * This matched `<item>` only, so a pure Atom feed parsed to ZERO items and the
+ * run reported success with nothing ingested — the quietest possible failure,
+ * and one that a vendor can cause at any time by changing feed format.
+ * `extractAtomLink` below has always been here, which says Atom was meant to be
+ * handled; only the block regex and the date/body tag names were missing. Added
+ * defensively rather than in response to a measured outage: of the four
+ * configured feeds, two (microsoft_security, talos) answer an unattended
+ * request with a bot-interstitial page, so their on-the-wire format cannot be
+ * checked from a developer machine at all — only in production, where they do
+ * deliver (151 and 123 rows).
+ *
+ * Atom spells every one of these differently: `<entry>` not `<item>`,
+ * `<published>`/`<updated>` not `<pubDate>`, `<summary>`/`<content>` not
+ * `<description>`, and the link is an href attribute rather than element text.
+ *
+ * NOTE ON TECHNIQUE EXTRACTION: widening the body text here does NOT recover
+ * technique mappings, and it was measured before this change rather than
+ * assumed. Across the two feeds that can be fetched unattended (dfir_report 10
+ * items, unit42 15), zero items carry a `T####` anywhere in title, description
+ * or `content:encoded`; neither feed emits `content:encoded` at all, so the
+ * fallback below is dead code for them; fetching the full article HTML (both
+ * server-rendered, 33k and 25k characters of visible text) also yields zero;
+ * the "MITRE ATT&CK" heading on a DFIR Report post links to an indicators
+ * repository that holds 38 KB of pure IOCs and no ATT&CK content; and matching
+ * all 534 multi-word live technique names against the article text returns two
+ * hits, both false positives ("Browser Fingerprint" in an SEO-poisoning piece,
+ * "Email Addresses"). These vendors do not publish machine-readable technique
+ * IDs anywhere reachable, so `report_techniques` stays OTX-only by nature and
+ * any UI counting it must say OTX rather than "CTI".
+ */
 function parseRss(xml: string): RssItem[] {
   const items: RssItem[] = [];
-  const itemRe = /<item[^>]*>([\s\S]*?)<\/item>/gi;
+  const blockRe = /<(item|entry)[^>]*>([\s\S]*?)<\/\1>/gi;
   let m: RegExpExecArray | null;
 
-  while ((m = itemRe.exec(xml)) !== null) {
-    const block = m[1];
+  while ((m = blockRe.exec(xml)) !== null) {
+    const block = m[2];
     const title = extractTag(block, 'title') ?? '';
-    const link = extractTag(block, 'link') ?? extractAtomLink(block) ?? '';
-    const pubDate = extractTag(block, 'pubDate') ?? extractTag(block, 'dc:date') ?? null;
+    // Atom's <link> carries the URL in an href attribute and has no text, so
+    // `extractTag` returns '' for it rather than null — hence the truthiness
+    // check instead of `??`, which would accept the empty string and drop the
+    // item for want of a link it actually has.
+    const link = extractTag(block, 'link') || extractAtomLink(block) || '';
+    const pubDate =
+      extractTag(block, 'pubDate')
+      ?? extractTag(block, 'dc:date')
+      ?? extractTag(block, 'published')
+      ?? extractTag(block, 'updated')
+      ?? null;
     const description =
-      extractTag(block, 'description') ?? extractTag(block, 'content:encoded') ?? '';
+      extractTag(block, 'description')
+      ?? extractTag(block, 'content:encoded')
+      ?? extractTag(block, 'summary')
+      ?? extractTag(block, 'content')
+      ?? '';
 
     if (link) {
       items.push({ title, link, pubDate, description: stripHtml(description) });
