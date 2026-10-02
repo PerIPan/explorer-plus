@@ -1,0 +1,8 @@
+# The CLI ships a shebang file that must stay LF whatever a contributor's
+# core.autocrlf is set to: CRLF after `#!/usr/bin/env node` makes the kernel
+# look for an interpreter called "node\r", which does not exist.
+*.mjs text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.sh text eol=lf
+*.yml text eol=lf

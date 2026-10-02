@@ -1,4 +1,5 @@
 import { USAGE_GUIDE } from './guide';
+import { appSlug } from '../app-slug.mjs';
 /**
  * Argument validation and tool execution for the shared tool catalogue.
  *
@@ -128,14 +129,6 @@ const ASSET_SECTOR_RE = /^[A-Za-z][A-Za-z0-9 &/-]{0,58}$/;
 function validateAssetSector(v: unknown): string | null {
   const s = String(v ?? '').trim().replace(/\s+/g, ' ');
   return ASSET_SECTOR_RE.test(s) ? s : null;
-}
-
-/**
- * Mirror of normalize() in scripts/sync-cve-products.mjs: the catalogue slug
- * in applications.normalized is lowercase [a-z0-9] only, per part.
- */
-function normalizeAppPart(s: unknown): string {
-  return String(s ?? '').toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
 function validateDomain(d: unknown): string | null {
@@ -284,8 +277,8 @@ export async function executeTool(name: string, args: Record<string, unknown>): 
       // whose slug has no '-' or '_'. Keeping them here 400'd ("Invalid slug")
       // for 2,430 of the 7,206 catalogue entries -- log4j-core, iphone_os,
       // federation-internals -- so normalise exactly as the ingest does.
-      const v = normalizeAppPart(args.vendor);
-      const p = normalizeAppPart(args.product);
+      const v = appSlug(args.vendor);
+      const p = appSlug(args.product);
       if (!v || !p) return { error: 'Vendor and product are required' };
       const qp = args.version ? `?version=${encodeURIComponent(sanitizeSearch(args.version).slice(0, 100))}` : '';
       return callInternalApi(`/applications/${v}/${p}${qp}`);

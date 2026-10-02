@@ -20,12 +20,15 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
   consistency:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: '24'
       # Fails if the catch-all CWE threshold drifts between inference.ts and the
@@ -35,12 +38,17 @@ jobs:
       # nor the guard's EXCLUDED map, if an entry points at no route, or if the
       # agent tool count disagrees across site.ts, declarations.ts and llms.txt.
       - run: node scripts/check-api-catalog.mjs
+      # Fails if cli/lib/commands.generated.mjs is stale against API_CATALOG, if
+      # the CLI's copy of api-request.mjs has diverged from src/lib's, or if the
+      # application-slug rule no longer matches the one in tools/execute.ts.
+      # The CLI's whole claim is that its commands ARE the REST surface.
+      - run: npm run check:cli
 
   build-gate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: '24'
           cache: npm

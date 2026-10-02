@@ -1,0 +1,32 @@
+{
+  "name": "mitrex",
+  "version": "0.1.0",
+  "description": "mitre-explorer.org from the command line \u2014 ATT&CK, CVEs, advisories and compliance frameworks. No key, no account, read-only.",
+  "type": "module",
+  "bin": {
+    "mitrex": "./mitrex.mjs"
+  },
+  "files": [
+    "mitrex.mjs",
+    "lib/",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=22.8.0"
+  },
+  "keywords": [
+    "mitre",
+    "attack",
+    "cve",
+    "threat-intelligence",
+    "cli",
+    "security"
+  ],
+  "license": "ISC",
+  "homepage": "https://mitre-explorer.org/cli",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PerIPan/explorer-plus.git",
+    "directory": "cli"
+  }
+}
