@@ -16,14 +16,53 @@ const ALLOWED_ORIGINS = new Set<string>([
   'https://www.mitre-explorer.org',
 ]);
 
+/**
+ * A disallowed origin gets NO `Access-Control-Allow-Origin` header at all.
+ *
+ * This used to answer `Access-Control-Allow-Origin: null`, which is not a
+ * refusal — `null` is a real serialised origin, sent by sandboxed iframes,
+ * `data:` URLs and `file://` documents. Echoing it back grants exactly those
+ * contexts the cross-origin read the allowlist exists to deny. Omitting the
+ * header is the actual deny.
+ *
+ * `Vary: Origin` stays on every response, including the denials: the header set
+ * depends on the request's Origin, so a cache must not serve one origin's
+ * answer to another.
+ *
+ * Worth being clear about what this can and cannot do. CORS gates READING a
+ * response, never SENDING the request — so it is not, by itself, protection for
+ * a metered write. That job belongs to the `application/json` requirement on
+ * each route: it makes a cross-origin POST non-simple, so the browser must
+ * preflight, and the preflight is what this allowlist refuses. Without that
+ * Content-Type check a page could post `text/plain`, consume a victim's daily
+ * quota, and simply not care that it cannot read the reply.
+ */
 function restrictedHeaders(origin: string | null): Record<string, string> {
-  const allowed = origin && ALLOWED_ORIGINS.has(origin) ? origin : 'null';
-  return {
-    'Access-Control-Allow-Origin': allowed,
+  const base: Record<string, string> = {
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Vary': 'Origin',
   };
+  if (origin && ALLOWED_ORIGINS.has(origin)) {
+    base['Access-Control-Allow-Origin'] = origin;
+  }
+  return base;
+}
+
+/**
+ * True when the body is declared as JSON.
+ *
+ * `req.json()` parses whatever bytes arrive regardless of Content-Type, so
+ * without this check a cross-origin `text/plain` POST is a SIMPLE request: no
+ * preflight, nothing for restrictedHeaders to refuse, and the write lands.
+ * Requiring JSON forces the preflight that makes the allowlist load-bearing.
+ *
+ * Parameters after `;` are allowed (`application/json; charset=utf-8`).
+ */
+export function isJsonContentType(req: NextRequest): boolean {
+  const ct = req.headers.get('content-type');
+  if (!ct) return false;
+  return ct.split(';')[0].trim().toLowerCase() === 'application/json';
 }
 
 export function corsOptions() {

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createHash, createHmac } from 'node:crypto';
 import { query } from '../../lib/db';
 import { jsonResponse, errorResponse } from '../../../lib/handler';
-import { withCorsRestricted, corsOptionsRestricted } from '../../../lib/cors';
+import { withCorsRestricted, corsOptionsRestricted, isJsonContentType } from '../../../lib/cors';
 import { submissionSchema } from '../../../../../src/lib/profile-submit-schema.mjs';
 
 // Restricted CORS: this is the repo's first unauthenticated public WRITE. The
@@ -149,6 +149,18 @@ async function underDailyCap(ipDay: string): Promise<boolean> {
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const withCors = (resp: NextResponse) => withCorsRestricted(resp, req);
+
+  // Declared JSON or nothing. req.json() would happily parse a `text/plain`
+  // body, and that is what made the restricted CORS above decorative: a
+  // text/plain cross-origin POST is a SIMPLE request, so the browser never
+  // preflights, the allowlist is never consulted, and the row lands against the
+  // victim's IP quota. The attacker cannot read the response and does not need
+  // to. Requiring JSON forces the preflight that the allowlist then refuses.
+  if (!isJsonContentType(req)) {
+    return withCors(
+      errorResponse(415, 'Content-Type must be application/json', 'UNSUPPORTED_MEDIA_TYPE'),
+    );
+  }
 
   let body: unknown;
   try {

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { query } from '../v1/lib/db';
-import { withCorsRestricted, corsOptionsRestricted } from '../lib/cors';
+import { withCorsRestricted, corsOptionsRestricted, isJsonContentType } from '../lib/cors';
 import { TOOL_DECLARATIONS, executeTool } from '../../../src/lib/tools';
 
 // A2A uses restricted CORS (origin allowlist) to prevent cross-origin browser
@@ -274,6 +274,19 @@ export async function POST(req: NextRequest) {
   // Parse defensively: an unparseable body threw out of the handler and surfaced
   // as a 500, which reads as "the server is broken" to a caller that simply sent
   // bad JSON. JSON-RPC has a code for exactly this.
+  // Declared JSON or nothing — see the note in app/api/lib/cors.ts. Without
+  // this, a cross-origin `text/plain` POST is a simple request that never
+  // preflights, so the ALLOWED_ORIGINS allowlist never gets a say and a page can
+  // burn a visitor's 50/day quota without being able to read a single reply.
+  // JSON-RPC over HTTP is specified as application/json anyway.
+  if (!isJsonContentType(req)) {
+    return withCors(
+      NextResponse.json(jsonRpcError(null, -32700, 'Content-Type must be application/json'), {
+        status: 415,
+      }),
+    );
+  }
+
   let body: JsonRpcRequest;
   try {
     body = (await req.json()) as JsonRpcRequest;

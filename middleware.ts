@@ -113,5 +113,26 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   // Page routes (for CSP) + the public v1 API (to tag usage for origin counting).
-  matcher: ['/((?!api|_next/static|_next/image|favicon|.*\\..*).*)', '/api/v1/:path*'],
+  // The first entry excludes static assets BY EXTENSION, not by "contains a
+  // dot". The previous `.*\\..*` term dropped every path with a dot anywhere in
+  // it out of the matcher — which meant middleware never ran for them and they
+  // were served with NO Content-Security-Policy at all. That silently covered
+  // three whole route families whose identifiers legitimately contain dots:
+  //
+  //   /techniques/T1059.001     every ATT&CK sub-technique
+  //   /frameworks/csf/GV.OC-01  every NIST CSF subcategory
+  //   /packages/npm/lodash.merge  any package whose name has a dot
+  //
+  // Verified against production 2026-10-02: /techniques/T1059 returned a CSP
+  // header and /techniques/T1059.001 returned none.
+  //
+  // The extension list covers everything /public holds (json, png, svg, txt)
+  // plus the generated robots.txt / sitemap.xml and the usual font and media
+  // types. `$` anchors it to a real trailing extension, so `T1059.001` is a
+  // page again while `logo.svg` stays excluded. Compiled both patterns through
+  // next/dist/compiled/path-to-regexp to confirm exactly three paths change.
+  matcher: [
+    '/((?!api|_next/static|_next/image|favicon|.*\\.(?:ico|png|jpe?g|gif|svg|webp|avif|css|js|mjs|map|txt|xml|json|webmanifest|woff2?|ttf|otf|eot|pdf)$).*)',
+    '/api/v1/:path*',
+  ],
 };
