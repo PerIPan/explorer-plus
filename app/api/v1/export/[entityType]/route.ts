@@ -1,9 +1,9 @@
 import { NextRequest } from 'next/server';
 import { query } from '../../lib/db';
-import { jsonResponse, errorResponse } from '../../../lib/handler';
+import { jsonResponse, errorResponse, fileResponse } from '../../../lib/handler';
 import { withCors, corsOptions as OPTIONS } from '../../../lib/cors';
 import { exportSchema } from '../../lib/validate';
-import { NextResponse } from 'next/server';
+
 
 export { OPTIONS };
 
@@ -78,15 +78,14 @@ export async function GET(
   const rows = result.rows as Record<string, unknown>[];
 
   if (parsed.data.format === 'csv') {
-    const csv = toCsv(rows);
-    const response = new NextResponse(csv, {
-      status: 200,
-      headers: {
-        'Content-Type': 'text/csv; charset=utf-8',
+    // Same 3600s TTL and the same usage count as the ?format=json branch below.
+    // This used to be a bare NextResponse, which meant the heavier of the two
+    // formats was the one that never cached and never counted.
+    return withCors(
+      fileResponse(toCsv(rows), 'text/csv; charset=utf-8', 3600, {
         'Content-Disposition': `attachment; filename="${entityType}.csv"`,
-      },
-    });
-    return withCors(response);
+      }),
+    );
   }
 
   return withCors(jsonResponse({ entityType, count: rows.length, data: rows }, 3600));

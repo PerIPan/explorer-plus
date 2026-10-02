@@ -221,13 +221,51 @@ function hasValidApiKey(req: NextRequest): boolean {
   return timingSafeEqual(Buffer.from(provided), Buffer.from(expected));
 }
 
-async function checkRateLimit(ipHash: string): Promise<{ allowed: boolean; remaining: number }> {
-  const result = await query<{ count: string }>(
-    `SELECT COUNT(*) FROM a2a_requests WHERE ip = $1 AND requested_at > NOW() - INTERVAL '24 hours'`,
-    [ipHash],
+/**
+ * Reserve a slot, rather than count one and hope.
+ *
+ * The previous version ran a bare COUNT(*) here and the row that made the count
+ * go up was not written until recordRequest() at the very END of the handler --
+ * after the Gemini call and every tool round trip, up to ~150s later. For that
+ * whole window every concurrent request read the same pre-increment count, so
+ * N requests fired together all saw "under the limit" and all proceeded. The
+ * cap was 50/day per IP on a route that spends the owner's Gemini quota; the
+ * real ceiling was "50 plus however many you can start at once".
+ *
+ * Now one statement does both: it inserts a row ONLY if the window is under the
+ * limit, and reports the pre-insert count so the caller can still send
+ * X-RateLimit-Remaining. The INSERT and the COUNT share a snapshot, so the gap
+ * between deciding and reserving is the duration of this one statement instead
+ * of the duration of an LLM conversation.
+ *
+ * Residual, stated plainly: two statements that interleave can both observe 49
+ * and both insert, so a burst can still overshoot by roughly the number of
+ * genuinely simultaneous requests. Closing that completely needs an advisory
+ * lock or SERIALIZABLE, which would serialise every A2A request through one
+ * connection out of a pool of three. Overshooting by a handful is the better
+ * trade; overshooting without bound was not.
+ *
+ * `id` is null when the limit is hit, and no row is written in that case -- a
+ * refused request must not consume the quota it was refused for.
+ */
+async function reserveRateLimitSlot(
+  ipHash: string,
+): Promise<{ allowed: boolean; remaining: number; logId: string | null }> {
+  const result = await query<{ used: number; id: string | null }>(
+    `WITH used AS (
+       SELECT COUNT(*)::int AS n
+       FROM a2a_requests
+       WHERE ip = $1 AND requested_at > NOW() - INTERVAL '24 hours'
+     ), ins AS (
+       INSERT INTO a2a_requests (ip)
+       SELECT $1 FROM used WHERE used.n < $2
+       RETURNING id
+     )
+     SELECT (SELECT n FROM used) AS used, (SELECT id FROM ins) AS id`,
+    [ipHash, DAILY_LIMIT],
   );
-  const used = parseInt(result.rows[0].count, 10);
-  return { allowed: used < DAILY_LIMIT, remaining: Math.max(0, DAILY_LIMIT - used) };
+  const { used, id } = result.rows[0];
+  return { allowed: id !== null, remaining: Math.max(0, DAILY_LIMIT - used - (id ? 1 : 0)), logId: id };
 }
 
 interface A2aLog {
@@ -242,8 +280,25 @@ interface A2aLog {
   error: string | null;
 }
 
-async function recordRequest(log: A2aLog): Promise<void> {
+/**
+ * Fill in the row reserveRateLimitSlot() already wrote, or insert one if there
+ * is no reservation -- which is the API-key path, where the rate limit is
+ * skipped entirely but the request is still logged. Updating rather than
+ * inserting is what keeps the reservation and the log as ONE row, so the
+ * quota count cannot drift from the request history.
+ */
+async function recordRequest(log: A2aLog, logId: string | null): Promise<void> {
   try {
+    if (logId) {
+      await query(
+        `UPDATE a2a_requests
+         SET user_query = $2, skill_id = $3, tools_called = $4, response_text = $5,
+             tokens_used = $6, latency_ms = $7, error = $8
+         WHERE id = $1`,
+        [logId, log.userQuery, log.skillId, log.toolsCalled, log.responseText, log.tokensUsed, log.latencyMs, log.error],
+      );
+      return;
+    }
     await query(
       `INSERT INTO a2a_requests (ip, user_query, skill_id, tools_called, response_text, tokens_used, latency_ms, error)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
@@ -318,10 +373,14 @@ export async function POST(req: NextRequest) {
   // Rate limit -- fail-closed on DB errors. Skipped for callers presenting a
   // valid A2A_API_KEY (see hasValidApiKey); their requests are still logged.
   let remaining = DAILY_LIMIT;
+  // null for the API-key path, which skips the limiter and so has no reserved
+  // row; recordRequest() inserts in that case.
+  let logId: string | null = null;
   if (!bypassRateLimit) {
     try {
-      const rl = await checkRateLimit(ipHash);
+      const rl = await reserveRateLimitSlot(ipHash);
       remaining = rl.remaining;
+      logId = rl.logId;
       if (!rl.allowed) {
         const resp = NextResponse.json(
           jsonRpcError(reqId, -32000, `Rate limit exceeded. ${DAILY_LIMIT} requests/day per IP.`),
@@ -508,7 +567,7 @@ export async function POST(req: NextRequest) {
         ipHash, userQuery: userText, skillId: skillsUsed[0] ?? null,
         toolsCalled: skillsUsed, responseText: finalText.slice(0, 4000),
         tokensUsed: totalTokens, latencyMs: Date.now() - startMs, error: null,
-      });
+      }, logId);
 
       const taskId = `task-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
       const now = new Date().toISOString();
@@ -561,7 +620,7 @@ export async function POST(req: NextRequest) {
       await recordRequest({
         ipHash, userQuery: userText, skillId: null, toolsCalled: [],
         responseText: null, tokensUsed: 0, latencyMs: Date.now() - startMs, error: errMsg.slice(0, 1000),
-      });
+      }, logId);
       return withCors(NextResponse.json(
         jsonRpcError(reqId, -32603, 'Internal error processing request'),
         { status: 500 },

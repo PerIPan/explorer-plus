@@ -41,6 +41,33 @@ function recordUsage(): void {
   }
 }
 
+/**
+ * A non-JSON body that still counts and still caches.
+ *
+ * Everything public goes out through jsonResponse(), which calls recordUsage()
+ * and sets Cache-Control. /api/v1/export/{entityType}?format=csv built a raw
+ * NextResponse instead and so got neither: the heaviest response the API serves
+ * (a whole entity table, serialised) was invisible to api_usage and uncacheable
+ * at the CDN, while its own ?format=json sibling was counted and cached for an
+ * hour. Every CSV request was a guaranteed origin hit.
+ */
+export function fileResponse(
+  body: string,
+  contentType: string,
+  cacheTtl?: number,
+  extraHeaders?: Record<string, string>,
+) {
+  recordUsage();
+  const respHeaders: Record<string, string> = {
+    'Content-Type': contentType,
+    ...extraHeaders,
+  };
+  if (cacheTtl) {
+    respHeaders['Cache-Control'] = `public, s-maxage=${cacheTtl}, stale-while-revalidate=86400`;
+  }
+  return new NextResponse(body, { status: 200, headers: respHeaders });
+}
+
 export function jsonResponse(data: unknown, cacheTtl?: number) {
   recordUsage();
   const respHeaders: Record<string, string> = {};
