@@ -54,6 +54,19 @@ interface ProfileGroup {
   aliases: string[] | null;
 }
 
+/**
+ * One row of the recent-evidence section: a technique distinctive to this
+ * sector that also carries a vulnerability published inside the window.
+ * `kevCount` can be 0, and that is information rather than a gap.
+ */
+interface EvidenceRow {
+  attackId: string;
+  name: string;
+  lift: number;
+  cveCount: number;
+  kevCount: number;
+}
+
 interface ProfileResponse {
   profile: {
     sector: string | null;
@@ -65,6 +78,9 @@ interface ProfileResponse {
   groups: ProfileGroup[];
   bandA: BandItem[];
   bandB: BandItem[];
+  /** The bottom section's rows. Optional on the wire so an older deployment of
+   *  the assembler degrades to the section simply not rendering. */
+  evidence?: EvidenceRow[];
   meta: {
     poolSize: number;
     groupCount: number;
@@ -108,6 +124,9 @@ interface ProfileResponse {
     /** The denominator for `platformCounts`: the unfiltered sector pool. NOT
      *  `poolSize`, which moves with the platform selection. */
     poolTotal?: number;
+    /** How many days back the evidence section looks. Shipped so the page
+     *  labels the window from the response instead of repeating the number. */
+    evidenceWindowDays?: number;
   };
 }
 
@@ -196,11 +215,13 @@ const SORT_OPTIONS: readonly SortOption[] = [
     explainer: (
       <>
         Lift compares how often this sector&apos;s attributed groups use a technique with how often
-        all tracked groups use it. 1.00x is the dataset average; above 1.00x is over-represented
-        here. It is a ratio over a small sample, and its ceiling is reached by any technique with a
-        single attributing group — so bands ranked by lift exclude techniques used by fewer than
-        three of the sector&apos;s groups. Sector attribution is automated, so every lift figure
-        inherits whatever that derivation got wrong.
+        all tracked groups use it. 1.00x is the dataset average; above 1.00x is 
+        <span className="font-semibold text-[var(--text-primary)]">over-represented</span> here. It is a <span className="font-semibold text-[var(--text-primary)]">ratio over a small sample</span>, and its
+        ceiling is reached by any technique with a single attributing group — so bands ranked by
+        lift exclude techniques used by fewer than three of the sector&apos;s groups. Which groups
+        count as this sector&apos;s is decided by <span className="font-semibold text-[var(--text-primary)]">keyword matching</span> on ATT&amp;CK group
+        descriptions, with no analyst confirmation, so a mis-tagged group shifts every lift figure
+        here.
       </>
     ),
   },
@@ -213,9 +234,10 @@ const SORT_OPTIONS: readonly SortOption[] = [
     explainer: (
       <>
         KEV counts the CVEs inferred for a technique that appear in CISA&apos;s Known Exploited
-        Vulnerabilities catalogue. The link is an inference along technique &rarr; CWE &rarr; CAPEC
-        &rarr; CVE, so it is a presence signal rather than a count of incidents in this sector, and
-        a technique with no CWE path carries zero however often it is used.
+        Vulnerabilities catalogue. The link is an <span className="font-semibold text-[var(--text-primary)]">inference</span> along technique &rarr; CWE
+        &rarr; CAPEC &rarr; CVE, so it is a <span className="font-semibold text-[var(--text-primary)]">presence signal</span> rather than a count of
+        incidents in this sector, and a technique with no CWE path carries zero however often it is
+        used.
       </>
     ),
   },
@@ -228,9 +250,9 @@ const SORT_OPTIONS: readonly SortOption[] = [
     explainer: (
       <>
         CVEs counts every vulnerability inferred for a technique along the same technique &rarr; CWE
-        &rarr; CAPEC &rarr; CVE chain. It measures how much vulnerability surface maps to the
-        technique, not how often the technique is used, so broad generic weaknesses score far above
-        specific tradecraft.
+        &rarr; CAPEC &rarr; CVE chain. It measures <span className="font-semibold text-[var(--text-primary)]">vulnerability surface</span>, <span className="font-semibold text-[var(--text-primary)]">not</span> 
+        how often the technique is used, so broad generic weaknesses score far above specific
+        tradecraft.
       </>
     ),
   },
@@ -243,9 +265,10 @@ const SORT_OPTIONS: readonly SortOption[] = [
     explainer: (
       <>
         Reports counts mentions of a technique across the CTI reporting held here. Every mapping
-        comes from AlienVault OTX pulse tags — the vendor blogs ingested alongside them publish no
-        machine-readable technique IDs and contribute none — and the count is corpus-wide rather
-        than sector-specific. It says what was written about, not what targeted this sector.
+        comes from <span className="font-semibold text-[var(--text-primary)]">OTX pulse tags</span> — the vendor blogs ingested alongside them publish no
+        machine-readable technique IDs and contribute none — and the count is 
+        <span className="font-semibold text-[var(--text-primary)]">corpus-wide</span> rather than sector-specific. It says what was written about, not
+        what targeted this sector.
       </>
     ),
   },
@@ -257,10 +280,11 @@ const SORT_OPTIONS: readonly SortOption[] = [
     blurb: 'One of twelve. Ordering by IOC sightings collapses the twelve sectors onto a single list: it measures activity, not sector focus.',
     explainer: (
       <>
-        Sightings counts indicators linked to a technique. That link is almost entirely inferred:
-        98.6% of these rows come from attributing every technique of a malware family to every
-        indicator of that family, so the number tracks feed volume for a handful of families rather
-        than observation of the technique itself. It is the weakest column here, and scores as such.
+        Sightings counts indicators linked to a technique. That link is almost entirely inferred: 
+        <span className="font-semibold text-[var(--text-primary)]">98.6%</span> of these rows come from a <span className="font-semibold text-[var(--text-primary)]">cross-product</span> that attributes every
+        technique of a malware family to every indicator of that family, so the number tracks feed
+        volume for a handful of families rather than observation of the technique itself. It is the
+        weakest column here, and scores as such.
       </>
     ),
   },
@@ -507,6 +531,49 @@ function BandCard({
         )}
       </section>
     </Card>
+  );
+}
+
+/**
+ * One evidence count, linked to the CVE list filtered to exactly what it counts.
+ *
+ * A LINK, not a popover. The first build of this was a portal popover showing
+ * the top ten; a page is better on every axis — the whole list rather than a
+ * truncated ten, the list page's own sorting, severity and search controls, a
+ * URL the reader can share or bookmark, and no positioning code to maintain.
+ *
+ * /cti/cves reads `technique`, `source` and `since` straight from the query
+ * string, and /api/v1/cves applies the same three, so the destination is
+ * guaranteed to agree with the number clicked: verified against production,
+ * T1218.001 KEV = 5 and T1027.009 all = 1,981, matching this section exactly.
+ *
+ * `source=cisa_kev` for the KEV column is the same definition the assembler
+ * counts with, which is why the two cannot drift apart.
+ *
+ * A zero renders as plain text: there is nothing to navigate to, and a link
+ * that lands on an empty list is a worse answer than the honest number.
+ */
+function EvidenceCount({
+  attackId, count, kevOnly, sinceIso,
+}: {
+  attackId: string;
+  count: number;
+  kevOnly: boolean;
+  sinceIso: string;
+}) {
+  if (count === 0) return <span className="tabular-nums text-[var(--text-secondary)]">0</span>;
+
+  const qs = new URLSearchParams({ technique: attackId, since: sinceIso });
+  if (kevOnly) qs.set('source', 'cisa_kev');
+
+  return (
+    <Link
+      href={`/cti/cves?${qs.toString()}`}
+      title={`${count.toLocaleString()} ${kevOnly ? 'KEV-listed ' : ''}CVEs for ${attackId} in the rolling 12 months`}
+      className="tabular-nums text-[var(--accent-teal)] underline decoration-dotted underline-offset-2 hover:decoration-solid"
+    >
+      {count.toLocaleString()}
+    </Link>
   );
 }
 
@@ -1087,6 +1154,20 @@ export function ThreatProfile() {
    *   • `evidenceUnavailable` — the pool is fine but the sort column is all
    *     zero, so Band A is an arbitrary slice presented as "most evidence".
    */
+  /**
+   * The evidence section's rows, and the window start its links carry.
+   *
+   * The date is derived from `meta.evidenceWindowDays` rather than hardcoded,
+   * so the section and the vulnerability list it links to can never disagree
+   * about the period — change the constant in the assembler and both move.
+   * Computed at render, which is correct for a rolling window: the reader's
+   * "last 12 months" ends today, not on the day this was deployed.
+   */
+  const evidence = data.evidence ?? [];
+  const evidenceSinceIso = new Date(
+    Date.now() - (meta.evidenceWindowDays ?? 365) * 86400000,
+  ).toISOString().split('T')[0];
+
   const emptyPool = meta.poolSize === 0;
   const platformPoolEmpty = meta.platformPoolEmpty === true;
   const evidenceUnavailable = meta.evidenceUnavailable === true;
@@ -1396,6 +1477,101 @@ export function ThreatProfile() {
             {poolExact ? 'Browse the whole pool' : "Browse this sector's techniques"} →
           </Link>
         </p>
+      )}
+
+      {/*
+        RECENT EVIDENCE — the bottom section.
+
+        Ordered by LIFT, which is the entire design and was not a preference.
+        Six rankings were measured against production first and every
+        alternative collapsed: by CVE volume, energy and healthcare returned an
+        IDENTICAL top five; by CRITICAL count, identical again; by max CVSS, 15
+        techniques tie at 10.0 so the order is alphabetical; and blending lift
+        with KEV or CRITICAL counts dragged energy and healthcare back to
+        sharing four of five. Lift keeps them disjoint because it is the one
+        column that separates all twelve sectors. The vulnerability figures are
+        therefore EVIDENCE on the row and never ranking inputs — which is also
+        why they are not combined into a score.
+
+        It renders only with rows. No ICS, mobile or ATLAS technique is
+        reachable through CWE/CAPEC, so on those domains the section is absent
+        rather than empty — the same rule the bands use for a missing column.
+      */}
+      {evidence.length > 0 && (
+        <Card className="p-4">
+          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
+              Recent evidence on distinctive techniques
+            </h2>
+            <span className="rounded-full border border-[var(--teal-dim)] bg-[var(--teal-faint)] px-2 py-0.5 text-xs font-semibold tabular-nums text-[var(--accent-teal)]">
+              {evidence.length}
+            </span>
+          </div>
+          <p className="mt-1 text-xs leading-relaxed text-[var(--text-secondary)]">
+            The techniques most disproportionately used by {sectorName}&apos;s attributed groups
+            that also carry a vulnerability published in the{' '}
+            <span className="font-semibold text-[var(--text-primary)]">rolling 12 months</span>.
+            Ordered by lift, the only column here that separates all twelve sectors — the CVE and
+            KEV figures describe each row rather than rank it.{' '}
+            {evidence.length < 10 && (
+              <>
+                Only {evidence.length} of this sector&apos;s techniques qualify, so the list is
+                short rather than padded.{' '}
+              </>
+            )}
+            Counts are inferred along technique &rarr; CWE &rarr; CAPEC &rarr; CVE and overlap
+            between rows, so they do not sum.
+          </p>
+
+          <div className="mt-3 overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="text-left text-[10px] uppercase tracking-wider text-[var(--text-secondary)]">
+                  <th scope="col" className="py-1 pr-3 font-semibold">Lift</th>
+                  <th scope="col" className="py-1 pr-3 font-semibold">Technique</th>
+                  <th scope="col" className="py-1 pr-3 text-right font-semibold">KEV</th>
+                  <th scope="col" className="py-1 text-right font-semibold">CVEs</th>
+                </tr>
+              </thead>
+              <tbody>
+                {evidence.map((e) => (
+                  <tr key={e.attackId} className="border-t border-[var(--border-faint)]">
+                    <td className="whitespace-nowrap py-1.5 pr-3 font-semibold tabular-nums text-[var(--accent-teal)]">
+                      {e.lift.toFixed(2)}x
+                    </td>
+                    <td className="py-1.5 pr-3">
+                      <EntityLink type="technique" attackId={e.attackId} name={e.name} useMap />
+                    </td>
+                    <td className="py-1.5 pr-3 text-right">
+                      <EvidenceCount
+                        attackId={e.attackId}
+                        count={e.kevCount}
+                        kevOnly
+                        sinceIso={evidenceSinceIso}
+                      />
+                    </td>
+                    <td className="py-1.5 text-right">
+                      <EvidenceCount
+                        attackId={e.attackId}
+                        count={e.cveCount}
+                        kevOnly={false}
+                        sinceIso={evidenceSinceIso}
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <p className="mt-2 text-[11px] leading-relaxed text-[var(--text-secondary)]">
+            A count links to those CVEs on the vulnerability list. This is{' '}
+            <span className="font-semibold text-[var(--text-primary)]">not</span> a severity
+            ranking: a technique appears here because this sector&apos;s groups use it
+            disproportionately and something on it was published recently, not because it is the
+            most dangerous.
+          </p>
+        </Card>
       )}
 
       <Card className="p-4">

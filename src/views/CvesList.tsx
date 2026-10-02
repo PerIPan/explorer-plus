@@ -414,6 +414,11 @@ export function CvesList() {
             { label: 'This week', days: 7 },
             { label: 'This month', days: 30 },
             { label: '6 months', days: 180 },
+            // 12 months matches the window the Threat Profile's evidence
+            // section links in with. Without it, a visitor arriving from that
+            // link could see the window applied but had no control that could
+            // restore it after touching any other preset.
+            { label: '12 months', days: 365 },
             { label: 'All time', days: 0 },
           ].map((f) => {
             const sinceDate = f.days > 0

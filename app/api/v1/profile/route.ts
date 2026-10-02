@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '../lib/db';
 import { jsonResponse, errorResponse } from '../../lib/handler';
+import { TECHNIQUE_CVE_LINKS_SQL, liveTechnique } from '../lib/inference';
 import { withCors, corsOptions as OPTIONS } from '../../lib/cors';
 import { profileQuerySchema, profileDomainSchema, PROFILE_DOMAIN_ALL } from '../lib/validate';
 import {
-  splitBands, selectBandB, isDegenerate, isEvidenceUnavailable, otLift, MIN_REACH,
+  splitBands, selectBandB, isDegenerate, isEvidenceUnavailable, otLift, MIN_REACH, MIN_GROUPS,
 } from '../../../../src/lib/profile-rank.mjs';
 
 export { OPTIONS };
@@ -65,6 +66,22 @@ function toPoolItem(r: RawPoolRow): PoolItem {
     kevCount: r.kevCount,
     maxEpss: r.maxEpss === null ? null : Number(r.maxEpss),
   };
+}
+
+/**
+ * How far back "recent" reaches for the evidence section. 365 days, and stated
+ * in the response so the page can label the window from the data rather than
+ * hardcoding a sentence that drifts out of step with this constant.
+ */
+const EVIDENCE_WINDOW_DAYS = 365;
+
+/** Raw shape of one evidence row. `lift` is `numeric`, so it arrives a string. */
+interface RawEvidenceRow {
+  attackId: string;
+  name: string;
+  lift: string;
+  cveCount: number;
+  kevCount: number;
 }
 
 interface GroupRow {
@@ -525,7 +542,7 @@ async function handler(req: NextRequest): Promise<NextResponse> {
     }, 3600));
   }
 
-  const [poolResult, groupsResult, sectorResult] = await Promise.all([
+  const [poolResult, groupsResult, sectorResult, evidenceResult] = await Promise.all([
     // Technique pool for this sector: lift + group_count from the
     // precomputed matview, joined against live evidence (IOC sightings, CTI
     // report mentions, CVE/KEV/EPSS).
@@ -601,6 +618,64 @@ async function handler(req: NextRequest): Promise<NextResponse> {
     ),
 
     query<{ name: string }>(`SELECT name FROM sectors WHERE slug = $1`, [sector]),
+
+    /**
+     * RECENT EVIDENCE on this sector's DISTINCTIVE techniques — the bottom
+     * section's rows.
+     *
+     * Ordered by lift, and that is the whole design. Six rankings were measured
+     * against production before this one was chosen, and every alternative
+     * collapsed: ranking the same candidates by CVE volume returned an
+     * IDENTICAL top five for energy and healthcare; by CRITICAL count, also
+     * identical; by max CVSS, 15 techniques tie at 10.0 so the order is
+     * alphabetical; and blending lift with KEV or with CRITICAL counts dragged
+     * energy and healthcare back to sharing four of five. Lift alone keeps them
+     * disjoint, because it is the one column that separates all twelve sectors.
+     * The vulnerability figures therefore ride as EVIDENCE on the row, never as
+     * ranking inputs.
+     *
+     * The candidate set is "in this sector's pool, past the three-group floor,
+     * and carrying at least one CVE published inside the window". KEV is NOT a
+     * filter: it yields a full ten for only seven of twelve sectors
+     * (transportation 2, media 2, retail 4), and a severity filter is inert
+     * because every technique this chain reaches already has a CRITICAL or HIGH.
+     *
+     * `kevCount` is counted through `ioc_entries` where `source = 'cisa_kev'`,
+     * deliberately NOT through `cve_details.is_kev`. That is the definition
+     * /api/v1/cves uses for `?source=cisa_kev`, which is the call the row's
+     * popover makes — so the number and the list behind it cannot disagree.
+     * The two paths returned the same totals on both techniques spot-checked
+     * (T1218.001 = 5, T1027.009 = 22), but only one of them is guaranteed to
+     * stay in step.
+     *
+     * The catch-all CWE exclusion repeats `app_technique_groups`' own rule
+     * (>10 distinct techniques per CWE); see scripts/check-catchall-threshold.mjs
+     * for why that threshold is 10 everywhere.
+     *
+     * Measured 152ms. Enterprise-only by nature: no ICS, mobile or ATLAS
+     * technique is reachable through CWE/CAPEC, so the section is absent rather
+     * than empty on those domains.
+     */
+    query<RawEvidenceRow>(
+      `SELECT t.attack_id AS "attackId", t.name, stl.lift,
+              count(DISTINCT l.cve_id)::int AS "cveCount",
+              count(DISTINCT l.cve_id) FILTER (
+                WHERE EXISTS (SELECT 1 FROM ioc_entries i
+                               WHERE i.type = 'cve' AND i.value = l.cve_id
+                                 AND i.source = 'cisa_kev'))::int AS "kevCount"
+         FROM sector_technique_lift stl
+         JOIN techniques t ON t.id = stl.technique_id
+              AND ${liveTechnique('t')}
+              AND ($2::text IS NULL OR t.domain = $2)
+         JOIN (${TECHNIQUE_CVE_LINKS_SQL}) l ON l.technique_id = t.id
+         JOIN cve_details d ON d.cve_id = l.cve_id
+              AND d.published_at >= now() - ($3 || ' days')::interval
+        WHERE stl.sector_slug = $1 AND stl.group_count >= $4
+        GROUP BY t.attack_id, t.name, stl.lift
+        ORDER BY stl.lift DESC, t.attack_id ASC
+        LIMIT 10`,
+      [sector, domainFilter, String(EVIDENCE_WINDOW_DAYS), MIN_GROUPS],
+    ),
   ]);
 
   const rawPool = poolResult.rows;
@@ -716,6 +791,19 @@ async function handler(req: NextRequest): Promise<NextResponse> {
     groups: groupsResult.rows.map(({ attackId, name, aliases }) => ({ attackId, name, aliases })),
     bandA,
     bandB,
+    /**
+     * The bottom section's rows: this sector's most distinctive techniques that
+     * also carry a vulnerability published inside the window. Ordered by lift —
+     * see the query for the six rankings that were measured and rejected.
+     * `lift` is coerced here so no consumer has to parseFloat it.
+     */
+    evidence: evidenceResult.rows.map((r) => ({
+      attackId: r.attackId,
+      name: r.name,
+      lift: Number(r.lift),
+      cveCount: r.cveCount,
+      kevCount: r.kevCount,
+    })),
     meta: {
       // The pool BAND B was selected from -- which is the full sector pool
       // whenever `platformDropped`, exactly as before this change. Band A may
@@ -760,6 +848,9 @@ async function handler(req: NextRequest): Promise<NextResponse> {
       // as the denominator would render "271 of 271" as soon as Windows was
       // picked.
       poolTotal: fullPool.length,
+      // The evidence section's window, in days. Shipped so the page states the
+      // period from the response instead of repeating the number in copy.
+      evidenceWindowDays: EVIDENCE_WINDOW_DAYS,
     },
   }, 3600));
 }
