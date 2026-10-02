@@ -1,6 +1,7 @@
 'use client';
 import { createContext, useContext, useCallback, useMemo, useEffect, useState, type ReactNode } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { resolveSector, ALL_SECTORS_PARAM } from '../lib/sector-scope.mjs';
 
 interface SectorContextValue {
   /** Active sector slug, or null for "All Sectors" */
@@ -33,12 +34,35 @@ const Ctx = createContext<SectorContextValue>({
 const EMPTY_PARAM: Record<string, string> = {};
 const STORAGE_KEY = 'mitre-sector';
 
+/**
+ * A link declaring that its list is deliberately NOT sector-scoped.
+ *
+ * Carrying the last sector across a link that omitted it is usually the helpful
+ * thing to do, and that is what both this context and `UrlSyncEffect` do. It is
+ * the wrong thing for a link whose number was computed without any sector
+ * scope: the Threat Profile's evidence counts count every CVE on a technique,
+ * and inheriting a sector made each one land on a strictly smaller list — 29
+ * CVEs linking to a page headed "1-17 of 17" (see `EvidenceCount`).
+ *
+ * `?sector=` cannot express this. An empty value reads as absent here, so it
+ * falls straight back to the stored sector, and it would be the one spelling
+ * that silently depends on that. A named parameter says what it means, in the
+ * URL, where someone sharing the link can see it.
+ *
+ * Re-exported so consumers have one import for the sector rule; the definition
+ * and its tests live in src/lib/sector-scope.mjs.
+ */
+export { ALL_SECTORS_PARAM };
+
 export function SectorProvider({ children }: { children: ReactNode }) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
 
   const urlSector = searchParams.get('sector') || null;
+  // An explicit opt-out beats both the URL and the cache: a link that says
+  // "no sector scope" is answering for the page it points at.
+  const allSectors = searchParams.has(ALL_SECTORS_PARAM);
 
   // Track stored sector — initialized as null to match server, synced from sessionStorage on mount
   const [storedSector, setStoredSector] = useState<string | null>(null);
@@ -49,7 +73,7 @@ export function SectorProvider({ children }: { children: ReactNode }) {
       if (stored) setStoredSector(stored);
     } catch { /* private mode / storage disabled — stay on the null default */ }
   }, []);
-  const sector = urlSector ?? storedSector;
+  const sector = resolveSector({ urlSector, storedSector, allSectors });
 
   // Persist to sessionStorage when URL sector changes
   useEffect(() => {

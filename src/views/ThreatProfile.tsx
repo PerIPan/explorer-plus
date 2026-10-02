@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
@@ -24,7 +24,7 @@ import {
   buildProfileApiQuery,
   ALL_DOMAINS,
 } from '../lib/profile-query.mjs';
-import { useSector } from '../contexts/SectorContext';
+import { useSector, ALL_SECTORS_PARAM } from '../contexts/SectorContext';
 import { DEFAULT_DOMAIN, useDomain } from '../contexts/DomainContext';
 import { ProfileMatrix } from '../components/profile/ProfileMatrix';
 
@@ -127,6 +127,7 @@ interface ProfileResponse {
     /** How many days back the evidence section looks. Shipped so the page
      *  labels the window from the response instead of repeating the number. */
     evidenceWindowDays?: number;
+    evidenceSince?: string;
   };
 }
 
@@ -543,12 +544,27 @@ function BandCard({
  * URL the reader can share or bookmark, and no positioning code to maintain.
  *
  * /cti/cves reads `technique`, `source` and `since` straight from the query
- * string, and /api/v1/cves applies the same three, so the destination is
- * guaranteed to agree with the number clicked: verified against production,
- * T1218.001 KEV = 5 and T1027.009 all = 1,981, matching this section exactly.
+ * string, and /api/v1/cves applies the same three — and `source=cisa_kev` is
+ * the very definition the assembler counts KEV with, so those three axes cannot
+ * drift.
  *
- * `source=cisa_kev` for the KEV column is the same definition the assembler
- * counts with, which is why the two cannot drift apart.
+ * `allSectors` IS LOAD-BEARING, and its absence was a real defect: every number
+ * in this section linked to a SMALLER list. Three axes agreeing is not the same
+ * as the page agreeing. A fourth parameter nobody put in the link arrived on its
+ * own — `UrlSyncEffect` re-injects the stored sector on every path but /profile,
+ * and this page is what wrote that value to sessionStorage. On /cti/cves
+ * `sector=` is an unrelated relation (affected product → app technique groups →
+ * groups → sector), which this count has no notion of, so it only ever subtracts:
+ * production, financial, T1218.001 — the section says 29 CVEs and 5 KEV, the
+ * page it linked to said 17 and 3, and T1003.006's "1" landed on "No CVEs
+ * found." The earlier verification missed it because it was run against
+ * /api/v1/cves directly, which never sees the injected param; the PAGE does.
+ *
+ * So the link now states its scope instead of leaving it to be filled in. This
+ * count is sector-blind by construction — it counts every CVE on the technique —
+ * and the URL now says so, which is also the only honest option: making the
+ * count sector-aware would mean adopting a sector definition that has nothing to
+ * do with what the section measures.
  *
  * A zero renders as plain text: there is nothing to navigate to, and a link
  * that lands on an empty list is a worse answer than the honest number.
@@ -561,9 +577,19 @@ function EvidenceCount({
   kevOnly: boolean;
   sinceIso: string;
 }) {
-  if (count === 0) return <span className="tabular-nums text-[var(--text-secondary)]">0</span>;
+  // No window, no link. An empty `since` would be DROPPED from the query string
+  // rather than defaulting to the same 12 months, so the list would answer for
+  // all time — a number far larger than the one clicked. Unreachable in
+  // practice (a row implies a window) and cheap to make impossible.
+  if (count === 0 || !sinceIso) {
+    return <span className="tabular-nums text-[var(--text-secondary)]">{count.toLocaleString()}</span>;
+  }
 
-  const qs = new URLSearchParams({ technique: attackId, since: sinceIso });
+  const qs = new URLSearchParams({
+    technique: attackId,
+    since: sinceIso,
+    [ALL_SECTORS_PARAM]: '1',
+  });
   if (kevOnly) qs.set('source', 'cisa_kev');
 
   return (
@@ -757,9 +783,38 @@ export function ThreatProfile() {
    * sector is in flight, there is no honest number, so the option carries no
    * `meta` line rather than a stale one. A platform the pool never mentions
    * shows 0 — the true answer, and the explanation for an empty briefing.
+   *
+   * HELD ACROSS A PLATFORM TOGGLE, which is the one in-flight window where
+   * dropping the number is not honesty but churn. These counts are taken over
+   * the pool BEFORE any platform filter (see the route), so they are invariant
+   * under the platform answer: the value that arrives after a toggle is the
+   * value that was already on screen. Without the hold, every toggle changes
+   * the query key, `data` goes `undefined` (no `placeholderData` anywhere), all
+   * eleven rows lose their second line, and the OPEN listbox — selecting does
+   * not close it — collapses by ~8px per row under the cursor, so the next
+   * click lands on a platform nobody aimed at. The hold is keyed on
+   * sector+domain, the two answers the counts DO move with, so a sector change
+   * still blanks them rather than showing another sector's numbers.
+   *
+   * Recorded in an EFFECT, not during render. A render-phase ref write would be
+   * the shorter spelling and React asks you not to: it is a side effect in a
+   * function React may call speculatively or discard. The effect is enough
+   * here, and the one-commit lag costs nothing — on the render where `data`
+   * exists the live value is used directly, and the cache is only ever read on
+   * the renders where it does not.
    */
-  const platformCounts = data?.meta?.platformCounts;
-  const poolTotal = data?.meta?.poolTotal;
+  const countsKey = `${sector ?? ''}|${domain}`;
+  const heldCounts = useRef<{ key: string; counts: Record<string, number>; total: number } | null>(null);
+  const liveCounts = data?.meta?.platformCounts;
+  const liveTotal = data?.meta?.poolTotal;
+  useEffect(() => {
+    if (liveCounts && liveTotal) {
+      heldCounts.current = { key: countsKey, counts: liveCounts, total: liveTotal };
+    }
+  }, [countsKey, liveCounts, liveTotal]);
+  const held = heldCounts.current?.key === countsKey ? heldCounts.current : null;
+  const platformCounts = liveCounts ?? held?.counts;
+  const poolTotal = liveTotal ?? held?.total;
   const platformOptions = useMemo<MultiSelectOption[]>(
     () => platformsForDomain(domain).map((p) => {
       const n = platformCounts?.[p];
@@ -884,10 +939,21 @@ export function ThreatProfile() {
                  A button cannot nest inside a button, and the (i) previously sat
                  OUTSIDE the pill for that reason — which read as a stray circle
                  belonging to nothing. Splitting the pill keeps the markup valid
-                 and puts the affordance where it belongs. */
+                 and puts the affordance where it belongs.
+
+                 NO `overflow-hidden` here, deliberately. It was the obvious way
+                 to keep the (i)'s background inside the rounded border, and it
+                 silently destroyed both buttons' touch targets: each one's 44px
+                 region is an absolutely-positioned `::before` whose containing
+                 block is the button, so a clipping ancestor clips it — for
+                 hit-testing as well as painting — back to the pill's own ~26px
+                 box. That is the whole mechanism the pseudo-elements exist for,
+                 and the `gap-y-5` above exists to separate. The (i) rounds its
+                 own right corners instead (5px = the 6px outer radius less the
+                 1px border), which costs one class and clips nothing. */
               <span
                 key={o.value}
-                className={`inline-flex items-stretch overflow-hidden rounded-md border text-xs transition-colors ${
+                className={`inline-flex items-stretch rounded-md border text-xs transition-colors ${
                   active
                     ? 'border-[var(--accent-teal)] bg-[var(--teal-ghost)] font-semibold text-[var(--accent-teal)]'
                     : 'border-[var(--border-color)] text-[var(--text-primary)] hover:border-[var(--border-hover)]'
@@ -925,8 +991,16 @@ export function ThreatProfile() {
                   aria-expanded={open}
                   aria-controls={EXPLAINER_ID}
                   aria-label={open ? `Hide what ${o.label} measures` : `What ${o.label} measures`}
-                  className={`relative inline-flex w-6 items-center justify-center border-l text-[10px] font-semibold italic transition-colors
-                              before:content-[''] before:absolute before:inset-y-0 before:-inset-x-1 before:h-11 before:top-1/2 before:-translate-y-1/2 ${
+                  /* `left-0 -right-1`, never `-inset-x-1`: a symmetric negative
+                     inset put 4px of this button's target ON TOP of the sort
+                     button's right padding, and because this is the later
+                     positioned sibling it won — a press on the last 4px of
+                     "KEV" opened the explainer instead of sorting, which is
+                     exactly what the comment above promises cannot happen. The
+                     widening now goes outward only, past the pill's edge, where
+                     there is nothing to steal from. */
+                  className={`relative inline-flex w-6 items-center justify-center rounded-r-[5px] border-l text-[10px] font-semibold italic transition-colors
+                              before:content-[''] before:absolute before:left-0 before:-right-1 before:top-1/2 before:h-11 before:-translate-y-1/2 ${
                     active ? 'border-[var(--accent-teal)]' : 'border-[var(--border-color)]'
                   } ${
                     open
@@ -1157,16 +1231,21 @@ export function ThreatProfile() {
   /**
    * The evidence section's rows, and the window start its links carry.
    *
-   * The date is derived from `meta.evidenceWindowDays` rather than hardcoded,
-   * so the section and the vulnerability list it links to can never disagree
-   * about the period — change the constant in the assembler and both move.
-   * Computed at render, which is correct for a rolling window: the reader's
-   * "last 12 months" ends today, not on the day this was deployed.
+   * TAKEN FROM THE RESPONSE, never recomputed here. This used to derive the
+   * date from `meta.evidenceWindowDays` and `Date.now()`, which looked like it
+   * could not drift — same constant, same arithmetic — and drifted anyway,
+   * because the two sides were not the same window: the counts come from a cut
+   * on the database's clock, this ran on the reader's, and the reader's clock is
+   * an hour or a day or a year off whenever it is. The response is also cached
+   * for an hour while this re-ran every render, so the gap changed sign at UTC
+   * midnight. The date now ships with the numbers it belongs to.
+   *
+   * The fallback is for the shape, not for correctness: `evidenceSince` is
+   * present whenever a row is, so an empty window start means an empty section
+   * and no link to build.
    */
   const evidence = data.evidence ?? [];
-  const evidenceSinceIso = new Date(
-    Date.now() - (meta.evidenceWindowDays ?? 365) * 86400000,
-  ).toISOString().split('T')[0];
+  const evidenceSinceIso = meta.evidenceSince ?? '';
 
   const emptyPool = meta.poolSize === 0;
   const platformPoolEmpty = meta.platformPoolEmpty === true;
@@ -1301,7 +1380,28 @@ export function ThreatProfile() {
           fallback widens to the full sector pool while Band A stays on the
           narrow one — so that comparison is true for an evidence sort too
           whenever `platformDropped` fired. The text quotes no second number for
-          the same reason. */}
+          the same reason.
+
+          The `> 0` below is why this needs a companion: at exactly ZERO the
+          floor has emptied the band, which is when the reader most needs the
+          explanation — and the old gate suppressed it there, leaving the card
+          to say "no technique in this pool carries any lift evidence", which
+          was false. `?sector=financial&domain=mobile-attack&sort=lift` is the
+          live case: a pool of two techniques, both carrying lift (2.17 and
+          0.72), both used by one group. Reachable on mobile for 9 of the 12
+          sectors. */}
+      {!emptyPool && sortKey === 'lift' && (meta.bandAEligible ?? 0) === 0 && (
+        <Notice tone="warn" title="Every technique here is below the floor">
+          Lift is a ratio, so it needs a sample: reach is drawn only from techniques used by at
+          least three of {sectorName}&apos;s groups
+          {platforms.length > 0 && ' and running on the selected platforms'}, and in this pool{' '}
+          <span className="font-semibold">no technique clears that</span>. The band is empty for
+          that reason and no other — the techniques here do carry lift, each on a single
+          attribution, which is exactly the evidence the floor exists to refuse. Switch the
+          selector to an evidence column to rank this pool without a floor.
+        </Notice>
+      )}
+
       {!emptyPool && sortKey === 'lift' && (meta.bandAEligible ?? 0) > 0
         && (meta.bandAEligible as number) < meta.poolSize && (
         <Notice tone="info" title="Lift needs a sample, so reach has a floor">
@@ -1313,8 +1413,9 @@ export function ThreatProfile() {
           <span className="font-semibold tabular-nums text-[var(--text-primary)]">
             {(meta.bandAEligible as number).toLocaleString()}
           </span>{' '}
-          techniques used by at least three of {sectorName}&apos;s groups — the same floor sector fit
-          has always applied. Switch the selector to an evidence column and reach uses the whole
+          techniques used by at least three of {sectorName}&apos;s groups
+          {platforms.length > 0 && ' and running on the selected platforms'} — the same floor sector
+          fit has always applied. Switch the selector to an evidence column and reach uses the whole
           pool: a KEV or CVE count is an absolute number and needs no floor.
         </Notice>
       )}
@@ -1389,9 +1490,18 @@ export function ThreatProfile() {
               </>
             ) : (
               <>
-                Top six by <span className="font-semibold">{sortOption.column}</span> across the
-                whole {sectorName} pool, with no group-count floor. This is what is loudest —
-                reach, not sector fit — and at {sortOption.score}/12 differentiation it is{' '}
+                {/* The floor is metric-scoped: it applies to lift and to
+                    nothing else, because only a ratio can be maximised by a
+                    single sighting. This sentence used to say "with no
+                    group-count floor" unconditionally, which on the lift sort
+                    contradicted the notice directly above it — the one
+                    explaining the floor it denied. */}
+                Top six by <span className="font-semibold">{sortOption.column}</span>{' '}
+                {sortKey === 'lift'
+                  ? `across the techniques used by at least three of ${sectorName}'s groups`
+                  : `across the whole ${sectorName} pool, with no group-count floor`}
+                . This is what is loudest — reach, not sector fit — and at {sortOption.score}/12
+                differentiation it is{' '}
                 {sortOption.score <= 2
                   ? 'very nearly the list every other sector sees'
                   : 'largely specific to this sector'}
@@ -1408,6 +1518,15 @@ export function ThreatProfile() {
                 <span className="font-semibold">The pool is empty.</span> There is no technique here
                 to rank — see above for why. This is not &ldquo;no evidence found&rdquo;; it is
                 &ldquo;nothing was searched&rdquo;.
+              </>
+            ) : sortKey === 'lift' && (meta.bandAEligible ?? 0) === 0 ? (
+              /* NOT "carries no lift evidence" — the pool does carry lift, and
+                 saying otherwise blamed the data for a decision this page made.
+                 The floor emptied the band; the notice above gives the numbers. */
+              <>
+                <span className="font-semibold">Nothing clears the floor.</span> Every technique in
+                this pool is attributed to fewer than three of {sectorName}&apos;s groups, so lift
+                has too little behind it to rank on — see above.
               </>
             ) : (
               <>No technique in this pool carries any {sortOption.column.toLowerCase()} evidence.</>
@@ -1520,7 +1639,22 @@ export function ThreatProfile() {
               </>
             )}
             Counts are inferred along technique &rarr; CWE &rarr; CAPEC &rarr; CVE and overlap
-            between rows, so they do not sum.
+            between rows, so they do not sum.{' '}
+            {/* Said rather than silently done. Everything above this section
+                narrows to the platform answer and this does not, which left the
+                bands showing only SaaS techniques above a table of ten that
+                carried none. Filtering here would be the other repair, and a
+                worse one: this list is already cut twice (the three-group floor
+                and a CVE in the window), so a narrow platform pick would empty
+                it, and the claim the section makes is about the sector's groups,
+                not about the estate. So it keeps its scope and states it. */}
+            {platforms.length > 0 && (
+              <>
+                This section is <span className="font-semibold">not</span> narrowed to{' '}
+                {platformList}: it ranks the sector&apos;s groups, and the bands above are where
+                the platform answer applies.
+              </>
+            )}
           </p>
 
           <div className="mt-3 overflow-x-auto">

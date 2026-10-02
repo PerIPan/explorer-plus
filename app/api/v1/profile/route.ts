@@ -80,6 +80,10 @@ interface RawEvidenceRow {
   attackId: string;
   name: string;
   lift: string;
+  // The window's start, as the DATABASE cut it. Identical on every row (it is
+  // cross-joined from a one-row CTE); carried per row only because that is
+  // where SQL can put it. The response lifts it to `meta.evidenceSince`.
+  since: string;
   cveCount: number;
   kevCount: number;
 }
@@ -652,26 +656,62 @@ async function handler(req: NextRequest): Promise<NextResponse> {
      * (>10 distinct techniques per CWE); see scripts/check-catchall-threshold.mjs
      * for why that threshold is 10 everywhere.
      *
-     * Measured 152ms. Enterprise-only by nature: no ICS, mobile or ATLAS
-     * technique is reachable through CWE/CAPEC, so the section is absent rather
-     * than empty on those domains.
+     * Measured 0.67s (media) to 1.47s (defense) warm, server-side, across all
+     * twelve sectors; 1.04s for `?domain=all`. An earlier "152ms" here was off
+     * by 7-10x and is corrected rather than quietly dropped. The cost is in the
+     * dedup `UNION`, which materialises the whole 137,610-row link relation per
+     * request — including a scan of all 777,316 `technique_iocs` rows — so it
+     * tracks that table's growth, not the ten rows returned. Tolerable only
+     * because the response is cached an hour; if it stops being, the link
+     * relation wants a matview of its own.
+     *
+     * Effectively enterprise-only, though not for the reason first written
+     * here: three mobile techniques ARE reachable through CWE/CAPEC (ICS and
+     * ATLAS are not). None of the three is attributed to three groups in any
+     * sector, so the floor below empties them and the section is absent rather
+     * than empty on those domains — the right outcome by a different mechanism.
      */
     query<RawEvidenceRow>(
-      `SELECT t.attack_id AS "attackId", t.name, stl.lift,
+      /*
+       * `date_trunc('day', ...)` and the boundary RETURNED, not an instant and
+       * a date recomputed in the browser. Those were two different windows:
+       * this counted from `now() - 365 days` — an instant, partway through the
+       * boundary day — while the link the count renders sent that day's DATE,
+       * which /api/v1/cves resolves to midnight UTC. The list was therefore
+       * wider than the count by however far into the UTC day the request fell,
+       * and the count under-reported. Measured on production: on 27 of the last
+       * 30 boundary dates at least one CVE on these techniques sits in that gap,
+       * worst day 11; three live rows disagreed by one at 23:16 UTC.
+       *
+       * Caching made it worse in both directions — the response is held an hour
+       * while the browser recomputed `since` on every render, so after UTC
+       * midnight the link's window was NEWER than the counted one and the list
+       * came back smaller instead.
+       *
+       * Now the window is a whole UTC day, cut once on the database's clock, and
+       * travels WITH the counts it produced. `w` is cross-joined rather than
+       * repeated so the predicate and the returned date cannot drift apart.
+       */
+      `WITH w AS (
+         SELECT date_trunc('day', now() - ($3 || ' days')::interval) AS since
+       )
+       SELECT t.attack_id AS "attackId", t.name, stl.lift,
+              to_char(w.since, 'YYYY-MM-DD') AS "since",
               count(DISTINCT l.cve_id)::int AS "cveCount",
               count(DISTINCT l.cve_id) FILTER (
                 WHERE EXISTS (SELECT 1 FROM ioc_entries i
                                WHERE i.type = 'cve' AND i.value = l.cve_id
                                  AND i.source = 'cisa_kev'))::int AS "kevCount"
          FROM sector_technique_lift stl
+         CROSS JOIN w
          JOIN techniques t ON t.id = stl.technique_id
               AND ${liveTechnique('t')}
               AND ($2::text IS NULL OR t.domain = $2)
          JOIN (${TECHNIQUE_CVE_LINKS_SQL}) l ON l.technique_id = t.id
          JOIN cve_details d ON d.cve_id = l.cve_id
-              AND d.published_at >= now() - ($3 || ' days')::interval
+              AND d.published_at >= w.since
         WHERE stl.sector_slug = $1 AND stl.group_count >= $4
-        GROUP BY t.attack_id, t.name, stl.lift
+        GROUP BY t.attack_id, t.name, stl.lift, w.since
         ORDER BY stl.lift DESC, t.attack_id ASC
         LIMIT 10`,
       [sector, domainFilter, String(EVIDENCE_WINDOW_DAYS), MIN_GROUPS],
@@ -851,6 +891,12 @@ async function handler(req: NextRequest): Promise<NextResponse> {
       // The evidence section's window, in days. Shipped so the page states the
       // period from the response instead of repeating the number in copy.
       evidenceWindowDays: EVIDENCE_WINDOW_DAYS,
+      // ...and its START, as the database cut it, so the links the section
+      // renders filter on exactly the window the counts were taken over. The
+      // page must NOT recompute this: it did, from the browser's clock, and the
+      // two windows disagreed by up to a day. Absent only when the section is,
+      // in which case there is no link to build.
+      evidenceSince: evidenceResult.rows[0]?.since,
     },
   }, 3600));
 }

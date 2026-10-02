@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from '../src/contexts/ThemeContext';
 import { DomainProvider, DEFAULT_DOMAIN } from '../src/contexts/DomainContext';
 import { SectorProvider } from '../src/contexts/SectorContext';
+import { shouldInjectStoredSector, ALL_SECTORS_PARAM } from '../src/lib/sector-scope.mjs';
 import { DiamondLoader } from '../src/components/shared/FoldingDiamond';
 import { AppShell } from '../src/components/layout/AppShell';
 import { Analytics } from '@vercel/analytics/react';
@@ -49,11 +50,24 @@ function UrlSyncEffect() {
     // render a full briefing for a sector they did not choose HERE — the one
     // failure mode the page is required not to have. With no ?sector= it must
     // reach /profile with no sector, so the page can say so.
+    //
+    // And NOT when the link carries `allSectors`, which says the list it points
+    // at was computed with no sector scope at all. Re-injecting there turned
+    // every evidence count on the briefing into a link to a smaller list; see
+    // ALL_SECTORS_PARAM in SectorContext for the measurements.
     let storedSector: string | null = null;
     try {
       storedSector = sessionStorage.getItem('mitre-sector');
     } catch { /* private mode / storage disabled — behave as unset */ }
-    if (storedSector && !params.has('sector') && pathname !== '/profile') {
+    // `storedSector &&` first so TypeScript narrows it to a string here; the
+    // helper returns false for a null store anyway, but a cast would be a
+    // promise the compiler cannot check.
+    if (storedSector && shouldInjectStoredSector({
+      hasSectorParam: params.has('sector'),
+      storedSector,
+      allSectors: params.has(ALL_SECTORS_PARAM),
+      pathname,
+    })) {
       params.set('sector', storedSector);
       changed = true;
     }

@@ -50,6 +50,18 @@ export function notCatchallCwe(col: string): string {
  * it navigates to is the worst defect this pairing can have, so the definition
  * is written once, here.
  *
+ * THIS FRAGMENT IS NOT, BY ITSELF, ENOUGH, and it is worth being exact about
+ * why, because sharing it read as a guarantee and was not one. It pins WHICH
+ * LINKS count. Two other things have to match before a number equals the page
+ * it navigates to, and both diverged in production after this was written: the
+ * WINDOW (this side cut at an instant, the link sent a date — see the evidence
+ * query in app/api/v1/profile/route.ts) and the SCOPE (the list page inherited
+ * a stored sector nobody put in the link, and applied it as an unrelated
+ * relation, so every count pointed at a smaller list — see ALL_SECTORS_PARAM in
+ * src/contexts/SectorContext.tsx). Verifying a count against /api/v1/cves is
+ * therefore not verifying it against the page: the API never sees what the
+ * client adds. Check the rendered total.
+ *
  * TWO ARMS, deliberately:
  *   1. the weakness chain, CVE -> CWE -> CAPEC -> technique, with catch-all
  *      CWEs removed (a CWE mapping to >10 techniques fans one CVE across
