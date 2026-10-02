@@ -36,9 +36,14 @@
 --
 --     Its cost: a matview cannot ADD COLUMN, so it is DROP + CREATE. Doing
 --     that in one transaction (as scripts/migrate-advisory-rank.sql does)
---     blocks the OSV branch for the whole build, and the route's
---     missing-relation fallback would serve GHSA-only results as a 200 with a
---     30-minute CDN TTL. Build aside and rename if you go this way.
+--     holds ACCESS EXCLUSIVE for the whole build, so the OSV branch STALLS for
+--     roughly a minute and then fails at the API pool's 30s client ceiling.
+--
+--     Note the transaction is what makes this safe rather than dangerous: a
+--     reader blocks on the lock and never observes a missing relation, so the
+--     route's missing-relation fallback cannot fire and cannot cache a
+--     GHSA-only answer. That only becomes a risk if the DROP is ever committed
+--     without the CREATE. Build aside and rename if you want zero stall.
 --
 -- (B) THE osv_id ARM COSTS 141 MB — 76% of the new bytes and 52% of the extra
 --     WAL — and earns it only for ID-shaped needles. The existing btree

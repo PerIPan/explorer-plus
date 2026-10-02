@@ -59,6 +59,37 @@
 -- join per branch, so a collision degrades to exactly what the old query did:
 -- two rows, each with its own numbers.
 -- ═══════════════════════════════════════════════════════════════════════════
+-- ═══════════════════════════════════════════════════════════════════════════
+-- RUNNING THIS AGAINST A LIVE SITE
+--
+-- Re-apply this file to raise the stored top-N from 3 to 10. A plain
+-- `REFRESH MATERIALIZED VIEW` will NOT do it: REFRESH re-runs the definition
+-- Postgres has stored, which still says 3. Only DROP + CREATE changes it, which
+-- is what this file does — so until it runs, /ecosystems/{slug} shows 3 top
+-- packages for every OSV ecosystem (and 1 for Alpaquita, Echo and MinimOS),
+-- forever, not just until the next weekly refresh.
+--
+-- WHAT HAPPENS WHILE IT RUNS. The DROP and CREATE are inside one transaction
+-- (BEGIN below), so the ACCESS EXCLUSIVE lock is held until COMMIT and a
+-- concurrent reader BLOCKS rather than seeing a missing relation. That is the
+-- safe shape and it is deliberate: readers cannot observe the intermediate
+-- state, so no route can cache a wrong answer.
+--
+-- The cost is a stall, not a wrong result. ecosystem_advisory_stats took 57.9s
+-- to build, so for about a minute:
+--   /api/v1/ecosystems/{slug}  blocks, then fails at the API pool's 30s
+--                              client ceiling. A 500, which is NOT cached.
+--   /api/v1/ecosystems         same.
+-- Both recover the moment COMMIT lands. Run it at a quiet hour anyway.
+--
+-- IF IT FAILS HALF-WAY, CHECK FOR THE MATVIEW BEFORE WALKING AWAY. The one
+-- genuinely bad state is the matview being ABSENT and committed so, because
+-- app/api/v1/ecosystems/route.ts:86-87 degrades a "does not exist" error to
+-- `{ rows: [] }` and returns it as a 200 cached for 300s — an empty ecosystem
+-- list, served from the CDN, with no error anywhere. ON_ERROR_STOP plus the
+-- transaction should prevent it; verify with:
+--   SELECT to_regclass('ecosystem_advisory_stats'), to_regclass('ecosystem_advisory_days');
+-- ═══════════════════════════════════════════════════════════════════════════
 \set ON_ERROR_STOP on
 
 BEGIN;
