@@ -79,6 +79,34 @@ const querySchema = paginationSchema.extend({
  * `COALESCE(o.cvss_severity, cve.cvss_severity) = 'HIGH'` and `sev_rank = 3`
  * select exactly the same rows.
  */
+/**
+ * The aliases pre-filter expression — ONE token to change when
+ * scripts/migrate-osv-search.sql is applied.
+ *
+ * Today: `array_to_string(o.aliases, ' ')`. That is correct and works, but it
+ * is UNINDEXED and cannot be indexed — array_to_string is STABLE
+ * (pg_proc.provolatile = 's') and an index expression must be IMMUTABLE. The
+ * migration therefore creates an IMMUTABLE wrapper, osv_aliases_text(), and
+ * indexes THAT.
+ *
+ * Postgres matches an expression index only when the query expression matches
+ * it textually, and it will NOT inline an IMMUTABLE sql function whose body
+ * calls a STABLE one. So while this says `array_to_string`, the index on
+ * `osv_aliases_text(aliases)` can never be used — one unindexable arm forces a
+ * sequential scan of the whole OR, and the migration would cost 185 MB for no
+ * speedup. That is the exact trap the migration's own header warns about.
+ *
+ * ORDER MATTERS, because this cannot be flipped early:
+ *   1. apply scripts/migrate-osv-search.sql (creates osv_aliases_text + indexes)
+ *   2. change the string below to `osv_aliases_text(o.aliases)`
+ *   3. deploy
+ *
+ * Flipping it before step 1 makes every `?q=` request a 500 — a missing
+ * function raises undefined_function, which does NOT match the
+ * missing-relation fallback further down this file.
+ */
+const ALIASES_TEXT_SQL = "array_to_string(o.aliases, ' ')";
+
 const SEVERITY_RANK: Record<string, number> = {
   CRITICAL: 4,
   HIGH: 3,
@@ -242,7 +270,7 @@ export async function GET(req: NextRequest) {
       // `?q=<term>` with no narrowing filter measured >70s with 0 bytes
       // returned — but it is already written in the form the indexes serve.
       osvConds.push(
-        `(o.osv_id ILIKE ${ph} OR o.summary ILIKE ${ph} OR (array_to_string(o.aliases, ' ') ILIKE ${ph} AND EXISTS (SELECT 1 FROM unnest(o.aliases) a WHERE a ILIKE ${ph})))`,
+        `(o.osv_id ILIKE ${ph} OR o.summary ILIKE ${ph} OR (${ALIASES_TEXT_SQL} ILIKE ${ph} AND EXISTS (SELECT 1 FROM unnest(o.aliases) a WHERE a ILIKE ${ph})))`,
       );
       osvNeedsBase = true;
     }

@@ -84,9 +84,18 @@
 -- block, and the pooler neither gives a stable session for the build nor
 -- accepts `options=-c ...`.
 --
--- DEPLOY THE ROUTE ONLY AFTER STEP 4. The route must call osv_aliases_text()
--- by name; until that function exists, every `?q=` request is a 500, and the
--- error does not match the route's missing-relation fallback.
+-- THE ROUTE IS NOT YET SWITCHED OVER, DELIBERATELY. As shipped it uses
+-- `array_to_string(o.aliases, ' ')`, which works but cannot use the index
+-- below, because Postgres matches an expression index textually and will not
+-- inline an IMMUTABLE wrapper whose body is STABLE. So applying this file
+-- alone leaves the aliases arm unindexed, one unindexable arm forces a seq
+-- scan of the whole OR, and you will have paid 185 MB for nothing.
+--
+-- Step 9 below is therefore part of the migration, not an afterthought. The
+-- change is a single constant: ALIASES_TEXT_SQL at the top of
+-- app/api/v1/advisories/route.ts. Flipping it BEFORE this file runs makes
+-- every `?q=` request a 500 — a missing function raises undefined_function,
+-- which does not match the route's missing-relation fallback.
 -- ═══════════════════════════════════════════════════════════════════════════
 
 -- 1. Preflight. Expect zero rows from both.
@@ -152,6 +161,15 @@ ORDER BY c.relname;
 --       OR (osv_aliases_text(o.aliases) ILIKE '%log4j%'
 --           AND EXISTS (SELECT 1 FROM unnest(o.aliases) a WHERE a ILIKE '%log4j%'));
 --
+-- 9. ONLY NOW switch the route over, and deploy:
+--
+--      app/api/v1/advisories/route.ts
+--      - const ALIASES_TEXT_SQL = "array_to_string(o.aliases, ' ')";
+--      + const ALIASES_TEXT_SQL = 'osv_aliases_text(o.aliases)';
+--
+--    Then re-run the EXPLAIN in step 8 and confirm a BitmapOr over all three
+--    arms. Without this step the two preceding indexes are dead weight.
+
 -- DO NOT set fastupdate=off (WAL per delta 140 MB -> 267 MB) and do not raise
 -- gin_pending_list_limit (every query scans the pending list; 64 MB costs
 -- +13-32ms hot per query). The real lever on ingest cost is not rewriting
