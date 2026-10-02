@@ -617,7 +617,11 @@ async function handler(req: NextRequest): Promise<NextResponse> {
     ? rawPool.filter((r) => Array.isArray(r.platforms) && r.platforms.some((p) => selected.has(p))).map(toPoolItem)
     : fullPool;
 
-  let { bandA, bandB, bandBShort } = splitBands(platformPool, sort, 6);
+  // `bandAEligible` and `bandATied` describe BAND A, so they move with it: the
+  // `platformPoolEmpty` branch below re-selects Band A over the full pool, and
+  // these two would otherwise still describe the EMPTY platform pool they were
+  // computed from (bandAEligible 0, for a band of six).
+  let { bandA, bandB, bandBShort, bandAEligible, bandATied } = splitBands(platformPool, sort, 6);
   // The pool each band was actually drawn from. They can differ, which is the
   // whole point of the fallback below.
   let bandAPool = platformPool;
@@ -655,6 +659,9 @@ async function handler(req: NextRequest): Promise<NextResponse> {
       bandA = widened.bandA;
       bandB = widened.bandB;
       bandBShort = widened.bandBShort;
+      // Band A was re-selected, so its two descriptors are re-taken with it.
+      bandAEligible = widened.bandAEligible;
+      bandATied = widened.bandATied;
       bandAPool = fullPool;
     } else {
       // `splitBands` is JSDoc-typed over `Array<object>`, so `bandA` arrives
@@ -709,6 +716,17 @@ async function handler(req: NextRequest): Promise<NextResponse> {
       // under a heading that names evidence. `sort=kev` over mobile-attack or
       // atlas-attack is the live case.
       evidenceUnavailable: isEvidenceUnavailable(bandAPool, sort),
+      // How many techniques Band A was actually CHOSEN FROM. Equal to
+      // `poolSize` for every evidence sort; smaller for `sort=lift`, where the
+      // group floor applies to Band A as well because lift is a ratio over a
+      // sample (see RATIO_METRICS in src/lib/profile-rank.mjs). Reported so the
+      // page can name the narrower set instead of implying the whole pool was
+      // ranked.
+      bandAEligible,
+      // Candidates cut off while TYING with Band A's last entry. 0 means the
+      // band's bottom edge is real. Anything else means a stable sort decided
+      // the final slot, which the page says rather than presents as a ranking.
+      bandATied,
     },
   }, 3600));
 }

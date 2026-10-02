@@ -297,3 +297,76 @@ test('isEvidenceUnavailable: the OT path reads exposure, not kevCount', () => {
   const none = ot.map(t => ({ ...t, exposure: 0 }));
   assert.equal(isEvidenceUnavailable(none, 'exposure'), true);
 });
+
+/* ── Band A's ratio floor and its tie reporting ────────────────────────────
+ *
+ * Added after `?sector=financial&sort=lift` was found returning six
+ * ceiling-lift techniques, each attributed to ONE group, carrying no KEV and no
+ * CVE evidence, in exact alphabetical order — a stable-sort slice of a 12-way
+ * tie, under the page selector's first and highest-scored option.
+ */
+
+test('splitBands: a ratio metric applies the group floor to BAND A, not just Band B', () => {
+  const pool = [
+    T('CEIL1', 10, 0, 1),  // ceiling lift off a single attributing group
+    T('CEIL2', 10, 0, 1),
+    T('REAL1', 4, 0, 5),   // lower lift, but attested
+    T('REAL2', 3, 0, 4),
+  ];
+  const { bandA, bandAEligible } = splitBands(pool, 'lift', 2);
+  assert.deepEqual(bandA.map(t => t.attackId), ['REAL1', 'REAL2'],
+    'single-group techniques must not reach Band A when the band IS the lift ranking');
+  assert.equal(bandAEligible, 2, 'bandAEligible reports the floored candidate set');
+});
+
+test('splitBands: a COUNT metric leaves Band A unfloored — an absolute count needs no sample', () => {
+  const pool = [
+    T('ONE', 1, 99, 1),   // one group on record, 99 KEV CVEs: a legitimate answer
+    T('MANY', 1, 10, 9),
+  ];
+  const { bandA, bandAEligible } = splitBands(pool, 'kev', 1);
+  assert.deepEqual(bandA.map(t => t.attackId), ['ONE']);
+  assert.equal(bandAEligible, pool.length, 'no floor applied, so every candidate was eligible');
+});
+
+test('splitBands: every evidence sort is byte-identical to the unfloored behaviour', () => {
+  // The guarantee that made the floor metric-scoped rather than band-scoped:
+  // production Band A for kev/cv/io/rp must not move.
+  const pool = [
+    T('S1', 9, 5, 1), T('S2', 8, 4, 1), T('S3', 7, 3, 2), T('S4', 6, 2, 9),
+  ];
+  for (const key of ['kev', 'cv', 'io', 'rp']) {
+    const { bandA } = splitBands(pool, key, 3);
+    const expected = [...pool]
+      .sort((a, b) => (b[{ kev: 'kevCount', cv: 'cveCount', io: 'iocs', rp: 'reports' }[key]] ?? 0)
+        - (a[{ kev: 'kevCount', cv: 'cveCount', io: 'iocs', rp: 'reports' }[key]] ?? 0))
+      .slice(0, 3).map(t => t.attackId);
+    assert.deepEqual(bandA.map(t => t.attackId), expected, `sort=${key} must be unchanged`);
+  }
+});
+
+test('splitBands: bandATied counts the candidates cut off mid-tie', () => {
+  const pool = [T('A', 1, 50), T('B', 1, 10), T('C', 1, 10), T('D', 1, 10)];
+  const { bandATied } = splitBands(pool, 'kev', 2);
+  assert.equal(bandATied, 2, 'B took the second slot; C and D tie with it and were cut');
+});
+
+test('splitBands: bandATied is 0 when the band edge is a real one', () => {
+  const pool = [T('A', 1, 50), T('B', 1, 40), T('C', 1, 10)];
+  assert.equal(splitBands(pool, 'kev', 2).bandATied, 0);
+});
+
+test('splitBands: bandATied is 0 when nothing was excluded at all', () => {
+  const pool = [T('A', 1, 10), T('B', 1, 10)];
+  assert.equal(splitBands(pool, 'kev', 6).bandATied, 0,
+    'a band smaller than n has no boundary to be arbitrary about');
+});
+
+test('splitBands: the OT path is untouched — exposure is a count, not a ratio', () => {
+  const ot = (id, exposure, lift, reach) => ({ attackId: id, exposure, lift, reach, groupCount: 0 });
+  const pool = [ot('T-A', 9, 2, 1), ot('T-B', 5, 1, 4)];
+  const { bandA, bandAEligible } = splitBands(pool, 'exposure', 1, 0, MIN_REACH);
+  assert.deepEqual(bandA.map(t => t.attackId), ['T-A'],
+    'reach 1 is below MIN_REACH but exposure is an absolute count, so Band A keeps it');
+  assert.equal(bandAEligible, pool.length);
+});

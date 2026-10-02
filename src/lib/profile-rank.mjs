@@ -50,32 +50,97 @@ export const MIN_GROUPS = 3;
 export const MIN_REACH = 2;
 
 /**
- * Band A = top N by the chosen evidence metric, unrestricted (reach stays valid at any
- * selection size). Band B = top N by lift among techniques that clear BOTH floors,
- * Band A excluded. `bandBShort` is true whenever fewer than N candidates clear
- * the floors — on the IT path the caller (the route) is responsible for the documented
- * fallback: drop the platform constraint, re-select, and label the widening.
+ * Metrics that are RATIOS over a sample, and so carry Band B's floors into Band A.
  *
- * Band A's comparator has no explicit tie-break ON PURPOSE. `Array.prototype.sort` is
- * stable, so ties resolve to the pool's incoming order, and BOTH routes order their pool
- * query deterministically (IT: `lift DESC, attack_id ASC`; OT: `exposure DESC,
- * attack_id ASC`). Adding a tie-break here would silently re-order the IT path's
- * existing Band A, which is in production use.
+ * Every other metric is an absolute count — KEV entries, CVEs, IOC sightings, CTI
+ * report mentions, ICS assets in range. A technique attributed to a single group
+ * can legitimately top those: 97 KEV CVEs map to it whether one group or thirty
+ * are on record using it, and the count is the answer to the question asked.
+ *
+ * `lift` is not like that. It is (sector share / global share), and its ceiling is
+ * `all_groups / sector_groups` — reached by ANY technique used by exactly one
+ * group, where that group happens to be in the sector. Measured against
+ * production 2026-10-02, `?sector=financial&sort=lift` returned a Band A of
+ * T1036.006, T1055.004, T1137.004, T1200, T1204.003, T1204.005: six techniques
+ * all at the ceiling 4.341 (=178/41), all with `groupCount` 1, all with no KEV
+ * and no CVE evidence, and in exact alphabetical order — because they were a
+ * stable-sort slice of a 12-way tie. "Lift" is the FIRST and highest-scored
+ * option in the page's own selector, so that was the most prominent ranking the
+ * briefing offered. `isDegenerate` did not catch it (79 distinct lift values
+ * across the pool) and nothing in `meta` said so.
+ *
+ * MIN_GROUPS already encodes this exact judgement for Band B — "one sighting
+ * must not mint a top-six entry". It belongs to the METRIC, not to the band:
+ * applying it wherever lift is being ranked is the rule, and leaving the count
+ * metrics alone is what keeps every evidence sort byte-identical to what
+ * production already serves.
+ */
+const RATIO_METRICS = new Set(['lift']);
+
+/**
+ * How many candidates were EXCLUDED while tying with the last one included —
+ * i.e. how arbitrary the band's bottom edge is.
+ *
+ * 0 means the edge is real: the next candidate scored strictly lower. Any other
+ * number means the cut fell inside a tie and that many equally-ranked techniques
+ * lost the slot to a stable sort, which is a fact about the band the caller is
+ * entitled to state rather than present as a ranking.
+ *
+ * @param {Array<object>} ranked sorted candidates, best first
+ * @param {number} n             band size
+ * @param {string} field         the metric actually sorted on
+ */
+function tiedOutOfBand(ranked, n, field) {
+  if (ranked.length <= n) return 0;
+  const edge = ranked[n - 1][field] ?? 0;
+  let tied = 0;
+  for (let i = n; i < ranked.length && (ranked[i][field] ?? 0) === edge; i++) tied++;
+  return tied;
+}
+
+/**
+ * Band A = top N by the chosen metric. Band B = top N by lift among techniques that
+ * clear BOTH floors, Band A excluded. `bandBShort` is true whenever fewer than N
+ * candidates clear the floors — on the IT path the caller (the route) is responsible
+ * for the documented fallback: drop the platform constraint, re-select, and label the
+ * widening.
+ *
+ * Band A is unrestricted for a COUNT metric and floored for a RATIO one; see
+ * `RATIO_METRICS` for why those are different questions. `bandAEligible` reports how
+ * many candidates it actually chose from, which equals `pool.length` whenever no floor
+ * applied, and `bandATied` how many it cut off mid-tie.
+ *
+ * Band A's comparator still has no explicit tie-break ON PURPOSE. `Array.prototype.sort`
+ * is stable, so ties resolve to the pool's incoming order, and BOTH routes order their
+ * pool query deterministically (IT: `lift DESC, attack_id ASC`; OT: `exposure DESC,
+ * attack_id ASC`). Adding one here would silently re-order the IT path's existing Band A,
+ * which is in production use — so the tie is REPORTED, via `bandATied`, rather than
+ * resolved by a second sort key.
  *
  * @param {Array<object>} pool         candidate techniques
  * @param {string} sortKey             a key of METRIC; anything else falls back to kevCount
  * @param {number} [n=6]               band size
- * @param {number} [minGroups=MIN_GROUPS] group-attribution floor for Band B. The OT path
- *   passes 0: its items have no group attribution, so the default would empty Band B.
- * @param {number} [minReach=0]        reach floor for Band B. Defaults to 0 so it is
- *   inert for the IT path (whose items have no `reach` field at all); the OT path
- *   passes MIN_REACH.
+ * @param {number} [minGroups=MIN_GROUPS] group-attribution floor for Band B, and for
+ *   Band A when the metric is a ratio. The OT path passes 0: its items have no group
+ *   attribution, so the default would empty Band B.
+ * @param {number} [minReach=0]        reach floor, same scope as `minGroups`. Defaults
+ *   to 0 so it is inert for the IT path (whose items have no `reach` field at all); the
+ *   OT path passes MIN_REACH.
  */
 export function splitBands(pool, sortKey, n = 6, minGroups = MIN_GROUPS, minReach = 0) {
   const field = METRIC[sortKey] ?? 'kevCount';
-  const bandA = [...pool].sort((a, b) => (b[field] ?? 0) - (a[field] ?? 0)).slice(0, n);
+  const candidates = RATIO_METRICS.has(field)
+    ? pool.filter(t => (t.groupCount ?? 0) >= minGroups && (t.reach ?? 0) >= minReach)
+    : pool;
+  const ranked = [...candidates].sort((a, b) => (b[field] ?? 0) - (a[field] ?? 0));
+  const bandA = ranked.slice(0, n);
   const taken = new Set(bandA.map(t => t.attackId));
-  return { bandA, ...selectBandB(pool, taken, n, minGroups, minReach) };
+  return {
+    bandA,
+    bandAEligible: candidates.length,
+    bandATied: tiedOutOfBand(ranked, n, field),
+    ...selectBandB(pool, taken, n, minGroups, minReach),
+  };
 }
 
 /**
