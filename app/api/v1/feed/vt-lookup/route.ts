@@ -1,10 +1,27 @@
 import { NextRequest } from 'next/server';
+import { query } from '../../lib/db';
 import { jsonResponse, errorResponse } from '../../../lib/handler';
 import { withCors, corsOptions as OPTIONS } from '../../../lib/cors';
 
 export { OPTIONS };
 
 const VT_BASE = 'https://www.virustotal.com/api/v3';
+
+/**
+ * Cache even the misses.
+ *
+ * Every other route on /api/v1 costs a Neon query; this one costs two calls
+ * against a finite third-party quota on a shared credential — the same
+ * VT_API_KEY that app/api/cron/enrich-vt and app/api/cron/scan-site-health
+ * depend on, so draining it stops CVE enrichment and blanks the site-health
+ * badge. The non-200 paths set no Cache-Control, so a hash VirusTotal does not
+ * know was a guaranteed origin-plus-upstream round trip on every repeat.
+ */
+function cachedError(status: number, message: string, code: string) {
+  const res = errorResponse(status, message, code);
+  res.headers.set('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=86400');
+  return withCors(res);
+}
 
 export async function GET(req: NextRequest) {
   const hash = req.nextUrl.searchParams.get('hash') ?? '';
@@ -18,6 +35,29 @@ export async function GET(req: NextRequest) {
     return withCors(errorResponse(500, 'VT_API_KEY not configured', 'CONFIG_ERROR'));
   }
 
+  /* Cheap local guard before spending the quota, the same
+     check-before-heavy-work shape /dashboard uses for `sector`.
+     `scripts/check-api-catalog.mjs` keeps this route out of the public
+     catalogue because it "spends the owner's VirusTotal API quota on every
+     call" — which is an admission that being undocumented was the only control
+     on it. An undocumented route is still a public route, and the path is in
+     the browser's own network tab. Both in-repo callers (IocsList and
+     TechniqueMapView) pass a hash that came from `ioc_entries`, so requiring
+     the hash to be one we hold costs them nothing and makes random-hash
+     grinding free to serve. */
+  /* Both spellings, not `lower(value)`: 52 of the 61,483 stored hashes carry
+     upper-case characters, so normalising the INPUT alone would have missed
+     them and broken the VT button for those rows — and wrapping the COLUMN in
+     lower() would give up the index on it. An IN over two constants keeps the
+     index and matches either casing. */
+  const known = await query<{ ok: number }>(
+    `SELECT 1 AS ok FROM ioc_entries WHERE value IN ($1, $2) LIMIT 1`,
+    [hash, hash.toLowerCase()],
+  );
+  if (known.rows.length === 0) {
+    return cachedError(404, 'Hash is not in this corpus', 'NOT_FOUND');
+  }
+
   const headers = { 'x-apikey': apiKey, 'User-Agent': 'mitre-explorer/1.0' };
 
   try {
@@ -29,7 +69,7 @@ export async function GET(req: NextRequest) {
 
     if (!fileResp.ok) {
       if (fileResp.status === 404) {
-        return withCors(errorResponse(404, 'Hash not found in VirusTotal', 'NOT_FOUND'));
+        return cachedError(404, 'Hash not found in VirusTotal', 'NOT_FOUND');
       }
       throw new Error(`VT API error: ${fileResp.status}`);
     }

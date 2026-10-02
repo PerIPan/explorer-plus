@@ -72,18 +72,21 @@ function getRawClientIp(req: NextRequest): string {
   // `x-forwarded-for` (an attacker can spoof it to rotate through "fresh"
   // IPs and bypass the per-visitor daily cap).
   //
-  // Header precedence, same as app/api/a2a/route.ts:159-176:
-  //   1. `cf-connecting-ip` — set by Cloudflare when the zone is proxied.
-  //      Must be checked FIRST: with Cloudflare in front, Vercel's own
-  //      headers would otherwise show Cloudflare's edge IP.
-  //   2. `x-vercel-forwarded-for` — Vercel edge, real client IP.
-  //   3. `x-real-ip` — legacy Vercel.
-  const cfIp = req.headers.get('cf-connecting-ip');
-  if (cfIp) return cfIp.trim();
+  // Header precedence, same as app/api/a2a/route.ts — see the long note there
+  // for why `cf-connecting-ip` is LAST and conditional. Short version: it was
+  // first and unconditional, justified by Cloudflare overwriting a
+  // client-supplied value, but this deployment is not behind Cloudflare
+  // (`server: Vercel`, no `cf-ray`), so the header arrived caller-controlled
+  // and rotating it reset the per-visitor daily cap.
+  //   1. `x-vercel-forwarded-for` — set by the Vercel edge; client cannot choose it.
+  //   2. `x-real-ip` — legacy Vercel, same guarantee.
+  //   3. `cf-connecting-ip` — only when `cf-ray` proves Cloudflare is in front.
   const vercelIp = req.headers.get('x-vercel-forwarded-for');
   if (vercelIp) return vercelIp.split(',')[0].trim();
   const realIp = req.headers.get('x-real-ip');
   if (realIp) return realIp.trim();
+  const cfIp = req.headers.get('cf-connecting-ip');
+  if (cfIp && req.headers.get('cf-ray')) return cfIp.trim();
   // Fallback to last hop of x-forwarded-for — Vercel appends the real IP at
   // the end if they forward the header at all.
   const forwarded = req.headers.get('x-forwarded-for');

@@ -162,19 +162,29 @@ function getRawClientIp(req: NextRequest): string {
   // IPs and bypass the 50-req/day quota).
   //
   // Header precedence:
-  //   1. `cf-connecting-ip` — set by Cloudflare when the zone is proxied.
-  //      Cloudflare overwrites/strips a client-supplied value, so it's the
-  //      true client IP whenever we sit behind Cloudflare. Must be checked
-  //      FIRST, because with Cloudflare in front Vercel's own headers would
-  //      otherwise show Cloudflare's edge IP and bucket every caller together.
-  //   2. `x-vercel-forwarded-for` — Vercel edge, real client IP (direct-to-Vercel).
-  //   3. `x-real-ip` — legacy Vercel.
-  const cfIp = req.headers.get('cf-connecting-ip');
-  if (cfIp) return cfIp.trim();
+  //   1. `x-vercel-forwarded-for` — set by the Vercel edge, which is the
+  //      infrastructure actually in front of this deployment. Overwritten by
+  //      Vercel, so a client cannot choose it.
+  //   2. `x-real-ip` — legacy Vercel, same guarantee.
+  //   3. `cf-connecting-ip` — ONLY when a Cloudflare marker is present too.
+  //
+  // That third condition is the fix for a real bypass. `cf-connecting-ip` used
+  // to be checked FIRST and trusted unconditionally, on the stated grounds that
+  // "Cloudflare overwrites/strips a client-supplied value". True — but only
+  // when Cloudflare is actually in front, and it is not: the deployment answers
+  // with `server: Vercel` and no `cf-ray`. Vercel has no reason to strip a
+  // third-party header name, so an anonymous caller could send
+  // `cf-connecting-ip: <anything>` and be bucketed under it, rotating the value
+  // to reset the 50-request daily quota at will. `cf-ray` is set by Cloudflare
+  // on every proxied request and cannot be forged INTO existence usefully,
+  // because if it is absent we ignore cf-connecting-ip entirely — so putting
+  // Cloudflare back in front keeps working, and not having it is now safe.
   const vercelIp = req.headers.get('x-vercel-forwarded-for');
   if (vercelIp) return vercelIp.split(',')[0].trim();
   const realIp = req.headers.get('x-real-ip');
   if (realIp) return realIp.trim();
+  const cfIp = req.headers.get('cf-connecting-ip');
+  if (cfIp && req.headers.get('cf-ray')) return cfIp.trim();
   // Fallback to last hop of x-forwarded-for — Vercel appends the real IP at
   // the end if they forward the header at all.
   const forwarded = req.headers.get('x-forwarded-for');
