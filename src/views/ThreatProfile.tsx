@@ -891,7 +891,7 @@ export function ThreatProfile() {
             options={platformOptions}
             selected={platforms}
             onChange={onPlatformsChange}
-            placeholder="Any platform"
+            countNoun="platforms"
           />
         )}
       </div>

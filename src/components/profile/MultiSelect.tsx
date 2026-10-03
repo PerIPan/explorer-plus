@@ -16,6 +16,13 @@ interface MultiSelectProps {
   selected: string[];
   onChange: (next: string[]) => void;
   placeholder?: string;
+  /**
+   * What the options ARE, plural — "platforms", "roles". When given, the field
+   * says how many there are to search through, which is the one thing a
+   * collapsed combobox otherwise hides: eleven platforms behind a box reading
+   * "Windows, SaaS, Containers…" reads as three.
+   */
+  countNoun?: string;
 }
 
 // Cap on rendered rows once options are filtered. The longest list here is the
@@ -92,7 +99,7 @@ const CHIP_VARIANT = 'bg-[var(--teal-faint)] text-[var(--accent-teal)] border-[v
  * short of clicking elsewhere on the page. "Dismissed but still focused" has
  * to be a reachable state, so `open` is only ever set by a deliberate act.
  */
-export function MultiSelect({ id, label, options, selected, onChange, placeholder }: MultiSelectProps) {
+export function MultiSelect({ id, label, options, selected, onChange, placeholder, countNoun }: MultiSelectProps) {
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
@@ -326,7 +333,9 @@ export function MultiSelect({ id, label, options, selected, onChange, placeholde
           aria-controls={open ? listboxId : undefined}
           aria-activedescendant={open && activeOption ? `${id}-option-${domSafe(activeOption.value)}` : undefined}
           value={query}
-          placeholder={placeholder}
+          placeholder={
+            countNoun ? `Search ${options.length} ${countNoun}…` : placeholder
+          }
           onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
           // Click, not focus: a click is a deliberate act, so Escape (or an
           // outside click) followed by Tab back into the field leaves the

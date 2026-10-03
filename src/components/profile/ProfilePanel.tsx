@@ -1424,7 +1424,7 @@ export function ProfilePanel({
             options={PLATFORM_OPTIONS}
             selected={answers.platforms ?? EMPTY_SELECTION}
             onChange={(next) => setAnswer('platforms', next)}
-            placeholder="Windows, SaaS, Containers…"
+            countNoun="platforms"
           />
             </>
           )}
