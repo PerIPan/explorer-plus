@@ -1,7 +1,21 @@
 name: refresh-cti-heat
 
-# Monthly refresh of scf_technique_heat. CVE / EPSS / GHSA / KEV update daily;
-# this picks up those deltas without waiting for the twice-yearly SCF sync.
+# Monthly: re-apply CTID's curated CVE->ATT&CK mappings, then rebuild
+# scf_technique_heat from them. CVE / EPSS / GHSA / KEV update daily; this picks
+# up those deltas without waiting for the twice-yearly SCF sync.
+#
+# The two steps are in ONE job, in this order, because heat is built from
+# capec_mappings rows where capec_id='CTID-DIRECT' — i.e. precisely what the
+# CTID sync writes. Running them on separate schedules would leave heat a month
+# behind its own input.
+#
+# Why CTID needs re-running at all, given its upstream file has not changed
+# since October 2023: sync-ctid-cve-mappings.mjs SKIPS any CVE absent from
+# cve_details (it checks, then `continue`s). So its coverage is gated by our
+# corpus, not by upstream. Before the 2026-10-03 history backfill we held 312
+# of its 836 CVEs and were silently dropping the other 63%; afterwards 711.
+# Expect this to be a no-op most months — it is a backstop against the corpus
+# growing into mappings we already have on disk, not a live feed.
 on:
   schedule:
     - cron: '0 6 1 * *'   # 1st of each month at 06:00 UTC
@@ -33,6 +47,11 @@ jobs:
       # including actions/checkout and actions/setup-node — so a moved upstream
       # tag on either one could read the production credential with no PR and
       # no review. Nothing above this line needs the database.
+      - name: Sync CTID curated CVE mappings
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: node scripts/sync-ctid-cve-mappings.mjs
+
       - name: Refresh CTI heat
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
