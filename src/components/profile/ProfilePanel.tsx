@@ -1014,6 +1014,12 @@ export function ProfilePanel({
     function handlePointerDown(event: PointerEvent) {
       const target = event.target as Element | null;
       if (panelRef.current?.contains(target)) return;
+      // A MultiSelect listbox renders through a portal to escape the panel's
+      // own overflow clipping, so it is NOT inside panelRef — but a click in it
+      // is a click inside this control, not outside the panel.
+      if (target && typeof target.closest === 'function' && target.closest('[data-profile-portal]')) {
+        return;
+      }
       // A click on the diamond is the disclosure toggling itself shut, not a
       // rejection of the feature — route it to the silent path so it writes no
       // `dismiss` row and does not set the dismissal flag.

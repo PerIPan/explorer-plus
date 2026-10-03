@@ -347,6 +347,16 @@ export function MultiSelect({ id, label, options, selected, onChange, placeholde
       {open && rect && createPortal(
         <ul
           ref={listRef}
+          /*
+           * Marks this subtree as part of the control even though it lives
+           * under <body>. ProfilePanel's outside-pointerdown handler tests
+           * `panelRef.contains(target)`, which a portalled node fails — so
+           * without this, choosing an option dismissed the whole panel AND
+           * wrote a `dismiss` telemetry row, recording a rejection of the
+           * feature every time someone answered a question in it. Same shape
+           * as the existing `data-profile-trigger` exemption beside it.
+           */
+          data-profile-portal=""
           id={listboxId}
           role="listbox"
           aria-label={label}
