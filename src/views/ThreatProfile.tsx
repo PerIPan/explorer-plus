@@ -216,7 +216,7 @@ const SORT_OPTIONS: readonly SortOption[] = [
     explainer: (
       <>
         Lift compares how often this sector&apos;s attributed groups use a technique with how often
-        all tracked groups use it. 1.00x is the dataset average; above 1.00x is 
+        all tracked groups use it. 1.00x is the dataset average; above 1.00x is{' '}
         <span className="font-semibold text-[var(--text-primary)]">over-represented</span> here. It is a <span className="font-semibold text-[var(--text-primary)]">ratio over a small sample</span>, and its
         ceiling is reached by any technique with a single attributing group — so bands ranked by
         lift exclude techniques used by fewer than three of the sector&apos;s groups. Which groups
@@ -251,7 +251,7 @@ const SORT_OPTIONS: readonly SortOption[] = [
     explainer: (
       <>
         CVEs counts every vulnerability inferred for a technique along the same technique &rarr; CWE
-        &rarr; CAPEC &rarr; CVE chain. It measures <span className="font-semibold text-[var(--text-primary)]">vulnerability surface</span>, <span className="font-semibold text-[var(--text-primary)]">not</span> 
+        &rarr; CAPEC &rarr; CVE chain. It measures <span className="font-semibold text-[var(--text-primary)]">vulnerability surface</span>, <span className="font-semibold text-[var(--text-primary)]">not</span>{' '}
         how often the technique is used, so broad generic weaknesses score far above specific
         tradecraft.
       </>
@@ -267,7 +267,7 @@ const SORT_OPTIONS: readonly SortOption[] = [
       <>
         Reports counts mentions of a technique across the CTI reporting held here. Every mapping
         comes from <span className="font-semibold text-[var(--text-primary)]">OTX pulse tags</span> — the vendor blogs ingested alongside them publish no
-        machine-readable technique IDs and contribute none — and the count is 
+        machine-readable technique IDs and contribute none — and the count is{' '}
         <span className="font-semibold text-[var(--text-primary)]">corpus-wide</span> rather than sector-specific. It says what was written about, not
         what targeted this sector.
       </>
@@ -281,7 +281,7 @@ const SORT_OPTIONS: readonly SortOption[] = [
     blurb: 'One of twelve. Ordering by IOC sightings collapses the twelve sectors onto a single list: it measures activity, not sector focus.',
     explainer: (
       <>
-        Sightings counts indicators linked to a technique. That link is almost entirely inferred: 
+        Sightings counts indicators linked to a technique. That link is almost entirely inferred:{' '}
         <span className="font-semibold text-[var(--text-primary)]">98.6%</span> of these rows come from a <span className="font-semibold text-[var(--text-primary)]">cross-product</span> that attributes every
         technique of a malware family to every indicator of that family, so the number tracks feed
         volume for a handful of families rather than observation of the technique itself. It is the
