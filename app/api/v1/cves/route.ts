@@ -4,7 +4,7 @@ import { jsonResponse, errorResponse } from '../../lib/handler';
 import { withCors, corsOptions as OPTIONS } from '../../lib/cors';
 import { paginationSchema, versionParam, sinceToIso } from '../lib/validate';
 import { escapeLikePattern } from '../lib/queries';
-import { notCatchallCwe } from '../lib/inference';
+import { notCatchallCwe, liveTechnique } from '../lib/inference';
 import { z } from 'zod';
 
 export { OPTIONS };
@@ -69,14 +69,19 @@ export async function GET(req: NextRequest) {
 
   if (technique) {
     params.push(technique);
+    // `liveTechnique` on BOTH arms. It was on the weakness arm only, so asking
+    // for a revoked technique returned its IOC-linked CVEs and none of its
+    // CWE-linked ones — a half-answer that depended on which arm happened to
+    // carry the data. Same spelling on both sides now, via the helper rather
+    // than a hand-written predicate.
     conditions.push(`cd.cve_id IN (
       SELECT cw.cve_id FROM cve_weaknesses cw
       JOIN capec_mappings cm ON cm.cwe_id = cw.cwe_id AND ${notCatchallCwe('cm.cwe_id')}
-      JOIN techniques t ON t.id = cm.technique_id AND t.attack_id = $${params.length} AND t.is_revoked = false AND t.is_deprecated = false
+      JOIN techniques t ON t.id = cm.technique_id AND t.attack_id = $${params.length} AND ${liveTechnique('t')}
       UNION
       SELECT i.value FROM ioc_entries i
       JOIN technique_iocs ti ON ti.ioc_id = i.id
-      JOIN techniques t ON t.id = ti.technique_id AND t.attack_id = $${params.length}
+      JOIN techniques t ON t.id = ti.technique_id AND t.attack_id = $${params.length} AND ${liveTechnique('t')}
       WHERE i.type = 'cve'
     )`);
   }
@@ -157,12 +162,12 @@ export async function GET(req: NextRequest) {
        FROM (
          SELECT i.value AS cve_id, ti.technique_id, t.attack_id
          FROM ioc_entries i JOIN technique_iocs ti ON ti.ioc_id = i.id
-         JOIN techniques t ON t.id = ti.technique_id
+         JOIN techniques t ON t.id = ti.technique_id AND ${liveTechnique('t')}
          WHERE i.type = 'cve' AND i.value IN (SELECT cve_id FROM page)
          UNION
          SELECT cw.cve_id, cm.technique_id, t.attack_id
          FROM cve_weaknesses cw JOIN capec_mappings cm ON cm.cwe_id = cw.cwe_id AND cm.technique_id IS NOT NULL AND ${notCatchallCwe('cm.cwe_id')}
-         JOIN techniques t ON t.id = cm.technique_id AND t.is_revoked = false AND t.is_deprecated = false
+         JOIN techniques t ON t.id = cm.technique_id AND ${liveTechnique('t')}
          WHERE cw.cve_id IN (SELECT cve_id FROM page)
        ) sub GROUP BY cve_id
      ),

@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { query } from '../../lib/db';
-import { notCatchallCwe } from '../../lib/inference';
+import { notCatchallCwe, liveTechnique } from '../../lib/inference';
 import { escapeLikePattern } from '../../lib/queries';
 import { jsonResponse, errorResponse } from '../../../lib/handler';
 import { withCors, corsOptions as OPTIONS } from '../../../lib/cors';
@@ -91,7 +91,7 @@ export async function GET(
          FROM techniques t
          JOIN technique_iocs ti ON ti.technique_id = t.id
          JOIN ioc_entries i ON i.id = ti.ioc_id
-         WHERE i.type = 'cve' AND i.value = $1`,
+         WHERE i.type = 'cve' AND i.value = $1 AND ${liveTechnique('t')}`,
         [id],
       ),
 
@@ -107,7 +107,7 @@ export async function GET(
          FROM cve_weaknesses cw
          JOIN capec_mappings cm ON cm.cwe_id = cw.cwe_id AND cm.technique_id IS NOT NULL
            AND ${notCatchallCwe('cm.cwe_id')}
-         JOIN techniques t ON t.id = cm.technique_id AND t.is_revoked = false AND t.is_deprecated = false
+         JOIN techniques t ON t.id = cm.technique_id AND ${liveTechnique('t')}
          WHERE cw.cve_id = $1`,
         [id],
       ),
