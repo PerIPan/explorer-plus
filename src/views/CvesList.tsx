@@ -19,6 +19,7 @@ import type { CveEntry } from '../lib/types';
 
 const SEVERITIES = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'];
 const SOURCES = ['otx', 'cisa_kev'];
+const CURATED_INFO_ID = 'cves-curated-explainer';
 
 const SEVERITY_COLORS: Record<string, string> = {
   CRITICAL: 'bg-[var(--pink-faint)] text-[var(--accent-pink)] border-[var(--pink-dim)]',
@@ -322,6 +323,8 @@ export function CvesList() {
   const qBox = useDebouncedSearchParam('q');
   // 500ms on the two identifier fields: a partial 'T10' or a half-typed
   // vendor matches far too much, and each keystroke is a real query.
+  const curated = searchParams.get('curated') === '1';
+  const [curatedInfo, setCuratedInfo] = useState(false);
   const techBox = useDebouncedSearchParam('technique', 500);
   const appBox = useDebouncedSearchParam('app', 500);
 
@@ -333,8 +336,9 @@ export function CvesList() {
     if (technique) p.technique = technique;
     if (app) p.app = app;
     if (since) p.since = since;
+    if (curated) p.curated = '1';
     return p;
-  }, [page, sectorParam, severity, source, q, technique, app, since]);
+  }, [page, sectorParam, severity, source, q, technique, app, since, curated]);
 
   const { data, isLoading } = useCves(params);
 
@@ -354,6 +358,23 @@ export function CvesList() {
           >
             Clear filter
           </button>
+        </div>
+      )}
+
+      {curatedInfo && (
+        <div
+          id={CURATED_INFO_ID}
+          className="rounded-md border border-[var(--border-color)] bg-[var(--hover-overlay)] p-3 text-xs leading-relaxed text-[var(--text-secondary)]"
+        >
+          Two different relations link a CVE to a technique here, and this chooses between them.
+          Unchecked, the list follows the <span className="font-semibold text-[var(--text-primary)]">inferred</span>{' '}
+          chain CVE &rarr; CWE &rarr; CAPEC &rarr; technique: broad, automatic, and only as precise
+          as the CWE it starts from. Checked, it shows only links an{' '}
+          <span className="font-semibold text-[var(--text-primary)]">analyst hand-mapped</span>{' '}
+          (MITRE CTID&rsquo;s curated CVE&rarr;ATT&amp;CK set) &mdash; far smaller, and the set the
+          compliance pages&rsquo; heat badges count. The two differ by up to{' '}
+          <span className="font-semibold text-[var(--text-primary)]">ten times</span> on a single
+          technique, so a number taken from one will not match the other.
         </div>
       )}
 
@@ -380,6 +401,29 @@ export function CvesList() {
           onChange={(e) => appBox.onChange(e.target.value)}
           className="min-w-[140px] px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent-teal)]"
         />
+        {/* Curated-only. Sits with the filters rather than in a menu because
+            it changes WHICH RELATION is being listed, not merely how it is
+            narrowed — the default list is CWE->CAPEC inference, this is the
+            hand-mapped set, and they differ by up to 10x on one technique. */}
+        <label className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm bg-[var(--surface-card)] border border-[var(--border-color)] cursor-pointer hover:border-[var(--border-hover)]">
+          <input
+            type="checkbox"
+            checked={curated}
+            onChange={(e) => setParam('curated', e.target.checked ? '1' : '')}
+            className="accent-[var(--accent-teal)]"
+          />
+          <span className="text-[var(--text-primary)] whitespace-nowrap">Curated links only</span>
+          <button
+            type="button"
+            onClick={(e) => { e.preventDefault(); setCuratedInfo((v) => !v); }}
+            aria-expanded={curatedInfo}
+            aria-controls={CURATED_INFO_ID}
+            aria-label={curatedInfo ? 'Hide what curated links are' : 'What curated links are'}
+            className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-[var(--border-color)] text-[10px] font-semibold italic text-[var(--text-secondary)] hover:border-[var(--accent-teal)] hover:text-[var(--accent-teal)]"
+          >
+            i
+          </button>
+        </label>
         <select
           value={severity}
           onChange={(e) => setParam('severity', e.target.value)}

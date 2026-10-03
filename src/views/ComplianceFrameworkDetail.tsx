@@ -34,41 +34,65 @@ function tacticHref(tacticAttackId: string): string {
 /** Tiny compact chip — used for heat badges next to a technique.
  *  Solid backgrounds with white/dark text for readability in both themes. */
 function HeatBadges({ t }: { t: TechniqueRef }) {
-  const badges: { label: string; title: string }[] = [];
+  /*
+   * Every badge links to a page showing EXACTLY the number on it.
+   *
+   * `curated=1` is load-bearing on the two CVE badges. These count the
+   * hand-mapped CTID edges (`capec_id = 'CTID-DIRECT'`), which is a different,
+   * much smaller relation than the CWE->CAPEC inference /cti/cves lists by
+   * default — measured, T1078 reads 62 here and 636 there. Without the filter
+   * the badge would navigate to a contradiction of itself.
+   *
+   * `allSectors=1` is load-bearing on both too: /cti/cves otherwise inherits
+   * whatever sector is in sessionStorage and applies it as an unrelated
+   * relation, which only ever subtracts. See ALL_SECTORS_PARAM.
+   *
+   * Verified against production: T1190 199 curated / 51 curated+KEV / 47 groups,
+   * T1059 134 / 11 / 17, T1078 62 / 3 / 49 — each equal to its destination.
+   */
+  const cveHref = (extra = '') =>
+    `/cti/cves?technique=${encodeURIComponent(t.attack_id)}&curated=1&allSectors=1${extra}`;
+  const badges: { label: string; title: string; href: string }[] = [];
   if (t.has_kev) {
     badges.push({
       label: 'KEV',
       title: 'A curated CVE for this technique is in CISA Known Exploited Vulnerabilities',
+      href: cveHref('&source=cisa_kev'),
     });
   }
   if (t.cve_count >= 3) {
     badges.push({
       label: `CVE ${t.cve_count.toLocaleString()}`,
       title: 'Curated CVE→technique links (CTID / CISA hand-mapped — not CWE inference)',
+      href: cveHref(),
     });
   }
+  const groupsHref = `/techniques/${encodeURIComponent(t.attack_id)}?tab=groups`;
   if (t.group_count >= 20) {
     badges.push({
       label: `WIDE ${t.group_count}`,
       title: 'Number of tracked threat groups using this technique',
+      href: groupsHref,
     });
   } else if (t.group_count >= 5) {
     badges.push({
       label: `${t.group_count} groups`,
       title: 'Number of tracked threat groups using this technique',
+      href: groupsHref,
     });
   }
   if (badges.length === 0) return null;
   return (
     <span className="inline-flex flex-wrap gap-1 ml-1.5">
       {badges.map((b) => (
-        <span
+        <Link
           key={b.label}
-          title={b.title}
-          className={`text-[10px] font-mono px-1.5 py-0.5 rounded border whitespace-nowrap ${BADGE_CLS}`}
+          href={b.href}
+          title={`${b.title} — click to see them`}
+          className={`text-[10px] font-mono px-1.5 py-0.5 rounded border whitespace-nowrap hover:border-[var(--accent-teal)] hover:text-[var(--accent-teal)] transition-colors ${BADGE_CLS}`}
         >
           {b.label}
-        </span>
+        </Link>
       ))}
     </span>
   );

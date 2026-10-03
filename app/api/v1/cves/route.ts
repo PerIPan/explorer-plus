@@ -16,6 +16,8 @@ const querySchema = paginationSchema.extend({
   sector: z.string().max(50).optional(),
   since: z.string().optional(),
   technique: z.string().regex(/^(AML\.)?(T|TA)\d{4}(\.\d{3})?$/).optional(),
+  // "Only CVEs an analyst hand-mapped to a technique", not the CWE inference.
+  curated: z.enum(['1', 'true']).optional(),
   app: z.string().min(1).max(200).optional(),
   // Substring/text match against affected_products.version_start/version_end.
   // Only meaningful with `app` (product context) — versions aren't globally
@@ -32,7 +34,8 @@ export async function GET(req: NextRequest) {
     return withCors(errorResponse(400, 'Invalid query parameters', 'VALIDATION_ERROR'));
   }
 
-  const { page, limit, severity, source, q, order, sector, since, technique, app, version } = parsed.data;
+  const { page, limit, severity, source, q, order, sector, since, technique, app, version, curated } = parsed.data;
+  const curatedOnly = curated === '1' || curated === 'true';
   const offset = (page - 1) * limit;
 
   // version filtering only makes sense scoped to a product (versions aren't
@@ -69,6 +72,30 @@ export async function GET(req: NextRequest) {
 
   if (technique) {
     params.push(technique);
+    /*
+     * CURATED: the CTID / CISA hand-mapped CVE->technique edges only, which is
+     * a DIFFERENT and much smaller relation than the two inference arms below.
+     *
+     * It exists because the compliance page's heat badges count exactly this
+     * (`capec_id = 'CTID-DIRECT'`) and say so — "not CWE inference" — while the
+     * default list here counts the inference union. Linking one to the other
+     * without this filter lands a badge reading 62 on a page reading 636
+     * (T1078, measured). Verified to reproduce the badge exactly: T1190 199,
+     * T1059 134, T1078 62, T1195.002 0.
+     *
+     * Joined on `attack_technique_id`, and with NO liveness predicate, because
+     * scripts/refresh-cti-heat.mjs does neither — parity with the number being
+     * clicked is the whole point, so this mirrors that query rather than the
+     * house style below.
+     */
+    if (curatedOnly) {
+      conditions.push(`cd.cve_id IN (
+        SELECT cw.cve_id FROM cve_weaknesses cw
+        JOIN capec_mappings cm ON cm.cwe_id = cw.cwe_id
+             AND cm.capec_id = 'CTID-DIRECT'
+             AND cm.attack_technique_id = $${params.length}
+      )`);
+    } else {
     // `liveTechnique` on BOTH arms. It was on the weakness arm only, so asking
     // for a revoked technique returned its IOC-linked CVEs and none of its
     // CWE-linked ones — a half-answer that depended on which arm happened to
@@ -83,6 +110,21 @@ export async function GET(req: NextRequest) {
       JOIN technique_iocs ti ON ti.ioc_id = i.id
       JOIN techniques t ON t.id = ti.technique_id AND t.attack_id = $${params.length} AND ${liveTechnique('t')}
       WHERE i.type = 'cve'
+    )`);
+    }
+  }
+
+  /*
+   * `curated` WITHOUT `technique`: every CVE carrying any hand-mapped technique
+   * edge, rather than any one technique's. Useful on its own as "the analyst-
+   * confirmed corpus", and it keeps the checkbox meaningful when the technique
+   * box is empty instead of silently doing nothing.
+   */
+  if (curatedOnly && !technique) {
+    conditions.push(`EXISTS (
+      SELECT 1 FROM cve_weaknesses cw
+      JOIN capec_mappings cm ON cm.cwe_id = cw.cwe_id AND cm.capec_id = 'CTID-DIRECT'
+      WHERE cw.cve_id = cd.cve_id
     )`);
   }
 
