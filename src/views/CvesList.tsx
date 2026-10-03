@@ -375,6 +375,14 @@ export function CvesList() {
           compliance pages&rsquo; heat badges count. The two differ by up to{' '}
           <span className="font-semibold text-[var(--text-primary)]">ten times</span> on a single
           technique, so a number taken from one will not match the other.
+          {' '}Both are slices of the catalogue, not views of it: about{' '}
+          <span className="font-semibold text-[var(--text-primary)]">18%</span> of CVEs carry any
+          technique link and under{' '}
+          <span className="font-semibold text-[var(--text-primary)]">1%</span> a hand-mapped one,
+          because most have no route from CVE to technique in the public data &mdash; no CWE
+          recorded, or a CWE whose CAPEC chain stops short of ATT&amp;CK. A CVE absent from a
+          technique&rsquo;s list may be unrelated to it, or may simply have no path to any
+          technique at all; the two look the same from here.
         </div>
       )}
 
