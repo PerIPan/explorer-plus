@@ -1410,7 +1410,7 @@ export function ProfilePanel({
                   the required question — knowing it is one of twelve, not one
                   of three, is the difference between scanning and guessing.
                   Derived from SECTOR_OPTIONS so it cannot fall out of step. */}
-              <option value="">Select 1 of {SECTOR_OPTIONS.length} sectors…</option>
+              <option value="">select 1 of {SECTOR_OPTIONS.length} sectors…</option>
               {SECTOR_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>
                   {o.label}

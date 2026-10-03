@@ -334,7 +334,7 @@ export function MultiSelect({ id, label, options, selected, onChange, placeholde
           aria-activedescendant={open && activeOption ? `${id}-option-${domSafe(activeOption.value)}` : undefined}
           value={query}
           placeholder={
-            countNoun ? `Search ${options.length} ${countNoun}…` : placeholder
+            countNoun ? `search ${options.length} ${countNoun}…` : placeholder
           }
           onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
           // Click, not focus: a click is a deliberate act, so Escape (or an
@@ -450,7 +450,7 @@ export function MultiSelect({ id, label, options, selected, onChange, placeholde
           {options.length > visible.length || visible.length > 0 ? (
             <li
               role="presentation"
-              className="sticky top-0 z-10 border-b border-[var(--border-input)] bg-[var(--surface-card)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--text-secondary)]"
+              className="sticky top-0 z-10 border-b border-[var(--border-input)] bg-[var(--surface-card)] px-3 py-1.5 text-[10px] font-semibold text-[var(--text-secondary)]"
             >
               {query.trim()
                 ? `${filtered.length} of ${options.length} match`
