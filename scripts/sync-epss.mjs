@@ -8,7 +8,7 @@
 // This script is for local / scratch runs.
 //
 // Design note: EPSS enriches existing cve_details rows but never creates new
-// ones. CVE rows are created by ingest-cve-delta / ingest-cvelistv5 with their
+// ones. CVE rows are created by sync-cve-delta / ingest-cvelistv5 with their
 // NOT NULL columns populated. EPSS rows for CVEs we don't have are silently
 // dropped and reported via rowsSkippedUnknown.
 
