@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 export interface MultiSelectOption {
   value: string;
@@ -84,7 +85,52 @@ export function MultiSelect({ id, label, options, selected, onChange, placeholde
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const containerRef = useRef<HTMLDivElement>(null);
+  /*
+   * The listbox is PORTALLED to document.body and positioned `fixed` from the
+   * field's rect, rather than `absolute` inside the field.
+   *
+   * It has to be. This control is used inside <Dialog>, whose body is
+   * `overflow-y-auto`, and an overflow ancestor clips absolutely-positioned
+   * descendants — so the options were cut off at the modal's bottom edge
+   * whenever the field sat low in the panel. Making the modal taller does not
+   * fix that; the clip follows the field wherever it ends up.
+   *
+   * Flips above the field when there is more room there, so the last control in
+   * a panel still opens into visible space.
+   */
+  const [rect, setRect] = useState<{ left: number; top: number; width: number; flip: boolean } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  /*
+   * The portalled listbox is NOT inside containerRef any more, so every
+   * "did this happen inside the control?" test has to consult it separately —
+   * otherwise a pointerdown on an option reads as a click outside and closes
+   * the list before the option's own handler can toggle it.
+   */
+  const listRef = useRef<HTMLUListElement>(null);
+  const insideControl = (node: Node | null) =>
+    Boolean(node && (containerRef.current?.contains(node) || listRef.current?.contains(node)));
+
+  useLayoutEffect(() => {
+    if (!open) { setRect(null); return; }
+    const measure = () => {
+      const el = containerRef.current;
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      // 11rem of options plus a little chrome; see LISTBOX_MAX_H.
+      const needed = 176 + 8;
+      const below = window.innerHeight - r.bottom;
+      const flip = below < needed && r.top > below;
+      setRect({ left: r.left, top: flip ? r.top : r.bottom, width: r.width, flip });
+    };
+    measure();
+    // `true` so ancestor scrolling counts — the dialog body scrolls, not window.
+    window.addEventListener('scroll', measure, true);
+    window.addEventListener('resize', measure);
+    return () => {
+      window.removeEventListener('scroll', measure, true);
+      window.removeEventListener('resize', measure);
+    };
+  }, [open]);
 
   const listboxId = `${id}-listbox`;
   const selectedSet = useMemo(() => new Set(selected), [selected]);
@@ -122,9 +168,7 @@ export function MultiSelect({ id, label, options, selected, onChange, placeholde
   // an option toggles it via that handler rather than being swallowed here.
   useEffect(() => {
     function handlePointerDown(e: PointerEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
+      if (!insideControl(e.target as Node)) setOpen(false);
     }
     document.addEventListener('pointerdown', handlePointerDown);
     return () => document.removeEventListener('pointerdown', handlePointerDown);
@@ -170,9 +214,7 @@ export function MultiSelect({ id, label, options, selected, onChange, placeholde
   // Tab-away close: fires when focus leaves the whole control for anywhere
   // outside it (the pointerdown listener above only covers pointer clicks).
   function handleBlur(e: React.FocusEvent<HTMLDivElement>) {
-    if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
-      setOpen(false);
-    }
+    if (!insideControl(e.relatedTarget as Node | null)) setOpen(false);
   }
 
   return (
@@ -302,13 +344,24 @@ export function MultiSelect({ id, label, options, selected, onChange, placeholde
           : ''}
       </div>
 
-      {open && (
+      {open && rect && createPortal(
         <ul
+          ref={listRef}
           id={listboxId}
           role="listbox"
           aria-label={label}
           aria-multiselectable="true"
-          className={`absolute z-50 mt-1 w-full ${LISTBOX_MAX_H} overflow-y-auto rounded-md border border-[var(--border-input)] bg-[var(--surface-card)] shadow-xl`}
+          // z-[102] clears <Dialog>'s panel (z-[101]) and its overlay (z-100):
+          // being out of the modal's DOM tree means stacking order is the only
+          // thing keeping it on top.
+          style={{
+            left: rect.left,
+            width: rect.width,
+            ...(rect.flip
+              ? { bottom: window.innerHeight - rect.top + 4 }
+              : { top: rect.top + 4 }),
+          }}
+          className={`fixed z-[102] ${LISTBOX_MAX_H} overflow-y-auto rounded-md border border-[var(--border-input)] bg-[var(--surface-card)] shadow-xl`}
         >
           {visible.length === 0 && (
             <li className="px-3 py-2.5 text-xs text-[var(--text-secondary)] italic">No matches</li>
@@ -351,7 +404,8 @@ export function MultiSelect({ id, label, options, selected, onChange, placeholde
               </li>
             );
           })}
-        </ul>
+        </ul>,
+        document.body,
       )}
     </div>
   );

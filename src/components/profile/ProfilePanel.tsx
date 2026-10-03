@@ -92,20 +92,6 @@ export { SECTOR_OPTIONS, ICS_PLATFORMS, IT_PLATFORMS };
 
 const PLATFORM_OPTIONS: MultiSelectOption[] = IT_PLATFORMS.map((p) => ({ value: p, label: p }));
 
-/**
- * Roles have no source of truth in this repo — no table, no schema, no enum.
- * This is an authored shortlist, deliberately short: it exists to colour the
- * briefing's tone, not to partition the visitor population.
- */
-export const ROLE_OPTIONS: MultiSelectOption[] = [
-  { value: 'soc-detection', label: 'SOC / detection engineering' },
-  { value: 'threat-intel', label: 'Threat intelligence' },
-  { value: 'incident-response', label: 'Incident response' },
-  { value: 'appsec', label: 'Application security' },
-  { value: 'grc', label: 'GRC / compliance' },
-  { value: 'red-team', label: 'Red team / offensive security' },
-  { value: 'ot-engineering', label: 'OT / engineering' },
-];
 
 /* ────────────────────────────────────────────────────────────────────────────
  * Telemetry
@@ -923,8 +909,6 @@ export function ProfilePanel({
   const titleId = `${baseId}-title`;
   const statusId = `${baseId}-status`;
   const sectorId = `${baseId}-sector`;
-  // Describes the two questions that are collected but never ranked.
-  const contextNoteId = `${baseId}-context-note`;
   const isOt = mode === 'ot';
 
   /**
@@ -1436,51 +1420,14 @@ export function ProfilePanel({
             </>
           )}
 
-          {/* ── Role: the one question still collected but not ranked ─────
-              The compliance-regime picker that used to sit beside it is GONE,
-              not hidden. It was asked in both modes, nothing on /profile read
-              it, and the measurement that would have given it a consumer
-              killed the idea instead: the SCF mapping reaches 160 frameworks
-              for EVERY sector (financial 5,153 controls, healthcare 5,160,
-              energy 5,127, transportation 5,043 — a 2% spread across pools
-              that differ by 154%). A regime answer cannot narrow a set that
-              does not vary, so the question could never have paid for itself.
-              `profile_submissions.frameworks` stays in the schema and simply
-              stops being written; the `variant` string is an opaque
-              CHECK-constraint value and is deliberately unchanged.
-
-              Role survives, and only OUTSIDE the large modal. The modal is the
-              deliberate, sidebar-opened entry point and is kept to the two
-              questions that actually move the briefing — sector, which carries
-              the whole ranking engine, and infrastructure, which narrows the
-              pool. The diamond's lighter presentations still ask it, which is
-              where a one-line answer costs the visitor least.
-
-              The note is placed BEFORE the field, not after, so it is read
-              while deciding whether to answer, and it is wired with
-              `aria-describedby` so a screen-reader visitor is told the same
-              thing at the same point rather than meeting it after the fact. */}
-          {!large && (
-            <div role="group" aria-describedby={contextNoteId} className="flex flex-col gap-4">
-              <p
-                id={contextNoteId}
-                className="text-[11px] leading-snug text-[var(--text-secondary)] border-t border-[var(--border-input)] pt-3"
-              >
-                The next one is{' '}
-                <span className="font-semibold text-[var(--text-primary)]">context, not ranking</span>
-                : it tells us which briefing to build next.
-              </p>
-
-              <MultiSelect
-                id={`${baseId}-roles`}
-                label="Your role"
-                options={ROLE_OPTIONS}
-                selected={answers.roles ?? EMPTY_SELECTION}
-                onChange={(next) => setAnswer('roles', next)}
-                placeholder="Search roles…"
-              />
-            </div>
-          )}
+          {/* The role question is GONE, not merely hidden. It never reached the
+              ranking — `role` appears nowhere in app/api/v1/profile/route.ts —
+              and was collected for telemetry only, behind a caption saying so.
+              A control that changes nothing invites a visitor to work it back
+              and forth expecting the briefing to move, which is a worse outcome
+              than never offering it. The telemetry column stays and is written
+              as an empty array, exactly as `frameworks` was when its picker
+              went, so the profile_submissions row shape does not change. */}
         </div>
 
         <div className="flex items-center justify-between gap-3 border-t border-[var(--border-input)] px-4 py-3">

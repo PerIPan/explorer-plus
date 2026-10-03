@@ -96,16 +96,32 @@ test('vocabulary: asset ids are exactly what assetIdSchema in validate.ts accept
   }
 });
 
-test('vocabulary: roles mirror ROLE_OPTIONS wherever the panel keeps them', () => {
-  // ROLE_OPTIONS is an authored shortlist with no database source of truth, so
-  // this drift guard is the only thing holding the picker and the sink together.
-  const candidates = ['src/components/profile/ProfilePanel.tsx', 'src/lib/profile-options.ts'];
-  const hit = candidates.find((f) => read(f).includes('ROLE_OPTIONS'));
-  assert.ok(hit, `ROLE_OPTIONS not found in ${candidates.join(' or ')} — repoint this guard`);
-  const block = read(hit).match(/ROLE_OPTIONS[^=]*=\s*\[([\s\S]*?)\n\];/);
-  assert.ok(block, `could not read the ROLE_OPTIONS array literal in ${hit}`);
-  const offered = [...block[1].matchAll(/value:\s*'([^']+)'/g)].map((m) => m[1]);
-  assert.deepEqual(offered, ROLE_VALUES);
+test('vocabulary: roles are no longer collected, but still parse for rows that have them', () => {
+  /*
+   * The role picker was REMOVED from the UI: it never reached the ranking
+   * (`role` appears nowhere in app/api/v1/profile/route.ts) and a control that
+   * changes nothing invites a visitor to work it back and forth expecting the
+   * briefing to move. This guard used to hold the picker and the sink in sync;
+   * with no picker it asserts the two things that still matter.
+   *
+   * ROLE_VALUES stays in the schema deliberately — profile_submissions holds
+   * rows written while the question existed, and they must keep parsing.
+   */
+  const panel = read('src/components/profile/ProfilePanel.tsx');
+  assert.ok(!panel.includes('ROLE_OPTIONS'), 'the role picker is back — restore the drift guard');
+  assert.ok(ROLE_VALUES.length > 0, 'ROLE_VALUES must survive for historical rows');
+
+  // An existing row still parses...
+  assert.ok(submissionSchema.safeParse({
+    variant: 'v1-4q', action: 'apply', sectors: ['financial'],
+    platforms: [], roles: [ROLE_VALUES[0]], frameworks: [], assets: [], purdue_levels: [],
+  }).success, 'a row written before the removal must still parse');
+
+  // ...and what the UI sends now is an empty array, as `frameworks` is.
+  assert.ok(submissionSchema.safeParse({
+    variant: 'v1-4q', action: 'apply', sectors: ['financial'],
+    platforms: [], roles: [], frameworks: [], assets: [], purdue_levels: [],
+  }).success, 'the current payload shape must parse');
 });
 
 test('vocabulary: framework keys mirror SCF_FRAMEWORK_REGISTRY', () => {

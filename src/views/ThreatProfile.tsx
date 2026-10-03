@@ -299,28 +299,6 @@ const DEFAULT_SORT: SortKey = 'kev';
 /** Ties every pill's (i) to the one panel it expands. */
 const EXPLAINER_ID = 'profile-sort-explainer';
 
-/** Amber at <=2, green at >=8 — everything between stays neutral. */
-function scoreTone(score: number): { text: string; bg: string; border: string } {
-  if (score <= 2) {
-    return {
-      text: 'text-[var(--accent-orange)]',
-      bg: 'bg-[var(--orange-faint)]',
-      border: 'border-[var(--orange-dim)]',
-    };
-  }
-  if (score >= 8) {
-    return {
-      text: 'text-[var(--accent-green)]',
-      bg: 'bg-[var(--green-faint)]',
-      border: 'border-[var(--green-dim)]',
-    };
-  }
-  return {
-    text: 'text-[var(--text-secondary)]',
-    bg: 'bg-[var(--hover-overlay)]',
-    border: 'border-[var(--border-color)]',
-  };
-}
 
 /* ────────────────────────────────────────────────────────────────────────────
  * Known-value sets
@@ -931,7 +909,6 @@ export function ThreatProfile() {
           {SORT_OPTIONS.map((o) => {
             const active = o.value === sortKey;
             const open = openSort === o.value;
-            const tone = scoreTone(o.score);
             return (
               /* The pill is a CONTAINER, not a button. It carries the border,
                  the rounding and the active background, and holds two separate
@@ -974,11 +951,6 @@ export function ThreatProfile() {
                              before:content-[''] before:absolute before:inset-x-0 before:top-1/2 before:h-11 before:-translate-y-1/2"
                 >
                   {o.label}
-                  <span
-                    className={`rounded-full border px-1.5 py-px text-[10px] font-semibold tabular-nums ${tone.text} ${tone.bg} ${tone.border}`}
-                  >
-                    {o.score}/12
-                  </span>
                 </button>
                 {/* Every column gets one, not just lift. Each names what it
                     measures AND what biases it, because the differentiation
@@ -1014,13 +986,23 @@ export function ThreatProfile() {
             );
           })}
         </div>
+        {/* The score lives HERE and nowhere else. On the pill it was a bare
+            `10/12` chip, which cannot be read without already knowing there are
+            twelve sectors and that the comparison is over each one's top six —
+            a methodology statistic in the place a reader looks for a threat
+            one. Below the pills there is room to say it in a sentence. */}
         <p className="mt-2 text-xs leading-relaxed text-[var(--text-secondary)]">
           <span className="font-semibold text-[var(--text-primary)]">
-            {sortOption.score}/12 differentiation.
+            {sortOption.score} of 12 sectors
           </span>{' '}
-          {sortOption.blurb} The badge counts how many of the twelve sectors rank a different top six
-          under that sort — a measure of how far the ranking separates one sector from the rest, not
-          of severity.
+          get a <span className="font-semibold">different</span> top six when ranked by{' '}
+          {sortOption.column.toLowerCase()}.{' '}
+          {sortOption.score === 12
+            ? 'No two sectors see the same list.'
+            : sortOption.score <= 2
+              ? 'So nearly every sector sees the list below — this ordering describes the data, not this sector.'
+              : ''}{' '}
+          It says how specific the ordering is, not how severe anything is.
         </p>
 
         {openSortOption && (

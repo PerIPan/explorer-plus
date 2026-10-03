@@ -31,6 +31,13 @@ interface NavItem {
    */
   count?: number;
   /**
+   * Text shown in the same parenthesised slot a count would occupy — `(wip)`.
+   * Takes precedence over `count`/`countKey`, so a page that is not ready to be
+   * advertised by size can say so without losing the number: comment the count
+   * out beside it and uncommenting is the whole of the change back.
+   */
+  note?: string;
+  /**
    * A field of /api/v1/nav-counts, for a page whose size is a live number
    * rather than a constant. `count` is for sizes the code already knows.
    */
@@ -54,7 +61,11 @@ const topNav: NavItem[] = [
   // property the page exists to demonstrate. Named to match its two siblings
   // above — all three are the same promise (public, keyless, unmetered) through
   // a different door, and a bare "CLI" read as a different kind of entry.
-  { path: '/cli', label: 'Open CLI', count: API_ENDPOINT_COUNT, tooltip: `the same ${API_ENDPOINT_COUNT} endpoints as a command line — tables in a terminal, json down a pipe, zero dependencies. not published to npm yet` },
+  // `(wip)` rather than the endpoint count, deliberately: the count advertises a
+  // size, and advertising a size invites use of something that is not published
+  // and has not been hardened for it. Restore by swapping the two lines below.
+  // count: API_ENDPOINT_COUNT,
+  { path: '/cli', label: 'Open CLI', note: 'wip', tooltip: `the same ${API_ENDPOINT_COUNT} endpoints as a command line — tables in a terminal, json down a pipe, zero dependencies. not published to npm yet` },
 ];
 
 const attackNav: NavItem[] = [
@@ -124,7 +135,7 @@ const NAV_ROW_CLASS = 'block px-3 py-2.5 rounded-md text-sm transition-colors du
 const NAV_ROW_IDLE_CLASS =
   'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--hover-overlay)]';
 
-function NavItemLink({ path, label, tooltip, end, emphasis, count, countKey, counts }: NavItem & { end?: boolean; counts?: NavCounts }) {
+function NavItemLink({ path, label, tooltip, end, emphasis, count, countKey, counts, note }: NavItem & { end?: boolean; counts?: NavCounts }) {
   const pathname = usePathname();
   const isActive = end
     ? pathname === path
@@ -143,6 +154,9 @@ function NavItemLink({ path, label, tooltip, end, emphasis, count, countKey, cou
     >
       {label}
       {(() => {
+        if (note) {
+          return <span className="ml-1 font-normal text-[var(--text-secondary)]">({note})</span>;
+        }
         const n = count ?? (countKey && counts ? counts[countKey] : undefined);
         // Renders nothing until the counts land, rather than flashing a (0).
         return n === undefined ? null : (
