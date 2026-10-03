@@ -47,11 +47,20 @@ function HeatBadges({ t }: { t: TechniqueRef }) {
    * whatever sector is in sessionStorage and applies it as an unrelated
    * relation, which only ever subtracts. See ALL_SECTORS_PARAM.
    *
-   * Verified against production: T1190 199 curated / 51 curated+KEV / 47 groups,
-   * T1059 134 / 11 / 17, T1078 62 / 3 / 49 — each equal to its destination.
+   * `since=` — EMPTY, and present — is the third. That page defaults to the
+   * last 30 days when the parameter is ABSENT (`searchParams.has('since')`
+   * gates it), while these badges count all time: refresh-cti-heat.mjs applies
+   * no publish-date window, deliberately, because the curated set is small and
+   * includes notable older exploited CVEs. Omitting it sent a badge reading 199
+   * to a page showing only what was published in the last month. An empty value
+   * is the page's own spelling of "all time"; `since` cannot be dropped instead,
+   * because absence is what triggers the default.
+   *
+   * Verified through the PAGE's own parameters, not the API alone — the API has
+   * no such default, which is exactly how this was missed the first time.
    */
   const cveHref = (extra = '') =>
-    `/cti/cves?technique=${encodeURIComponent(t.attack_id)}&curated=1&allSectors=1${extra}`;
+    `/cti/cves?technique=${encodeURIComponent(t.attack_id)}&curated=1&allSectors=1&since=${extra}`;
   const badges: { label: string; title: string; href: string }[] = [];
   if (t.has_kev) {
     badges.push({
@@ -89,7 +98,9 @@ function HeatBadges({ t }: { t: TechniqueRef }) {
           key={b.label}
           href={b.href}
           title={`${b.title} — click to see them`}
-          className={`text-[10px] font-mono px-1.5 py-0.5 rounded border whitespace-nowrap hover:border-[var(--accent-teal)] hover:text-[var(--accent-teal)] transition-colors ${BADGE_CLS}`}
+          // Underlined so it reads as a link rather than a static chip — same
+          // dotted-to-solid treatment the Threat Profile's evidence counts use.
+          className={`text-[10px] font-mono px-1.5 py-0.5 rounded border whitespace-nowrap underline decoration-dotted underline-offset-2 hover:decoration-solid hover:border-[var(--accent-teal)] hover:text-[var(--accent-teal)] transition-colors ${BADGE_CLS}`}
         >
           {b.label}
         </Link>
