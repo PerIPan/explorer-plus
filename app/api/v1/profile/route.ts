@@ -656,14 +656,32 @@ async function handler(req: NextRequest): Promise<NextResponse> {
      * (>10 distinct techniques per CWE); see scripts/check-catchall-threshold.mjs
      * for why that threshold is 10 everywhere.
      *
-     * Measured 0.67s (media) to 1.47s (defense) warm, server-side, across all
-     * twelve sectors; 1.04s for `?domain=all`. An earlier "152ms" here was off
-     * by 7-10x and is corrected rather than quietly dropped. The cost is in the
-     * dedup `UNION`, which materialises the whole 137,610-row link relation per
-     * request — including a scan of all 777,316 `technique_iocs` rows — so it
-     * tracks that table's growth, not the ten rows returned. Tolerable only
-     * because the response is cached an hour; if it stops being, the link
-     * relation wants a matview of its own.
+     * Measured 204ms (media), 304ms (financial), 323ms (defense): medians of 5,
+     * warm, server-side on the unpooled endpoint, timed with clock_timestamp()
+     * around the statement.
+     *
+     * This comment has now been wrong twice, in both directions, so the method
+     * above is stated rather than just the number. "152ms" was too low; the
+     * "0.67s-1.47s" that replaced it was too high by 3-4.5x, because it came
+     * from EXPLAIN (ANALYZE) runs — instrumentation inflates this statement
+     * about 1.6-1.8x — and I repeated it without re-measuring. Time it
+     * uninstrumented before quoting it.
+     *
+     * The cost is the dedup `UNION` building the whole 137,610-row link
+     * relation per request. Not, however, because of `technique_iocs` growth:
+     * the planner seq-scans all 778,384 of its rows only because it misestimates
+     * rows-per-ioc_id (it assumes 30; cve-type IOCs average 8.3), and an
+     * `OFFSET 0` optimization barrier inside a LATERAL takes arm 2 from ~100ms
+     * to ~15ms. That rewrite is the cheap half of what a matview would buy.
+     *
+     * A matview of the relation is NOT the answer, and the reason is this
+     * section's own invariant rather than its cost: /api/v1/cves computes these
+     * links live, so freezing them here puts the count and the page it links to
+     * back out of step — measured at 16 of 120 rendered rows reading low on a
+     * 24h refresh, worst row short by 12 CVEs. That is the defect
+     * TECHNIQUE_CVE_LINKS_SQL exists to prevent. The traffic says the same:
+     * /api/v1/profile takes ~56 origin hits a day (peak 110), so a perfect
+     * matview would save about 25 seconds of aggregate waiting per day.
      *
      * Effectively enterprise-only, though not for the reason first written
      * here: three mobile techniques ARE reachable through CWE/CAPEC (ICS and
