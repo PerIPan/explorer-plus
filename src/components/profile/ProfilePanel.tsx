@@ -1405,7 +1405,12 @@ export function ProfilePanel({
               aria-describedby={statusId}
               className="w-full min-h-[44px] px-2 rounded-md border border-[var(--border-input)] bg-[var(--surface-card)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-teal)] focus-visible:ring-2 focus-visible:ring-[var(--accent-teal)] transition-colors"
             >
-              <option value="">Select a sector…</option>
+              {/* States the size of the list, like the platform picker does.
+                  A collapsed <select> hides how much is behind it, and this is
+                  the required question — knowing it is one of twelve, not one
+                  of three, is the difference between scanning and guessing.
+                  Derived from SECTOR_OPTIONS so it cannot fall out of step. */}
+              <option value="">Select 1 of {SECTOR_OPTIONS.length} sectors…</option>
               {SECTOR_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>
                   {o.label}
