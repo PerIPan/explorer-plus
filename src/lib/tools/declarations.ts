@@ -48,7 +48,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
   },
   {
     name: 'get_cve_detail',
-    description: 'Full record for one CVE: CWEs, CVSS, EPSS, affected apps, OWASP categories, KEV status, GHSA alias, and osvAdvisories -- the distro and kernel advisories aliasing it, which answer which distros are affected. CAPEC patterns and ATT&CK techniques are inferred from shared CWEs, not published per-CVE; attribute them that way. version matches text in an affected range, not a verdict that the version is vulnerable; say so. Find a CVE ID with search_cves.',
+    description: 'Full record for one CVE: CWEs, CVSS, EPSS, affected apps, OWASP categories, KEV status, GHSA alias, and osvAdvisories -- the distro and kernel advisories aliasing it, which answer which distros are affected. CAPEC patterns and ATT&CK techniques are inferred from shared CWEs, not published per-CVE; attribute them that way. `techniqueLinkage` grades that: level `curated` means CTID analysts hand-mapped the CVE to the technique (hard evidence, 0.27% of CVEs), `inferred` means the CWE->CAPEC chain reached it (~18%), `none` means no link, with `reason` saying where the chain broke -- no-cwe-recorded, cwe-not-mapped-to-attack, excluded-catchall-cwe, technique-revoked-or-deprecated. An empty `techniques` array therefore never means the CVE is unknown or unimportant; read the reason and say which it is, and never present `inferred` as confirmed attribution. version matches text in an affected range, not a verdict that the version is vulnerable; say so. Find a CVE ID with search_cves.',
     parameters: {
       type: "OBJECT",
       properties: {

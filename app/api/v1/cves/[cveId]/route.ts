@@ -28,7 +28,7 @@ export async function GET(
     : 'WHERE ap.cve_id = $1';
   const appsParams = version ? [id, `%${escapeLikePattern(version)}%`] : [id];
 
-  const [detailResult, sourcesResult, cwesResult, appsResult, techIocResult, techCapecResult, reportsResult, owaspResult, ghsaResult, osvRes] =
+  const [detailResult, sourcesResult, cwesResult, appsResult, techIocResult, techCapecResult, reportsResult, owaspResult, ghsaResult, osvRes, linkageRes] =
     await Promise.all([
       query<{
         cve_id: string;
@@ -182,6 +182,28 @@ export async function GET(
           cvssScore: string | null; cvssSeverity: string | null; published: string | null;
         }>,
       })),
+
+      /*
+       * Why `techniques: []` is empty, which the empty array itself cannot say.
+       * Four links have to hold for a CVE to reach a technique -- CVE -> CWE ->
+       * CAPEC -> ATT&CK, with the catch-all rule removing CWEs that fan out --
+       * and ~82% of the catalogue breaks at one of them. Measured 2026-10-03:
+       * 304,612 CVEs, 54,375 with any technique link, 823 hand-mapped. Without
+       * this, "no attack mapping exists" and "the public chain stops short"
+       * serialise identically, so a caller cannot tell a negative finding from
+       * missing data. Three booleans, one pass over this CVE's CWEs.
+       */
+      query<{ any_tech: boolean | null; catchall_tech: boolean | null; live_path: boolean | null }>(
+        `SELECT bool_or(cm.technique_id IS NOT NULL) AS any_tech,
+                bool_or(cm.technique_id IS NOT NULL
+                        AND ${'cw.cwe_id IN (SELECT cwe_id FROM catchall_cwes)'}) AS catchall_tech,
+                bool_or(cm.technique_id IS NOT NULL
+                        AND ${notCatchallCwe('cw.cwe_id')}) AS live_path
+           FROM cve_weaknesses cw
+           LEFT JOIN capec_mappings cm ON cm.cwe_id = cw.cwe_id
+          WHERE cw.cve_id = $1`,
+        [id],
+      ).catch(() => ({ rows: [] as Array<{ any_tech: boolean | null; catchall_tech: boolean | null; live_path: boolean | null }> })),
     ]);
 
   // Resolve CAPEC attack patterns via CWE overlap. Safe on pre-migration envs
@@ -224,6 +246,35 @@ export async function GET(
     }
   }
 
+  const techniques = Array.from(techMap.values()).sort((a, b) => a.attackId.localeCompare(b.attackId));
+
+  /*
+   * `techniqueLinkage` — HOW this CVE reaches ATT&CK, or why it does not.
+   *
+   * `curated` is reserved for CTID's hand-mapped edges (source `ctid`). The
+   * `ioc` arm is NOT promoted to curated despite looking like evidence: its
+   * CVE-type rows are overwhelmingly `inferred` through the same CAPEC bridge
+   * (measured 2026-10-03: 5,874 inferred against 349 confirmed), so calling it
+   * hand-mapped would overstate 94% of them.
+   *
+   * The `reason` codes are mutually exclusive and ordered by where the chain
+   * actually broke, nearest the CVE first. They are a closed set: add to it
+   * rather than reusing one loosely, because a consumer filtering on these is
+   * distinguishing a negative finding from an absence of data.
+   */
+  const linkage = (() => {
+    if (techniques.some((t) => t.sources.includes('ctid'))) return { level: 'curated' as const, reason: null };
+    if (techniques.length > 0) return { level: 'inferred' as const, reason: null };
+    if (cwesResult.rows.length === 0) return { level: 'none' as const, reason: 'no-cwe-recorded' };
+    const l = linkageRes.rows[0];
+    // The query failed or the CVE has no weakness rows at all: say the chain
+    // state is unknown rather than inventing a break we did not observe.
+    if (!l) return { level: 'none' as const, reason: 'unknown' };
+    if (!l.any_tech) return { level: 'none' as const, reason: 'cwe-not-mapped-to-attack' };
+    if (!l.live_path) return { level: 'none' as const, reason: 'excluded-catchall-cwe' };
+    return { level: 'none' as const, reason: 'technique-revoked-or-deprecated' };
+  })();
+
   return withCors(jsonResponse({
     cveId: id,
     versionFilter: version ?? null,
@@ -242,7 +293,8 @@ export async function GET(
       source: r.source,
       sourceRef: r.source_ref,
     })),
-    techniques: Array.from(techMap.values()).sort((a, b) => a.attackId.localeCompare(b.attackId)),
+    techniques,
+    techniqueLinkage: linkage,
     affectedApps: appsResult.rows.map((r) => ({
       normalized: r.normalized,
       vendor: r.vendor,

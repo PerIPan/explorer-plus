@@ -1747,7 +1747,7 @@ export const COMMANDS = [
         "index": 2
       }
     ],
-    "summary": "One CVE in full — CWEs, EPSS, KEV, OWASP, affected apps, GHSA alias, aliasing OSV advisories.",
+    "summary": "One CVE in full — CWEs, EPSS, KEV, OWASP, affected apps, GHSA alias, aliasing OSV advisories, plus techniqueLinkage saying whether its ATT&CK links are curated (CTID hand-mapped), inferred (CWE→CAPEC) or absent and why — only ~18% of CVEs carry any technique link, so an empty techniques array is the norm, not a lookup failure.",
     "group": "vulns",
     "paginated": false,
     "example": "/cves/CVE-2021-44228",
