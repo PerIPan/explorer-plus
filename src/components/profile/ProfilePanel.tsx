@@ -1295,7 +1295,10 @@ export function ProfilePanel({
             once — which also means less scrolling behind an open listbox. */}
         <div
           className={`flex flex-col gap-4 overflow-y-auto px-4 py-3 ${
-            large ? 'max-h-[min(70vh,560px)]' : 'max-h-[min(60vh,420px)]'
+            // Taller than it was: the panel ends in a Platforms picker whose open
+            // list needs somewhere to go, and a short body forced it over the
+            // footer's Apply button.
+            large ? 'max-h-[min(78vh,680px)]' : 'max-h-[min(70vh,540px)]'
           }`}
           onScroll={onInteract}
         >

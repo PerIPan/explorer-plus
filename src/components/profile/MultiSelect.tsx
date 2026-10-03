@@ -41,7 +41,19 @@ function domSafe(value: string): string {
  * was no visible context to return to and no obvious way back. Four rows is
  * enough to browse without the listbox swallowing the questions underneath.
  */
-const LISTBOX_MAX_H = 'max-h-[11rem]';
+/*
+ * How tall the open list may get, in px so it can be measured against the room
+ * it actually has.
+ *
+ * Was 11rem (176px), which predates options carrying a second `meta` line. At
+ * ~56px a row that showed barely three of the eleven enterprise platforms, and
+ * read as "we only have four platforms" rather than as a scroll. 352px is six
+ * rows; the measurement below still clamps it to whatever room the scroll
+ * container really has, so this is a ceiling, not a demand.
+ */
+const MAX_LIST_PX = 420;
+/* Below this a list is useless; better to use the room than show two rows. */
+const MIN_LIST_PX = 132;
 
 /**
  * Selected-value chips, in the site's house pill style.
@@ -98,7 +110,9 @@ export function MultiSelect({ id, label, options, selected, onChange, placeholde
    * Flips above the field when there is more room there, so the last control in
    * a panel still opens into visible space.
    */
-  const [rect, setRect] = useState<{ left: number; top: number; width: number; flip: boolean } | null>(null);
+  const [rect, setRect] = useState<
+    { left: number; top: number; width: number; flip: boolean; maxH: number } | null
+  >(null);
   const inputRef = useRef<HTMLInputElement>(null);
   /*
    * The portalled listbox is NOT inside containerRef any more, so every
@@ -116,11 +130,47 @@ export function MultiSelect({ id, label, options, selected, onChange, placeholde
       const el = containerRef.current;
       if (!el) return;
       const r = el.getBoundingClientRect();
-      // 11rem of options plus a little chrome; see LISTBOX_MAX_H.
-      const needed = 176 + 8;
-      const below = window.innerHeight - r.bottom;
-      const flip = below < needed && r.top > below;
-      setRect({ left: r.left, top: flip ? r.top : r.bottom, width: r.width, flip });
+
+      /*
+       * Bound by the SCROLL CONTAINER, not the viewport.
+       *
+       * Measuring against window.innerHeight means a field sitting comfortably
+       * above the fold always looks like it has room — so the list opened
+       * downward and, being fixed and above everything, painted straight over
+       * the panel's own footer and its Apply button. The space that matters is
+       * the space inside the thing the field scrolls in.
+       */
+      let bound = { top: 0, bottom: window.innerHeight };
+      for (let n = el.parentElement; n; n = n.parentElement) {
+        const st = getComputedStyle(n);
+        if (/(auto|scroll|hidden|clip)/.test(`${st.overflowX} ${st.overflowY}`)) {
+          const br = n.getBoundingClientRect();
+          bound = { top: Math.max(0, br.top), bottom: Math.min(window.innerHeight, br.bottom) };
+          break;
+        }
+      }
+
+      const GAP = 4;
+      const below = bound.bottom - r.bottom - GAP;
+      const above = r.top - bound.top - GAP;
+      const flip = below < above && below < MAX_LIST_PX;
+      // Never taller than the room it actually has, so it cannot spill past the
+      // container in either direction.
+      const space = Math.max(MIN_LIST_PX, Math.min(MAX_LIST_PX, flip ? above : below));
+      const next = { left: r.left, top: flip ? r.top : r.bottom, width: r.width, flip, maxH: space };
+      /*
+       * Only set state when something actually moved. This runs on EVERY scroll
+       * event in the capture phase — including the list's own, once it is tall
+       * enough to scroll — and re-rendering the portal under the pointer on
+       * each wheel tick is pure churn.
+       */
+      setRect((prev) =>
+        prev
+          && prev.left === next.left && prev.top === next.top
+          && prev.width === next.width && prev.flip === next.flip && prev.maxH === next.maxH
+          ? prev
+          : next,
+      );
     };
     measure();
     // `true` so ancestor scrolling counts — the dialog body scrolls, not window.
@@ -367,12 +417,39 @@ export function MultiSelect({ id, label, options, selected, onChange, placeholde
           style={{
             left: rect.left,
             width: rect.width,
+            maxHeight: rect.maxH,
             ...(rect.flip
               ? { bottom: window.innerHeight - rect.top + 4 }
               : { top: rect.top + 4 }),
           }}
-          className={`fixed z-[102] ${LISTBOX_MAX_H} overflow-y-auto rounded-md border border-[var(--border-input)] bg-[var(--surface-card)] shadow-xl`}
+          // `overscroll-contain`: reaching the end of this list must not chain
+          // the wheel on to the panel behind it, which would scroll the form
+          // out from under an open dropdown.
+          className="fixed z-[102] overflow-y-auto overscroll-contain rounded-md border border-[var(--border-input)] bg-[var(--surface-card)] shadow-xl
+                     [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[var(--text-secondary)]"
+
         >
+          {/*
+            * Says how many options there are, because the scrollbar does not.
+            * macOS overlay scrollbars stay hidden until a scroll is in
+            * progress, so a list showing six of eleven rows looks exactly like
+            * a list of six — which is precisely how this was read ("do we have
+            * only 4 platforms?"). role="presentation" keeps it out of the
+            * option set for assistive tech, which gets the same fact from
+            * aria-setsize on the rows.
+            */}
+          {options.length > visible.length || visible.length > 0 ? (
+            <li
+              role="presentation"
+              className="sticky top-0 z-10 border-b border-[var(--border-input)] bg-[var(--surface-card)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--text-secondary)]"
+            >
+              {query.trim()
+                ? `${filtered.length} of ${options.length} match`
+                : `${options.length} ${options.length === 1 ? 'option' : 'options'}`}
+              {visible.length < filtered.length ? ` · first ${visible.length}` : ''}
+              {filtered.length > 1 ? ' · scroll for more' : ''}
+            </li>
+          ) : null}
           {visible.length === 0 && (
             <li className="px-3 py-2.5 text-xs text-[var(--text-secondary)] italic">No matches</li>
           )}
