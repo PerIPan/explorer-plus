@@ -20,6 +20,8 @@ import type {
   AtomicTest,
   FeedSyncStatus,
   TechniqueIntelligence,
+  EmulationPlanList,
+  EmulationPlanDetail,
   FrameworkData,
   NistControlSummary,
   EngageSummary,
@@ -271,6 +273,28 @@ export function useFrameworks(attackId: string) {
     queryFn: () => apiFetch<FrameworkData>(`/frameworks/technique/${attackId}`),
     enabled: Boolean(attackId),
     staleTime: 2 * 60 * 1000,
+  });
+}
+
+/**
+ * CTID emulation plans, optionally for one group or one technique. `enabled`
+ * lets the group 360 skip the request for the ~180 groups with no plan.
+ */
+export function useEmulationPlans(params: Record<string, string> = EMPTY_PARAMS, enabled = true) {
+  return useQuery({
+    queryKey: ['emulation-plans', params],
+    queryFn: () => apiFetch<EmulationPlanList>('/frameworks/emulation', params),
+    enabled,
+    staleTime: 60 * 60 * 1000,
+  });
+}
+
+export function useEmulationPlan(planKey: string) {
+  return useQuery({
+    queryKey: ['emulation-plan', planKey],
+    queryFn: () => apiFetch<{ data: EmulationPlanDetail }>(`/frameworks/emulation/${planKey}`).then((r) => r.data),
+    enabled: Boolean(planKey),
+    staleTime: 60 * 60 * 1000,
   });
 }
 

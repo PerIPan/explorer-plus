@@ -112,6 +112,7 @@ const frameworksNav: NavItem[] = [
   { path: '/frameworks/ot-inventory', label: 'OT Asset Inventory', tooltip: 'CISA multinational OT asset-inventory guidance (Aug 2025): five steps, 32 inventory fields by priority, and the oil & gas, electricity and water taxonomies — each row mapped by this project to the ATT&CK ICS assets, unmodelled equipment shown as such' },
   { path: '/cti/sigma', label: 'Sigma Rules', tooltip: 'detection signatures mapped to techniques (SigmaHQ)' },
   { path: '/frameworks/atomic', label: 'Atomic Tests', tooltip: 'red team validation tests from Atomic Red Team' },
+  { path: '/frameworks/emulation', label: 'Emulation Plans', tooltip: 'MITRE CTID adversary emulation plans for 9 ATT&CK groups (APT29, FIN6, Sandworm, Turla, …) — every step resolved to its current technique, plus how much of each group’s attributed techniques the plan exercises' },
   { path: '/cti/capec', label: 'CAPEC', tooltip: 'MITRE Common Attack Pattern Enumeration — 615 attack patterns with severity, likelihood, prerequisites, mitigations' },
   { path: '/frameworks/cra', label: 'CRA – wip', tooltip: 'EU Cyber Resilience Act (Regulation 2024/2847) — reference page covering key dates, Annex I essential requirements, Article 14 reporting cadence. Mappings to ATT&CK/CWE pending harmonised standards.' },
   { path: '/frameworks/owasp-ai', label: 'OWASP AI – wip', tooltip: 'OWASP AI Exchange — AI/ML threats, controls, and framework alignments (ISO 27090, EU AI Act). Structured JSON/ATLAS crosswalks on the 2026 roadmap; reference page for now.' },

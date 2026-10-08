@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useGroup, useCampaign, useExternalActorByGroup, useExternalActorByName, useFrameworksByTechniques } from '../../hooks/useApi';
+import { useGroup, useCampaign, useExternalActorByGroup, useExternalActorByName, useFrameworksByTechniques, useEmulationPlans } from '../../hooks/useApi';
+import { EMULATION_PLANS } from '../../lib/emulation-plans.mjs';
 import { apiFetch } from '../../lib/api';
 import { useDomain } from '../../contexts/DomainContext';
 import { useSector } from '../../contexts/SectorContext';
@@ -286,6 +287,11 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
     ?.map((t: { attackId: string }) => t.attackId) ?? [];
   const fwResult = useFrameworksByTechniques(techniqueIds);
   const owaspCategories: Array<{ categoryId: string; name: string; framework: string }> = fwResult.data?.owasp ?? [];
+  // CTID emulation plan(s) for this group. The registry says which groups have
+  // one, so the other ~180 groups never make the request.
+  const hasEmulationPlan = entityType === 'group' && EMULATION_PLANS.some((p) => p.attackGroupId === attackId);
+  const emulationResult = useEmulationPlans({ group: attackId }, hasEmulationPlan);
+  const emulationPlans = emulationResult.data?.data ?? [];
 
   // ── External actor profile (ThaiCERT / ETDA) ───────────────────────────
   if (entityType === 'external_actor') {
@@ -585,6 +591,41 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
         {software.length > 0 && (
           <CollapsibleSection title="Software Arsenal" count={software.length} defaultOpen>
             <SoftwareArsenal software={software} />
+          </CollapsibleSection>
+        )}
+
+        {/* Adversary emulation plan — collapsed. Upstream ids, not inferred;
+            the overlap figures are derived server-side and say so. */}
+        {emulationPlans.length > 0 && (
+          <CollapsibleSection
+            title={emulationPlans.length > 1 ? 'Adversary Emulation Plans' : 'Adversary Emulation Plan'}
+            count={emulationPlans.reduce((n, p) => n + p.stepCount, 0)}
+            badge={{ label: 'CTID', variant: 'blue' }}
+            defaultOpen={false}
+          >
+            {emulationPlans.map((p) => (
+              <div key={p.planKey} className="py-1.5 px-3 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)]">
+                <div className="flex flex-wrap items-center gap-2">
+                  <a
+                    href={`/frameworks/emulation?plan=${p.planKey}`}
+                    className="text-xs font-semibold text-[var(--accent-teal)] hover:underline"
+                  >
+                    {p.name}
+                  </a>
+                  <Badge label={`${p.stepCount} steps`} variant="neutral" />
+                  <Badge label={`${p.techniqueCount} techniques`} variant="teal" />
+                  {p.attackVersion && (
+                    <span className="text-[10px] text-[var(--text-secondary)]">written for ATT&amp;CK v{p.attackVersion}</span>
+                  )}
+                </div>
+                <p className="text-[11px] text-[var(--text-secondary)] mt-1">
+                  Exercises {p.overlapCount} of the {p.groupTechniqueCount} Enterprise techniques ATT&amp;CK
+                  attributes to this group by exact id, {p.familyOverlapCount} counting parent/sub-technique
+                  matches. Derived from the plan&apos;s steps; its other techniques are not attributed to this
+                  group in current ATT&amp;CK.
+                </p>
+              </div>
+            ))}
           </CollapsibleSection>
         )}
 

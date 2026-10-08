@@ -392,6 +392,7 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
   }, {});
 
   const atomicTests = intel?.atomicTests ?? [];
+  const emulationSteps = intel?.emulationSteps ?? [];
   const atomicPlatforms = Array.from(
     new Set(atomicTests.flatMap((t) => t.platforms ?? []))
   );
@@ -972,6 +973,51 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
               <span className="text-xs text-[var(--text-secondary)]">No atomic tests in feed yet.</span>
             </MapRow>
           )
+        )}
+        {/* CTID emulation-plan steps: upstream technique ids, resolved — not
+            inferred. Steps, not tests, so a badge of their own rather than a
+            share of the card count. */}
+        {emulationSteps.length > 0 && (
+          <>
+            <MapRow prefix="CTID emulation" prefixUrl="https://github.com/center-for-threat-informed-defense/adversary_emulation_library">
+              <a
+                href={`/frameworks/emulation?technique=${attackId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-medium text-[var(--text-secondary)] hover:text-[var(--accent-teal)] transition-colors"
+              >
+                view plans ↗
+              </a>
+              <Badge label={`${emulationSteps.length} plan steps`} variant="blue" />
+              <Badge label={`${new Set(emulationSteps.map((s) => s.planKey)).size} plans`} variant="neutral" />
+            </MapRow>
+            <div className="mt-1 space-y-1.5 max-h-56 overflow-y-auto">
+              {emulationSteps.map((s, i) => (
+                <div
+                  key={`${s.planKey}-${s.procedureStep ?? ''}-${i}`}
+                  className="flex items-center gap-2 py-1.5 px-3 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)]"
+                >
+                  <a
+                    href={`/frameworks/emulation?plan=${s.planKey}`}
+                    className="text-xs font-medium text-[var(--accent-teal)] hover:underline shrink-0"
+                  >
+                    {s.planName}
+                  </a>
+                  {s.procedureStep && (
+                    <span className="font-mono text-[10px] text-[var(--text-secondary)] shrink-0">{s.procedureStep}</span>
+                  )}
+                  <span className="text-xs text-[var(--text-primary)] flex-1 truncate">{s.name}</span>
+                  {s.attackId && s.attackId !== attackId && (
+                    <span className="font-mono text-[10px] text-[var(--text-secondary)] shrink-0">{s.attackId}</span>
+                  )}
+                  {s.resolution === 'revoked_replaced' && (
+                    <Badge label="id replaced" variant="yellow" />
+                  )}
+                  {s.resolution === 'deprecated' && <Badge label="deprecated" variant="yellow" />}
+                </div>
+              ))}
+            </div>
+          </>
         )}
         <MapRow prefix="MITRE Caldera" prefixUrl="https://caldera.mitre.org/">
           <span className="text-xs text-[var(--text-secondary)]">adversary emulation platform</span>

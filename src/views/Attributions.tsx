@@ -18,6 +18,8 @@ const PUBLIC_DOMAIN: Source[] = [
   { name: 'NIST 800-66 r2', url: 'https://csrc.nist.gov/publications/detail/sp/800-66/rev-2/final', license: 'Public domain', blurb: 'HIPAA Security Rule implementation guidance.' },
   { name: 'CISA Known Exploited Vulnerabilities', url: 'https://www.cisa.gov/known-exploited-vulnerabilities-catalog', license: 'Public domain', blurb: 'Vulnerabilities known to be actively exploited in the wild.' },
   { name: 'NVD (NIST National Vulnerability Database)', url: 'https://nvd.nist.gov/', license: 'Public domain', blurb: 'CVE metadata, CVSS scores, CPE enrichment.' },
+  { name: 'NIST SP 800-40 Rev. 4', url: 'https://doi.org/10.6028/NIST.SP.800-40r4', license: 'Public domain (17 USC §105)', blurb: 'Enterprise patch management planning — reference page at /frameworks/nist-800-40.' },
+  { name: 'CISA OT Asset Inventory Guidance', url: 'https://www.cisa.gov/resources-tools/resources/foundations-ot-cybersecurity-asset-inventory-guidance-owners-and-operators', license: 'TLP:CLEAR (US Government work, with partner agencies)', blurb: 'Inventory steps, fields and sector taxonomies at /frameworks/ot-inventory; the ATT&CK asset crosswalk there is this project’s.' },
   { name: 'MITRE CWE', url: 'https://cwe.mitre.org/', license: 'Public domain (DHS-funded)', blurb: 'Common Weakness Enumeration taxonomy.' },
 ];
 
@@ -31,6 +33,7 @@ const PERMISSIVE: Source[] = [
   { name: 'RE&CT', url: 'https://atc-project.github.io/atc-react/', license: 'MIT', licenseUrl: 'https://github.com/atc-project/atc-react/blob/master/LICENSE', blurb: 'ATC incident response playbook actions.' },
   { name: 'SigmaHQ', url: 'https://github.com/SigmaHQ/sigma', license: 'Detection Rule License (permissive)', licenseUrl: 'https://github.com/SigmaHQ/sigma/blob/master/LICENSE.Detection.Rules.md', blurb: '3,000+ detection rules mapped to ATT&CK techniques.' },
   { name: 'Atomic Red Team', url: 'https://github.com/redcanaryco/atomic-red-team', license: 'MIT', licenseUrl: 'https://github.com/redcanaryco/atomic-red-team/blob/master/LICENSE.txt', blurb: '1,700+ adversary-emulation tests.' },
+  { name: 'CTID Adversary Emulation Library', url: 'https://github.com/center-for-threat-informed-defense/adversary_emulation_library', license: 'Apache 2.0', licenseUrl: 'https://github.com/center-for-threat-informed-defense/adversary_emulation_library/blob/master/LICENSE', blurb: 'Emulation plans for 9 ATT&CK groups — plan and step names, step-to-technique ids. Commands and payloads not reproduced.' },
   { name: 'abuse.ch (ThreatFox + MalwareBazaar)', url: 'https://abuse.ch/', license: 'CC0', blurb: 'Public-domain malware-family + IOC feeds (IPs, domains, URLs, hashes).' },
   { name: 'CVElistV5', url: 'https://github.com/CVEProject/cvelistV5', license: 'CC0 (CVE Program)', blurb: 'Authoritative CVE Program JSON feed — what NIST NVD consumes.' },
 ];
