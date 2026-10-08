@@ -25,7 +25,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     '/frameworks/iso27001', '/frameworks/engage', '/frameworks/react', '/frameworks/veris',
     '/frameworks/cloud', '/frameworks/atomic', '/frameworks/detection', '/frameworks/d3fend',
     '/frameworks/purdue', '/frameworks/cra', '/frameworks/owasp-ai',
-    '/frameworks/scf', '/frameworks/enisa-sbd', '/frameworks/nist-800-40',
+    '/frameworks/scf', '/frameworks/enisa-sbd', '/frameworks/nist-800-40', '/frameworks/ot-inventory',
     '/compliance', '/external-actors', '/data-sources', '/about/attributions',
     '/open-apis', '/open-mcp',
   ].map((path) => ({ url: `${BASE_URL}${path}`, changeFrequency: 'weekly' as const }));

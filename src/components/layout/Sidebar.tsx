@@ -109,6 +109,7 @@ const frameworksNav: NavItem[] = [
   { path: '/frameworks/veris', label: 'VERIS', tooltip: 'incident classification categories (Verizon DBIR standard)' },
   { path: '/frameworks/cloud', label: 'Cloud Controls', tooltip: 'AWS, Azure, and GCP security controls mapped to techniques' },
   { path: '/frameworks/purdue', label: 'Purdue Model', tooltip: 'OT network segmentation — seven levels from physical process to enterprise IT, which ICS assets sit at each, and which levels may communicate' },
+  { path: '/frameworks/ot-inventory', label: 'OT Asset Inventory', tooltip: 'CISA multinational OT asset-inventory guidance (Aug 2025): five steps, 32 inventory fields by priority, and the oil & gas, electricity and water taxonomies — each row mapped by this project to the ATT&CK ICS assets, unmodelled equipment shown as such' },
   { path: '/cti/sigma', label: 'Sigma Rules', tooltip: 'detection signatures mapped to techniques (SigmaHQ)' },
   { path: '/frameworks/atomic', label: 'Atomic Tests', tooltip: 'red team validation tests from Atomic Red Team' },
   { path: '/cti/capec', label: 'CAPEC', tooltip: 'MITRE Common Attack Pattern Enumeration — 615 attack patterns with severity, likelihood, prerequisites, mitigations' },

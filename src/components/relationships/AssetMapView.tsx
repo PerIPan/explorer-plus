@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { apiFetch } from '../../lib/api';
@@ -96,6 +96,82 @@ const IconAlias = (
     <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M7 3h5a1.99 1.99 0 011.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.99 1.99 0 013 12V7a4 4 0 014-4z" />
   </svg>
 );
+
+const IconInventory = (
+  <svg fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+  </svg>
+);
+
+// ── CISA inventory classes ───────────────────────────────────────────────────
+
+type CisaModule = typeof import('../../lib/cisa-ot-inventory.mjs');
+
+const SECTOR_SHORT: Record<string, string> = { 'oil-gas': 'Oil & gas', electricity: 'Electricity', water: 'Water' };
+const CRIT_VARIANT: Record<string, 'orange' | 'yellow' | 'neutral'> = { high: 'orange', medium: 'yellow', low: 'neutral' };
+
+/**
+ * Which rows of CISA's example OT taxonomies land on this asset, under this
+ * project's crosswalk (src/lib/cisa-ot-inventory.mjs).
+ *
+ * The data module is imported on mount rather than at the top of the file so
+ * its ~75 rows of text ship in their own chunk, not in every 360 view. An
+ * asset no CISA row names (Jump Host, VPN Server) says so instead of hiding the
+ * card: that the example taxonomies stop short of the DMZ is itself useful.
+ */
+function CisaInventoryCard({ attackId }: { attackId: string }) {
+  const [mod, setMod] = useState<CisaModule | null>(null);
+  useEffect(() => {
+    let live = true;
+    import('../../lib/cisa-ot-inventory.mjs').then((m) => {
+      if (live) setMod(m);
+    });
+    return () => {
+      live = false;
+    };
+  }, []);
+
+  if (!mod) return null;
+  const items = mod.itemsForAsset(attackId);
+
+  return (
+    <MapCard label="CISA inventory classes" icon={IconInventory} count={items.length} defaultOpen={false}>
+      {items.length > 0 ? (
+        <div className="space-y-1.5 max-h-64 overflow-y-auto">
+          {items.map((it) => (
+            <div
+              key={it.key}
+              className="py-1.5 px-3 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)]"
+            >
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-[10px] uppercase tracking-wider text-[var(--text-secondary)]">
+                  {SECTOR_SHORT[it.sector] ?? it.sector}
+                </span>
+                <Badge label={it.criticality} variant={CRIT_VARIANT[it.criticality] ?? 'neutral'} />
+                <Badge label={it.match} variant={it.match === 'direct' ? 'teal' : 'blue'} />
+                <span className="text-xs text-[var(--text-primary)]">
+                  <span className="text-[var(--text-secondary)]">{it.category} › </span>
+                  {it.item}
+                </span>
+              </div>
+              <div className="text-[11px] text-[var(--text-secondary)] mt-0.5">{it.rationale}</div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-xs text-[var(--text-secondary)]">
+          None of the rows in CISA&apos;s three example sector taxonomies names this asset.
+        </p>
+      )}
+      <p className="text-[10px] text-[var(--text-secondary)]">
+        CISA&apos;s guide carries no ATT&amp;CK identifiers; this mapping is curated by this project.{' '}
+        <Link href="/frameworks/ot-inventory" className="text-[var(--accent-teal)] hover:underline">
+          OT asset inventory →
+        </Link>
+      </p>
+    </MapCard>
+  );
+}
 
 /** OT plant floor, the DMZ between, and corporate IT. */
 const ZONE_VARIANT: Record<string, 'orange' | 'yellow' | 'blue'> = {
@@ -270,6 +346,9 @@ export function AssetMapView({ attackId }: AssetMapViewProps) {
           </p>
         )}
       </MapCard>
+
+      {/* CISA OT INVENTORY — curated crosswalk, collapsed */}
+      <CisaInventoryCard attackId={data.attackId} />
 
       {/* OWASP */}
       {owaspCategories.length > 0 && (
