@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { PageHeader } from '../components/layout/PageHeader';
-import { getFrameworkEntry } from '../lib/scf-framework-registry';
+import { getFrameworkEntry, ENTERPRISE_ONLY_CAVEAT } from '../lib/scf-framework-registry';
 
 interface Framework {
   framework_key: string;
@@ -353,9 +353,11 @@ function Section({ title, rows, defaultOpen }: { title: string; rows: Framework[
 
 function Row({ row }: { row: Framework }) {
   const hasCoverage = row.scf_controls > 0;
-  // OT-subject frameworks (IEC 62443, NERC CIP) whose SCF mappings are
-  // Enterprise-only — the technique count is not ICS coverage.
-  const entOnly = getFrameworkEntry(row.framework_key)?.ot_subject_enterprise_mappings === true;
+  // OT- and AI-subject frameworks (IEC 62443, NERC CIP; AI RMF, AI 600-1, EU
+  // AI Act) whose SCF mappings are Enterprise-only — the technique count is
+  // not ICS or ATLAS coverage.
+  const entOnlySubject = getFrameworkEntry(row.framework_key)?.enterprise_only_subject;
+  const entOnly = entOnlySubject ? ENTERPRISE_ONLY_CAVEAT[entOnlySubject] : null;
   const techCount = hasCoverage ? `${row.techniques_filtered} tech` : 'not yet in SCF';
   const rawTitle = hasCoverage
     ? `${row.techniques_filtered} of ${row.techniques_total} techniques referenced by ≥2 SCF controls · ${row.scf_controls} SCF controls. Relative detection/monitoring depth — not a governance or compliance guarantee.`
@@ -383,9 +385,9 @@ function Row({ row }: { row: Framework }) {
           {entOnly && (
             <div
               className="mt-0.5 inline-block text-[10px] px-1.5 py-0.5 rounded border bg-[var(--yellow-faint)] text-[var(--accent-yellow)] border-[var(--yellow-dim)]"
-              title="This is an OT/ICS standard, but SCF cross-references it only to Enterprise ATT&CK techniques. SCF carries no ics-attack mappings, so this count is not ICS coverage."
+              title={entOnly.title}
             >
-              Enterprise-technique mappings only — not ICS coverage
+              {entOnly.badge}
             </div>
           )}
         </div>

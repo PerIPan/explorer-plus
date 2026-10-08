@@ -1,7 +1,7 @@
 // scripts/lib/scf-parse.test.mjs — run with `npm test` (node --test scripts/lib/)
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { locateAuthColumns, parseAuthSources, SCF_FALLBACK_URL } from './scf-parse.mjs';
+import { locateAuthColumns, parseAuthSources, SCF_FALLBACK_URL, resolveCuratedKey, buildCuratedFdiMap } from './scf-parse.mjs';
 import { stripShadowSuffix, shrinkViolations, parseArgs } from '../sync-scf.mjs';
 
 // Header rows exactly as the two workbook generations ship them.
@@ -100,4 +100,47 @@ test('parseArgs: accepts documented flags, rejects typos', () => {
   assert.deepEqual(parseArgs(['--dry-run', '--allow-shrink', '--version=2026.1.1']),
     { version: '2026.1.1', dryRun: true, force: false, allowShrink: true, xlsx: null });
   assert.throws(() => parseArgs(['--allow-shrnk']), /unknown argument/);
+});
+
+// Curated matching. aliasLookup is longest-first, as buildAliasLookup() sorts it.
+const ALIASES = [
+  { alias: 'nist ai rmf 1.0', framework_key: 'nist-ai-rmf' },
+  { alias: 'nist ai rmf', framework_key: 'nist-ai-rmf' },
+  { alias: 'ai rmf', framework_key: 'nist-ai-rmf' },
+];
+const KEYS = new Set(['nist-ai-rmf', 'nist-600-1-gen-ai-profile']);
+
+test('resolveCuratedKey: alias match wins, as it always has', () => {
+  const r = resolveCuratedKey({ columnHeader: 'NIST\r\nAI RMF\r\n1.0', fdi: 'general-nist-ai-rmf-1-0', aliasLookup: ALIASES, registryKeys: KEYS });
+  assert.deepEqual(r, { key: 'nist-ai-rmf', via: 'alias', conflict: null });
+});
+
+test('resolveCuratedKey: a promoted Tier-3 entry is matched by its FDI-derived key', () => {
+  const r = resolveCuratedKey({ columnHeader: 'NIST\r\nAI 600-1', fdi: 'USA-Federal-NIST-600-1-Gen-AI-Profile', aliasLookup: ALIASES, registryKeys: KEYS });
+  assert.deepEqual(r, { key: 'nist-600-1-gen-ai-profile', via: 'fdi', conflict: null });
+});
+
+test('resolveCuratedKey: neither path → uncurated (Tier 3)', () => {
+  const r = resolveCuratedKey({ columnHeader: 'ISO 27018', fdi: 'general-iso-27018-2025', aliasLookup: ALIASES, registryKeys: KEYS });
+  assert.deepEqual(r, { key: null, via: null, conflict: null });
+});
+
+test('resolveCuratedKey: alias and FDI key disagree → alias kept, conflict reported', () => {
+  const r = resolveCuratedKey({ columnHeader: 'NIST AI RMF GenAI', fdi: 'general-nist-600-1-gen-ai-profile', aliasLookup: ALIASES, registryKeys: KEYS });
+  assert.equal(r.key, 'nist-ai-rmf');
+  assert.deepEqual(r.conflict, { aliasKey: 'nist-ai-rmf', fdiKey: 'nist-600-1-gen-ai-profile' });
+});
+
+test('buildCuratedFdiMap: maps curated rows only and collects conflicts', () => {
+  const rows = [
+    { fdi: 'general-nist-ai-rmf-1-0', column_header: 'NIST AI RMF 1.0' },
+    { fdi: 'general-nist-600-1-gen-ai-profile', column_header: 'NIST AI 600-1' },
+    { fdi: 'general-iso-27018-2025', column_header: 'ISO 27018' },
+  ];
+  const { map, conflicts } = buildCuratedFdiMap(rows, ALIASES, KEYS);
+  assert.deepEqual([...map.entries()], [
+    ['general-nist-ai-rmf-1-0', 'nist-ai-rmf'],
+    ['general-nist-600-1-gen-ai-profile', 'nist-600-1-gen-ai-profile'],
+  ]);
+  assert.deepEqual(conflicts, []);
 });

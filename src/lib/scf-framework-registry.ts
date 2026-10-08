@@ -47,14 +47,43 @@ export interface ScfFrameworkEntry {
   scope?: string;
   enforcer?: string;
   /**
-   * True when the framework's SUBJECT MATTER is OT/ICS but its SCF ATT&CK
-   * cross-references resolve to Enterprise techniques only. SCF ships no
-   * ics-attack mappings at all, so these frameworks' technique counts must
-   * NOT be read as ICS/OT coverage. Surfaced as an explicit caveat on both
-   * the /compliance hub row and the /compliance/<key> detail header.
+   * Set when the framework's SUBJECT MATTER is OT/ICS or AI, but its SCF
+   * ATT&CK cross-references resolve to Enterprise techniques only. SCF ships
+   * no ics-attack and no ATLAS mappings at all, so these frameworks' technique
+   * counts must NOT be read as ICS/OT or AI-system coverage. Surfaced as an
+   * explicit caveat on both the /compliance hub row and the /compliance/<key>
+   * detail header, worded by `ENTERPRISE_ONLY_CAVEAT`.
+   *
+   * A string union rather than an enum: scripts/sync-scf.mjs loads this file
+   * through Node's type stripping, which erases types but cannot compile an
+   * enum.
    */
-  ot_subject_enterprise_mappings?: boolean;
+  enterprise_only_subject?: EnterpriseOnlySubject;
 }
+
+export type EnterpriseOnlySubject = 'ot' | 'ai';
+
+/**
+ * The caveat wording, once, for both surfaces. `badge` is the short hub-row
+ * label, `detail` the sentence under "ATT&CK scope" on the detail header.
+ *
+ * The AI wording names ATLAS because that is the model a reader expects an AI
+ * framework to reach, and says plainly that no official AI RMF <-> ATLAS
+ * crosswalk exists (NIST's crosswalk list carries none, checked 2026-10-08),
+ * so the absence is not read as work this site has yet to do.
+ */
+export const ENTERPRISE_ONLY_CAVEAT: Record<EnterpriseOnlySubject, { badge: string; title: string; detail: string }> = {
+  ot: {
+    badge: 'Enterprise-technique mappings only — not ICS coverage',
+    title: 'This is an OT/ICS standard, but SCF cross-references it only to Enterprise ATT&CK techniques. SCF carries no ics-attack mappings, so this count is not ICS coverage.',
+    detail: 'Enterprise techniques only — SCF carries no ics-attack cross-references, so these counts are not ICS/OT coverage.',
+  },
+  ai: {
+    badge: 'Enterprise-technique mappings only — not ATLAS coverage',
+    title: 'This is an AI framework, but SCF cross-references it only to Enterprise ATT&CK techniques — the IT systems around an AI system, not attacks on the model. SCF carries no MITRE ATLAS mappings, and no official crosswalk to ATLAS exists.',
+    detail: 'Enterprise techniques only — SCF maps these controls to Enterprise ATT&CK, not to MITRE ATLAS, and no official crosswalk to ATLAS exists. Read the counts as coverage of the IT around an AI system, not of attacks on the model.',
+  },
+};
 
 export const SCF_FRAMEWORK_REGISTRY: ScfFrameworkEntry[] = [
   // ----- Tier 1 — Global, high-demand (12) -----------------------------
@@ -213,6 +242,7 @@ export const SCF_FRAMEWORK_REGISTRY: ScfFrameworkEntry[] = [
     short_blurb: 'Risk-based regulation of AI systems placed on the EU market.',
     aliases: ['EU AI Act', 'EU 2024/1689', 'AI Act'],
     effective: 'Phased — prohibited practices from 2 Feb 2025; high-risk obligations 2 Aug 2026',
+    enterprise_only_subject: 'ai',
   },
   {
     framework_key: 'cmmc-2',
@@ -313,7 +343,7 @@ export const SCF_FRAMEWORK_REGISTRY: ScfFrameworkEntry[] = [
     license_class: 'permissive',
     short_blurb: 'Critical Infrastructure Protection standards for the Bulk Electric System.',
     aliases: ['NERC CIP', 'NERC CIP-002 through CIP-014', 'NERC CIP 2024'],
-    ot_subject_enterprise_mappings: true,
+    enterprise_only_subject: 'ot',
   },
   {
     framework_key: 'iec-62443',
@@ -327,7 +357,7 @@ export const SCF_FRAMEWORK_REGISTRY: ScfFrameworkEntry[] = [
     license_class: 'commercial',
     short_blurb: 'Industrial automation & control systems (IACS) security.',
     aliases: ['IEC 62443-2-1', 'IEC 62443-3-3', 'IEC 62443-4-2', 'IEC 62443'],
-    ot_subject_enterprise_mappings: true,
+    enterprise_only_subject: 'ot',
   },
   {
     framework_key: 'uk-cyber-essentials',
@@ -358,16 +388,40 @@ export const SCF_FRAMEWORK_REGISTRY: ScfFrameworkEntry[] = [
   {
     framework_key: 'nist-ai-rmf',
     name: 'NIST AI RMF 1.0',
-    version: '1.0 + Generative AI Profile',
+    // Was '1.0 + Generative AI Profile', but these aliases only ever matched
+    // the AI RMF column; the profile is its own SCF column and entry below.
+    version: '1.0',
     source_org: 'NIST',
     upstream_url: 'https://www.nist.gov/itl/ai-risk-management-framework',
     region: 'global',
     tier: 2,
     license: 'Public Domain (US Government Work)',
     license_class: 'public-domain',
-    short_blurb: 'Voluntary AI risk-management framework (Govern, Map, Measure, Manage).',
+    short_blurb: 'Voluntary AI risk-management framework (Govern, Map, Measure, Manage). Its Generative AI Profile, NIST AI 600-1, is listed separately.',
     aliases: ['NIST AI RMF 1.0', 'NIST AI RMF', 'AI RMF'],
     effective: 'Published 26 January 2023',
+    enterprise_only_subject: 'ai',
+  },
+  {
+    // The key is the one sync-scf derived for this column while it was Tier 3
+    // (`fdiToKey` of its FDI), kept so its /compliance URL, refs and alias
+    // history survive the promotion. No `aliases`: sync-scf matches it by that
+    // derived key (`resolveCuratedKey` in scripts/lib/scf-parse.mjs), so its
+    // column header never has to be guessed. scripts/migrate-ai-rmf-tier.sql
+    // writes these same values to production ahead of the next SCF release.
+    framework_key: 'nist-600-1-gen-ai-profile',
+    name: 'NIST AI 600-1 — Generative AI Profile',
+    version: 'July 2024',
+    source_org: 'NIST',
+    upstream_url: 'https://doi.org/10.6028/NIST.AI.600-1',
+    region: 'global',
+    tier: 2,
+    license: 'Public Domain (US Government Work)',
+    license_class: 'public-domain',
+    short_blurb: 'Cross-sectoral AI RMF profile for generative AI: 12 risks unique to or exacerbated by GenAI, with suggested actions per AI RMF function.',
+    aliases: [],
+    effective: 'Published 26 July 2024',
+    enterprise_only_subject: 'ai',
   },
   // (Removed mitre-attck-mitigations: SCF's "MITRE ATT&CK" column maps to
   // T-codes, not M-codes, and those flow into scf_attack_mappings. The /mitigations

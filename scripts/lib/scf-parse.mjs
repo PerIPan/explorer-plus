@@ -174,3 +174,59 @@ export function mapRegion(geography) {
 export function fdiToKey(fdi) {
   return String(fdi).toLowerCase().replace(/^(general|usa-federal|emea|apac|americas)-/, '');
 }
+
+/**
+ * Which curated registry entry, if any, an auth-source row belongs to.
+ *
+ * Alias first — a substring match on the normalized column header, the rule
+ * every curated entry has always resolved by. Then the FDI-derived key: when
+ * the registry carries an entry under exactly `fdiToKey(fdi)`, that row is
+ * curated too. The second path exists for an entry PROMOTED from Tier 3, which
+ * keeps the key sync-scf derived for it (so its /compliance URL, refs and
+ * alias history survive) and therefore needs no guessed header alias. Without
+ * it the Tier-3 upsert would overwrite the curated name, URL and blurb on every
+ * ingest.
+ *
+ * `conflict` is set when both paths resolve, to DIFFERENT keys: a short alias
+ * ('AI RMF', 'AI Act') absorbing a column that some other entry claims by key.
+ * Alias still wins — changing that would move existing columns — but the
+ * caller must surface it.
+ *
+ * @param {{ columnHeader: string, fdi: string | null | undefined,
+ *           aliasLookup: Array<{ alias: string, framework_key: string }>,
+ *           registryKeys: ReadonlySet<string> }} input
+ * @returns {{ key: string | null, via: 'alias' | 'fdi' | null,
+ *             conflict: { aliasKey: string, fdiKey: string } | null }}
+ */
+export function resolveCuratedKey({ columnHeader, fdi, aliasLookup, registryKeys }) {
+  const norm = normHeader(columnHeader);
+  const viaAlias = aliasLookup.find((a) => norm.includes(a.alias))?.framework_key ?? null;
+  const derived = fdi ? fdiToKey(fdi) : null;
+  const viaFdi = derived && registryKeys.has(derived) ? derived : null;
+  return {
+    key: viaAlias ?? viaFdi,
+    via: viaAlias ? 'alias' : viaFdi ? 'fdi' : null,
+    conflict: viaAlias && viaFdi && viaAlias !== viaFdi ? { aliasKey: viaAlias, fdiKey: viaFdi } : null,
+  };
+}
+
+/**
+ * `resolveCuratedKey` over every auth-source row: FDI -> curated key, plus the
+ * conflicts. Both match sites in sync-scf.mjs use this, so they cannot drift.
+ *
+ * @param {Array<{ fdi: string, column_header: string }>} frameworkRows
+ * @param {Array<{ alias: string, framework_key: string }>} aliasLookup
+ * @param {ReadonlySet<string>} registryKeys
+ * @returns {{ map: Map<string, string>,
+ *             conflicts: Array<{ fdi: string, header: string, aliasKey: string, fdiKey: string }> }}
+ */
+export function buildCuratedFdiMap(frameworkRows, aliasLookup, registryKeys) {
+  const map = new Map();
+  const conflicts = [];
+  for (const row of frameworkRows) {
+    const r = resolveCuratedKey({ columnHeader: row.column_header, fdi: row.fdi, aliasLookup, registryKeys });
+    if (r.key) map.set(row.fdi, r.key);
+    if (r.conflict) conflicts.push({ fdi: row.fdi, header: normHeader(row.column_header), ...r.conflict });
+  }
+  return { map, conflicts };
+}

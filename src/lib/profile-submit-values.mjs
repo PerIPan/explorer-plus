@@ -123,7 +123,7 @@ export const ROLE_VALUES = [
 /**
  * Framework keys. Mirrors `framework_key` across `SCF_FRAMEWORK_REGISTRY` in
  * src/lib/scf-framework-registry.ts, which is what the panel's framework picker
- * is built from. 21 entries (Tier 1 + Tier 2).
+ * is built from. 22 entries (Tier 1 + Tier 2).
  *
  * Keys only. No framework TEXT of any kind belongs here: this list names ISO,
  * PCI DSS, SOC 2, IEC 62443 and CIS Controls, whose text this project may not
@@ -151,4 +151,5 @@ export const FRAMEWORK_VALUES = [
   'uk-cyber-essentials',
   'au-essential-8',
   'nist-ai-rmf',
+  'nist-600-1-gen-ai-profile',
 ];

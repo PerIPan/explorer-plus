@@ -127,7 +127,7 @@ test('vocabulary: roles are no longer collected, but still parse for rows that h
 test('vocabulary: framework keys mirror SCF_FRAMEWORK_REGISTRY', () => {
   const f = 'src/lib/scf-framework-registry.ts';
   const keys = [...read(f).matchAll(/framework_key:\s*'([^']+)'/g)].map((m) => m[1]);
-  assert.equal(keys.length, 21, 'registry entry count changed — update FRAMEWORK_VALUES');
+  assert.equal(keys.length, 22, 'registry entry count changed — update FRAMEWORK_VALUES');
   assert.deepEqual(keys, FRAMEWORK_VALUES);
 });
 

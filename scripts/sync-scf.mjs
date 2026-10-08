@@ -43,6 +43,7 @@ import {
   parseAuthSources,
   mapRegion,
   fdiToKey,
+  buildCuratedFdiMap,
 } from './lib/scf-parse.mjs';
 
 const SCF_REPO = 'securecontrolsframework/securecontrolsframework';
@@ -60,6 +61,7 @@ async function loadRegistry() {
     return {
       entries: mod.SCF_FRAMEWORK_REGISTRY,
       aliasLookup: mod.buildAliasLookup(),
+      keys: new Set(mod.SCF_FRAMEWORK_REGISTRY.map((e) => e.framework_key)),
       tier1: mod.TIER1_KEYS,
       tier2: mod.TIER2_KEYS,
     };
@@ -233,18 +235,10 @@ async function upsertFrameworks(client, frameworkRows, registry, observedHeaders
   // Build registry → metadata map.
   const regByKey = new Map(registry.entries.map((e) => [e.framework_key, e]));
 
-  // Map auth-source FDI rows → curated registry framework_key by alias.
-  // Each auth row's column_header is checked against registry aliases.
-  const fdiToCurated = new Map();
-  for (const row of frameworkRows) {
-    const norm = normHeader(row.column_header);
-    for (const ali of registry.aliasLookup) {
-      if (norm.includes(ali.alias)) {
-        fdiToCurated.set(row.fdi, ali.framework_key);
-        break;
-      }
-    }
-  }
+  // Map auth-source FDI rows → curated registry framework_key: by alias, or
+  // by FDI-derived key for an entry promoted from Tier 3 (resolveCuratedKey).
+  // Conflicts are reported by the column-classification site below.
+  const { map: fdiToCurated } = buildCuratedFdiMap(frameworkRows, registry.aliasLookup, registry.keys);
 
   // Phase 1: ensure curated entries exist (some may not have SCF backing — e.g. EU CRA).
   for (const entry of registry.entries) {
@@ -1169,15 +1163,16 @@ async function main() {
     // Classify columns once + capture observed header → key map.
     const columnClasses = new Array(headers.length);
     const observedHeaders = []; // for scf_framework_aliases
-    const fdiToCurated = new Map();
-    for (const fr of frameworkRows) {
-      const norm = normHeader(fr.column_header);
-      for (const ali of registry.aliasLookup) {
-        if (norm.includes(ali.alias)) {
-          fdiToCurated.set(fr.fdi, ali.framework_key);
-          break;
-        }
-      }
+    // Same resolver as upsertFrameworks(), so the two sites cannot disagree.
+    const { map: fdiToCurated, conflicts: curatedKeyConflicts } =
+      buildCuratedFdiMap(frameworkRows, registry.aliasLookup, registry.keys);
+    if (curatedKeyConflicts.length > 0) {
+      // An alias claimed a column whose FDI-derived key is ANOTHER registry
+      // entry. Alias wins (unchanged behaviour), but a short alias silently
+      // absorbing a renamed column is exactly what the Tier-1 alias check
+      // cannot see for Tier 2, so it is logged and recorded.
+      meta.curatedKeyConflicts = curatedKeyConflicts;
+      console.warn('[sync-scf] curated key conflicts (alias kept):', curatedKeyConflicts);
     }
     // Build a headerToFdi map already exists; for classify we still pass it.
     // After classifyColumn returns a framework_key, normalize curated keys.
