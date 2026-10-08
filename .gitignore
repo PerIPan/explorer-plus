@@ -18,8 +18,10 @@ dist/
 .vercel
 .claude/
 .env.neon
-.gitignore
 .playwright-mcp/
 
 # Internal docs — local only, never committed
 docs/
+
+# macOS
+.DS_Store
