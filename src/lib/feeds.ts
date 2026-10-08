@@ -40,7 +40,7 @@ export const FEED_SOURCES = [
   'nvd', 'virustotal',
   'cve_delta', 'cve_products',
   'epss', 'osv', 'csf',
-  'ghsa', 'ghsa_delta', 'sigma', 'atomic',
+  'ghsa', 'ghsa_delta', 'sigma', 'atomic', 'emulation',
   'matview_refresh', 'd3fend',
   'site_health', 'scf', 'cti_heat_refresh',
 ] as const;
@@ -76,6 +76,7 @@ export const AUTOMATED_TABLES: FrameworkTable[] = [
   { key: 'defensive_mappings', label: 'D3FEND', description: 'Defensive countermeasures from the MITRE D3FEND knowledge graph' },
   { key: 'sigma_rules', label: 'Sigma Rules', description: '3,100+ detection rules from SigmaHQ with ATT&CK mappings' },
   { key: 'atomic_tests', label: 'Atomic Red Team', description: '1,770+ adversary-emulation tests (PowerShell/bash/batch)' },
+  { key: 'emulation_plan_steps', label: 'CTID Emulation Plans', description: 'Adversary emulation plan steps (10 plans, 9 groups), each resolved to an ATT&CK technique' },
 ];
 
 export const REFERENCE_TABLES: FrameworkTable[] = [

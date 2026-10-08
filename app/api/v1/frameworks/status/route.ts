@@ -24,6 +24,7 @@ const ESTIMATED_TABLES = [
   'capec_patterns', 'capec_mitigations',
   'ghsa_advisories', 'ghsa_weaknesses', 'ghsa_packages', 'packages',
   'osv_advisories', 'osv_affected',
+  'emulation_plan_steps',
 ];
 
 export async function GET(_req: NextRequest) {
