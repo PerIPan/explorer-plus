@@ -22,7 +22,7 @@ import { DOCS_PROBE_HEADER } from './src/lib/site';
  */
 const STATIC_CHILDREN: Record<string, Set<string>> = {
   feed: new Set(['atomic', 'intelligence', 'iocs', 'reports', 'sigma', 'status', 'vt-lookup']),
-  frameworks: new Set(['by-techniques', 'cloud-controls', 'csf', 'detection', 'engage', 'iso27001', 'nist', 'owasp', 'purdue', 'react', 'status', 'technique', 'veris']),
+  frameworks: new Set(['by-techniques', 'cloud-controls', 'csf', 'd3fend', 'detection', 'engage', 'iso27001', 'nist', 'owasp', 'purdue', 'react', 'scf', 'status', 'technique', 'veris']),
   compliance: new Set(['frameworks', 'groups', 'sectors', 'software', 'tactics', 'techniques']),
   home: new Set(['recent-affected']),
   profile: new Set(['submit']),
