@@ -28,7 +28,7 @@ export const AGENT_TOOL_COUNT = 43;
  * else needs to. `scripts/check-api-catalog.mjs` fails the build when this
  * number and API_CATALOG.length disagree, so it cannot drift silently.
  */
-export const API_ENDPOINT_COUNT = 83;
+export const API_ENDPOINT_COUNT = 85;
 
 /**
  * The CLI's binary and package name, in ONE place.

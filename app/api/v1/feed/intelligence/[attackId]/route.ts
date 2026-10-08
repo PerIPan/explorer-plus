@@ -28,7 +28,7 @@ export async function GET(
 
   const techId = techResult.rows[0].id;
 
-  const [reportsResult, sigmaResult, atomicResult, defensiveResult, iocsResult, detStrategiesResult, cvesResult, appsResult] =
+  const [reportsResult, sigmaResult, atomicResult, defensiveResult, iocsResult, detStrategiesResult, cvesResult, appsResult, emulationResult] =
     await Promise.all([
       // Top 5 threat reports
       query<{
@@ -195,6 +195,29 @@ export async function GET(
          LIMIT 100`,
         [id],
       ),
+
+      // CTID emulation-plan steps that exercise this technique (or, on a
+      // parent, its sub-techniques — the atomic rule above). The .catch keeps
+      // a database without scripts/migrate-emulation-plans.sql from failing
+      // this whole Promise.all, which would blank every card on technique 360.
+      query<{
+        plan_key: string;
+        plan_name: string;
+        group_attack_id: string;
+        procedure_step: string | null;
+        name: string;
+        resolved_attack_id: string | null;
+        resolution: string;
+      }>(
+        `SELECT p.plan_key, p.name AS plan_name, p.attack_group_id AS group_attack_id,
+                s.procedure_step, s.name, s.resolved_attack_id, s.resolution
+         FROM emulation_plan_steps s
+         JOIN emulation_plans p ON p.id = s.plan_id
+         WHERE s.technique_id = $1
+            OR s.technique_id IN (SELECT id FROM techniques WHERE parent_technique_id = $1)
+         ORDER BY p.name, s.ordinal`,
+        [techId],
+      ).catch(() => ({ rows: [] })),
     ]);
 
   // Normalize ioc first_seen -> first_seen_at for frontend
@@ -213,5 +236,14 @@ export async function GET(
     cves: cvesResult.rows,
     iocs,
     affectedApps: appsResult.rows.map((r) => ({ ...r, cveCount: parseInt(r.cveCount, 10) })),
+    emulationSteps: emulationResult.rows.map((r) => ({
+      planKey: r.plan_key,
+      planName: r.plan_name,
+      groupAttackId: r.group_attack_id,
+      procedureStep: r.procedure_step,
+      name: r.name,
+      attackId: r.resolved_attack_id,
+      resolution: r.resolution,
+    })),
   }, 300));
 }

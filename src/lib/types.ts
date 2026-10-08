@@ -602,6 +602,77 @@ export interface ExternalActor {
   attributionConfidence: string | null;
 }
 
+/** A CTID emulation-plan step that exercises a technique (technique 360). */
+export interface EmulationStepRef {
+  planKey: string;
+  planName: string;
+  groupAttackId: string;
+  procedureStep: string | null;
+  name: string;
+  /** The current ATT&CK id the step resolved to (a sub-technique on a parent's page). */
+  attackId: string | null;
+  resolution: EmulationResolution;
+}
+
+export type EmulationResolution = 'exact' | 'deprecated' | 'revoked_replaced' | 'unresolved' | 'none';
+
+/** One row of GET /api/v1/frameworks/emulation. */
+export interface EmulationPlanSummary {
+  planKey: string;
+  name: string;
+  groupAttackId: string;
+  groupName: string | null;
+  attackVersion: string | null;
+  sourcePath: string;
+  sourceCommit: string | null;
+  sourceUrl: string;
+  stepCount: number;
+  techniqueCount: number;
+  unlinkedStepCount: number;
+  /** Enterprise techniques ATT&CK attributes to the plan's group. */
+  groupTechniqueCount: number;
+  /** Of those, how many the plan exercises (derived, exact id). */
+  overlapCount: number;
+  /** Plan techniques whose parent family the group is known for (derived). */
+  familyOverlapCount: number;
+}
+
+export interface EmulationPlanList {
+  available: boolean;
+  data: EmulationPlanSummary[];
+  total?: number;
+  repo: string;
+  license: string;
+  notIngested: ReadonlyArray<{ label: string; attackGroupId: string | null; path: string; reason: string }>;
+}
+
+/** GET /api/v1/frameworks/emulation/:planKey */
+export interface EmulationPlanDetail {
+  planKey: string;
+  name: string;
+  groupAttackId: string;
+  groupName: string | null;
+  upstreamPlanId: string | null;
+  attackVersion: string | null;
+  sourcePath: string;
+  sourceCommit: string | null;
+  sourceUrl: string;
+  stepCount: number;
+  steps: Array<{
+    ordinal: number;
+    procedureStep: string | null;
+    name: string;
+    description: string | null;
+    tacticRaw: string | null;
+    upstreamAttackId: string | null;
+    resolvedAttackId: string | null;
+    resolution: EmulationResolution;
+    techniqueName: string | null;
+    tactics: string[] | null;
+    platforms: string[];
+  }>;
+}
+
 export interface TechniqueIntelligence {
   attackId: string;
   reports: Array<{
@@ -629,6 +700,8 @@ export interface TechniqueIntelligence {
     platforms: string[] | null;
     executor_type: string | null;
   }>;
+  /** Optional: absent from responses cached before the field existed. */
+  emulationSteps?: EmulationStepRef[];
   defensiveMappings: Array<{
     id: string;
     d3fend_id: string;

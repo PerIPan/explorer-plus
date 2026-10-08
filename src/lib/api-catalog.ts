@@ -542,6 +542,17 @@ export const API_CATALOG: readonly ApiEntry[] = [
     example: '/frameworks/d3fend/D3-AM',
   },
   {
+    path: '/frameworks/emulation', method: 'GET', group: 'frameworks', executable: true,
+    summary: 'CTID adversary emulation plans — steps, techniques, and how much of the group\'s known Enterprise techniques each plan exercises.',
+    params: [{ name: 'group', type: 'string' }, { name: 'technique', type: 'string' }],
+    example: '/frameworks/emulation?group=G0016',
+  },
+  {
+    path: '/frameworks/emulation/{planKey}', method: 'GET', group: 'frameworks', executable: true,
+    summary: 'One emulation plan — every step in order, with the technique it resolves to.',
+    example: '/frameworks/emulation/apt29',
+  },
+  {
     path: '/frameworks/engage', method: 'GET', group: 'frameworks', executable: true,
     summary: 'MITRE Engage adversary-engagement activities by goal and approach.',
     params: [P.search, { name: 'goal', type: 'string' }, { name: 'page', type: 'number' }, { name: 'limit', type: 'number' }],

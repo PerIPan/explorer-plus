@@ -35,7 +35,7 @@ Requires Node 22.8 or newer (that is when `styleText` began honouring `NO_COLOR`
 ```sh
 mitrex                        # the resources, and some examples
 mitrex help cves              # every command for one resource, with its flags
-mitrex ls                     # all 83 commands, one per line
+mitrex ls                     # all 85 commands, one per line
 
 mitrex techniques T1059                      # one technique
 mitrex techniques T1059 --expand groups      # the 125 groups that use it, as a table

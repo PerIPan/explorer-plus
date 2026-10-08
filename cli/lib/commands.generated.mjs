@@ -2737,6 +2737,57 @@ export const COMMANDS = [
     "params": []
   },
   {
+    "path": "/frameworks/emulation",
+    "words": [
+      "frameworks",
+      "emulation"
+    ],
+    "positionals": [],
+    "summary": "CTID adversary emulation plans — steps, techniques, and how much of the group's known Enterprise techniques each plan exercises.",
+    "group": "frameworks",
+    "paginated": false,
+    "example": "/frameworks/emulation?group=G0016",
+    "fulltext": null,
+    "transform": null,
+    "params": [
+      {
+        "name": "group",
+        "type": "string",
+        "required": false,
+        "values": null,
+        "note": null
+      },
+      {
+        "name": "technique",
+        "type": "string",
+        "required": false,
+        "values": null,
+        "note": null
+      }
+    ]
+  },
+  {
+    "path": "/frameworks/emulation/{planKey}",
+    "words": [
+      "frameworks",
+      "emulation"
+    ],
+    "positionals": [
+      {
+        "name": "planKey",
+        "catchAll": false,
+        "index": 3
+      }
+    ],
+    "summary": "One emulation plan — every step in order, with the technique it resolves to.",
+    "group": "frameworks",
+    "paginated": false,
+    "example": "/frameworks/emulation/apt29",
+    "fulltext": null,
+    "transform": null,
+    "params": []
+  },
+  {
     "path": "/frameworks/engage",
     "words": [
       "frameworks",
