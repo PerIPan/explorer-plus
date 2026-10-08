@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { useGroup, useCampaign, useExternalActorByGroup, useExternalActorByName, useFrameworksByTechniques, useEmulationPlans } from '../../hooks/useApi';
 import { EMULATION_PLANS } from '../../lib/emulation-plans.mjs';
@@ -606,12 +607,12 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
             {emulationPlans.map((p) => (
               <div key={p.planKey} className="py-1.5 px-3 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)]">
                 <div className="flex flex-wrap items-center gap-2">
-                  <a
+                  <Link
                     href={`/frameworks/emulation?plan=${p.planKey}`}
                     className="text-xs font-semibold text-[var(--accent-teal)] hover:underline"
                   >
                     {p.name}
-                  </a>
+                  </Link>
                   <Badge label={`${p.stepCount} steps`} variant="neutral" />
                   <Badge label={`${p.techniqueCount} techniques`} variant="teal" />
                   {p.attackVersion && (
@@ -621,8 +622,8 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
                 <p className="text-[11px] text-[var(--text-secondary)] mt-1">
                   Exercises {p.overlapCount} of the {p.groupTechniqueCount} Enterprise techniques ATT&amp;CK
                   attributes to this group by exact id, {p.familyOverlapCount} counting parent/sub-technique
-                  matches. Derived from the plan&apos;s steps; its other techniques are not attributed to this
-                  group in current ATT&amp;CK.
+                  matches. Derived from the plan&apos;s steps; its other techniques may still be attributed at
+                  parent or sub-technique level, or fall outside Enterprise.
                 </p>
               </div>
             ))}

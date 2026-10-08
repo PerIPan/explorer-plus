@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useUpdateParams } from '../hooks/useUpdateParams';
 import { useEmulationPlans, useEmulationPlan } from '../hooks/useApi';
@@ -55,7 +56,8 @@ export function EmulationPlans() {
         <h2 className={`${H2} mb-2`}>How these connect to ATT&amp;CK</h2>
         <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
           Each plan step names its technique; that id is resolved to current ATT&amp;CK, following revocations to
-          their replacement. Nothing is inferred. Steps whose id changed or could not be resolved are marked, with
+          their replacement. Technique links are not inferred; the group-overlap line under each plan is derived
+          and says so. Steps whose id changed or could not be resolved are marked, with
           the id the plan wrote. Commands and payloads are not reproduced — they only run inside CTID&rsquo;s kit;
           each plan links to its source file. The same steps appear on each technique&rsquo;s 360 view under
           &ldquo;How to Test&rdquo;, and each plan on its group&rsquo;s profile.
@@ -149,17 +151,25 @@ function PlanCard({
   onToggle: () => void;
   highlight: string;
 }) {
+  const cardId = `plan-${plan.planKey}`;
+  // A ?plan= deep link (from a 360 card) opens the plan; bring it into view
+  // once, on mount — not on every toggle, which would yank the page around.
+  useEffect(() => {
+    if (open) document.getElementById(cardId)?.scrollIntoView({ block: 'start' });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   return (
-    <div id={`plan-${plan.planKey}`} className="rounded-lg border border-[var(--border-color)] overflow-hidden">
+    <div id={cardId} className="rounded-lg border border-[var(--border-color)] overflow-hidden scroll-mt-20">
       <div className="px-4 py-3 bg-[var(--surface-card)] space-y-1.5">
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={onToggle}
             aria-expanded={open}
+            aria-controls={`${cardId}-steps`}
             className="text-sm font-semibold text-[var(--text-primary)] hover:text-[var(--accent-teal)] text-left"
           >
-            {open ? '▾' : '▸'} {plan.name}
+            <span aria-hidden="true">{open ? '▾' : '▸'}</span> {plan.name}
           </button>
           <EntityLink type="group" attackId={plan.groupAttackId} name={plan.groupName ?? plan.groupAttackId} useMap />
           <Badge label={`${plan.stepCount} steps`} variant="neutral" />
@@ -183,7 +193,11 @@ function PlanCard({
           parent/sub-technique matches).
         </p>
       </div>
-      {open && <PlanSteps planKey={plan.planKey} highlight={highlight} />}
+      {open && (
+        <div id={`${cardId}-steps`}>
+          <PlanSteps planKey={plan.planKey} highlight={highlight} />
+        </div>
+      )}
     </div>
   );
 }

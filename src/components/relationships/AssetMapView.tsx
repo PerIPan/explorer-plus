@@ -123,9 +123,14 @@ function CisaInventoryCard({ attackId }: { attackId: string }) {
   const [mod, setMod] = useState<CisaModule | null>(null);
   useEffect(() => {
     let live = true;
-    import('../../lib/cisa-ot-inventory.mjs').then((m) => {
-      if (live) setMod(m);
-    });
+    import('../../lib/cisa-ot-inventory.mjs')
+      .then((m) => {
+        if (live) setMod(m);
+      })
+      .catch(() => {
+        // A failed chunk load leaves the card out, as before it loaded; the
+        // rest of the 360 view does not depend on it.
+      });
     return () => {
       live = false;
     };

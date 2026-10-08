@@ -199,7 +199,8 @@ export async function GET(
       // CTID emulation-plan steps that exercise this technique (or, on a
       // parent, its sub-techniques — the atomic rule above). The .catch keeps
       // a database without scripts/migrate-emulation-plans.sql from failing
-      // this whole Promise.all, which would blank every card on technique 360.
+      // this whole Promise.all, which would blank every card on technique 360;
+      // any other error is logged.
       query<{
         plan_key: string;
         plan_name: string;
@@ -217,7 +218,12 @@ export async function GET(
             OR s.technique_id IN (SELECT id FROM techniques WHERE parent_technique_id = $1)
          ORDER BY p.name, s.ordinal`,
         [techId],
-      ).catch(() => ({ rows: [] })),
+      ).catch((err: { code?: string }) => {
+        // Only a missing table is expected (pre-migration DB); anything else
+        // is a bug and must reach the logs, not silently empty the row.
+        if (err?.code !== '42P01') console.error('[intelligence] emulation steps query failed:', err);
+        return { rows: [] };
+      }),
     ]);
 
   // Normalize ioc first_seen -> first_seen_at for frontend

@@ -995,18 +995,18 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
               {emulationSteps.map((s, i) => (
                 <div
                   key={`${s.planKey}-${s.procedureStep ?? ''}-${i}`}
-                  className="flex items-center gap-2 py-1.5 px-3 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)]"
+                  className="flex flex-wrap items-center gap-x-2 gap-y-0.5 py-1.5 px-3 rounded-md bg-[var(--surface-card)] border border-[var(--border-color)]"
                 >
-                  <a
+                  <Link
                     href={`/frameworks/emulation?plan=${s.planKey}`}
                     className="text-xs font-medium text-[var(--accent-teal)] hover:underline shrink-0"
                   >
                     {s.planName}
-                  </a>
+                  </Link>
                   {s.procedureStep && (
                     <span className="font-mono text-[10px] text-[var(--text-secondary)] shrink-0">{s.procedureStep}</span>
                   )}
-                  <span className="text-xs text-[var(--text-primary)] flex-1 truncate">{s.name}</span>
+                  <span className="text-xs text-[var(--text-primary)] flex-1 min-w-0 truncate">{s.name}</span>
                   {s.attackId && s.attackId !== attackId && (
                     <span className="font-mono text-[10px] text-[var(--text-secondary)] shrink-0">{s.attackId}</span>
                   )}

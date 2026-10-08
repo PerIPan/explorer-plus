@@ -91,7 +91,10 @@ export async function GET(req: NextRequest) {
          p.attack_version   AS "attackVersion",
          p.source_path      AS "sourcePath",
          p.source_commit    AS "sourceCommit",
-         p.step_count       AS "stepCount",
+         -- Counted live, not p.step_count: a full seed.py empties the steps
+         -- (TRUNCATE ... CASCADE) and leaves the plans, and a stored count
+         -- would then promise steps the plan page cannot show.
+         (SELECT count(*) FROM emulation_plan_steps s WHERE s.plan_id = p.id)::int AS "stepCount",
          (SELECT count(*) FROM plan_tech pt WHERE pt.plan_id = p.id)::int AS "techniqueCount",
          (SELECT count(*) FROM emulation_plan_steps s
            WHERE s.plan_id = p.id AND s.technique_id IS NULL)::int AS "unlinkedStepCount",

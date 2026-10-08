@@ -63,7 +63,8 @@ export async function GET(
         `SELECT p.id, p.plan_key AS "planKey", p.name, p.attack_group_id AS "groupAttackId",
                 g.name AS "groupName", p.upstream_plan_id AS "upstreamPlanId",
                 p.attack_version AS "attackVersion", p.source_path AS "sourcePath",
-                p.source_commit AS "sourceCommit", p.step_count AS "stepCount"
+                p.source_commit AS "sourceCommit",
+                (SELECT count(*) FROM emulation_plan_steps s WHERE s.plan_id = p.id)::int AS "stepCount"
          FROM emulation_plans p
          LEFT JOIN threat_groups g ON g.attack_id = p.attack_group_id
          WHERE p.plan_key = $1`,

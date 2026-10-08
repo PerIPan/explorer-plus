@@ -10,6 +10,11 @@ on:
 permissions:
   contents: read
 
+# The ingest also takes an advisory lock; this just avoids a pointless second runner.
+concurrency:
+  group: sync-emulation
+  cancel-in-progress: false
+
 # A GitHub Action rather than an app/api/cron route: it needs a git clone and
 # the `yaml` package, which the app does not ship.
 jobs:

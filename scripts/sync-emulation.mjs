@@ -19,7 +19,8 @@
  * Everything in ONE transaction that first takes
  * pg_try_advisory_xact_lock(hashtext('sync-emulation')). Transaction-scoped on
  * purpose: a session lock is unreliable through Neon's pooler, and 375 rows is
- * nothing. If another run holds the lock this one logs `skipped` and exits 0.
+ * nothing. If another run holds the lock this one deletes its own log row and
+ * exits 0.
  * Per plan: upsert the plan row, delete its steps, insert the new ones — full
  * replace, because upstream steps can disappear and an upsert would keep them.
  * Plans no longer in the registry are deleted. A missing plan file aborts the
@@ -163,8 +164,12 @@ async function main() {
     const lock = await client.query(`SELECT pg_try_advisory_xact_lock(hashtext('sync-emulation')) AS ok`);
     if (!lock.rows[0].ok) {
       await client.query('ROLLBACK');
+      // No new status value: /cti/feed-status knows running/success/error
+      // only. The run holding the lock writes the row that matters, so this
+      // one removes its own `running` row rather than masking that one.
       console.warn('[sync-emulation] another run holds the lock — skipping');
-      await logDone('skipped', 'another run holds the advisory lock');
+      await client.query('DELETE FROM feed_sync_log WHERE id = $1', [logId]);
+      logId = null;
       return;
     }
 

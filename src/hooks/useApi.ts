@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { apiFetch } from '../lib/api';
 import type {
   DashboardData,
@@ -286,6 +286,9 @@ export function useEmulationPlans(params: Record<string, string> = EMPTY_PARAMS,
     queryFn: () => apiFetch<EmulationPlanList>('/frameworks/emulation', params),
     enabled,
     staleTime: 60 * 60 * 1000,
+    // Switching ?technique= changes the key; keep the old list on screen
+    // instead of swapping the whole page for a loader.
+    placeholderData: keepPreviousData,
   });
 }
 
