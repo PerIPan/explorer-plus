@@ -95,6 +95,7 @@ Next.js 16 App Router (React 19 + TypeScript + Tailwind 4)
 | ThreatFox + MalwareBazaar | Malware IOCs with family attribution | 154,756 IOCs | Cron |
 | SigmaHQ | Detection rules per technique | 3,146 | GH Actions |
 | Atomic Red Team | Adversary-emulation tests | 2,042 | GH Actions |
+| CTID Adversary Emulation Library | Emulation plans for 9 groups, each step resolved to a technique | 10 plans, 375 steps | GH Actions |
 | MITRE D3FEND | Defensive countermeasures, Enterprise + ICS | 5,750 mappings | Cron (weekly) |
 | Secure Controls Framework | Regulatory frameworks bridged to ATT&CK | 224 frameworks, 58,631 refs | GH Actions |
 | NIST CSF v2 | Subcategories plus the CRI Profile crosswalk to ATT&CK | 132 subcategories | Cron |
@@ -110,7 +111,7 @@ Next.js 16 App Router (React 19 + TypeScript + Tailwind 4)
 
 Each has a dedicated page under `/frameworks`, mapped to ATT&CK techniques:
 
-OWASP Top 10 (web / ML / LLM) · NIST CSF v2 · NIST 800-53 · ISO/IEC 27001:2022 · **MITRE D3FEND** · MITRE Engage · RE&CT · VERIS · CAPEC · Cloud controls (Azure, GCP) · Purdue model · Detection strategies · Atomic tests · EU CRA *(reference)* · OWASP AI Exchange *(reference)*
+OWASP Top 10 (web / ML / LLM) · NIST CSF v2 · NIST 800-53 · NIST SP 800-40r4 *(patching; via NIST's own 800-53 list)* · ISO/IEC 27001:2022 · **MITRE D3FEND** · MITRE Engage · RE&CT · VERIS · CAPEC · Cloud controls (Azure, GCP) · Purdue model · CISA OT asset inventory *(curated crosswalk to ICS assets)* · Detection strategies · Atomic tests · CTID emulation plans · EU CRA *(reference)* · OWASP AI Exchange *(reference)*
 
 `/compliance` covers the 224 SCF-bridged regulatory frameworks separately, since those reach ATT&CK through control cross-references rather than direct technique mappings.
 
@@ -177,6 +178,7 @@ Inferred links are never presented as confirmed attribution.
 | `sync-scf` | Twice yearly + manual | Secure Controls Framework workbook ingest |
 | `sync-sigma` | Weekly | SigmaHQ rule pack |
 | `sync-atomic` | Weekly | Atomic Red Team tests |
+| `sync-emulation` | Quarterly + manual | CTID adversary emulation plans (sparse clone of the 10 plan files) |
 | `refresh-cti-heat` | Scheduled | Technique heat signals |
 | `checks` | On push | Threshold consistency gate |
 
