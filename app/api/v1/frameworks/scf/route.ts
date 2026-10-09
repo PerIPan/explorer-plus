@@ -119,7 +119,7 @@ export async function GET(req: NextRequest) {
       frameworksCrosswalked: parseInt(m.frameworks, 10),
       coverageNote:
         'ATT&CK mappings exist for a minority of SCF controls. The rest are governance, privacy and procurement controls with no ATT&CK counterpart.',
-      licence: 'Secure Controls Framework, CC BY 4.0 — https://www.securecontrolsframework.com/',
+      licence: 'Secure Controls Framework, CC BY-ND 4.0 — https://securecontrolsframework.com/terms-conditions/',
     },
     pagination: {
       page,

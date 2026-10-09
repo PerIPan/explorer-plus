@@ -158,7 +158,7 @@ export function ScfFramework() {
             itself: the common spine that lets one control satisfy many.
           </>
         }
-        actions={<Badge label="CC BY 4.0" variant="neutral" />}
+        actions={<Badge label="CC BY-ND 4.0" variant="neutral" />}
       />
 
       {meta && (
@@ -241,7 +241,7 @@ export function ScfFramework() {
         >
           Secure Controls Framework
         </a>
-        , used under CC BY 4.0. See{' '}
+        , used under CC BY-ND 4.0. See{' '}
         <Link href="/about/attributions" className="text-[var(--accent-teal)] hover:underline">
           data attributions
         </Link>

@@ -105,7 +105,7 @@ export function ComplianceFrameworksSection({ attackId }: { attackId: string }) 
           Browse all compliance frameworks
         </Link>
         <span className="text-[10px] text-[var(--text-secondary)] italic">
-          via <a href="https://www.securecontrolsframework.com/" target="_blank" rel="noopener noreferrer" className="hover:underline">SCF</a> — <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer" className="hover:underline">CC BY 4.0</a>
+          via <a href="https://www.securecontrolsframework.com/" target="_blank" rel="noopener noreferrer" className="hover:underline">SCF</a> — <a href="https://creativecommons.org/licenses/by-nd/4.0/" target="_blank" rel="noopener noreferrer" className="hover:underline">CC BY-ND 4.0</a>
         </span>
       </div>
     </section>
