@@ -58,11 +58,14 @@ concurrency:
 jobs:
   alert:
     # Only runs on the default branch alert: a manual run of a sync on a
-    # feature branch is someone testing, not production failing.
+    # feature branch is someone testing, not production failing. A SCHEDULED
+    # run that ends "cancelled" alerts too — that is how a job reaching its
+    # timeout-minutes ends; a human cancelling a manual run already knows.
     if: >-
       (github.event_name == 'workflow_run' &&
        github.event.workflow_run.head_branch == github.event.repository.default_branch &&
-       contains(fromJSON('["failure","timed_out","startup_failure"]'), github.event.workflow_run.conclusion)) ||
+       (contains(fromJSON('["failure","timed_out","startup_failure"]'), github.event.workflow_run.conclusion) ||
+        (github.event.workflow_run.conclusion == 'cancelled' && github.event.workflow_run.event == 'schedule'))) ||
       (github.event_name == 'workflow_dispatch' && inputs.test)
     runs-on: ubuntu-latest
     timeout-minutes: 5

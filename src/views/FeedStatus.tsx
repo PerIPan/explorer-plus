@@ -5,7 +5,7 @@ import { useFeedStatus } from '../hooks/useApi';
 import { apiFetch } from '../lib/api';
 import { PageHeader } from '../components/layout/PageHeader';
 import type { FeedSyncStatus } from '../lib/types';
-import { FEED_SOURCES, MANUAL_SOURCES, AUTOMATED_TABLES, REFERENCE_TABLES } from '../lib/feeds';
+import { FEED_SOURCES, MANUAL_SOURCES, AUTOMATED_TABLES, REFERENCE_TABLES, FEED_MAX_AGE_HOURS, isFeedLate } from '../lib/feeds';
 import type { FrameworkTable } from '../lib/feeds';
 
 const SOURCE_LABELS: Record<string, string> = {
@@ -55,10 +55,10 @@ const SOURCE_DESCRIPTIONS: Record<string, string> = {
   epss: 'First.org exploit-probability scoring, daily refreshed',
   osv: 'OS, distro, kernel advisories — Linux, Debian, Ubuntu, Alpine, Android, OSS-Fuzz, …',
   csf: 'NIST Cybersecurity Framework v2 subcategories + CRI Profile crosswalk',
-  ghsa: 'GitHub Security Advisories — full corpus rebase (monthly)',
+  ghsa: 'GitHub Security Advisories — full corpus rebase (weekly)',
   ghsa_delta: 'GitHub Security Advisories — incremental delta (daily)',
-  sigma: 'SigmaHQ detection rules — weekly refresh',
-  atomic: 'Atomic Red Team adversary-emulation tests — weekly refresh',
+  sigma: 'SigmaHQ detection rules — monthly refresh',
+  atomic: 'Atomic Red Team adversary-emulation tests — monthly refresh',
   emulation: 'CTID Adversary Emulation Library — plan steps per group, resolved to techniques (quarterly)',
   site_health: 'VirusTotal self-scan of mitre-explorer.org (weekly)',
   scf: 'Secure Controls Framework 2026.3 XLSX — 1,591 controls × 278 focal documents; checked monthly (10th), ingested when SCF ships a release',
@@ -78,6 +78,7 @@ function StatusDot({ status }: { status: string }) {
   const colorMap: Record<string, string> = {
     success: 'bg-[#34d399]',
     running: 'bg-[#fbbf24] animate-pulse',
+    late: 'bg-[#fbbf24]',
     error: 'bg-[var(--accent-orange)]',
   };
   return (
@@ -88,15 +89,16 @@ function StatusDot({ status }: { status: string }) {
   );
 }
 
-function StatusBadge({ status }: { status: string }) {
+function StatusBadge({ status, title }: { status: string; title?: string }) {
   const styleMap: Record<string, string> = {
     success: 'bg-[var(--green-faint)] text-[var(--accent-green)] border-[var(--green-dim)]',
     running: 'bg-[var(--yellow-faint)] text-[var(--accent-yellow)] border-[var(--yellow-dim)]',
+    late: 'bg-[var(--yellow-faint)] text-[var(--accent-yellow)] border-[var(--yellow-dim)]',
     error: 'bg-[var(--orange-faint)] text-[var(--accent-orange)] border-[var(--orange-dim)]',
   };
   const classes = styleMap[status] ?? 'bg-[var(--hover-overlay)] text-[var(--text-secondary)] border-[var(--border-color)]';
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${classes}`}>
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${classes}`} title={title}>
       {status}
     </span>
   );
@@ -111,12 +113,24 @@ interface FeedCardProps {
  *   [dot] [label + description]  [last-sync]  [status-badge]
  * Error messages render as an indented sub-row when present.
  */
+/** "36 h" / "9 days" for a lateness window. */
+function windowLabel(hours: number): string {
+  return hours < 72 ? `${hours} h` : `${Math.round(hours / 24)} days`;
+}
+
 function FeedCard({ feed }: FeedCardProps) {
   const description = SOURCE_DESCRIPTIONS[feed.source];
+  // A success that is older than the source's schedule allows is not healthy:
+  // the sync has stopped running, or is dying before it can log.
+  const late = isFeedLate(feed.source, feed.status, feed.lastSync);
+  const shown = late ? 'late' : feed.status;
+  const lateTitle = late
+    ? `Last successful run ${formatTimeAgo(feed.lastSync)}; this source should succeed at least every ${windowLabel((FEED_MAX_AGE_HOURS as Record<string, number>)[feed.source])}. The sync may have stopped, or be failing before it can log.`
+    : undefined;
   return (
     <div className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-md px-4 py-2.5">
       <div className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-3">
-        <StatusDot status={feed.status} />
+        <StatusDot status={shown} />
         <div className="min-w-0">
           <div className="text-[var(--text-primary)] font-medium text-sm truncate">
             {SOURCE_LABELS[feed.source] ?? feed.source}
@@ -138,7 +152,7 @@ function FeedCard({ feed }: FeedCardProps) {
           )}
           {formatTimeAgo(feed.lastSync)}
         </span>
-        <StatusBadge status={feed.status} />
+        <StatusBadge status={shown} title={lateTitle} />
       </div>
       {feed.error && (
         <div className="mt-2 ml-6 text-[11px] text-[var(--accent-orange)] bg-[var(--orange-faint)] border border-[var(--orange-dim)] rounded px-2 py-1 font-mono break-words">
@@ -188,6 +202,7 @@ export function FeedStatus() {
   /** Poll every 30s while a sync is running (was 5s) — enough for progress,
       and bounded so a stuck "running" state can't pin Neon awake. */
   const hasRunning = (data?.data ?? []).some((f) => f.status === 'running');
+  const lateSources = (data?.data ?? []).filter((f) => isFeedLate(f.source, f.status, f.lastSync)).map((f) => SOURCE_LABELS[f.source] ?? f.source);
   useEffect(() => {
     if (!hasRunning) return;
     const interval = setInterval(() => { void refetch(); }, 30_000);
@@ -200,6 +215,15 @@ export function FeedStatus() {
         title="Feed Status"
         subtitle="CTI ingestion pipeline health and manual sync controls"
       />
+
+      {lateSources.length > 0 && (
+        <div role="status" className="rounded-md border border-[var(--yellow-dim)] bg-[var(--yellow-faint)] px-4 py-2 text-sm text-[var(--text-primary)]">
+          {lateSources.length === 1
+            ? '1 feed has not succeeded within its expected window'
+            : `${lateSources.length} feeds have not succeeded within their expected windows`}
+          : {lateSources.join(', ')}.
+        </div>
+      )}
 
       <div className="space-y-2">
         {FEED_SOURCES.map((source) => {

@@ -71,6 +71,15 @@ function extractSection(refId: string, frameworkKey?: string): string {
   const chain = refId.match(/^((?:title|chapter|annex|appendix|part|schedule)\s+[\w.]+),\s/i);
   if (chain) return chain[1];
 
+  // A bare container ref groups under the container and its first number or
+  // letter: "Schedule 1 - 1(1)(a)" -> "Schedule 1" (Hong Kong PDO),
+  // "Annex 1.1.7" -> "Annex 1" (India RBI PA), "Appendix C" -> "Appendix C"
+  // (Israel CDMO), "Title II - Chapter IV" -> "Title II" (DORA RTS). The
+  // generic fallback below kept only the keyword, so each of those frameworks
+  // collapsed into one section named "Schedule" / "Annex" / "Appendix".
+  const bare = refId.match(/^((?:title|chapter|annex|appendix|part|schedule)\s+(?:\d+|[A-Za-z]+))\b/i);
+  if (bare) return bare[1];
+
   // "Article N[.something]" -> "Article N"
   const art = refId.match(/^(Article\s+\d+)/i);
   if (art) return art[1];

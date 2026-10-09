@@ -46,6 +46,58 @@ export const FEED_SOURCES = [
 ] as const;
 
 /**
+ * How long a scheduled source may go without a SUCCESSFUL run before /status
+ * calls it late — its schedule's interval plus slack for GitHub's cron delays
+ * (often hours). Typed over every non-manual source, so adding a feed without
+ * a window fails the type check.
+ *
+ * Why: the page used to show the last row's status and its age, nothing more.
+ * A sync that stops running — a workflow GitHub auto-disables after 60 days
+ * without repository activity, or a run that dies before it can write a log
+ * row (sync-scf, April–October 2026) — stays "success", just old, and old
+ * looked normal for half the feeds here. Schedules: vercel.json and
+ * .github/workflows/*.yml.
+ */
+type ScheduledSource = Exclude<(typeof FEED_SOURCES)[number], 'attack_update' | 'ics_assets'>;
+const H = 1, D = 24;
+export const FEED_MAX_AGE_HOURS: Readonly<Record<ScheduledSource, number>> = {
+  otx: 18 * H,               // Vercel, every 6 h
+  virustotal: 24 * H,        // Vercel, 3× a day
+  abuse_ch: 36 * H,          // Vercel, daily
+  cisa_kev: 36 * H,          // Vercel, daily
+  rss: 36 * H,               // Vercel, daily
+  nvd: 36 * H,               // Vercel, daily
+  epss: 36 * H,              // Vercel, daily
+  matview_refresh: 36 * H,   // Vercel + Actions, daily
+  cve_delta: 36 * H,         // Actions, daily
+  cve_products: 36 * H,      // Actions, twice a day
+  ghsa_delta: 36 * H,        // Actions, daily
+  osv: 3 * D,                // Actions, every 2 days
+  ghsa: 9 * D,               // Actions, weekly
+  site_health: 9 * D,        // Vercel, weekly
+  sigma: 35 * D,             // Actions, monthly
+  atomic: 35 * D,            // Actions, monthly
+  cti_heat_refresh: 35 * D,  // Actions, monthly
+  scf: 35 * D,               // Actions, monthly check (logs success when there is nothing new)
+  emulation: 97 * D,         // Actions, quarterly
+  d3fend: 97 * D,            // Actions, quarterly
+  csf: 190 * D,              // Vercel, January + July
+};
+
+/**
+ * Whether a source's last successful run is older than its window. Manual
+ * sources and non-success rows (running / error speak for themselves) are
+ * never "late".
+ */
+export function isFeedLate(source: string, status: string, lastSyncIso: string, now = Date.now()): boolean {
+  if (status !== 'success') return false;
+  const max = (FEED_MAX_AGE_HOURS as Record<string, number>)[source];
+  if (max === undefined) return false;
+  const t = new Date(lastSyncIso).getTime();
+  return Number.isFinite(t) && now - t > max * 3_600_000;
+}
+
+/**
  * The framework/reference tables the same page lists under the feed cards.
  *
  * Here with FEED_SOURCES because the sidebar quotes the page's TOTAL row count,
