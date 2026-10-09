@@ -54,6 +54,23 @@ function extractSection(refId: string, frameworkKey?: string): string {
     if (fam) return fam[1];
   }
 
+  // EU CRA: SCF writes Annex I points as "Annex I, Part I(2)(e)". Before
+  // splitRefs kept that path whole, ingests stored a bare "Annex I" plus an
+  // orphan "Part I(2)(e)", which the generic fallback filed in a section named
+  // "Part". Those rows stay until the next sync, so bare Part refs still go
+  // under Annex I, and annex refs keep their numeral ("Annex II", not "Annex").
+  if (frameworkKey === 'eu-cra') {
+    if (/^Part\s+I{1,2}\b/i.test(refId)) return 'Annex I';
+    const annex = refId.match(/^Annex\s+([IVX]+)\b/i);
+    if (annex) return `Annex ${annex[1].toUpperCase()}`;
+  }
+
+  // A hierarchical path the ingest keeps whole ("Title 2, Chapter II, Art.
+  // 29(5)", "Appendix A, 1.1", "Annex I, Part II" — see splitRefs) groups
+  // under its first container.
+  const chain = refId.match(/^((?:title|chapter|annex|appendix|part|schedule)\s+[\w.]+),\s/i);
+  if (chain) return chain[1];
+
   // "Article N[.something]" -> "Article N"
   const art = refId.match(/^(Article\s+\d+)/i);
   if (art) return art[1];

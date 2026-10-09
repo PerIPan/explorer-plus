@@ -98,10 +98,14 @@ export function CraReference() {
           Direct mappings will be added once they are published.
         </p>
         <p className="text-[var(--text-secondary)] leading-relaxed mt-2">
-          In the meantime there is one indirect path. The Secure Controls Framework cross-references its controls to
-          CRA articles and Annex I, and maps those controls to ATT&amp;CK, so the CRA reaches techniques through SCF.
-          It is SCF&rsquo;s crosswalk, not the regulator&rsquo;s, and it shows which controls relate to an article, not
-          what the article requires.{' '}
+          In the meantime there is one indirect, thin path. The Secure Controls Framework cross-references a few dozen
+          of its controls to CRA articles and Annex I, and only a handful of those carry an ATT&amp;CK mapping. The
+          part that speaks to product security runs through encryption, secure-development and assessment controls
+          (Annex I Part I, Articles 13, 24 and 32). Part of the technique count comes instead from a data-retention
+          control that SCF links to the record-keeping duties (Articles 13(13), 19(6) and 23(2): keep documentation
+          for ten years) &mdash; read those techniques as noise, not as CRA security requirements. It is SCF&rsquo;s
+          crosswalk, not the regulator&rsquo;s: it shows which controls relate to an article, not what the article
+          requires.{' '}
           <Link href="/compliance/eu-cra" className="text-[var(--accent-teal)] hover:underline">
             See the CRA through SCF &rarr;
           </Link>
