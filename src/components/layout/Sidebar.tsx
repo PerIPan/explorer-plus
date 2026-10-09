@@ -115,7 +115,7 @@ const frameworksNav: NavItem[] = [
   { path: '/frameworks/atomic', label: 'Atomic Tests', tooltip: 'red team validation tests from Atomic Red Team' },
   { path: '/frameworks/emulation', label: 'Emulation Plans', tooltip: 'MITRE CTID adversary emulation plans for 9 ATT&CK groups (APT29, FIN6, Sandworm, Turla, …) — every step resolved to its current technique, plus how much of each group’s attributed techniques the plan exercises' },
   { path: '/cti/capec', label: 'CAPEC', tooltip: 'MITRE Common Attack Pattern Enumeration — 615 attack patterns with severity, likelihood, prerequisites, mitigations' },
-  { path: '/frameworks/cra', label: 'CRA – wip', tooltip: 'EU Cyber Resilience Act (Regulation 2024/2847) — reference page covering key dates, Annex I essential requirements, Article 14 reporting cadence. Mappings to ATT&CK/CWE pending harmonised standards.' },
+  { path: '/frameworks/cra', label: 'CRA – wip', tooltip: 'EU Cyber Resilience Act (Regulation 2024/2847) — reference page covering key dates, Annex I essential requirements, Article 14 reporting cadence. Direct ATT&CK/CWE mappings await the harmonised standards; until then it reaches techniques through SCF control cross-references.' },
   { path: '/frameworks/owasp-ai', label: 'OWASP AI – wip', tooltip: 'OWASP AI Exchange — AI/ML threats, controls, and framework alignments (ISO 27090, EU AI Act). Structured JSON/ATLAS crosswalks on the 2026 roadmap; reference page for now.' },
   // No count badge and no "wip": the page is complete, it simply has nothing to
   // bridge to. Measured across all 22 playbooks — none cites an ATT&CK

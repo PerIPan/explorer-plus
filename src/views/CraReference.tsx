@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Badge } from '../components/shared/Badge';
 import { ComplianceLink } from '../components/shared/ComplianceLink';
@@ -84,17 +85,26 @@ export function CraReference() {
         title="EU Cyber Resilience Act (CRA)"
         subtitle="Regulation (EU) 2024/2847 — cybersecurity requirements for products with digital elements"
         titleAction={<Badge label="Work in progress" variant="yellow" />}
-        actions={<ComplianceLink frameworkKey="eu-cra" />}
+        actions={<ComplianceLink frameworkKey="eu-cra" label="Techniques via SCF" />}
       />
 
       {/* WIP notice */}
       <div className="rounded-lg border border-[var(--yellow-dim)] bg-[var(--yellow-faint)] px-4 py-3 text-sm text-[var(--text-primary)]">
-        <p className="font-medium text-[var(--accent-yellow)] mb-1">Reference page — not a data-backed framework yet</p>
+        <p className="font-medium text-[var(--accent-yellow)] mb-1">Reference page — awaiting the harmonised standards</p>
         <p className="text-[var(--text-secondary)] leading-relaxed">
           This page summarises the regulation for orientation. Unlike OWASP Top 10 or NIST 800-53, there is no
-          authoritative technical crosswalk yet between CRA essential requirements and ATT&amp;CK / CWE / NIST 800-53.
-          CEN/CENELEC JTC 13 is drafting the harmonised standards. Mappings will be added once they become public
-          or once we commit editorial mappings with sources.
+          authoritative technical crosswalk yet between CRA essential requirements and ATT&amp;CK / CWE / NIST 800-53:
+          CEN/CENELEC JTC 13 is still drafting the harmonised standards that will give Annex I testable detail.
+          Direct mappings will be added once they are published.
+        </p>
+        <p className="text-[var(--text-secondary)] leading-relaxed mt-2">
+          In the meantime there is one indirect path. The Secure Controls Framework cross-references its controls to
+          CRA articles and Annex I, and maps those controls to ATT&amp;CK, so the CRA reaches techniques through SCF.
+          It is SCF&rsquo;s crosswalk, not the regulator&rsquo;s, and it shows which controls relate to an article, not
+          what the article requires.{' '}
+          <Link href="/compliance/eu-cra" className="text-[var(--accent-teal)] hover:underline">
+            See the CRA through SCF &rarr;
+          </Link>
         </p>
       </div>
 

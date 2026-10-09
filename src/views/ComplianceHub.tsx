@@ -67,7 +67,7 @@ const REGION_LABEL: Record<string, string> = {
 // Cross-links to dedicated /frameworks/* pages we've already built.
 // These are NOT SCF-backed — they live outside the SCF ingest.
 const ALSO_ON_SITE: { label: string; href: string; note: string }[] = [
-  { label: 'EU CRA', href: '/frameworks/cra', note: 'EU Cyber Resilience Act reference page (no SCF mappings yet — pending harmonised standards).' },
+  { label: 'EU CRA', href: '/frameworks/cra', note: 'EU Cyber Resilience Act reference page. Harmonised standards pending; until then it reaches techniques only through SCF cross-references.' },
   { label: 'NIST CSF v2', href: '/frameworks/csf', note: 'Full subcategory → ATT&CK technique browser.' },
   { label: 'NIST 800-53 r5', href: '/frameworks/nist', note: 'Control catalog mapped to techniques.' },
   { label: 'OWASP Top 10', href: '/frameworks/owasp', note: 'Web, ML, and LLM security risks via CWE.' },
