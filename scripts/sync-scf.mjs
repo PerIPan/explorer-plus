@@ -831,18 +831,30 @@ async function buildSoftwareSummary(client, R, M, T) {
 async function buildSectorSummary(client, R, M, T) {
   const exists = await client.query(`SELECT to_regclass('group_sectors') AS r`);
   if (!exists.rows[0].r) return 0;
+  // Deduplicate before the fan-out. Joined raw, a technique used by N groups
+  // in a sector, times each control's refs, multiplied every row N × refs
+  // before COUNT(DISTINCT) threw the copies away — on production the 2026.3
+  // ingest hit the statement timeout here. Counting distinct values over the
+  // deduplicated sets gives the same numbers.
   const r = await client.query(`
+    WITH sector_tech AS (
+      SELECT DISTINCT gs.sector_id, t.attack_id
+      FROM group_sectors gs
+      JOIN group_techniques gt ON gt.group_id = gs.group_id
+      JOIN techniques t        ON t.id = gt.technique_id
+    ),
+    control_fw AS (
+      SELECT DISTINCT scf_id, framework_key FROM ${ident(R)}
+    )
     INSERT INTO ${ident(T)} (sector_id, framework_key, controls, techniques_ref)
-    SELECT gs.sector_id,
-           fr.framework_key,
-           COUNT(DISTINCT fr.scf_id) AS controls,
-           COUNT(DISTINCT t.attack_id) AS techniques_ref
-    FROM group_sectors gs
-    JOIN group_techniques gt ON gt.group_id = gs.group_id
-    JOIN techniques t        ON t.id = gt.technique_id
-    JOIN ${ident(M)} m       ON m.attack_id = t.attack_id AND NOT m.is_unresolved
-    JOIN ${ident(R)} fr      ON fr.scf_id = m.scf_id
-    GROUP BY gs.sector_id, fr.framework_key
+    SELECT st.sector_id,
+           cf.framework_key,
+           COUNT(DISTINCT cf.scf_id) AS controls,
+           COUNT(DISTINCT st.attack_id) AS techniques_ref
+    FROM sector_tech st
+    JOIN ${ident(M)} m  ON m.attack_id = st.attack_id AND NOT m.is_unresolved
+    JOIN control_fw cf  ON cf.scf_id = m.scf_id
+    GROUP BY st.sector_id, cf.framework_key
   `);
   return r.rowCount ?? 0;
 }
@@ -1162,6 +1174,10 @@ async function main() {
 
   try {
     client = await pool.connect();
+    // A batch job, not an API request: the role's default statement_timeout is
+    // sized for interactive reads, and the summary rebuilds legitimately run
+    // longer. Session-scoped; the swap still sets its own lock_timeout.
+    await client.query(`SET statement_timeout = '15min'`);
     logId = await insertLogStart(client);
     if (!(await acquireAdvisoryLock(client))) {
       throw new Error('Another sync-scf run is in progress (advisory lock held).');

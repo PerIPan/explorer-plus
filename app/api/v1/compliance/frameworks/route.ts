@@ -77,11 +77,15 @@ export async function GET(req: NextRequest) {
        (SELECT COUNT(*)::text FROM scf_controls)                AS control_count,
        (SELECT COUNT(*)::text FROM scf_attack_mappings)         AS mapping_count,
        (SELECT COUNT(*)::text FROM scf_attack_mappings WHERE is_unresolved) AS unresolved_count,
+       -- A dry run logs status='success' too; it changes no data, so it must
+       -- not set the version or date shown beside the data.
        (SELECT completed_at::text FROM feed_sync_log
          WHERE source='scf' AND status='success'
+           AND COALESCE(metadata->>'dryRun', 'false') <> 'true'
          ORDER BY completed_at DESC NULLS LAST LIMIT 1)         AS last_run_at,
        (SELECT metadata->>'scfVersion' FROM feed_sync_log
          WHERE source='scf' AND status='success'
+           AND COALESCE(metadata->>'dryRun', 'false') <> 'true'
          ORDER BY completed_at DESC NULLS LAST LIMIT 1)         AS scf_version`,
   );
   const meta = metaRows.rows[0] ?? {};
