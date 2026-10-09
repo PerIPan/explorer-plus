@@ -602,6 +602,31 @@ export interface ExternalActor {
   attributionConfidence: string | null;
 }
 
+/** One technique in GET /api/v1/frameworks/fair-cam/coverage. */
+export interface FairCamTechniqueRow {
+  attackId: string;
+  name: string;
+  domain: string;
+  /** FAIR-CAM function id -> D3FEND / ATT&CK mitigation ids (this site's classification). */
+  functions: Record<string, string[]>;
+  counts: { dataComponents: number; detectionStrategies: number; sigmaRules: number };
+  defaultRule: string[];
+  unmapped: string[];
+}
+
+/** GET /api/v1/frameworks/fair-cam/coverage */
+export interface FairCamCoverage {
+  rollup: 'subtechniques';
+  attribution: string;
+  source: { name: string; version: string; licence: string; licenceUrl: string; referenceUrl: string };
+  curation: string;
+  total: number;
+  defaultRuleIds: string[];
+  unmappedIds: string[];
+  controls: Record<string, { name: string; kind: 'mitigation' | 'd3fend' }>;
+  techniques: FairCamTechniqueRow[];
+}
+
 /** A CTID emulation-plan step that exercises a technique (technique 360). */
 export interface EmulationStepRef {
   planKey: string;

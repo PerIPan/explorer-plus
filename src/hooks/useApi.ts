@@ -22,6 +22,7 @@ import type {
   TechniqueIntelligence,
   EmulationPlanList,
   EmulationPlanDetail,
+  FairCamCoverage,
   FrameworkData,
   NistControlSummary,
   EngageSummary,
@@ -289,6 +290,20 @@ export function useEmulationPlans(params: Record<string, string> = EMPTY_PARAMS,
     // Switching ?technique= changes the key; keep the old list on screen
     // instead of swapping the whole page for a loader.
     placeholderData: keepPreviousData,
+  });
+}
+
+/**
+ * The FAIR-CAM coverage map — every technique, one response, one cache entry,
+ * shared by the technique card and the profile/group panels so they always
+ * agree. Fetched only when one of those is opened (`enabled`).
+ */
+export function useFairCamCoverage(enabled = true) {
+  return useQuery({
+    queryKey: ['fair-cam-coverage'],
+    queryFn: () => apiFetch<FairCamCoverage>('/frameworks/fair-cam/coverage'),
+    enabled,
+    staleTime: 60 * 60 * 1000,
   });
 }
 

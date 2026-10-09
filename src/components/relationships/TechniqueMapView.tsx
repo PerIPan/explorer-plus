@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
@@ -109,6 +109,19 @@ function MapRow({ prefix, prefixUrl, children }: { prefix: string; prefixUrl?: s
 }
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
+
+/**
+ * FAIR-CAM card body, loaded only when its MapCard is opened (MapCard renders
+ * children only while open) — so the component and the coverage response are
+ * never fetched for a visitor who does not look.
+ */
+const FairCamCard = lazy(() => import('../faircam/FairCamCard').then((m) => ({ default: m.FairCamCard })));
+
+const IconFairCam = (
+  <svg fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h4M4 12h4M4 18h4M12 6h8M12 12h8M12 18h8" />
+  </svg>
+);
 
 const IconPeople = (
   <svg fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" className="w-4 h-4">
@@ -897,6 +910,13 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
             Browse response actions
           </Link>
         </MapRow>
+      </MapCard>
+
+      {/* FAIR-CAM LENS — candidate controls by function; closed by default, lazy */}
+      <MapCard label="FAIR-CAM lens" icon={IconFairCam} defaultOpen={false}>
+        <Suspense fallback={<p className="text-xs italic text-[var(--text-secondary)]">Loading FAIR-CAM coverage…</p>}>
+          <FairCamCard attackId={attackId} />
+        </Suspense>
       </MapCard>
 
       {/* COMPLIANCE FRAMEWORKS — SCF-backed, closed by default */}

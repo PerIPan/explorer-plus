@@ -16,6 +16,7 @@ import { buildProfileUrl } from '../lib/profile-url.mjs';
 import { buildProfileApiQuery, parseCsvParam } from '../lib/profile-query.mjs';
 import { levelDisplay, type OtSelection } from '../lib/profile-ot.mjs';
 import { ProfileMatrix } from '../components/profile/ProfileMatrix';
+import { FairCamCoveragePanel } from '../components/faircam/FairCamCoveragePanel';
 
 /* ════════════════════════════════════════════════════════════════════════════
  * The OT (ICS) briefing.
@@ -829,6 +830,8 @@ export function OtProfile() {
         domain="ics-attack"
         techniqueIds={[...bandA, ...bandB].map((t) => t.attackId)}
       />
+
+      <FairCamCoveragePanel techniqueIds={[...bandA, ...bandB].map((t) => t.attackId)} scopeLabel="this plant briefing" />
 
       <OtProvenance minReach={meta.minReach} />
     </>,

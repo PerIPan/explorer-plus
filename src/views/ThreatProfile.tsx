@@ -27,6 +27,7 @@ import {
 import { useSector, ALL_SECTORS_PARAM } from '../contexts/SectorContext';
 import { DEFAULT_DOMAIN, useDomain } from '../contexts/DomainContext';
 import { ProfileMatrix } from '../components/profile/ProfileMatrix';
+import { FairCamCoveragePanel } from '../components/faircam/FairCamCoveragePanel';
 
 /* ────────────────────────────────────────────────────────────────────────────
  * Wire types
@@ -1732,6 +1733,8 @@ export function ThreatProfile() {
         domain={profile.domain}
         techniqueIds={[...bandA, ...bandB].map((t) => t.attackId)}
       />
+
+      <FairCamCoveragePanel techniqueIds={[...bandA, ...bandB].map((t) => t.attackId)} scopeLabel="this briefing" />
 
       <Provenance />
     </>,

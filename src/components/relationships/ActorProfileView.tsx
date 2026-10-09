@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { useGroup, useCampaign, useExternalActorByGroup, useExternalActorByName, useFrameworksByTechniques, useEmulationPlans } from '../../hooks/useApi';
 import { EMULATION_PLANS } from '../../lib/emulation-plans.mjs';
+import { FairCamCoveragePanel } from '../faircam/FairCamCoveragePanel';
 import { apiFetch } from '../../lib/api';
 import { useDomain } from '../../contexts/DomainContext';
 import { useSector } from '../../contexts/SectorContext';
@@ -710,6 +711,9 @@ export function ActorProfileView({ attackId, entityType }: ActorProfileViewProps
             </div>
           </CollapsibleSection>
         )}
+
+        {/* FAIR-CAM coverage of this group's techniques (current domain) — lazy */}
+        <FairCamCoveragePanel techniqueIds={techniques.map((t) => t.attackId)} scopeLabel={`${group.name}'s techniques`} />
 
         {/* Techniques — last, largest section */}
         {techniques.length > 0 && (
