@@ -25,6 +25,7 @@ import path from 'path';
 import crypto from 'node:crypto';
 import { spawnSync } from 'child_process';
 import { captureSnapshot } from './lib/attack-snapshot.mjs';
+import { batchDatabaseUrl, takeSessionLock } from './lib/db-session.mjs';
 import { diffSnapshots, summarizeDiff } from './lib/attack-diff.mjs';
 
 const DATABASE_URL = process.env.DATABASE_URL;
@@ -108,15 +109,6 @@ async function updateLogDone(pool, logId, status, counters, meta, errorMessage) 
       logId,
     ],
   );
-}
-
-async function acquireAdvisoryLock(pool) {
-  const r = await pool.query('SELECT pg_try_advisory_lock($1) AS locked', [ADVISORY_LOCK_KEY]);
-  return r.rows[0].locked === true;
-}
-
-async function releaseAdvisoryLock(pool) {
-  await pool.query('SELECT pg_advisory_unlock($1)', [ADVISORY_LOCK_KEY]);
 }
 
 async function getLastVersion(pool) {
@@ -557,9 +549,11 @@ async function reconcileBulk(pool, args) {
 
 async function main() {
   const args = parseArgs();
+  // Direct endpoint + a dedicated lock client: see scripts/lib/db-session.mjs.
+  // One connection is held by the lock for the whole run, hence max 5.
   const pool = new pg.Pool({
-    connectionString: DATABASE_URL,
-    max: 4,
+    connectionString: batchDatabaseUrl(DATABASE_URL, 'attack-update'),
+    max: 5,
     idleTimeoutMillis: 30_000,
     connectionTimeoutMillis: 15_000,
     keepAlive: true,
@@ -569,9 +563,9 @@ async function main() {
   const startedAt = Date.now();
 
   // Concurrency: refuse to start if another update is mid-flight.
-  const locked = await acquireAdvisoryLock(pool);
-  if (!locked) {
-    console.error('[attack-update] another update is already running — bailing out');
+  const lock = await takeSessionLock(pool, ADVISORY_LOCK_KEY, 'attack-update');
+  if (!lock.locked) {
+    console.error(`[attack-update] another update is already running${lock.holder ? ` (lock held by ${lock.holder})` : ''} — bailing out`);
     await pool.end();
     process.exit(2);
   }
@@ -863,7 +857,7 @@ async function main() {
     }
     throw err;
   } finally {
-    try { await releaseAdvisoryLock(pool); } catch { /* ignore */ }
+    try { await lock.release(); } catch (e) { console.error('[attack-update] lock release failed:', e.message); }
     await pool.end();
   }
 }

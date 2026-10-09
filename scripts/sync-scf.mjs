@@ -46,6 +46,7 @@ import {
   buildCuratedFdiMap,
   findAuthSheetName,
 } from './lib/scf-parse.mjs';
+import { batchDatabaseUrl, describeLockHolder } from './lib/db-session.mjs';
 
 const SCF_REPO = 'securecontrolsframework/securecontrolsframework';
 const ADVISORY_LOCK_KEY = 0x736366; // ASCII 'scf'
@@ -121,8 +122,8 @@ async function updateLogDone(client, logId, status, counters, meta, errorMessage
 // IMPORTANT: pg_try_advisory_lock + pg_advisory_unlock are SESSION-scoped.
 // We MUST hold them on the same client instance — pool.query() leases a
 // different connection per call and would silently leak the lock. And the
-// client must be on a DIRECT connection (see directNeonUrl): through Neon's
-// pooler the same client's statements land on different server sessions.
+// client must be on a DIRECT connection (scripts/lib/db-session.mjs): through
+// Neon's pooler the same client's statements land on different server sessions.
 async function acquireAdvisoryLock(client) {
   const r = await client.query('SELECT pg_try_advisory_lock($1) AS locked', [ADVISORY_LOCK_KEY]);
   return r.rows[0].locked === true;
@@ -135,33 +136,6 @@ async function releaseAdvisoryLock(client) {
   }
 }
 
-/**
- * The direct-endpoint form of a Neon connection string.
- *
- * Neon's pooled endpoint (host "ep-…-pooler.<region>…") is PgBouncer in
- * transaction mode: consecutive statements from one pinned client can run on
- * different server sessions. This job depends on session state, so through
- * the pooler (2026-10-09, SCF 2026.3 runs):
- *   - pg_advisory_unlock ran on a different session from the lock, which then
- *     stayed held by a pooled server connection that API traffic also uses,
- *     blocking the next run ("advisory lock held") until that connection died;
- *   - a statement_timeout another client had leaked onto a pooled session
- *     cancelled the sector-summary rebuild, and our own session SET would leak
- *     the same way (app/api/v1/lib/db.ts documents the pooler behaviour).
- * The direct endpoint is the same host without "-pooler". DATABASE_URL_UNPOOLED
- * wins when set. Anything that is not a Neon pooler URL is returned unchanged.
- */
-export function directNeonUrl(url, unpooled = undefined) {
-  if (unpooled) return { url: unpooled, switched: true, via: 'DATABASE_URL_UNPOOLED' };
-  try {
-    const u = new URL(url);
-    if (/-pooler\./.test(u.hostname)) {
-      u.hostname = u.hostname.replace('-pooler.', '.');
-      return { url: u.toString(), switched: true, via: 'host without -pooler' };
-    }
-  } catch { /* not a URL we can parse — use as given */ }
-  return { url, switched: false, via: null };
-}
 
 async function getLastVersion(client) {
   const r = await client.query(
@@ -293,9 +267,14 @@ async function upsertFrameworks(client, frameworkRows, registry, observedHeaders
   const { map: fdiToCurated } = buildCuratedFdiMap(frameworkRows, registry.aliasLookup, registry.keys);
 
   // Phase 1: ensure curated entries exist (some may not have SCF backing — e.g. EU CRA).
+  // Keys this run INSERTED (not updated): a failed run takes back the ones
+  // that never received refs, so a failure leaves no empty framework rows.
+  const insertedKeys = [];
+  const note = (r) => { if (r.rows[0]?.inserted) insertedKeys.push(r.rows[0].framework_key); };
+
   for (const entry of registry.entries) {
     if (dryRun) continue;
-    await client.query(
+    note(await client.query(
       `INSERT INTO scf_frameworks (
          framework_key, name, version, source_org, upstream_url, region, tier, license, short_blurb
        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
@@ -308,7 +287,8 @@ async function upsertFrameworks(client, frameworkRows, registry, observedHeaders
          tier=EXCLUDED.tier,
          license=EXCLUDED.license,
          short_blurb=EXCLUDED.short_blurb,
-         updated_at=NOW()`,
+         updated_at=NOW()
+       RETURNING framework_key, (xmax = 0) AS inserted`,
       [
         entry.framework_key,
         entry.name,
@@ -320,7 +300,7 @@ async function upsertFrameworks(client, frameworkRows, registry, observedHeaders
         entry.license,
         entry.short_blurb,
       ],
-    );
+    ));
   }
 
   // Phase 2: UPSERT every auth-source row. Curated ones resolve to their registry key;
@@ -339,7 +319,7 @@ async function upsertFrameworks(client, frameworkRows, registry, observedHeaders
       // update set below always overwrites it: a blurb must describe THIS
       // workbook's row, never linger from an older one.
       const blurb = row.doc_title && row.doc_title !== name ? row.doc_title.slice(0, 240) : null;
-      await client.query(
+      note(await client.query(
         `INSERT INTO scf_frameworks (
            framework_key, name, version, source_org, upstream_url, region, tier, license, short_blurb
          ) VALUES ($1,$2,$3,$4,$5,$6,3,$7,$8)
@@ -349,7 +329,8 @@ async function upsertFrameworks(client, frameworkRows, registry, observedHeaders
            upstream_url=EXCLUDED.upstream_url,
            region=EXCLUDED.region,
            short_blurb=EXCLUDED.short_blurb,
-           updated_at=NOW()`,
+           updated_at=NOW()
+         RETURNING framework_key, (xmax = 0) AS inserted`,
         [
           key,
           name,
@@ -360,7 +341,7 @@ async function upsertFrameworks(client, frameworkRows, registry, observedHeaders
           null,
           blurb,
         ],
-      );
+      ));
     }
   }
 
@@ -374,6 +355,23 @@ async function upsertFrameworks(client, frameworkRows, registry, observedHeaders
       [framework_key, source_header],
     );
   }
+  return { insertedKeys };
+}
+
+/**
+ * After a failed run: delete the framework rows this run inserted that still
+ * have no refs (their aliases cascade). The NOT EXISTS guard keeps any key
+ * that did go live, in case the failure came after the swap.
+ */
+async function unstageFrameworks(client, insertedKeys) {
+  if (insertedKeys.length === 0) return 0;
+  const r = await client.query(
+    `DELETE FROM scf_frameworks f
+      WHERE f.framework_key = ANY($1::text[])
+        AND NOT EXISTS (SELECT 1 FROM scf_framework_refs r WHERE r.framework_key = f.framework_key)`,
+    [insertedKeys],
+  );
+  return r.rowCount ?? 0;
 }
 
 /**
@@ -1198,14 +1196,13 @@ async function main() {
   // entire ingest. pg_try_advisory_lock is session-scoped, so leasing different
   // pool connections per query would silently leak the lock + break atomicity
   // of the shadow-table swap (RENAME on connection A, COMMIT on connection B).
-  const direct = directNeonUrl(DATABASE_URL, process.env.DATABASE_URL_UNPOOLED);
-  if (direct.switched) console.log(`[sync-scf] using the direct (unpooled) endpoint — ${direct.via}`);
-  const pool = new pg.Pool({ connectionString: direct.url, keepAlive: true, max: 2 });
+  const pool = new pg.Pool({ connectionString: batchDatabaseUrl(DATABASE_URL, 'sync-scf'), keepAlive: true, max: 2 });
   let client = null;
   let logId = null;
   let lockAcquired = false;
   const counters = { recordsInserted: 0, recordsSkipped: 0 };
   const meta = { dryRun: args.dryRun };
+  let insertedFrameworkKeys = [];
 
   try {
     client = await pool.connect();
@@ -1216,7 +1213,8 @@ async function main() {
     await client.query(`SET statement_timeout = '15min'`);
     logId = await insertLogStart(client);
     if (!(await acquireAdvisoryLock(client))) {
-      throw new Error('Another sync-scf run is in progress (advisory lock held).');
+      const holder = await describeLockHolder(client, ADVISORY_LOCK_KEY);
+      throw new Error(`Another sync-scf run is in progress (advisory lock held${holder ? ` by ${holder}` : ''}).`);
     }
     lockAcquired = true;
 
@@ -1339,7 +1337,8 @@ async function main() {
     // the header in the current XLSX (see upsertFrameworks). The Tier-1 guard
     // below compares last_seen_at against this timestamp.
     const runStart = new Date();
-    await upsertFrameworks(client, frameworkRows, registry, observedHeaders, args.dryRun);
+    ({ insertedKeys: insertedFrameworkKeys } = await upsertFrameworks(client, frameworkRows, registry, observedHeaders, args.dryRun));
+    if (insertedFrameworkKeys.length) console.log(`[sync-scf] ${insertedFrameworkKeys.length} new framework keys`);
 
     // Tier-1 alias guard. Compare to runStart so stale aliases from prior
     // ingests don't mask a vanished column.
@@ -1453,6 +1452,11 @@ async function main() {
     console.log(`[sync-scf] DONE — SCF ${versionTag}`);
   } catch (e) {
     console.error('[sync-scf] FAILED:', e);
+    if (client && insertedFrameworkKeys.length) {
+      await unstageFrameworks(client, insertedFrameworkKeys)
+        .then((n) => n && console.log(`[sync-scf] removed ${n} framework rows this run had added`))
+        .catch((err) => console.error('[sync-scf] framework cleanup failed:', err.message));
+    }
     // Best-effort log write — wrap separately so a pool failure doesn't mask
     // the original error.
     if (logId && client) {

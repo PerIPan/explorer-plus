@@ -40,6 +40,7 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import pg from 'pg';
+import { batchDatabaseUrl, takeSessionLock } from './lib/db-session.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(__dirname, '..');
@@ -361,7 +362,9 @@ async function seedCuratedLayer(client, reg) {
 // ---------------------------------------------------------------------------
 
 const stats = {};
-const pool = new pg.Pool({ connectionString: DATABASE_URL, max: 3 });
+// Direct endpoint + a dedicated lock client: see scripts/lib/db-session.mjs.
+const pool = new pg.Pool({ connectionString: batchDatabaseUrl(DATABASE_URL, 'ics-assets'), max: 4 });
+let lock = null;
 let logId;
 const startedAt = Date.now();
 
@@ -405,8 +408,8 @@ try {
     process.exit(0);
   }
 
-  const lock = await pool.query('SELECT pg_try_advisory_lock($1) AS ok', [ADVISORY_LOCK_KEY]);
-  if (!lock.rows[0].ok) throw new Error('another ics-assets backfill is running (advisory lock held)');
+  lock = await takeSessionLock(pool, ADVISORY_LOCK_KEY, 'ics-assets');
+  if (!lock.locked) throw new Error(`another ics-assets backfill is running (advisory lock held${lock.holder ? ` by ${lock.holder}` : ''})`);
 
   logId = await insertLogStart(pool);
 
@@ -458,6 +461,8 @@ try {
   }
   process.exitCode = 1;
 } finally {
-  try { await pool.query('SELECT pg_advisory_unlock($1)', [ADVISORY_LOCK_KEY]); } catch { /* ignore */ }
+  if (lock?.locked) {
+    try { await lock.release(); } catch (e) { console.error('[ics-assets] lock release failed:', e.message); }
+  }
   await pool.end();
 }
