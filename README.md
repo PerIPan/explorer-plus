@@ -111,7 +111,7 @@ Next.js 16 App Router (React 19 + TypeScript + Tailwind 4)
 
 Each has a dedicated page under `/frameworks`, mapped to ATT&CK techniques:
 
-OWASP Top 10 (web / ML / LLM) · NIST CSF v2 · NIST 800-53 · NIST SP 800-40r4 *(patching; via NIST's own 800-53 list)* · ISO/IEC 27001:2022 · **MITRE D3FEND** · MITRE Engage · RE&CT · VERIS · CAPEC · Cloud controls (Azure, GCP) · Purdue model · CISA OT asset inventory *(curated crosswalk to ICS assets)* · Detection strategies · Atomic tests · CTID emulation plans · EU CRA *(reference)* · OWASP AI Exchange *(reference)*
+OWASP Top 10 (web / ML / LLM) · NIST CSF v2 · NIST 800-53 · NIST SP 800-40r4 *(patching; via NIST's own 800-53 list)* · ISO/IEC 27001:2022 · **MITRE D3FEND** · MITRE Engage · RE&CT · VERIS · CAPEC · Cloud controls (Azure, GCP) · Purdue model · CISA OT asset inventory *(curated crosswalk to ICS assets)* · Detection strategies · Atomic tests · CTID emulation plans · FAIR-CAM v1.0 *(controls lens: candidate controls per technique by FAIR-CAM function; ontology quoted unmodified, ©2025 FAIR Institute, CC BY-NC-ND 4.0)* · EU CRA *(reference)* · OWASP AI Exchange *(reference)*
 
 `/compliance` covers the 224 SCF-bridged regulatory frameworks separately, since those reach ATT&CK through control cross-references rather than direct technique mappings.
 
@@ -237,4 +237,5 @@ ISC
 ---
 
 *Not affiliated with or endorsed by MITRE Corporation. ATT&CK®, ATLAS™, D3FEND™, CAPEC™ and Engage™ are trademarks of The MITRE Corporation.*
+*Not affiliated with or endorsed by the FAIR Institute. FAIR-CAM™ is a trademark of the FAIR Institute; the classification of controls into FAIR-CAM functions is this project's.*
 *contact @ mitre-explorer.org*
