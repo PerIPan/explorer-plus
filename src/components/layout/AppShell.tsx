@@ -178,8 +178,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </button>
           {/* min-w-0 lets the search input shrink instead of forcing the row
               wider than the viewport — the header has no flex-wrap and the
-              APIs / MCP button next to it must stay reachable. */}
-          <div className="order-last w-full min-w-0 md:order-none md:w-auto md:flex-1">
+              APIs / MCP button next to it must stay reachable. flex-[3] below
+              xl: the spacer further along also grows, and at 1:1 the search
+              got half the spare width — at 768px with the VirusTotal badge its
+              placeholder read "Sea". From xl the split goes back to 1:1, where
+              the search's own max-w-xl is the limit and 3:1 would only open a
+              gap before the buttons. */}
+          <div className="order-last w-full min-w-0 md:order-none md:w-auto md:flex-[3] xl:flex-1">
             <SearchBar />
           </div>
           <button
@@ -204,16 +209,28 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </button>
           {/* Hidden from April to October 2026 while the diagram was out of date;
               back now that its layout is data with a test behind it. Not on
-              phones: a 40-node canvas needs the width. */}
+              phones: a 40-node canvas needs the width. Icon-only below xl:
+              from md up the search box shares the row's spare width with the
+              spacer below, and a text label cost it ~50px — rendered at 768px
+              its placeholder clipped to "Sear". */}
           <button
             ref={modelButtonRef}
             type="button"
             onClick={() => setModelOpen(true)}
             data-print-hide
-            className="hidden sm:inline-flex flex-shrink-0 px-3 h-8 items-center justify-center rounded-md border border-[var(--border-color)] text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--accent-teal)] hover:border-[var(--teal-dim)] transition-colors"
+            aria-label="Data model diagram"
+            className="hidden sm:inline-flex flex-shrink-0 gap-1.5 px-2 xl:px-3 h-8 items-center justify-center rounded-md border border-[var(--border-color)] text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--accent-teal)] hover:border-[var(--teal-dim)] transition-colors"
             title="How the data connects — every entity, feed and framework, and how each maps onto ATT&CK techniques"
           >
-            Data Model
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="2.5" />
+              <circle cx="5" cy="5" r="2" />
+              <circle cx="19" cy="5" r="2" />
+              <circle cx="5" cy="19" r="2" />
+              <circle cx="19" cy="19" r="2" />
+              <path strokeLinecap="round" d="M6.5 6.5l3.7 3.7M17.5 6.5l-3.7 3.7M6.5 17.5l3.7-3.7M17.5 17.5l-3.7-3.7" />
+            </svg>
+            <span className="hidden xl:inline" aria-hidden="true">Data Model</span>
           </button>
           <div className="hidden md:block md:flex-1" />
           <div className="hidden md:block"><VtBadge /></div>
