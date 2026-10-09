@@ -29,11 +29,14 @@ test('layout check catches what it claims to (a deliberately broken copy)', () =
   assert.ok(layoutProblems(MODEL_NODES, [...MODEL_EDGES, { from: 'nope', to: 'technique', label: 'x' }]).includes('dangling edge: nope -> technique'));
 });
 
-test('ids are unique and every node takes part in at least one edge', () => {
+test('ids are unique; every node has an edge except reference-only ones, which have none', () => {
   const ids = MODEL_NODES.map((n) => n.id);
   assert.equal(new Set(ids).size, ids.length);
   const linked = new Set(MODEL_EDGES.flatMap((e) => [e.from, e.to]));
-  for (const id of ids) assert.ok(linked.has(id), `${id} has no edge`);
+  for (const n of MODEL_NODES) {
+    if (n.referenceOnly) assert.ok(!linked.has(n.id), `${n.id} is reference-only but has an edge`);
+    else assert.ok(linked.has(n.id), `${n.id} has no edge`);
+  }
 });
 
 test('every node links to a page that exists in app/', () => {

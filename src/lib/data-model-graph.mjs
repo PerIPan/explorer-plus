@@ -36,6 +36,10 @@ export const MODEL_HEIGHT = 840;
  * @property {ModelCategory} category
  * @property {string} color        A theme token name (accentTeal …) or a hex.
  * @property {number} [scale]      Visual scale; Technique is the hub.
+ * @property {boolean} [referenceOnly]  A source with no identifier to join on
+ *   (no ATT&CK, CWE or control id). Drawn dotted, and the only kind of node
+ *   allowed — and required — to have no edge: an edge would be this site's
+ *   opinion drawn as a mapping.
  *
  * @typedef {Object} ModelEdge
  * @property {string} from
@@ -79,6 +83,9 @@ export const MODEL_NODES = Object.freeze([
   { id: 'scf', label: 'SCF Compliance', x: 1200, y: 680, color: '#38bdf8', path: '/compliance', category: 'compliance', scale: 0.85, description: '224 regulatory frameworks (NIS2, DORA, PCI DSS, NIST AI RMF …) bridged to techniques through Secure Controls Framework control cross-references' },
   { id: 'purdue', label: 'Purdue Model', x: 1150, y: 770, color: '#fbbf24', path: '/frameworks/purdue', category: 'compliance', scale: 0.85, description: 'OT network segmentation — seven levels from the physical process to enterprise IT. Placement curated from NIST SP 800-82r3 and ISA-95.' },
   { id: 'otinv', label: 'CISA OT Inventory', x: 770, y: 810, color: '#fbbf24', path: '/frameworks/ot-inventory', category: 'compliance', scale: 0.85, description: 'CISA OT asset-inventory guidance — its sector taxonomy rows mapped (by this site) to ATT&CK ICS assets' },
+  { id: 'cra', label: 'EU CRA', x: 1400, y: 690, color: '#818cf8', path: '/frameworks/cra', category: 'compliance', scale: 0.85, description: 'EU Cyber Resilience Act (Regulation 2024/2847) — reference page; reaches techniques only through the SCF controls that cross-reference it' },
+  { id: 'enisa', label: 'ENISA SbD', x: 1400, y: 785, color: '#818cf8', path: '/frameworks/enisa-sbd', category: 'compliance', scale: 0.85, referenceOnly: true, description: 'ENISA Secure by Design and Default playbooks (22, for SMEs) — reference only: no ATT&CK, CWE or control identifiers to join on, and ENISA keeps them separate from the CRA' },
+  { id: 'owaspai', label: 'OWASP AI', x: 1420, y: 600, color: '#059669', path: '/frameworks/owasp-ai', category: 'compliance', scale: 0.85, referenceOnly: true, description: 'OWASP AI Exchange — AI/ML threats and controls; reference only until its structured ATLAS crosswalk ships (on OWASP’s roadmap)' },
   // ── Threat intelligence ──────────────────────────────────────────────────
   { id: 'report', label: 'Threat Reports', x: 230, y: 450, color: 'accentOrange', path: '/cti/reports', category: 'intelligence', description: 'Live threat intelligence from OTX and RSS feeds' },
   { id: 'cve', label: 'CVEs', x: 390, y: 510, color: 'accentPink', path: '/cti/cves', category: 'intelligence', description: 'Known vulnerabilities, enriched by NVD, flagged by CISA KEV and scored by EPSS' },
@@ -139,6 +146,7 @@ export const MODEL_EDGES = Object.freeze([
   { from: 'csf', to: 'nist', label: 'implemented by', style: 'dashed' },
   { from: 'iso', to: 'csf', label: 'crosswalk', style: 'dashed' },
   { from: 'scf', to: 'technique', label: 'bridges via controls', style: 'dashed' },
+  { from: 'cra', to: 'scf', label: 'cross-referenced in SCF', style: 'dashed' },
   { from: 'faircam', to: 'mitigation', label: 'classifies', style: 'dashed' },
   { from: 'faircam', to: 'd3fend', label: 'classifies', style: 'dashed' },
   { from: 'package', to: 'ghsa', label: 'affected by' },

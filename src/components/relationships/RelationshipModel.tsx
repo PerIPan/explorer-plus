@@ -183,7 +183,8 @@ export function RelationshipModelPanel({ onClose }: { onClose: () => void }) {
                   fill={`${color}${isHovered ? '30' : '18'}`}
                   stroke={color}
                   strokeWidth={isHovered || s > 1 ? 2 : 1}
-                  opacity={isHovered || s > 1 ? 1 : 0.85}
+                  strokeDasharray={n.referenceOnly ? '2 3' : undefined}
+                  opacity={isHovered || s > 1 ? 1 : n.referenceOnly ? 0.7 : 0.85}
                   className="transition-all duration-200"
                 />
                 <text
@@ -252,7 +253,7 @@ export function RelationshipModelPanel({ onClose }: { onClose: () => void }) {
             );
           })}
         </div>
-        <div className="flex items-center gap-4 text-[10px] text-[var(--text-secondary)]">
+        <div className="flex flex-wrap items-center gap-4 text-[10px] text-[var(--text-secondary)]">
           <span className="flex items-center gap-1.5">
             <svg width="20" height="2" aria-hidden="true">
               <line x1="0" y1="1" x2="20" y2="1" stroke={c.borderColor} strokeWidth="1" />
@@ -264,6 +265,12 @@ export function RelationshipModelPanel({ onClose }: { onClose: () => void }) {
               <line x1="0" y1="1" x2="20" y2="1" stroke={c.borderColor} strokeWidth="1" strokeDasharray="4 3" />
             </svg>
             enrichment / mapping
+          </span>
+          <span className="flex items-center gap-1.5">
+            <svg width="14" height="10" aria-hidden="true">
+              <ellipse cx="7" cy="5" rx="6" ry="4" fill="none" stroke={c.borderColor} strokeWidth="1" strokeDasharray="2 2" />
+            </svg>
+            reference only — nothing to join on
           </span>
         </div>
       </div>
