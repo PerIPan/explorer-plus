@@ -24,6 +24,8 @@ export async function GET(_req: NextRequest) {
        records_skipped,
        error_message
      FROM feed_sync_log
+     -- A dry run changes no data; it must not stand in for the last real sync.
+     WHERE COALESCE(metadata->>'dryRun', 'false') <> 'true'
      ORDER BY source, started_at DESC`,
   );
 

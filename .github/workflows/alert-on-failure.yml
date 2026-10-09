@@ -1,0 +1,95 @@
+name: alert-on-failure
+
+# Opens a GitHub issue when a data-sync workflow fails, and comments on it
+# when the same workflow fails again while the issue is open.
+#
+# Why: sync-scf failed on every run from April to October 2026 and nobody
+# saw. A run that dies before reaching the database (there: a missing npm
+# package) leaves nothing in feed_sync_log, so /status stayed green, and
+# GitHub's own failure email goes only to whoever last edited the cron line.
+#
+# One open issue per workflow, labelled `workflow-failure`. Close it once the
+# workflow is green again; the next failure opens a fresh one.
+#
+# Keep the list below in sync with the workflows' `name:` fields:
+# scripts/check-scripts.mjs fails CI when a scheduled workflow is missing.
+#
+# Manual test: run this workflow with `test` set to true — it opens (or
+# comments on) "Workflow failing: alert-on-failure self-test"; close it after.
+
+on:
+  workflow_run:
+    workflows:
+      - audit-cve-coverage
+      - refresh-cti-heat
+      - Refresh matview
+      - Sync Atomic Red Team
+      - Sync CVE Delta (CVElistV5)
+      - Sync CVE → Application Products (NVD)
+      - Sync D3FEND Mappings
+      - Sync Emulation Plans
+      - Sync GHSA delta (daily)
+      - Sync GitHub Security Advisories (full rebase)
+      - Sync OSV Advisories
+      - sync-scf
+      - Sync Sigma Rules
+      - Update MITRE ATT&CK (manual)
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      test:
+        description: 'Open a self-test alert issue'
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: alert-on-failure
+  cancel-in-progress: false
+
+jobs:
+  alert:
+    if: >-
+      (github.event_name == 'workflow_run' &&
+       contains(fromJSON('["failure","timed_out","startup_failure"]'), github.event.workflow_run.conclusion)) ||
+      (github.event_name == 'workflow_dispatch' && inputs.test)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Open or update the issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          EVENT_NAME: ${{ github.event_name }}
+          WF_NAME: ${{ github.event.workflow_run.name }}
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
+          CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          TRIGGER: ${{ github.event.workflow_run.event }}
+          SHA: ${{ github.event.workflow_run.head_sha }}
+          SELF_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            WF_NAME="alert-on-failure self-test"
+            RUN_URL="$SELF_URL"
+            CONCLUSION="test"
+            TRIGGER="workflow_dispatch"
+            SHA="$GITHUB_SHA"
+          fi
+          title="Workflow failing: $WF_NAME"
+          gh label create workflow-failure --color B60205 --description "A scheduled data sync failed" --force >/dev/null
+          num=$(gh issue list --state open --label workflow-failure --limit 200 --json number,title \
+                | jq -r --arg t "$title" 'map(select(.title == $t)) | .[0].number // empty')
+          body="**$CONCLUSION** (trigger: $TRIGGER, commit ${SHA:0:7}): $RUN_URL"
+          if [ -n "$num" ]; then
+            gh issue comment "$num" --body "$body"
+            echo "Commented on #$num"
+          else
+            gh issue create --title "$title" --label workflow-failure \
+              --body "$body"$'\n\n'"Opened by .github/workflows/alert-on-failure.yml. Close this once the workflow is green again; the next failure opens a new issue."
+            echo "Opened a new issue"
+          fi
