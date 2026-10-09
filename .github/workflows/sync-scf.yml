@@ -50,8 +50,11 @@ jobs:
           node-version: '24'
           cache: 'npm'
 
+      # Full install: sync-scf reads the workbook with `xlsx`, a devDependency
+      # since 0d7b8a6 (2026-04). `--omit=dev` dropped it, so every run since
+      # failed with ERR_MODULE_NOT_FOUND before touching the database.
       - name: Install deps
-        run: npm ci --omit=dev --include=optional || npm ci
+        run: npm ci
 
       # Secrets scoped to this step: at job level, actions/checkout and
       # actions/setup-node could both read DATABASE_URL, and neither needs it.
