@@ -45,6 +45,7 @@ const ATTRIBUTION_REQUIRED: Source[] = [
   { name: 'GHSA (GitHub Security Advisories)', url: 'https://github.com/advisories', license: 'CC BY 4.0', licenseUrl: 'https://docs.github.com/en/site-policy/github-terms/github-terms-for-additional-products-and-features#advisory-database', blurb: 'OSS package advisories — npm, PyPI, Maven, Go, RubyGems, Composer, Rust, etc.' },
   { name: 'EPSS (FIRST.org)', url: 'https://www.first.org/epss/', license: 'CC BY 4.0', licenseUrl: 'https://www.first.org/epss/data_access', blurb: 'Exploit Prediction Scoring System — daily probability scores per CVE.' },
   { name: 'ThaiCERT / ETDA Actor Encyclopedia', url: 'https://apt.etda.or.th/', license: 'CC BY 4.0', blurb: '500+ external threat-actor profiles.' },
+  { name: 'FAIR Controls Analytics Model (FAIR-CAM™) v1.0', url: 'http://www.fairinstitute.org/FAIR-CAM/', license: 'CC BY-NC-ND 4.0', licenseUrl: 'https://creativecommons.org/licenses/by-nc-nd/4.0/legalcode', blurb: '©2025 FAIR Institute. Function names, definitions, units and relationships quoted unmodified at /frameworks/fair-cam; the classification of ATT&CK mitigations and D3FEND countermeasures into its functions is this site’s.' },
   { name: 'Secure Controls Framework (SCF)', url: 'https://www.securecontrolsframework.com/', license: 'CC BY-ND 4.0', licenseUrl: 'https://securecontrolsframework.com/terms-conditions/', blurb: 'Catalogue of 1,534 controls cross-mapped to 224 compliance and regulatory frameworks, shown as published by the SCF Council. Powers /compliance/* — the regulatory lens (NIS2, DORA, PCI DSS, ISO 27002, HIPAA, GDPR, NIST 800-53, CMMC, ...).' },
 ];
 
@@ -135,7 +136,7 @@ export function Attributions() {
           <Badge label="must credit" variant="yellow" />
         </h2>
         <p className="text-xs text-[var(--text-secondary)] mb-2">
-          CC BY 4.0, CC BY-SA 4.0 and CC BY-ND 4.0 — free to use and redistribute provided attribution is given. Share-alike (BY-SA) additionally requires derivative works to carry the same license; NoDerivatives (BY-ND, the Secure Controls Framework) allows sharing the material only as published, not modified versions. This page is part of that attribution.
+          CC BY 4.0, CC BY-SA 4.0, CC BY-ND 4.0 and CC BY-NC-ND 4.0 — free to use and redistribute provided attribution is given. Share-alike (BY-SA) additionally requires derivative works to carry the same license; NoDerivatives (BY-ND — the Secure Controls Framework; BY-NC-ND — FAIR-CAM) allows sharing the material only as published, not modified versions, and NonCommercial (NC) limits use to non-commercial purposes; this site is free and carries no advertising. This page is part of that attribution.
         </p>
         <SourceTable rows={ATTRIBUTION_REQUIRED} />
       </section>

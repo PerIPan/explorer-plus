@@ -105,6 +105,7 @@ const frameworksNav: NavItem[] = [
   { path: '/frameworks/scf', label: 'Secure Controls (SCF)', tooltip: 'the 1,534-control catalogue that NIS2, DORA, PCI DSS, ISO 27001, HIPAA and ~250 other frameworks are crosswalked through — the spine behind the Compliance pages, with the ATT&CK techniques its mapped controls bridge to' },
   { path: '/frameworks/iso27001', label: 'ISO/IEC 27001:2022', tooltip: 'ISO 27001:2022 Annex A controls + mandatory clauses mapped to ATT&CK via the NIST CSF v2 crosswalk' },
   { path: '/frameworks/d3fend', label: 'D3FEND', tooltip: 'MITRE D3FEND countermeasures grouped by defensive tactic (Model/Harden/Detect/Isolate/Deceive/Evict/Restore), each mapped to the ATT&CK techniques it counters. Enterprise + ICS.' },
+  { path: '/frameworks/fair-cam', label: 'FAIR-CAM', tooltip: 'FAIR Controls Analytics Model (FAIR Institute, CC BY-NC-ND 4.0) — how controls affect risk, by function. Quoted unmodified, with this site’s classification of ATT&CK mitigations and D3FEND countermeasures into its functions.' },
   { path: '/frameworks/react', label: 'RE&CT', tooltip: 'incident response actions and playbooks' },
   { path: '/frameworks/veris', label: 'VERIS', tooltip: 'incident classification categories (Verizon DBIR standard)' },
   { path: '/frameworks/cloud', label: 'Cloud Controls', tooltip: 'AWS, Azure, and GCP security controls mapped to techniques' },
