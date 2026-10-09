@@ -120,3 +120,19 @@ export const fetchD3fendCountermeasure = cache(async (d3fendId: string) => {
   );
   return result.rows[0] ?? null;
 });
+
+/**
+ * One compliance framework's name, blurb, tier and whether it maps anything —
+ * for /compliance/[key] metadata and its not-found decision. Both lookups are
+ * primary-key reads (scf_frameworks, scf_framework_coverage).
+ */
+export const fetchComplianceFramework = cache(async (key: string) => {
+  const result = await query<{ framework_key: string; name: string; short_blurb: string | null; tier: number; scf_controls: number }>(
+    `SELECT f.framework_key, f.name, f.short_blurb, f.tier, COALESCE(c.scf_controls, 0)::int AS scf_controls
+     FROM scf_frameworks f
+     LEFT JOIN scf_framework_coverage c USING (framework_key)
+     WHERE f.framework_key = $1`,
+    [key],
+  );
+  return result.rows[0] ?? null;
+});

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { DOCS_PROBE_HEADER } from './src/lib/site';
+import { canonicalRedirect } from './src/lib/canonical-redirects.mjs';
 
 // ---------------------------------------------------------------------------
 // API usage counting (part 1 of 2)
@@ -87,6 +88,16 @@ export function middleware(request: NextRequest) {
       headers.set('x-usage-endpoint', endpoint);
     }
     return NextResponse.next({ request: { headers } });
+  }
+
+  // Page routes: permanent redirects first — a real 308 here, before any
+  // rendering (in-page redirect() arrives as a 200 + meta refresh, because the
+  // root <Suspense> has already flushed the shell). See canonical-redirects.mjs.
+  const target = canonicalRedirect(request.nextUrl.pathname);
+  if (target) {
+    const url = request.nextUrl.clone();
+    url.pathname = target;
+    return NextResponse.redirect(url, 308);
   }
 
   // Page routes: attach the per-request CSP nonce.
