@@ -86,7 +86,7 @@ export function ComplianceHub() {
   const [data, setData] = useState<ApiResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   // All 244 frameworks on first paint. The unfiltered fetch is 85KB against
-  // 8.7KB for the 21-framework default — worth it so the Tier 3 catalogue is
+  // 8.7KB for the 22-framework default — worth it so the Tier 3 catalogue is
   // discoverable rather than hidden behind a checkbox nobody ticks.
   const [includeAll, setIncludeAll] = useState(true);
   const [regionFilter, setRegionFilter] = useState<string | 'all'>('all');

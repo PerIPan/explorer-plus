@@ -35,7 +35,7 @@ export async function GET(_req: NextRequest) {
        -- Every framework /compliance can show: the curated tiers 1-2 plus the
        -- tier-3 long tail that has at least one control reference. This is the
        -- exact expression behind that page's own framework_count, and behind
-       -- ?include_all -- 224, against 21 for the default view. The nav badge is
+       -- ?include_all -- 244, against 22 for the default view (SCF 2026.3). The nav badge is
        -- what is COVERED, not what one filter happens to show.
        (SELECT count(*) FROM scf_frameworks f
           WHERE f.tier <= 2

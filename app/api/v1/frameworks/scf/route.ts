@@ -14,7 +14,7 @@ export { OPTIONS };
  * because it is narrow and the page must not imply otherwise: 113 of the 1,591
  * controls carry a mapping. The other 1,478 are real controls that simply have
  * no ATT&CK counterpart — governance, privacy, procurement — and a page that
- * hid that would suggest the bridge is twenty times wider than it is.
+ * hid that would suggest the bridge is about fourteen times wider than it is.
  *
  * `is_unresolved` marks a mapping whose technique id no longer resolves against
  * the ingested ATT&CK version (a revoked or renamed technique). Counted

@@ -3112,7 +3112,7 @@ export const COMMANDS = [
         "type": "boolean",
         "required": false,
         "values": null,
-        "note": "Adds the Tier 3 long tail (~250 frameworks). Default false — the curated 22. Send 1 or true."
+        "note": "Adds the Tier 3 long tail (240+ frameworks in all). Default false — the curated 22. Send 1 or true."
       }
     ]
   },
@@ -3162,7 +3162,7 @@ export const COMMANDS = [
         "type": "boolean",
         "required": false,
         "values": null,
-        "note": "Adds the Tier 3 long tail (~250 frameworks). Default false — the curated 22. Send 1 or true."
+        "note": "Adds the Tier 3 long tail (240+ frameworks in all). Default false — the curated 22. Send 1 or true."
       }
     ]
   },
@@ -3191,7 +3191,7 @@ export const COMMANDS = [
         "type": "boolean",
         "required": false,
         "values": null,
-        "note": "Adds the Tier 3 long tail (~250 frameworks). Default false — the curated 22. Send 1 or true."
+        "note": "Adds the Tier 3 long tail (240+ frameworks in all). Default false — the curated 22. Send 1 or true."
       }
     ]
   },
@@ -3220,7 +3220,7 @@ export const COMMANDS = [
         "type": "boolean",
         "required": false,
         "values": null,
-        "note": "Adds the Tier 3 long tail (~250 frameworks). Default false — the curated 22. Send 1 or true."
+        "note": "Adds the Tier 3 long tail (240+ frameworks in all). Default false — the curated 22. Send 1 or true."
       }
     ]
   },
@@ -3249,7 +3249,7 @@ export const COMMANDS = [
         "type": "boolean",
         "required": false,
         "values": null,
-        "note": "Adds the Tier 3 long tail (~250 frameworks). Default false — the curated 22. Send 1 or true."
+        "note": "Adds the Tier 3 long tail (240+ frameworks in all). Default false — the curated 22. Send 1 or true."
       }
     ]
   },
@@ -3278,7 +3278,7 @@ export const COMMANDS = [
         "type": "boolean",
         "required": false,
         "values": null,
-        "note": "Adds the Tier 3 long tail (~250 frameworks). Default false — the curated 22. Send 1 or true."
+        "note": "Adds the Tier 3 long tail (240+ frameworks in all). Default false — the curated 22. Send 1 or true."
       }
     ]
   },
