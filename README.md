@@ -33,7 +33,7 @@
 | **IOCs** | 154,000 indicators (IPs, domains, hashes, URLs) from OTX, ThreatFox and MalwareBazaar, enriched with VirusTotal verdicts |
 | **Detection** | 3,146 Sigma rules, 2,042 Atomic Red Team tests, ATT&CK v19 detection strategies and analytics |
 | **Defence** | 5,750 D3FEND mappings across 153 countermeasures, browsable by defensive tactic, covering Enterprise **and ICS** |
-| **Compliance** | 224 frameworks bridged to ATT&CK through the Secure Controls Framework: 1,534 controls and 58,600 cross-references spanning NIS2, DORA, GDPR, EU CRA, EU AI Act, HIPAA, PCI DSS, SOC 2, CMMC, FedRAMP and more |
+| **Compliance** | 244 frameworks bridged to ATT&CK through the Secure Controls Framework: 1,591 controls and 65,500 cross-references spanning NIS2, DORA, GDPR, EU CRA, EU AI Act, HIPAA, PCI DSS, SOC 2, CMMC, FedRAMP and more |
 | **ICS and OT** | 18 ATT&CK for ICS assets with curated Purdue-model placement (level, zone, boundary), the techniques that target them, and the D3FEND countermeasures that defend them |
 | **Threat actors** | 180 ATT&CK groups plus 514 ThaiCERT/ETDA external actors with country, motivation and state-sponsor attribution |
 | **Sector intelligence** | 12 industry verticals with their threat landscape: groups, techniques, campaigns, CVEs, vulnerable apps |
@@ -97,7 +97,7 @@ Next.js 16 App Router (React 19 + TypeScript + Tailwind 4)
 | Atomic Red Team | Adversary-emulation tests | 2,042 | GH Actions |
 | CTID Adversary Emulation Library | Emulation plans for 9 groups, each step resolved to a technique | 10 plans, 375 steps | GH Actions |
 | MITRE D3FEND | Defensive countermeasures, Enterprise + ICS | 5,750 mappings | Cron (weekly) |
-| Secure Controls Framework | Regulatory frameworks bridged to ATT&CK | 224 frameworks, 58,631 refs | GH Actions |
+| Secure Controls Framework | Regulatory frameworks bridged to ATT&CK | 244 frameworks, 65,541 refs | GH Actions |
 | NIST CSF v2 | Subcategories plus the CRI Profile crosswalk to ATT&CK | 132 subcategories | Cron |
 | NIST SP 800-53 / 800-171 | Control catalogues, titles from NIST CPRT | 5,264 controls | Seed |
 | ThaiCERT/ETDA | External threat-actor profiles | 514 | Seed |
@@ -113,7 +113,7 @@ Each has a dedicated page under `/frameworks`, mapped to ATT&CK techniques:
 
 OWASP Top 10 (web / ML / LLM) · NIST CSF v2 · NIST 800-53 · NIST SP 800-40r4 *(patching; via NIST's own 800-53 list)* · ISO/IEC 27001:2022 · **MITRE D3FEND** · MITRE Engage · RE&CT · VERIS · CAPEC · Cloud controls (Azure, GCP) · Purdue model · CISA OT asset inventory *(curated crosswalk to ICS assets)* · Detection strategies · Atomic tests · CTID emulation plans · FAIR-CAM v1.0 *(controls lens: candidate controls per technique by FAIR-CAM function; ontology quoted unmodified, ©2025 FAIR Institute, CC BY-NC-ND 4.0)* · EU CRA *(reference)* · OWASP AI Exchange *(reference)*
 
-`/compliance` covers the 224 SCF-bridged regulatory frameworks separately, since those reach ATT&CK through control cross-references rather than direct technique mappings.
+`/compliance` covers the 244 SCF-bridged regulatory frameworks separately, since those reach ATT&CK through control cross-references rather than direct technique mappings.
 
 ## CVE → technique paths
 

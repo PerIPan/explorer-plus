@@ -97,7 +97,7 @@ export function ScfFramework() {
   /**
    * ATT&CK-mapped is ON unless the URL says otherwise.
    *
-   * 1,426 of the 1,534 controls have no ATT&CK counterpart, so an unfiltered
+   * 1,478 of the 1,591 controls have no ATT&CK counterpart, so an unfiltered
    * first page is 50 rows of em dashes — technically the whole catalogue,
    * practically a wall of nothing for anyone who arrived from Compliance.
    * `?mapped=0` turns it off; the param is never FORWARDED as 0, because the
@@ -154,7 +154,7 @@ export function ScfFramework() {
             <Link href="/compliance" className="text-[var(--accent-teal)] hover:underline">
               Compliance
             </Link>{' '}
-            is crosswalked through — {meta?.frameworksCrosswalked ?? 254} of them. Not a regulation
+            is crosswalked through — {meta?.frameworksCrosswalked ?? 278} of them. Not a regulation
             itself: the common spine that lets one control satisfy many.
           </>
         }
@@ -182,7 +182,7 @@ export function ScfFramework() {
           hole in the ingest, and the page should not let anyone assume either. */}
       <p className="rounded-md border border-[var(--border-color)] bg-[var(--surface-card)] px-3 py-2.5 text-xs leading-relaxed text-[var(--text-secondary)]">
         Showing the controls that bridge to ATT&amp;CK. The other{' '}
-        {meta ? (meta.controls - meta.mappedControls).toLocaleString() : '1,426'} have no ATT&amp;CK
+        {meta ? (meta.controls - meta.mappedControls).toLocaleString() : '1,478'} have no ATT&amp;CK
         counterpart, and that is correct rather than missing — governance, privacy, procurement and
         personnel controls describe obligations, not adversary behaviour. Switch off{' '}
         <strong className="font-semibold text-[var(--text-primary)]">ATT&amp;CK-mapped only</strong> to

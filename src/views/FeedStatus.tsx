@@ -61,7 +61,7 @@ const SOURCE_DESCRIPTIONS: Record<string, string> = {
   atomic: 'Atomic Red Team adversary-emulation tests — weekly refresh',
   emulation: 'CTID Adversary Emulation Library — plan steps per group, resolved to techniques (quarterly)',
   site_health: 'VirusTotal self-scan of mitre-explorer.org (weekly)',
-  scf: 'Secure Controls Framework 2026.2 XLSX — 1,534 controls × 254 framework mappings, ingested twice a year (Jan/Jul)',
+  scf: 'Secure Controls Framework 2026.3 XLSX — 1,591 controls × 278 focal documents; checked monthly (10th), ingested when SCF ships a release',
 };
 
 function formatTimeAgo(iso: string): string {

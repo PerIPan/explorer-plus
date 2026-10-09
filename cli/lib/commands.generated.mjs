@@ -2621,7 +2621,7 @@ export const COMMANDS = [
       "scf"
     ],
     "positionals": [],
-    "summary": "The Secure Controls Framework catalogue — 1,534 controls, the spine every compliance framework here is crosswalked through.",
+    "summary": "The Secure Controls Framework catalogue — 1,591 controls, the spine every compliance framework here is crosswalked through.",
     "group": "compliance",
     "paginated": true,
     "example": "/frameworks/scf?mapped=1&limit=5",
@@ -2650,7 +2650,7 @@ export const COMMANDS = [
           "1",
           "true"
         ],
-        "note": "Only controls carrying an ATT&CK mapping — 108 of 1,534."
+        "note": "Only controls carrying an ATT&CK mapping — 113 of 1,591."
       },
       {
         "name": "page",
@@ -3112,7 +3112,7 @@ export const COMMANDS = [
         "type": "boolean",
         "required": false,
         "values": null,
-        "note": "Adds the Tier 3 long tail (~250 frameworks). Default false — the curated 21. Send 1 or true."
+        "note": "Adds the Tier 3 long tail (~250 frameworks). Default false — the curated 22. Send 1 or true."
       }
     ]
   },
@@ -3162,7 +3162,7 @@ export const COMMANDS = [
         "type": "boolean",
         "required": false,
         "values": null,
-        "note": "Adds the Tier 3 long tail (~250 frameworks). Default false — the curated 21. Send 1 or true."
+        "note": "Adds the Tier 3 long tail (~250 frameworks). Default false — the curated 22. Send 1 or true."
       }
     ]
   },
@@ -3191,7 +3191,7 @@ export const COMMANDS = [
         "type": "boolean",
         "required": false,
         "values": null,
-        "note": "Adds the Tier 3 long tail (~250 frameworks). Default false — the curated 21. Send 1 or true."
+        "note": "Adds the Tier 3 long tail (~250 frameworks). Default false — the curated 22. Send 1 or true."
       }
     ]
   },
@@ -3220,7 +3220,7 @@ export const COMMANDS = [
         "type": "boolean",
         "required": false,
         "values": null,
-        "note": "Adds the Tier 3 long tail (~250 frameworks). Default false — the curated 21. Send 1 or true."
+        "note": "Adds the Tier 3 long tail (~250 frameworks). Default false — the curated 22. Send 1 or true."
       }
     ]
   },
@@ -3249,7 +3249,7 @@ export const COMMANDS = [
         "type": "boolean",
         "required": false,
         "values": null,
-        "note": "Adds the Tier 3 long tail (~250 frameworks). Default false — the curated 21. Send 1 or true."
+        "note": "Adds the Tier 3 long tail (~250 frameworks). Default false — the curated 22. Send 1 or true."
       }
     ]
   },
@@ -3278,7 +3278,7 @@ export const COMMANDS = [
         "type": "boolean",
         "required": false,
         "values": null,
-        "note": "Adds the Tier 3 long tail (~250 frameworks). Default false — the curated 21. Send 1 or true."
+        "note": "Adds the Tier 3 long tail (~250 frameworks). Default false — the curated 22. Send 1 or true."
       }
     ]
   },

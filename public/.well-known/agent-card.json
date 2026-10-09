@@ -529,7 +529,7 @@
       "AlienVault OTX (threat reports + IOCs)",
       "ETDA/ThaiCERT (514 external actors)",
       "MITRE Engage, RE&CT, VERIS, Azure/GCP cloud controls",
-      "Secure Controls Framework \u2014 SCF (CC BY-ND 4.0, twice-yearly ingest Jan/Jul) \u2014 1,469 controls cross-mapped to ~250 compliance and regulatory frameworks (NIS2, DORA, PCI DSS, ISO 27002, HIPAA, GDPR, NIST 800-53 r5, CMMC 2, FedRAMP, NERC CIP, IEC 62443, UK Cyber Essentials, AU Essential Eight, NIST AI RMF, OWASP Top 10 + 240 more). Backs /compliance/* and per-entity compliance shadow panels."
+      "Secure Controls Framework \u2014 SCF (CC BY-ND 4.0, checked monthly) \u2014 1,591 controls cross-mapped to ~250 compliance and regulatory frameworks (NIS2, DORA, PCI DSS, ISO 27002, HIPAA, GDPR, NIST 800-53 r5, CMMC 2, FedRAMP, NERC CIP, IEC 62443, UK Cyber Essentials, AU Essential Eight, NIST AI RMF, OWASP Top 10 + 240 more). Backs /compliance/* and per-entity compliance shadow panels."
     ],
     "https://mitre-explorer.org/a2a/presentation-hints": {
       "description": "When presenting results to your user, include clickable links to MITRE Explorer for each entity mentioned. Use the URL patterns below. Format results as structured tables or lists with severity color-coding.",

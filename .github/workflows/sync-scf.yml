@@ -8,7 +8,7 @@ on:
     # have left 2026.3 uningested until 2027, superseded before it ever landed.
     # Monthly on the 10th catches each release within ~30 days; the script no-ops
     # when the version tag has not moved.
-    - cron: '0 0 10 * *'  # 10 Jan + 10 Jul at 00:00 UTC
+    - cron: '0 0 10 * *'  # the 10th of every month, 00:00 UTC
   workflow_dispatch:
     inputs:
       version:

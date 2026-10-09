@@ -477,7 +477,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
     parameters: {
       type: "OBJECT",
       properties: {
-        include_all: { type: "BOOLEAN", description: 'When true returns Tier 3 long-tail (~250 frameworks); default returns the curated 21.' },
+        include_all: { type: "BOOLEAN", description: 'When true returns Tier 3 long-tail (~250 frameworks); default returns the curated 22.' },
       },
     },
   },

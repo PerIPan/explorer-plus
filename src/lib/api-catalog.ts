@@ -160,7 +160,7 @@ const P = {
   severity: { name: 'severity', type: 'string', values: SEVERITIES } as ApiParam,
   since: { name: 'since', type: 'string', note: 'ISO-8601 date. Only rows published after it.' } as ApiParam,
   version: { name: 'version', type: 'string', note: 'Text match on an affected-version range — not a vulnerability verdict. Needs product context on list routes.' } as ApiParam,
-  includeAll: { name: 'include_all', type: 'boolean', note: 'Adds the Tier 3 long tail (~250 frameworks). Default false — the curated 21. Send 1 or true.' } as ApiParam,
+  includeAll: { name: 'include_all', type: 'boolean', note: 'Adds the Tier 3 long tail (~250 frameworks). Default false — the curated 22. Send 1 or true.' } as ApiParam,
   includeDeprecated: { name: 'include_deprecated', type: 'boolean', note: 'Revoked and deprecated ATT&CK entries are excluded by default.' } as ApiParam,
   hasCve: { name: 'has_cve', type: 'string', values: ['true', 'false'], note: 'Filter on CVE-alias presence.' } as ApiParam,
 } as const;
@@ -518,11 +518,11 @@ export const API_CATALOG: readonly ApiEntry[] = [
   },
   {
     path: '/frameworks/scf', method: 'GET', group: 'compliance', paginated: true, executable: true,
-    summary: 'The Secure Controls Framework catalogue — 1,534 controls, the spine every compliance framework here is crosswalked through.',
+    summary: 'The Secure Controls Framework catalogue — 1,591 controls, the spine every compliance framework here is crosswalked through.',
     params: [
       { name: 'search', type: 'string', note: 'Matches control id, name or description.' },
       { name: 'domain', type: 'string', note: 'One of the 34 SCF domains, e.g. Network Security.' },
-      { name: 'mapped', type: 'string', values: ['1', 'true'], note: 'Only controls carrying an ATT&CK mapping — 108 of 1,534.' },
+      { name: 'mapped', type: 'string', values: ['1', 'true'], note: 'Only controls carrying an ATT&CK mapping — 113 of 1,591.' },
     ],
     example: '/frameworks/scf?mapped=1&limit=5',
   },

@@ -11,8 +11,8 @@ export { OPTIONS };
  * on /compliance is crosswalked through, rather than one of the frameworks.
  *
  * Its ATT&CK coverage is deliberately reported per control and in `meta`,
- * because it is narrow and the page must not imply otherwise: 108 of the 1,534
- * controls carry a mapping. The other 1,426 are real controls that simply have
+ * because it is narrow and the page must not imply otherwise: 113 of the 1,591
+ * controls carry a mapping. The other 1,478 are real controls that simply have
  * no ATT&CK counterpart — governance, privacy, procurement — and a page that
  * hid that would suggest the bridge is twenty times wider than it is.
  *
