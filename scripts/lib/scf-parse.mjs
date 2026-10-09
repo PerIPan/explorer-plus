@@ -8,18 +8,40 @@ export function normHeader(s) {
   return String(s ?? '').replace(/\r?\n/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
 }
 
+/** A bare structural container — "Annex I", "Title 2", "Appendix A" — that
+ *  SCF writes in front of the point it qualifies: "Annex I, Part II". */
+const CONTAINER = /^(title|chapter|annex|appendix|part|schedule)\s+[\w.]+$/i;
+
 /** Split a cell value into individual ref IDs.
  *  SCF inconsistently uses \n, \r\n, ', ', or '; '.
  *  Comma is conditional: only split on ", " (comma + space) — a bare comma
- *  inside ref IDs like "164.308(a)(1)" or "Art. 9.3(a)" must NOT be split. */
+ *  inside ref IDs like "164.308(a)(1)" or "Art. 9.3(a)" must NOT be split.
+ *
+ *  ", " is also how SCF writes a hierarchical path ("Annex I, Part I(2)(e)",
+ *  "Title 2, Chapter II, Art. 29(5)", "Appendix A, 1.1"). Splitting those
+ *  produced a bare "Annex I" ref plus an orphan "Part I(2)(e)" — measured on
+ *  2026.3: EU CRA 48, Belgium Act 8 1992 257, Israel CDMO 37. So a container
+ *  is glued to the piece after it, on the same line, unless that piece is a
+ *  sibling of the same kind ("Annex I, Annex II" stays a list). */
 export function splitRefs(cellValue) {
   if (cellValue == null) return [];
   const s = String(cellValue).trim();
   if (!s) return [];
-  return s
-    .split(/[\r\n;]+|,\s+/)
-    .map((x) => x.trim())
-    .filter((x) => x && x.toLowerCase() !== 'n/a');
+  const out = [];
+  for (const line of s.split(/[\r\n;]+/)) {
+    let prevContainer = null; // keyword of the open container on this line
+    for (const raw of line.split(/,\s+/)) {
+      const x = raw.trim();
+      if (!x || x.toLowerCase() === 'n/a') continue;
+      if (prevContainer && !new RegExp(`^${prevContainer}\\b`, 'i').test(x)) {
+        out[out.length - 1] += `, ${x}`;
+      } else {
+        out.push(x);
+      }
+      prevContainer = CONTAINER.exec(x)?.[1] ?? null;
+    }
+  }
+  return out;
 }
 
 /** Extract T-codes (T1059, T1059.001) from an ATT&CK cell value. */
@@ -70,6 +92,16 @@ export function classifyColumn({ header, colIndex, headerToFdi, aliasLookup, att
 }
 
 // ----- Authoritative-source sheet ('Focal Documents' since SCF 2026.2) --------
+
+/** The "authoritative sources" sheet, under each name SCF has shipped it:
+ *  'Authoritative Sources' (≤2026.1), 'Focal Documents' (2026.2),
+ *  'Focal Documents (FD)' (2026.3). Exact names first, then any sheet whose
+ *  name starts with "Focal Documents", so a further suffix does not break
+ *  the ingest again. Returns null when none is present. */
+export function findAuthSheetName(sheetNames) {
+  for (const exact of ['Focal Documents', 'Authoritative Sources']) if (sheetNames.includes(exact)) return exact;
+  return sheetNames.find((n) => /^focal documents\b/i.test(n.trim())) ?? null;
+}
 
 export const SCF_FALLBACK_URL = 'https://www.securecontrolsframework.com/';
 

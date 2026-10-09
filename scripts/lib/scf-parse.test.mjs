@@ -1,7 +1,7 @@
 // scripts/lib/scf-parse.test.mjs — run with `npm test` (node --test scripts/lib/)
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { locateAuthColumns, parseAuthSources, SCF_FALLBACK_URL, resolveCuratedKey, buildCuratedFdiMap } from './scf-parse.mjs';
+import { locateAuthColumns, parseAuthSources, SCF_FALLBACK_URL, resolveCuratedKey, buildCuratedFdiMap, splitRefs, findAuthSheetName } from './scf-parse.mjs';
 import { stripShadowSuffix, shrinkViolations, parseArgs } from '../sync-scf.mjs';
 
 // Header rows exactly as the two workbook generations ship them.
@@ -143,4 +143,30 @@ test('buildCuratedFdiMap: maps curated rows only and collects conflicts', () => 
     ['general-nist-600-1-gen-ai-profile', 'nist-600-1-gen-ai-profile'],
   ]);
   assert.deepEqual(conflicts, []);
+});
+
+test('splitRefs: newline, semicolon and ", " lists still split; bare commas do not', () => {
+  assert.deepEqual(splitRefs('164.308(a)(1)\r\n164.312(b); Art. 9.3(a), Art. 10'), ['164.308(a)(1)', '164.312(b)', 'Art. 9.3(a)', 'Art. 10']);
+  assert.deepEqual(splitRefs('N/A'), []);
+  assert.deepEqual(splitRefs(''), []);
+});
+
+test('splitRefs: a container is glued to the point it qualifies (2026.3 CRA, Belgium, Israel)', () => {
+  assert.deepEqual(splitRefs('Article 24(1)\nAnnex I, Part I(2)(e)\nAnnex I, Part I(2)(f)'), ['Article 24(1)', 'Annex I, Part I(2)(e)', 'Annex I, Part I(2)(f)']);
+  assert.deepEqual(splitRefs('Title 2, Chapter II, Art. 29(5)'), ['Title 2, Chapter II, Art. 29(5)']);
+  assert.deepEqual(splitRefs('Appendix A, 1.1\nAppendix A, 1.2'), ['Appendix A, 1.1', 'Appendix A, 1.2']);
+});
+
+test('splitRefs: siblings of the same kind stay a list; no glue across lines', () => {
+  assert.deepEqual(splitRefs('Annex I, Annex II'), ['Annex I', 'Annex II']);
+  assert.deepEqual(splitRefs('Part I(1), Part II(3)'), ['Part I(1)', 'Part II(3)']);
+  assert.deepEqual(splitRefs('Annex I\nPart II'), ['Annex I', 'Part II']);
+});
+
+test('findAuthSheetName: every name SCF has shipped, plus a future suffix', () => {
+  assert.equal(findAuthSheetName(['SCF 2026.1', 'Authoritative Sources']), 'Authoritative Sources');
+  assert.equal(findAuthSheetName(['SCF 2026.2', 'Focal Documents']), 'Focal Documents');
+  assert.equal(findAuthSheetName(['READ THIS', 'Focal Documents (FD)', 'SCF 2026.3']), 'Focal Documents (FD)');
+  assert.equal(findAuthSheetName(['SCF 2027.1', 'Focal Documents v2']), 'Focal Documents v2');
+  assert.equal(findAuthSheetName(['SCF 2026.3', 'Risk Catalog']), null);
 });

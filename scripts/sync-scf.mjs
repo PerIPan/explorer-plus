@@ -44,6 +44,7 @@ import {
   mapRegion,
   fdiToKey,
   buildCuratedFdiMap,
+  findAuthSheetName,
 } from './lib/scf-parse.mjs';
 
 const SCF_REPO = 'securecontrolsframework/securecontrolsframework';
@@ -138,6 +139,24 @@ async function getLastVersion(client) {
      ORDER BY completed_at DESC NULLS LAST LIMIT 1`,
   );
   return r.rows[0]?.v ?? null;
+}
+
+/**
+ * scf_controls count recorded by the last successful (non-dry) run, or null.
+ * The shrink gate's baseline: the live count can be inflated by ids a killed
+ * run staged and never swapped (see stageControls), which would make a retry
+ * look like a collapse.
+ */
+async function getLastGoodControlCount(client) {
+  const r = await client.query(
+    `SELECT (metadata->'snapshot'->'post'->>'controls')::int AS n
+     FROM feed_sync_log
+     WHERE source='scf' AND status='success'
+       AND COALESCE(metadata->>'dryRun', 'false') <> 'true'
+       AND metadata->'snapshot'->'post'->>'controls' IS NOT NULL
+     ORDER BY completed_at DESC NULLS LAST LIMIT 1`,
+  );
+  return r.rows[0]?.n ?? null;
 }
 
 function isStrictlyGreater(newVer, oldVer) {
@@ -383,12 +402,13 @@ function readControlRows(workbook, sheetName) {
   return rows;
 }
 
-async function ingestControlsAndRefs({ client, rows, columnClasses, dryRun, currentAttackVersion }) {
+async function ingestControlsAndRefs({ client, rows, columnClasses, currentAttackVersion }) {
   const headers = rows[0];
   const numCols = headers.length;
   const refsBatch = []; // { scf_id, framework_key, ref_id }
   const attackBatch = []; // { scf_id, attack_id }
   const seenScfIds = new Set(); // every control present in THIS workbook
+  const controlRows = new Map(); // scf_id -> row, written by stageControls + the swap
   let controlsUpserted = 0;
   let unresolvedAttackTotal = 0;
 
@@ -444,43 +464,23 @@ async function ingestControlsAndRefs({ client, rows, columnClasses, dryRun, curr
     }
     unresolvedAttackTotal += unresolvedForRow;
 
-    if (!dryRun) {
-      // Plain upsert, outside the swap transaction: it only ever adds or
-      // re-describes controls, and scf_attack_mappings_new carries an FK to
-      // this table, so the rows must exist before the shadow build. Removal
-      // of controls the workbook dropped happens inside the swap (see
-      // planControlPrune) so readers never see a control vanish before its
-      // mappings do.
-      await client.query(
-        `INSERT INTO scf_controls (
-           scf_id, domain, name, description, threat_codes, risk_codes,
-           last_validated_attack_version, unresolved_attack_count, updated_at
-         ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,NOW())
-         ON CONFLICT (scf_id) DO UPDATE SET
-           domain=EXCLUDED.domain,
-           name=EXCLUDED.name,
-           description=EXCLUDED.description,
-           threat_codes=EXCLUDED.threat_codes,
-           risk_codes=EXCLUDED.risk_codes,
-           last_validated_attack_version=EXCLUDED.last_validated_attack_version,
-           unresolved_attack_count=EXCLUDED.unresolved_attack_count,
-           updated_at=NOW()`,
-        [
-          scfId,
-          scfDomain || 'Uncategorized',
-          scfName,
-          scfDesc,
-          threatCodes.length ? [...new Set(threatCodes)] : null,
-          riskCodes.length ? [...new Set(riskCodes)] : null,
-          currentAttackVersion,
-          unresolvedForRow,
-        ],
-      );
-    }
+    // Staged, not written: see stageControls / swapShadowTables. A duplicate
+    // scf_id later in the workbook replaces the earlier row, as the old
+    // per-row upsert did.
+    controlRows.set(scfId, {
+      scf_id: scfId,
+      domain: scfDomain || 'Uncategorized',
+      name: scfName,
+      description: scfDesc,
+      threat_codes: threatCodes.length ? [...new Set(threatCodes)] : null,
+      risk_codes: riskCodes.length ? [...new Set(riskCodes)] : null,
+      last_validated_attack_version: currentAttackVersion,
+      unresolved_attack_count: unresolvedForRow,
+    });
     controlsUpserted++;
   }
 
-  return { controlsUpserted, seenScfIds, refsBatch, attackBatch, unresolvedAttackTotal, validAttackIds };
+  return { controlsUpserted, seenScfIds, refsBatch, attackBatch, unresolvedAttackTotal, validAttackIds, controlRows };
 }
 
 // ----- Shadow-table build + atomic swap ------------------------------------
@@ -941,6 +941,58 @@ async function buildShadowTables(client, { refsBatch, attackBatch, validAttackId
   return counts;
 }
 
+/**
+ * Control rows reach scf_controls in two steps, so readers never see a
+ * control's new name or description beside its old mappings:
+ *   - stageControls (before the shadow build): INSERT only ids the table does
+ *     not have yet — scf_attack_mappings_new has an FK to scf_controls, so
+ *     they must exist first. A new id has no live refs or mappings, so it
+ *     changes nothing a reader joins on.
+ *   - swapShadowTables: UPDATE the existing ids, inside the swap transaction.
+ * This matters since SCF 2026.3, which renumbered the catalogue: 704 ids were
+ * reused for different controls (GOV-01 went from "Security, Compliance &
+ * Resilience Program" to "… Governance Policy"). Upserting them outside the
+ * swap put the new names over the old mappings for the whole rebuild, and
+ * left them there for good if the run then failed.
+ *
+ * Rows travel as one jsonb parameter (jsonb_to_recordset), so each step is a
+ * single statement and text[] columns arrive as arrays.
+ */
+const CONTROL_RECORD = `x(scf_id text, domain text, name text, description text, threat_codes text[],
+                          risk_codes text[], last_validated_attack_version text, unresolved_attack_count int)`;
+
+async function stageControls(client, controlRows) {
+  const existing = new Set((await client.query(`SELECT scf_id FROM scf_controls`)).rows.map((r) => r.scf_id));
+  const fresh = [...controlRows.values()].filter((r) => !existing.has(r.scf_id));
+  const updates = [...controlRows.values()].filter((r) => existing.has(r.scf_id));
+  let insertedIds = [];
+  if (fresh.length > 0) {
+    const r = await client.query(
+      `INSERT INTO scf_controls (scf_id, domain, name, description, threat_codes, risk_codes,
+                                 last_validated_attack_version, unresolved_attack_count, updated_at)
+       SELECT scf_id, domain, name, description, threat_codes, risk_codes,
+              last_validated_attack_version, unresolved_attack_count, NOW()
+         FROM jsonb_to_recordset($1::jsonb) AS ${CONTROL_RECORD}
+       ON CONFLICT (scf_id) DO NOTHING
+       RETURNING scf_id`,
+      [JSON.stringify(fresh)],
+    );
+    insertedIds = r.rows.map((x) => x.scf_id);
+    // A row ON CONFLICT skipped appeared after the `existing` read; it is not
+    // ours to delete on failure, but it must still be re-described.
+    const got = new Set(insertedIds);
+    for (const row of fresh) if (!got.has(row.scf_id)) updates.push(row);
+  }
+  return { insertedIds, updates };
+}
+
+/** Undo stageControls after a failed run: the new ids it added have no live refs or mappings. */
+async function unstageControls(client, insertedIds) {
+  if (insertedIds.length === 0) return 0;
+  const r = await client.query(`DELETE FROM scf_controls WHERE scf_id = ANY($1::text[])`, [insertedIds]);
+  return r.rowCount ?? 0;
+}
+
 /** scf_controls rows present in prod but absent from this workbook. */
 async function planControlPrune(client, seenScfIds) {
   const r = await client.query(
@@ -950,11 +1002,15 @@ async function planControlPrune(client, seenScfIds) {
   return r.rows.map((x) => x.scf_id);
 }
 
-function shrinkGate({ pre, built, pruneCount, allowShrink }) {
+function shrinkGate({ pre, built, insertedCount, pruneCount, controlsBaseline, allowShrink }) {
+  // The control count after the swap is live + newly staged − pruned. Leaving
+  // out the staged ids would read a renumbering release (2026.3: 801 ids gone,
+  // 858 new) as a 52% collapse. The baseline is the last good run's count when
+  // known, since leftovers of a killed run inflate pre.controls.
   const violations = shrinkViolations([
     ['scf_framework_refs', pre.refs, built.refs],
     ['scf_attack_mappings', pre.attackMappings, built.attackMappings],
-    ['scf_controls (after prune)', pre.controls, pre.controls - pruneCount],
+    ['scf_controls (after prune)', controlsBaseline ?? pre.controls, pre.controls + insertedCount - pruneCount],
   ]);
   if (violations.length === 0) return;
   const msg = `rebuilt tables are more than ${Math.round(SHRINK_GATE * 100)}% smaller than live — ${violations.join('; ')}`;
@@ -968,7 +1024,7 @@ function shrinkGate({ pre, built, pruneCount, allowShrink }) {
  * ONE transaction that makes every shadow live and prunes stale controls.
  * Readers see either the entire previous state or the entire new one.
  */
-async function swapShadowTables(client, { pruneScfIds }) {
+async function swapShadowTables(client, { pruneScfIds, controlUpdates = [] }) {
   const q = (name) => client.escapeIdentifier(name);
   const idx = async (table) => (await client.query(
     `SELECT indexname FROM pg_indexes WHERE schemaname = 'public' AND tablename = $1 ORDER BY indexname`, [table],
@@ -979,6 +1035,25 @@ async function swapShadowTables(client, { pruneScfIds }) {
     // ALTER TABLE RENAME takes ACCESS EXCLUSIVE. Fail rather than queue the
     // API's readers behind a lock we cannot get.
     await client.query(`SET LOCAL lock_timeout = '30s'`);
+
+    // 0. Re-describe existing controls in the same transaction as the swap
+    //    (see stageControls). Done before the renames, which take ACCESS
+    //    EXCLUSIVE until COMMIT; this UPDATE only takes row locks.
+    if (controlUpdates.length > 0) {
+      const u = await client.query(
+        `UPDATE scf_controls c
+            SET domain = x.domain, name = x.name, description = x.description,
+                threat_codes = x.threat_codes, risk_codes = x.risk_codes,
+                last_validated_attack_version = x.last_validated_attack_version,
+                unresolved_attack_count = x.unresolved_attack_count, updated_at = NOW()
+           FROM jsonb_to_recordset($1::jsonb) AS ${CONTROL_RECORD}
+          WHERE c.scf_id = x.scf_id`,
+        [JSON.stringify(controlUpdates)],
+      );
+      if ((u.rowCount ?? 0) !== controlUpdates.length) {
+        throw new Error(`control update touched ${u.rowCount} rows but ${controlUpdates.length} were planned — scf_controls changed under us`);
+      }
+    }
 
     for (const name of SHADOW_TABLES) {
       const live = name, fresh = name + SFX_NEW, old = name + SFX_OLD;
@@ -1132,11 +1207,12 @@ async function main() {
     // frameworks, and the run CONTINUED -- which dropped every non-curated
     // framework's refs in one pass. Resolve by name with a fallback, and treat
     // zero as fatal: an empty auth source is never a legitimate outcome.
-    const AUTH_SHEETS = ['Focal Documents', 'Authoritative Sources'];
-    const authSheetName = AUTH_SHEETS.find((n) => wb.Sheets[n]);
+    // 2026.3 renamed it again, to 'Focal Documents (FD)'; findAuthSheetName
+    // accepts every name SCF has used and any 'Focal Documents…' variant.
+    const authSheetName = findAuthSheetName(wb.SheetNames);
     if (!authSheetName) {
       throw new Error(
-        `no authoritative-source sheet found; looked for ${AUTH_SHEETS.join(' / ')}. Sheets present: ${wb.SheetNames.join(', ')}`,
+        `no authoritative-source sheet found; looked for 'Focal Documents*' / 'Authoritative Sources'. Sheets present: ${wb.SheetNames.join(', ')}`,
       );
     }
     const authRows = xlsx.utils.sheet_to_json(wb.Sheets[authSheetName], { header: 1, defval: '' });
@@ -1255,10 +1331,10 @@ async function main() {
       } catch { /* ignore */ }
     }
 
-    const { controlsUpserted, seenScfIds, refsBatch, attackBatch, unresolvedAttackTotal, validAttackIds } =
+    const { controlsUpserted, seenScfIds, refsBatch, attackBatch, unresolvedAttackTotal, validAttackIds, controlRows } =
       await ingestControlsAndRefs({
         client, rows, columnClasses,
-        dryRun: args.dryRun, currentAttackVersion: currentAttackVersion || 'v19',
+        currentAttackVersion: currentAttackVersion || 'v19',
       });
     console.log(`[sync-scf] controls: ${controlsUpserted}, refs: ${refsBatch.length}, attack-mappings: ${attackBatch.length}, unresolved: ${unresolvedAttackTotal}`);
     counters.recordsInserted += controlsUpserted;
@@ -1272,22 +1348,35 @@ async function main() {
     let pruned = 0;
     if (!args.dryRun) {
       await preflightShadow(client);
+      let staged = { insertedIds: [], updates: [] };
       try {
+        staged = await stageControls(client, controlRows);
+        console.log(`[sync-scf] controls staged: ${staged.insertedIds.length} new ids inserted, ${staged.updates.length} to update in the swap`);
+        meta.controlsInserted = staged.insertedIds.length;
         built = await buildShadowTables(client, { refsBatch, attackBatch, validAttackIds });
         console.log('[sync-scf] shadow tables built:', built);
         const pruneIds = await planControlPrune(client, seenScfIds);
-        shrinkGate({ pre, built, pruneCount: pruneIds.length, allowShrink: args.allowShrink });
+        const controlsBaseline = await getLastGoodControlCount(client);
+        if (controlsBaseline !== null && controlsBaseline !== pre.controls) {
+          console.log(`[sync-scf] scf_controls holds ${pre.controls} rows but the last good run left ${controlsBaseline} — ${pre.controls - controlsBaseline} presumably staged by an interrupted run; gating against ${controlsBaseline}`);
+        }
+        shrinkGate({ pre, built, insertedCount: staged.insertedIds.length, pruneCount: pruneIds.length, controlsBaseline, allowShrink: args.allowShrink });
         if (pruneIds.length > 0) {
           console.log(`[sync-scf] pruning ${pruneIds.length} scf_controls absent from this workbook: ${pruneIds.slice(0, 20).join(', ')}${pruneIds.length > 20 ? ', …' : ''}`);
           meta.prunedScfIds = pruneIds.slice(0, 200);
         }
-        ({ pruned } = await swapShadowTables(client, { pruneScfIds: pruneIds }));
+        ({ pruned } = await swapShadowTables(client, { pruneScfIds: pruneIds, controlUpdates: staged.updates }));
         console.log(`[sync-scf] swap committed (${SHADOW_TABLES.length} tables, ${pruned} controls pruned)`);
       } catch (e) {
         // The swap is all-or-nothing, so nothing live has changed. Just don't
         // leave half-built shadows behind (a leftover is harmless; preflight
         // drops it next run).
         await dropShadowTables(client, SFX_NEW).catch((err) => console.error('[sync-scf] shadow cleanup failed:', err.message));
+        // ...and take back the new ids stageControls added, so a failed run
+        // leaves scf_controls exactly as it found it.
+        await unstageControls(client, staged.insertedIds)
+          .then((n) => n && console.log(`[sync-scf] removed ${n} staged control ids after the failure`))
+          .catch((err) => console.error('[sync-scf] staged-control cleanup failed:', err.message));
         throw e;
       }
       await dropShadowTables(client, SFX_OLD);
