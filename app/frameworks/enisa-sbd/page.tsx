@@ -3,7 +3,7 @@ import { EnisaPlaybooks } from '../../../src/views/EnisaPlaybooks';
 import { ENISA_SBD_COUNT } from '../../../src/lib/enisa-sbd';
 
 export const metadata: Metadata = {
-  title: 'ENISA Playbooks — Secure by Design and Default — MITRE Explorer',
+  title: 'ENISA Playbooks — Secure by Design and Default',
   description:
     `ENISA's ${ENISA_SBD_COUNT} Secure by Design and Secure by Default playbooks for SMEs: principle, ` +
     'objective, checklist, minimum evidence and release gate for each. Reference list — the source ' +

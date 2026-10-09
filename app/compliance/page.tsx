@@ -4,7 +4,7 @@ import { DiamondLoader } from '../../src/components/shared/FoldingDiamond';
 import { ComplianceHub } from '../../src/views/ComplianceHub';
 
 export const metadata: Metadata = {
-  title: 'Compliance — MITRE Explorer',
+  title: 'Compliance',
   description:
     'Regulatory and audit frameworks bridged to MITRE ATT&CK via the Secure Controls Framework (SCF). NIS2, DORA, PCI DSS, NIST 800-53, HIPAA, GDPR, CMMC and more — mapped to the techniques they help mitigate.',
   openGraph: {

@@ -11,7 +11,7 @@ export async function generateMetadata({ params }: RouteProps): Promise<Metadata
   const entry = getFrameworkEntry(key);
   const name = entry?.name ?? key.replaceAll('-', ' ').toUpperCase();
   return {
-    title: `${name} — Compliance — MITRE Explorer`,
+    title: `${name} — Compliance`,
     description: entry?.short_blurb
       ? `${entry.short_blurb} Mapped to MITRE ATT&CK techniques via the Secure Controls Framework (SCF).`
       : `${name} compliance framework mapped to MITRE ATT&CK techniques via the Secure Controls Framework (SCF).`,

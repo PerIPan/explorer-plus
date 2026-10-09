@@ -4,7 +4,7 @@ import { DiamondLoader } from '../../../src/components/shared/FoldingDiamond';
 import { AdvisoriesList } from '../../../src/views/AdvisoriesList';
 
 export const metadata: Metadata = {
-  title: 'Advisories — MITRE Explorer',
+  title: 'Advisories',
   description:
     'Unified GHSA + OSV advisories — OSS package vulnerabilities and OS/distro/kernel advisories in one list with faceted filters',
 };

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { FairCamReference } from '../../../src/views/FairCamReference';
 
 export const metadata: Metadata = {
-  title: 'FAIR-CAM — FAIR Controls Analytics Model — MITRE Explorer',
+  title: 'FAIR-CAM — FAIR Controls Analytics Model',
   description:
     'The FAIR Controls Analytics Model (FAIR-CAM™) v1.0 — loss event, variance management and decision support ' +
     'functions, quoted with their units and relationships (©2025 FAIR Institute, CC BY-NC-ND 4.0) — and this site’s ' +

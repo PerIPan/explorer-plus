@@ -4,7 +4,7 @@ import { DiamondLoader } from '../../../../src/components/shared/FoldingDiamond'
 import { OsvDetail } from '../../../../src/views/OsvDetail';
 
 export const metadata: Metadata = {
-  title: 'OSV advisory — MITRE Explorer',
+  title: 'OSV advisory',
   description:
     'Open Source Vulnerability advisory detail — OS, distro, and kernel records from OSV.dev',
 };

@@ -4,7 +4,7 @@ import { DiamondLoader } from '../../../src/components/shared/FoldingDiamond';
 import { EcosystemDetail } from '../../../src/views/EcosystemDetail';
 
 export const metadata: Metadata = {
-  title: 'Ecosystem — MITRE Explorer',
+  title: 'Ecosystem',
   description:
     'Per-ecosystem advisory dashboard: severity breakdown, top affected packages, recent advisories sorted by severity.',
 };
