@@ -1,6 +1,6 @@
 name: sync-scf
 
-# Twice-yearly + manual. SCF ships quarterly but our review cadence is 6-monthly.
+# Monthly check + manual. The script no-ops unless SCF has published a newer release.
 on:
   schedule:
     # SCF ships quarterly with patches (2026.1 Apr 2, 2026.1.1 Apr 22, 2026.2 Jul 8,
@@ -54,7 +54,7 @@ jobs:
       # since 0d7b8a6 (2026-04). `--omit=dev` dropped it, so every run since
       # failed with ERR_MODULE_NOT_FOUND before touching the database.
       - name: Install deps
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       # Secrets scoped to this step: at job level, actions/checkout and
       # actions/setup-node could both read DATABASE_URL, and neither needs it.

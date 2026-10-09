@@ -1032,7 +1032,15 @@ async function stageControls(client, controlRows) {
 /** Undo stageControls after a failed run: the new ids it added have no live refs or mappings. */
 async function unstageControls(client, insertedIds) {
   if (insertedIds.length === 0) return 0;
-  const r = await client.query(`DELETE FROM scf_controls WHERE scf_id = ANY($1::text[])`, [insertedIds]);
+  // Guard as unstageFrameworks does: if a COMMIT landed but its ack was lost,
+  // these ids are live with mappings, and must not be deleted.
+  const r = await client.query(
+    `DELETE FROM scf_controls c
+      WHERE c.scf_id = ANY($1::text[])
+        AND NOT EXISTS (SELECT 1 FROM scf_attack_mappings m WHERE m.scf_id = c.scf_id)
+        AND NOT EXISTS (SELECT 1 FROM scf_framework_refs r WHERE r.scf_id = c.scf_id)`,
+    [insertedIds],
+  );
   return r.rowCount ?? 0;
 }
 

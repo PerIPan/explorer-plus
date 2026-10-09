@@ -363,7 +363,8 @@ async function seedCuratedLayer(client, reg) {
 
 const stats = {};
 // Direct endpoint + a dedicated lock client: see scripts/lib/db-session.mjs.
-const pool = new pg.Pool({ connectionString: batchDatabaseUrl(DATABASE_URL, 'ics-assets'), max: 4 });
+const pool = new pg.Pool({ connectionString: batchDatabaseUrl(DATABASE_URL, 'ics-assets'), max: 4, keepAlive: true });
+pool.on('error', (err) => console.error('[ics-assets] pool error:', err.message));
 let lock = null;
 let logId;
 const startedAt = Date.now();

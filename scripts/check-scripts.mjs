@@ -58,18 +58,20 @@ export function parseInstall(text) {
   for (const raw of text.split('\n')) {
     const line = raw.replace(/^\s*-?\s*(run:\s*)?/, '');
     if (line.startsWith('#')) continue;
+    const PROD = /--omit[= ]dev\b|--production\b|--only[= ]prod(?:uction)?\b/;
     const ci = line.match(/\bnpm ci\b([^|&;]*)/);
     if (ci) {
-      if (/--omit[= ]dev/.test(ci[1])) out.prod = true;
+      if (PROD.test(ci[1])) out.prod = true;
       else out.all = true;
       continue;
     }
-    const inst = line.match(/\bnpm (?:install|i)\s+([^|&;#]*)/);
+    const inst = line.match(/\bnpm (?:install|i)\b([^|&;#]*)/);
     if (inst) {
-      for (const tok of inst[1].trim().split(/\s+/)) {
-        if (!tok || tok.startsWith('-')) continue;
-        out.names.add(tok.startsWith('@') ? tok.split('@').slice(0, 2).join('@') : tok.split('@')[0]);
-      }
+      const toks = inst[1].trim().split(/\s+/).map((t) => t.replace(/^['"]|['"]$/g, '')).filter(Boolean);
+      const pkgs = toks.filter((t) => !t.startsWith('-'));
+      // A bare `npm install` installs package.json's dependencies.
+      if (pkgs.length === 0) { if (PROD.test(inst[1])) out.prod = true; else out.all = true; continue; }
+      for (const tok of pkgs) out.names.add(tok.startsWith('@') ? tok.split('@').slice(0, 2).join('@') : tok.split('@')[0]);
     }
   }
   return out;
@@ -84,7 +86,8 @@ export function parseInstall(text) {
  */
 export function scriptEntries(text, npmScripts, seen = new Set()) {
   const out = new Set();
-  for (const raw of text.split('\n')) {
+  // Join shell line continuations ("node \\\n  scripts/x.mjs").
+  for (const raw of text.replace(/\\\n\s*/g, ' ').split('\n')) {
     const line = raw.trim();
     if (line.startsWith('#')) continue;
     for (const m of line.matchAll(/\bnode\b[^\n]*?\b(scripts\/[\w./-]+\.(?:mjs|js|ts))\b/g)) out.add(m[1]);
@@ -111,7 +114,8 @@ export function importsOf(src) {
     /^\s*import\s+(?!type\s)[\s\S]*?\bfrom\s*['"]([^'"]+)['"]/gm,
     /^\s*import\s+['"]([^'"]+)['"]/gm,
     /^\s*export\s+(?!type\s)[^;'"]*?\bfrom\s*['"]([^'"]+)['"]/gm,
-    /\bimport\(\s*['"]([^'"]+)['"]\s*\)/g,
+    // Dynamic import, but not a JSDoc type (`{import('pg').Pool}`) or a comment line.
+    /^(?![ \t]*(?:\/\/|\*|\/\*))[^\n{]*?\bimport\(\s*['"]([^'"]+)['"]\s*\)/gm,
     /\brequire\(\s*['"]([^'"]+)['"]\s*\)/g,
   ];
   for (const re of patterns) for (const m of src.matchAll(re)) out.add(m[1]);
@@ -140,7 +144,7 @@ function resolveLocal(fromFile, spec) {
  *
  * @returns {Map<string, string[]>}  package -> chain of repo-relative files
  */
-export function packagesReachable(entryAbs) {
+export function packagesReachable(entryAbs, unresolved = []) {
   const found = new Map();
   const walk = (file, chain, seen) => {
     if (seen.has(file)) return;
@@ -151,7 +155,8 @@ export function packagesReachable(entryAbs) {
       if (pkg) { if (!found.has(pkg)) found.set(pkg, here); continue; }
       if (spec.startsWith('.')) {
         const next = resolveLocal(file, spec);
-        if (next && next.startsWith(ROOT) && !next.includes('node_modules')) walk(next, here, seen);
+        if (!next) unresolved.push(`${relative(ROOT, file)} imports '${spec}', which does not resolve`);
+        else if (next.startsWith(ROOT) && !next.includes('node_modules')) walk(next, here, seen);
       }
     }
   };
@@ -174,7 +179,9 @@ export function workflowMeta(text) {
 
 /** Session-state use that needs db-session.mjs: a session advisory lock or a non-LOCAL SET. */
 export function usesSessionState(src) {
-  return /\bpg_(?:try_)?advisory_lock\s*\(/.test(src) || /query\(\s*[`'"]\s*SET\s+(?!LOCAL\b)\w/i.test(src);
+  return /\bpg_(?:try_)?advisory_lock\s*\(/.test(src)
+    || /query\(\s*[`'"]\s*(?:SET\s+(?!LOCAL\b)\w|RESET\s+\w)/i.test(src)
+    || /set_config\([^)]*,\s*false\s*\)/i.test(src);
 }
 
 function main() {
@@ -199,11 +206,13 @@ function main() {
       const abs = join(ROOT, entry);
       if (!existsSync(abs)) { problems.push(`${f}: runs ${entry}, which does not exist`); continue; }
       checkedRuns++;
-      for (const [name, chain] of packagesReachable(abs)) {
+      const unresolved = [];
+      for (const [name, chain] of packagesReachable(abs, unresolved)) {
         if (have.has(name)) continue;
         const why = dev.includes(name) ? ' (a devDependency — the install step omits dev)' : '';
         problems.push(`${f}: ${chain.join(' → ')} imports '${name}', which the workflow does not install${why}`);
       }
+      for (const u of unresolved) problems.push(`${f}: ${u}`);
     }
   }
 
@@ -217,7 +226,9 @@ function main() {
     const src = readFileSync(join(ROOT, p), 'utf8');
     if (!usesSessionState(src)) continue;
     sessionUsers++;
-    if (!/from\s+['"][./]*(?:lib\/)?db-session\.mjs['"]/.test(src)) {
+    const imports = /from\s+['"][./]*(?:lib\/)?db-session\.mjs['"]/.test(src);
+    const calls = /\b(?:batchDatabaseUrl|takeSessionLock)\s*\(/.test(src);
+    if (!imports || !calls) {
       problems.push(`${p}: takes a session advisory lock or sets session state but does not use scripts/lib/db-session.mjs (direct endpoint + dedicated lock client)`);
     }
   }
@@ -232,6 +243,7 @@ function main() {
     for (const f of readdirSync(wfDir).filter((n) => /\.ya?ml$/.test(n) && n !== 'alert-on-failure.yml')) {
       const meta = workflowMeta(readFileSync(join(wfDir, f), 'utf8'));
       if (meta.name) names.set(meta.name, { file: f, ...meta });
+      else if (meta.scheduled) problems.push(`${f}: scheduled workflow has no name: — alert-on-failure.yml cannot watch it`);
     }
     for (const { file, name, scheduled } of names.values()) {
       if (scheduled && !watched.has(name)) problems.push(`${file}: scheduled workflow '${name}' is not in alert-on-failure.yml — its failures would go unnoticed`);

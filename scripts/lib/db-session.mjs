@@ -101,11 +101,15 @@ export async function describeLockHolder(q, key) {
  */
 export async function takeSessionLock(pool, key, tag) {
   const client = await pool.connect();
+  // A checked-out client with no 'error' listener crashes the process when
+  // its connection drops, skipping the caller's finally. Log instead; the
+  // next query on it fails and the caller's error path runs.
+  client.on('error', (e) => console.error(`[${tag}] lock connection error:`, e.message));
   let r;
   try {
     r = await client.query('SELECT pg_try_advisory_lock($1) AS locked', [String(key)]);
   } catch (e) {
-    client.release();
+    client.release(true); // destroy: its state is unknown
     throw e;
   }
   if (r.rows[0].locked !== true) {
@@ -120,13 +124,17 @@ export async function takeSessionLock(pool, key, tag) {
     async release() {
       if (released) return;
       released = true;
+      let ok = false;
       try {
         const u = await client.query('SELECT pg_advisory_unlock($1) AS released', [String(key)]);
         if (u.rows[0].released !== true) {
           console.warn(`[${tag}] pg_advisory_unlock returned false — this session did not hold the lock`);
         }
+        ok = true;
       } finally {
-        client.release();
+        // Destroy rather than return a connection whose unlock failed: ending
+        // the session is what finally frees a session lock.
+        client.release(ok ? undefined : true);
       }
     },
   };

@@ -64,3 +64,24 @@ test('watchedWorkflows / workflowMeta: the alert list and a workflow\'s name + s
   assert.deepEqual(workflowMeta("name: sync-scf\non:\n  schedule:\n    - cron: '0 0 10 * *'\n"), { name: 'sync-scf', scheduled: true });
   assert.deepEqual(workflowMeta('name: Checks\non:\n  push:\n'), { name: 'Checks', scheduled: false });
 });
+
+test('parseInstall: production flags, bare npm install, quoted tokens', () => {
+  assert.equal(parseInstall('run: npm ci --production\n').prod, true);
+  assert.equal(parseInstall('run: npm ci --only=prod\n').prod, true);
+  assert.equal(parseInstall('run: npm install\n').all, true);
+  assert.deepEqual([...parseInstall('run: npm install "pg@8.23.0" --no-audit\n').names], ['pg']);
+});
+
+test('scriptEntries follows a backslash-continued node command', () => {
+  assert.deepEqual(scriptEntries('        run: node --experimental-strip-types \\\n          scripts/x.mjs --flag\n', {}), ['scripts/x.mjs']);
+});
+
+test('importsOf ignores JSDoc types and comment lines', () => {
+  assert.deepEqual(importsOf(" * @param {import('pg').Pool} pool\n// await import('nope')\nconst m = await import('./real.mjs');"), ['./real.mjs']);
+});
+
+test('usesSessionState: RESET and set_config(..., false) count; set_config(..., true) does not', () => {
+  assert.equal(usesSessionState("await client.query('RESET statement_timeout')"), true);
+  assert.equal(usesSessionState("await client.query(\"SELECT set_config('statement_timeout', '0', false)\")"), true);
+  assert.equal(usesSessionState("await client.query(\"SELECT set_config('statement_timeout', $1, true)\", [ms])"), false);
+});
