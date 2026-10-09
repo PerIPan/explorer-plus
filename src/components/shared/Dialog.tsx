@@ -18,8 +18,8 @@ let seq = 0;
  * endpoint modal opens from inside a scrolling page.
  *
  * Not a third modal implementation: `ProfilePanel` keeps its own because its trap
- * is fused to that feature's controller and telemetry, and `RelationshipModel`
- * predates this. Everything new in this area uses this one.
+ * is fused to that feature's controller and telemetry. The header's API and
+ * Data Model dialogs both use this one, and so does everything new.
  */
 export function Dialog({
   open,

@@ -1,417 +1,270 @@
-import { useState, useEffect } from 'react';
+'use client';
+
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useThemeColors } from '../../hooks/useThemeColors';
+import {
+  MODEL_NODES,
+  MODEL_EDGES,
+  MODEL_WIDTH,
+  MODEL_HEIGHT,
+  nodeRadii,
+  edgeGeometry,
+} from '../../lib/data-model-graph.mjs';
 
-interface ModelNode {
-  id: string;
-  label: string;
-  x: number;
-  y: number;
-  color: string;
-  bg: string;
-  path: string;
-  description: string;
-  category: 'core' | 'defensive' | 'intelligence' | 'compliance';
-  /** Visual scale factor — defaults to 1. Technique uses 1.8 as the central hub. */
-  scale?: number;
+/**
+ * The header "Data Model" diagram: every entity and source on the site and
+ * how each maps onto ATT&CK techniques.
+ *
+ * Only the CONTENT lives here. The chrome — scrim, title, close button, focus
+ * trap, Escape, inert background, focus return — is the shared `<Dialog>` in
+ * AppShell, which lazy-loads this panel so the diagram's data never ships in
+ * the chunk every page downloads. Node positions and edges are data in
+ * src/lib/data-model-graph.mjs, where a test keeps the layout free of overlaps
+ * and of edges running through nodes they do not connect.
+ *
+ * Nodes are links: click, or Tab to one and press Enter. Hover or focus shows
+ * the description and lights up the node's edges with their labels.
+ */
+
+type ThemeColors = ReturnType<typeof useThemeColors>;
+
+const CATEGORIES = [
+  { key: 'core', label: 'ATT&CK Core', token: 'accentTeal' },
+  { key: 'defensive', label: 'Detection & Prevention', token: 'accentGreen' },
+  { key: 'compliance', label: 'Frameworks & Compliance', token: '#38bdf8' },
+  { key: 'intelligence', label: 'Threat Intelligence', token: 'accentOrange' },
+] as const;
+
+/** A node colour is either a theme token name or a literal hex. */
+function resolveColor(c: ThemeColors, value: string): string {
+  return (c as unknown as Record<string, string>)[value] ?? value;
 }
 
-interface ModelEdge {
-  from: string;
-  to: string;
-  label: string;
-  style?: 'solid' | 'dashed';
+/** Word-wrap a description so the tooltip box always contains the text. */
+function wrap(text: string, max = 55): string[] {
+  const lines: string[] = [];
+  let current = '';
+  for (const w of text.split(/\s+/)) {
+    if (current.length + w.length + 1 > max && current) {
+      lines.push(current);
+      current = w;
+    } else {
+      current = current ? `${current} ${w}` : w;
+    }
+  }
+  if (current) lines.push(current);
+  return lines;
 }
 
-function makeNodes(c: ReturnType<typeof useThemeColors>): ModelNode[] {
-  const alpha = (hex: string, a: string) => `${hex}${a}`;
-  return [
-    // Core entities — center cluster with more spacing
-    { id: 'technique', label: 'Technique', x: 650, y: 330, color: c.accentTeal, bg: alpha(c.accentTeal, '18'), path: '/techniques', description: 'Attack methods and sub-techniques used by adversaries', category: 'core', scale: 1.4 },
-    { id: 'tactic', label: 'Tactic', x: 550, y: 100, color: c.accentYellow, bg: alpha(c.accentYellow, '18'), path: '/tactics', description: 'Kill chain phases: Reconnaissance to Impact', category: 'core' },
-    { id: 'atlas', label: 'ATLAS', x: 850, y: 60, color: '#a78bfa', bg: '#a78bfa18', path: '/matrix?domain=atlas-attack', description: 'MITRE ATLAS — AI/ML adversarial threat framework with 155 techniques', category: 'core' },
-    { id: 'group', label: 'Threat Group', x: 180, y: 190, color: c.accentOrange, bg: alpha(c.accentOrange, '18'), path: '/groups', description: 'Tracked adversary groups (APT29, Lazarus, etc.)', category: 'core' },
-    { id: 'software', label: 'Malware', x: 150, y: 370, color: c.accentPurple, bg: alpha(c.accentPurple, '18'), path: '/software', description: 'Attacker tools — malware and hacking tools used in attacks', category: 'core' },
-    { id: 'campaign', label: 'Campaign', x: 400, y: 100, color: c.accentBlue, bg: alpha(c.accentBlue, '18'), path: '/campaigns', description: 'Named intrusion operations with timelines', category: 'core' },
-    { id: 'sector', label: 'Sector', x: 70, y: 80, color: c.accentPink, bg: alpha(c.accentPink, '18'), path: '/sectors', description: 'Industries targeted by threat groups', category: 'core' },
-    { id: 'application', label: 'Application', x: 180, y: 560, color: '#3b82f6', bg: '#3b82f618', path: '/applications', description: 'Defender view — vendor products with CVEs (Windows, PAN-OS, etc.)', category: 'core' },
-    { id: 'package', label: 'Package', x: 420, y: 700, color: '#60a5fa', bg: '#60a5fa33', path: '/packages', description: 'Library packages (npm, PyPI, Go, Maven, RubyGems, NuGet, Composer, Rust) with GHSA advisories — parallel to Applications but library-centric', category: 'core' },
-    // Defensive
-    { id: 'mitigation', label: 'Mitigation', x: 1000, y: 140, color: c.accentGreen, bg: alpha(c.accentGreen, '18'), path: '/mitigations', description: 'Countermeasures to prevent techniques', category: 'defensive' },
-    { id: 'sigma', label: 'Sigma Rules', x: 1040, y: 370, color: '#c084fc', bg: '#c084fc18', path: '/cti/sigma', description: 'Detection signatures from SigmaHQ mapped to techniques', category: 'defensive' },
-    // Compliance & frameworks
-    { id: 'owasp', label: 'OWASP Top 10', x: 700, y: 60, color: '#059669', bg: '#05966918', path: '/frameworks/owasp', description: 'Web, ML, and LLM security risks mapped to techniques via CWE + ATLAS', category: 'compliance' },
-    { id: 'csf', label: 'NIST CSF v2', x: 1060, y: 60, color: '#6366f1', bg: '#6366f118', path: '/frameworks/csf', description: 'NIST Cybersecurity Framework v2 subcategories (GV/ID/PR/DE/RS/RC) mapped to ATT&CK techniques', category: 'compliance' },
-    { id: 'nist', label: 'NIST 800-53', x: 1240, y: 140, color: '#38bdf8', bg: '#38bdf818', path: '/frameworks/nist', description: 'Federal security controls mapped to ATT&CK techniques', category: 'compliance' },
-    { id: 'engage', label: 'MITRE Engage', x: 1240, y: 310, color: '#fb923c', bg: '#fb923c18', path: '/frameworks/engage', description: 'Adversary deception & engagement activities per technique', category: 'compliance' },
-    { id: 'react', label: 'RE&CT', x: 1240, y: 490, color: '#4ade80', bg: '#4ade8018', path: '/frameworks/react', description: 'Incident response playbooks and actions per technique', category: 'compliance' },
-    { id: 'veris', label: 'VERIS', x: 1420, y: 140, color: '#e879f9', bg: '#e879f918', path: '/techniques', description: 'Incident classification categories mapped to ATT&CK techniques', category: 'compliance', scale: 0.85 },
-    { id: 'azure', label: 'Azure', x: 1420, y: 220, color: '#38bdf8', bg: '#38bdf818', path: '/techniques', description: 'Azure security controls mapped to ATT&CK techniques', category: 'compliance', scale: 0.85 },
-    { id: 'gcp', label: 'GCP', x: 1420, y: 450, color: '#34d399', bg: '#34d39918', path: '/techniques', description: 'GCP security controls mapped to ATT&CK techniques', category: 'compliance', scale: 0.85 },
-    // Intelligence
-    { id: 'report', label: 'Threat Reports', x: 240, y: 460, color: c.accentOrange, bg: alpha(c.accentOrange, '18'), path: '/cti/reports', description: 'Live threat intelligence from OTX, RSS feeds', category: 'intelligence' },
-    { id: 'cve', label: 'CVEs', x: 440, y: 500, color: c.accentPink, bg: alpha(c.accentPink, '18'), path: '/cti/cves', description: 'Known vulnerabilities enriched with NVD metadata', category: 'intelligence' },
-    { id: 'ghsa', label: 'GHSA', x: 560, y: 700, color: '#f472b6', bg: '#f472b633', path: '/cti/ghsa', description: 'GitHub Security Advisories — library-level vulnerabilities for open-source packages. Includes ~2K GHSA-only advisories not tracked in NVD.', category: 'intelligence' },
-    { id: 'nvd', label: 'NVD', x: 320, y: 560, color: '#38bdf8', bg: '#38bdf818', path: '/cti/cves', description: 'National Vulnerability Database — CVSS scores, CWE, descriptions', category: 'intelligence' },
-    { id: 'capec', label: 'CAPEC', x: 380, y: 600, color: '#fbbf24', bg: '#fbbf2418', path: '/cti/capec', description: 'MITRE Common Attack Pattern Enumeration — 615 patterns with severity, likelihood, prerequisites, consequences, and mitigations. Bridges CWE weaknesses to ATT&CK techniques.', category: 'intelligence', scale: 0.85 },
-    { id: 'ctid', label: 'CTID', x: 520, y: 600, color: '#f472b6', bg: '#f472b618', path: '/cti/cves?curated=1&since=', description: 'Hand-curated CVE→ATT&CK mappings from MITRE Center for Threat-Informed Defense', category: 'intelligence', scale: 0.85 },
-    { id: 'ioc', label: 'IOCs', x: 650, y: 500, color: '#fb923c', bg: '#fb923c18', path: '/cti/iocs', description: 'Hashes, domains, IPs from OTX, ThreatFox, MalwareBazaar', category: 'intelligence' },
-    { id: 'virustotal', label: 'VirusTotal', x: 790, y: 560, color: '#3b82f6', bg: '#3b82f618', path: '/cti/iocs', description: 'Sandbox verdicts and ATT&CK techniques for file hashes', category: 'intelligence' },
-    { id: 'atomic', label: 'Atomic Tests', x: 860, y: 490, color: '#ef4444', bg: '#ef444418', path: '/techniques', description: 'Red team test procedures from Atomic Red Team per technique', category: 'intelligence' },
-    { id: 'd3fend', label: 'D3FEND', x: 1060, y: 490, color: c.accentGreen, bg: alpha(c.accentGreen, '18'), path: '/techniques', description: 'Defensive countermeasures from MITRE D3FEND', category: 'intelligence' },
-    { id: 'thaicert', label: 'ETDA Actors', x: 80, y: 300, color: c.accentNeutral, bg: alpha(c.accentNeutral, '18'), path: '/external-actors', description: '500+ extended threat actors from ThaiCERT encyclopedia', category: 'intelligence' },
-    // Domain variants
-    { id: 'ics', label: 'ICS', x: 460, y: 220, color: '#f97316', bg: '#f9731618', path: '/matrix?domain=ics-attack', description: 'Industrial Control Systems ATT&CK domain — OT-specific techniques', category: 'core', scale: 0.85 },
-    { id: 'mobile', label: 'Mobile', x: 830, y: 170, color: '#8b5cf6', bg: '#8b5cf618', path: '/matrix?domain=mobile-attack', description: 'Mobile ATT&CK domain — Android and iOS specific techniques', category: 'core', scale: 0.85 },
-    // OT / ICS asset layer
-    { id: 'asset', label: 'ICS Assets', x: 930, y: 660, color: '#f97316', bg: '#f9731618', path: '/assets', description: 'ATT&CK for ICS equipment — PLCs, RTUs, HMIs, historians, gateways, safety controllers — with the techniques MITRE publishes as targeting each', category: 'core', scale: 0.85 },
-    { id: 'purdue', label: 'Purdue Model', x: 1130, y: 660, color: '#fbbf24', bg: '#fbbf2418', path: '/frameworks/purdue', description: 'OT network segmentation — seven levels from the physical process to enterprise IT, with the industrial DMZ between them. Level placement is curated from NIST SP 800-82r3 and ISA-95.', category: 'compliance', scale: 0.85 },
-  ];
-}
-
-const EDGES: ModelEdge[] = [
-  { from: 'group', to: 'technique', label: 'uses' },
-  { from: 'group', to: 'software', label: 'uses' },
-  { from: 'campaign', to: 'group', label: 'attributed to' },
-  { from: 'software', to: 'technique', label: 'implements' },
-  { from: 'campaign', to: 'technique', label: 'uses' },
-  { from: 'technique', to: 'tactic', label: 'accomplishes' },
-  { from: 'group', to: 'sector', label: 'targets' },
-  { from: 'mitigation', to: 'technique', label: 'prevents' },
-  { from: 'sigma', to: 'technique', label: 'detects', style: 'dashed' },
-  { from: 'nist', to: 'technique', label: 'governs', style: 'dashed' },
-  { from: 'engage', to: 'technique', label: 'counters', style: 'dashed' },
-  { from: 'react', to: 'technique', label: 'responds to', style: 'dashed' },
-  { from: 'report', to: 'technique', label: 'mentions', style: 'dashed' },
-  { from: 'atomic', to: 'technique', label: 'validates', style: 'dashed' },
-  { from: 'cve', to: 'technique', label: 'exploits', style: 'dashed' },
-  { from: 'nvd', to: 'cve', label: 'enriches', style: 'dashed' },
-  { from: 'ioc', to: 'technique', label: 'linked to', style: 'dashed' },
-  { from: 'virustotal', to: 'ioc', label: 'enriches', style: 'dashed' },
-  { from: 'virustotal', to: 'technique', label: 'sandbox verifies', style: 'dashed' },
-  { from: 'd3fend', to: 'technique', label: 'defends', style: 'dashed' },
-  { from: 'thaicert', to: 'group', label: 'extends', style: 'dashed' },
-  { from: 'veris', to: 'technique', label: 'classifies', style: 'dashed' },
-  { from: 'azure', to: 'technique', label: 'defends', style: 'dashed' },
-  { from: 'gcp', to: 'technique', label: 'defends', style: 'dashed' },
-  { from: 'capec', to: 'cve', label: 'bridges', style: 'dashed' },
-  { from: 'ctid', to: 'cve', label: 'curates', style: 'dashed' },
-  { from: 'ctid', to: 'technique', label: 'maps directly', style: 'dashed' },
-  { from: 'application', to: 'cve', label: 'affected by' },
-  { from: 'capec', to: 'technique', label: 'maps to', style: 'dashed' },
-  { from: 'application', to: 'technique', label: 'exploited via', style: 'dashed' },
-  { from: 'ics', to: 'technique', label: 'contains', style: 'dashed' },
-  { from: 'mobile', to: 'technique', label: 'contains', style: 'dashed' },
-  { from: 'atlas', to: 'technique', label: 'cross-references', style: 'dashed' },
-  { from: 'owasp', to: 'technique', label: 'maps via CWE', style: 'dashed' },
-  { from: 'owasp', to: 'atlas', label: 'AI risks', style: 'dashed' },
-  { from: 'owasp', to: 'cve', label: 'categorizes', style: 'dashed' },
-  { from: 'csf', to: 'technique', label: 'outcomes', style: 'dashed' },
-  { from: 'csf', to: 'nist', label: 'implemented by', style: 'dashed' },
-  { from: 'package', to: 'ghsa', label: 'affected by' },
-  { from: 'ghsa', to: 'cve', label: 'alias', style: 'dashed' },
-  { from: 'ghsa', to: 'technique', label: 'exploits via CWE', style: 'dashed' },
-  { from: 'technique', to: 'asset', label: 'targets', style: 'dashed' },
-  { from: 'ics', to: 'asset', label: 'catalogues' },
-  { from: 'purdue', to: 'asset', label: 'places', style: 'dashed' },
-];
-
-function getEdgePath(from: ModelNode, to: ModelNode): { path: string; midX: number; midY: number; angle: number } {
-  const dx = to.x - from.x;
-  const dy = to.y - from.y;
-  const angle = Math.atan2(dy, dx);
-
-  // Calculate actual ellipse radii for each node
-  const fromScale = from.scale ?? 1;
-  const fromRx = Math.max(48, from.label.length * 5.5 + 10) * fromScale;
-  const fromRy = 26 * fromScale;
-
-  const toScale = to.scale ?? 1;
-  const toRx = Math.max(48, to.label.length * 5.5 + 10) * toScale;
-  const toRy = 26 * toScale;
-
-  // Ellipse boundary point: parametric form
-  const fromR = (fromRx * fromRy) / Math.sqrt((fromRy * Math.cos(angle)) ** 2 + (fromRx * Math.sin(angle)) ** 2);
-  const toR = (toRx * toRy) / Math.sqrt((toRy * Math.cos(angle + Math.PI)) ** 2 + (toRx * Math.sin(angle + Math.PI)) ** 2);
-
-  const sx = from.x + Math.cos(angle) * (fromR + 2);
-  const sy = from.y + Math.sin(angle) * (fromR + 2);
-  const ex = to.x - Math.cos(angle) * (toR + 2);
-  const ey = to.y - Math.sin(angle) * (toR + 2);
-
-  const len = Math.sqrt(dx * dx + dy * dy);
-  const cx = (sx + ex) / 2 + (dy / len) * 15;
-  const cy = (sy + ey) / 2 - (dx / len) * 15;
-  const midX = (sx + ex) / 2;
-  const midY = (sy + ey) / 2;
-  const angleDeg = Math.atan2(ey - sy, ex - sx) * (180 / Math.PI);
-  return { path: `M ${sx} ${sy} Q ${cx} ${cy} ${ex} ${ey}`, midX, midY, angle: angleDeg };
-}
-
-interface Props {
-  open: boolean;
-  onClose: () => void;
-}
-
-export function RelationshipModel({ open, onClose }: Props) {
+export function RelationshipModelPanel({ onClose }: { onClose: () => void }) {
   const router = useRouter();
   const c = useThemeColors();
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
   const [hoveredEdge, setHoveredEdge] = useState<number | null>(null);
-  const [allActive, setAllActive] = useState(false);
-  const [hiddenCategories, setHiddenCategories] = useState<Set<string>>(new Set());
+  const [allActive, setAllActive] = useState(true);
+  const [hidden, setHidden] = useState<Set<string>>(new Set());
 
-  const NODES = makeNodes(c);
-  const CATEGORIES = [
-    { key: 'core', label: 'ATT&CK Core', color: c.accentTeal },
-    { key: 'defensive', label: 'Detection & Prevention', color: c.accentGreen },
-    { key: 'compliance', label: 'Frameworks & Compliance', color: '#38bdf8' },
-    { key: 'intelligence', label: 'Threat Intelligence', color: c.accentOrange },
-  ];
+  // The panel mounts each time the dialog opens: light every edge for two
+  // seconds so the shape of the model reads at a glance, then settle.
+  useEffect(() => {
+    const t = setTimeout(() => setAllActive(false), 2000);
+    return () => clearTimeout(t);
+  }, []);
 
-  const toggleCategory = (key: string) => {
-    setHiddenCategories(prev => {
+  const go = (path: string) => {
+    router.push(path);
+    onClose();
+  };
+
+  const toggle = (key: string) =>
+    setHidden((prev) => {
       const next = new Set(prev);
       if (next.has(key)) next.delete(key);
       else next.add(key);
       return next;
     });
-  };
 
-  const visibleNodes = NODES.filter(n => !hiddenCategories.has(n.category));
-  const visibleNodeIds = new Set(visibleNodes.map(n => n.id));
-
-  useEffect(() => {
-    if (open) {
-      setAllActive(true);
-      const timer = setTimeout(() => setAllActive(false), 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [open]);
-
-  if (!open) return null;
-
-  const nodeMap = Object.fromEntries(visibleNodes.map(n => [n.id, n]));
-  const visibleEdges = EDGES.filter(e => visibleNodeIds.has(e.from) && visibleNodeIds.has(e.to));
+  const visibleNodes = MODEL_NODES.filter((n) => !hidden.has(n.category));
+  const nodeMap = new Map(visibleNodes.map((n) => [n.id, n]));
+  const visibleEdges = MODEL_EDGES.map((e, i) => ({ e, i })).filter(({ e }) => nodeMap.has(e.from) && nodeMap.has(e.to));
+  const hovered = hoveredNode ? nodeMap.get(hoveredNode) : undefined;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={onClose}>
-      <div
-        className="bg-[var(--surface-deep)] border border-[var(--border-color)] rounded-xl shadow-2xl w-[95vw] max-w-[1400px] max-h-[90vh] overflow-hidden flex flex-col"
-        onClick={e => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border-color)]">
-          <div>
-            <h2 className="text-lg font-semibold text-[var(--text-primary)]">ATT&CK Object Model Relationships</h2>
-            <p className="text-xs text-[var(--text-secondary)] mt-0.5">click any node to navigate — hover for details</p>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-md text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--hover-overlay)] transition-colors"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
+    <div className="flex flex-col">
+      {/* Phones scroll the canvas sideways rather than shrink 40 labels to dust. */}
+      <div className="overflow-x-auto px-2 py-3 md:px-4">
+        <svg
+          viewBox={`0 0 ${MODEL_WIDTH} ${MODEL_HEIGHT}`}
+          className="mx-auto h-auto w-full min-w-[900px]"
+          style={{ maxHeight: 'calc(88vh - 9rem)' }}
+          role="group"
+          aria-label="Data model: entities and sources, and how each maps onto ATT&CK techniques"
+        >
+          <defs>
+            <marker id="dm-arrow" viewBox="0 0 10 7" refX="10" refY="3.5" markerWidth="8" markerHeight="6" orient="auto-start-reverse">
+              <polygon points="0 0, 10 3.5, 0 7" fill={c.borderColor} />
+            </marker>
+            <marker id="dm-arrow-active" viewBox="0 0 10 7" refX="10" refY="3.5" markerWidth="8" markerHeight="6" orient="auto-start-reverse">
+              <polygon points="0 0, 10 3.5, 0 7" fill={c.accentTeal} />
+            </marker>
+          </defs>
 
-        {/* Diagram */}
-        <div className="flex-1 overflow-auto p-4">
-          <svg viewBox="0 0 1520 760" className="w-full h-auto min-h-[640px]">
-            <defs>
-              <marker id="arrow" viewBox="0 0 10 7" refX="10" refY="3.5" markerWidth="8" markerHeight="6" orient="auto-start-reverse">
-                <polygon points="0 0, 10 3.5, 0 7" fill={c.borderColor} />
-              </marker>
-              <marker id="arrow-active" viewBox="0 0 10 7" refX="10" refY="3.5" markerWidth="8" markerHeight="6" orient="auto-start-reverse">
-                <polygon points="0 0, 10 3.5, 0 7" fill={c.accentTeal} />
-              </marker>
-            </defs>
+          {/* Edges */}
+          {visibleEdges.map(({ e, i }) => {
+            const from = nodeMap.get(e.from)!;
+            const to = nodeMap.get(e.to)!;
+            const { path, midX, midY } = edgeGeometry(from, to);
+            const active = allActive || hoveredNode === e.from || hoveredNode === e.to || hoveredEdge === i;
+            return (
+              <g key={i} onMouseEnter={() => setHoveredEdge(i)} onMouseLeave={() => setHoveredEdge(null)}>
+                <path
+                  d={path}
+                  fill="none"
+                  stroke={active ? c.accentTeal : c.borderColor}
+                  strokeWidth={active ? 2 : 1}
+                  strokeDasharray={e.style === 'dashed' ? '6 4' : undefined}
+                  markerEnd={active ? 'url(#dm-arrow-active)' : 'url(#dm-arrow)'}
+                  className={`transition-all ${allActive ? 'duration-500' : 'duration-200'}`}
+                />
+                {active && !allActive && (
+                  <>
+                    <rect
+                      x={midX - Math.max(30, e.label.length * 3.5)}
+                      y={midY - 8}
+                      width={Math.max(60, e.label.length * 7)}
+                      height={16}
+                      rx={3}
+                      fill={c.surfaceCard}
+                      stroke={`${c.accentTeal}33`}
+                    />
+                    <text x={midX} y={midY + 4} textAnchor="middle" fontSize={9} fill={c.accentTeal} className="select-none">
+                      {e.label}
+                    </text>
+                  </>
+                )}
+              </g>
+            );
+          })}
 
-            {/* Edges */}
-            {visibleEdges.map((edge, i) => {
-              const from = nodeMap[edge.from];
-              const to = nodeMap[edge.to];
-              if (!from || !to) return null;
-              const { path, midX, midY } = getEdgePath(from, to);
-              const isActive = allActive || hoveredNode === edge.from || hoveredNode === edge.to || hoveredEdge === i;
-
-              return (
-                <g key={i}
-                  onMouseEnter={() => setHoveredEdge(i)}
-                  onMouseLeave={() => setHoveredEdge(null)}
+          {/* Nodes — focusable links */}
+          {visibleNodes.map((n) => {
+            const color = resolveColor(c, n.color);
+            const isHovered = hoveredNode === n.id;
+            const s = n.scale ?? 1;
+            const { rx, ry } = nodeRadii(n);
+            return (
+              <g
+                key={n.id}
+                role="link"
+                tabIndex={0}
+                aria-label={`${n.label}: ${n.description}`}
+                className="cursor-pointer focus:outline-none"
+                onMouseEnter={() => setHoveredNode(n.id)}
+                onMouseLeave={() => setHoveredNode(null)}
+                onFocus={() => setHoveredNode(n.id)}
+                onBlur={() => setHoveredNode(null)}
+                onClick={() => go(n.path)}
+                onKeyDown={(ev) => {
+                  if (ev.key === 'Enter' || ev.key === ' ') {
+                    ev.preventDefault();
+                    go(n.path);
+                  }
+                }}
+              >
+                {isHovered && (
+                  <ellipse cx={n.x} cy={n.y} rx={rx + 7} ry={ry + 6} fill="none" stroke={color} strokeWidth={1.5} opacity={0.5} />
+                )}
+                <ellipse
+                  cx={n.x}
+                  cy={n.y}
+                  rx={rx}
+                  ry={ry}
+                  fill={`${color}${isHovered ? '30' : '18'}`}
+                  stroke={color}
+                  strokeWidth={isHovered || s > 1 ? 2 : 1}
+                  opacity={isHovered || s > 1 ? 1 : 0.85}
+                  className="transition-all duration-200"
+                />
+                <text
+                  x={n.x}
+                  y={n.y + 1}
+                  textAnchor="middle"
+                  dominantBaseline="central"
+                  fontSize={Math.round(11 * s)}
+                  fontWeight={s > 1 ? 700 : 600}
+                  fill={isHovered ? color : c.textPrimary}
+                  className="pointer-events-none select-none transition-colors duration-200"
                 >
-                  <path
-                    d={path}
-                    fill="none"
-                    stroke={isActive ? c.accentTeal : c.borderColor}
-                    strokeWidth={isActive ? 2 : 1}
-                    strokeDasharray={edge.style === 'dashed' ? '6 4' : undefined}
-                    markerEnd={isActive ? 'url(#arrow-active)' : 'url(#arrow)'}
-                    className={`transition-all ${allActive ? 'duration-500' : 'duration-200'}`}
-                  />
-                  {isActive && (
-                    <>
-                      <rect
-                        x={midX - Math.max(30, edge.label.length * 3.5)} y={midY - 8}
-                        width={Math.max(60, edge.label.length * 7)} height={16}
-                        rx={3}
-                        fill={c.surfaceCard}
-                        stroke={`${c.accentTeal}33`}
-                      />
-                      <text
-                        x={midX} y={midY + 4}
-                        textAnchor="middle"
-                        fontSize={9}
-                        fill={c.accentTeal}
-                        className="select-none"
-                      >
-                        {edge.label}
-                      </text>
-                    </>
-                  )}
-                </g>
-              );
-            })}
+                  {n.label}
+                </text>
+              </g>
+            );
+          })}
 
-            {/* Nodes */}
-            {visibleNodes.map((node) => {
-              const isHovered = hoveredNode === node.id;
-              return (
-                <g
-                  key={node.id}
-                  className="cursor-pointer"
-                  onMouseEnter={() => setHoveredNode(node.id)}
-                  onMouseLeave={() => setHoveredNode(null)}
-                  onClick={() => { router.push(node.path); onClose(); }}
-                >
-                  {(() => {
-                    const s = node.scale ?? 1;
-                    const rx = Math.max(48, node.label.length * 5.5 + 10) * s;
-                    const ry = 26 * s;
-                    const fontSize = Math.round(11 * s);
-                    return (
-                      <>
-                      {isHovered && (
-                        <ellipse
-                          cx={node.x} cy={node.y}
-                          rx={rx + 7} ry={ry + 6}
-                          fill="none"
-                          stroke={node.color}
-                          strokeWidth={1}
-                          opacity={0.3}
-                        />
-                      )}
-                  <ellipse
-                    cx={node.x} cy={node.y}
-                    rx={rx} ry={ry}
-                    fill={isHovered ? node.bg.replace('18', '30') : node.bg}
-                    stroke={node.color}
-                    strokeWidth={isHovered ? 2 : (s > 1 ? 2 : 1)}
-                    opacity={isHovered ? 1 : (s > 1 ? 1 : 0.85)}
-                    className="transition-all duration-200"
-                  />
-                  <text
-                    x={node.x} y={node.y + 1}
-                    textAnchor="middle"
-                    dominantBaseline="central"
-                    fontSize={fontSize}
-                    fontWeight={s > 1 ? 700 : 600}
-                    fill={isHovered ? node.color : c.textPrimary}
-                    className="transition-colors duration-200 select-none pointer-events-none"
-                  >
-                    {node.label}
-                  </text>
-                      </>
-                    );
-                  })()}
-                </g>
-              );
-            })}
-
-            {/* Tooltip */}
-            {hoveredNode && (() => {
-              const node = nodeMap[hoveredNode];
-              if (!node) return null;
-              // Word-wrap the description so the rect always fully contains the text.
-              const MAX_CHARS = 55;
-              const lines: string[] = [];
-              let current = '';
-              for (const w of node.description.split(/\s+/)) {
-                if (current.length + w.length + 1 > MAX_CHARS && current) {
-                  lines.push(current);
-                  current = w;
-                } else {
-                  current = current ? `${current} ${w}` : w;
-                }
-              }
-              if (current) lines.push(current);
-              const longest = Math.max(...lines.map((l) => l.length));
-              const tooltipW = Math.max(200, longest * 5 + 20);
-              const lineHeight = 12;
+          {/* Tooltip, drawn last so it sits above every node */}
+          {hovered &&
+            (() => {
+              const lines = wrap(hovered.description);
+              const w = Math.max(200, Math.max(...lines.map((l) => l.length)) * 5 + 20);
+              const lineH = 12;
               const padY = 6;
-              const tooltipH = lines.length * lineHeight + padY * 2;
-              const tooltipY = node.y < 100 ? node.y + 40 : node.y - (tooltipH + 14);
+              const h = lines.length * lineH + padY * 2;
+              const y = hovered.y < 120 ? hovered.y + 40 : hovered.y - (h + 14);
+              const x = Math.min(Math.max(hovered.x, w / 2 + 4), MODEL_WIDTH - w / 2 - 4);
               return (
                 <g className="pointer-events-none">
-                  <rect
-                    x={node.x - tooltipW / 2} y={tooltipY}
-                    width={tooltipW} height={tooltipH}
-                    rx={4}
-                    fill={c.surfaceCard}
-                    stroke={c.borderColor}
-                  />
-                  <text
-                    x={node.x} y={tooltipY + padY + 9}
-                    textAnchor="middle"
-                    fontSize={9}
-                    fill={c.textSecondary}
-                    className="select-none"
-                  >
+                  <rect x={x - w / 2} y={y} width={w} height={h} rx={4} fill={c.surfaceCard} stroke={c.borderColor} />
+                  <text x={x} y={y + padY + 9} textAnchor="middle" fontSize={9} fill={c.textSecondary} className="select-none">
                     {lines.map((line, i) => (
-                      <tspan key={i} x={node.x} dy={i === 0 ? 0 : lineHeight}>{line}</tspan>
+                      <tspan key={i} x={x} dy={i === 0 ? 0 : lineH}>
+                        {line}
+                      </tspan>
                     ))}
                   </text>
                 </g>
               );
             })()}
-          </svg>
-        </div>
+        </svg>
+      </div>
 
-        {/* Legend */}
-        <div className="px-6 py-3 border-t border-[var(--border-color)] flex items-center justify-between flex-wrap gap-3">
-          <div className="flex items-center gap-4">
-            {CATEGORIES.map(cat => {
-              const isHidden = hiddenCategories.has(cat.key);
-              return (
-                <button
-                  key={cat.key}
-                  type="button"
-                  onClick={() => toggleCategory(cat.key)}
-                  className={`flex items-center gap-1.5 transition-opacity ${isHidden ? 'opacity-30' : 'opacity-100'} hover:opacity-80`}
-                  title={isHidden ? `Show ${cat.label}` : `Hide ${cat.label}`}
-                >
-                  <div
-                    className="w-2.5 h-2.5 rounded-full transition-all"
-                    style={{ backgroundColor: cat.color, opacity: isHidden ? 0.3 : 0.7 }}
-                  />
-                  <span className={`text-[10px] ${isHidden ? 'line-through text-[var(--text-secondary)]' : 'text-[var(--text-secondary)]'}`}>
-                    {cat.label}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-          <div className="flex items-center gap-4 text-[10px] text-[var(--text-secondary)]">
-            <span className="flex items-center gap-1.5">
-              <svg width="20" height="2"><line x1="0" y1="1" x2="20" y2="1" stroke={c.borderColor} strokeWidth="1" /></svg>
-              direct relationship
-            </span>
-            <span className="flex items-center gap-1.5">
-              <svg width="20" height="2"><line x1="0" y1="1" x2="20" y2="1" stroke={c.borderColor} strokeWidth="1" strokeDasharray="4 3" /></svg>
-              enrichment mapping
-            </span>
-          </div>
+      {/* Legend */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border-color)] px-4 py-3 md:px-6">
+        <div className="flex flex-wrap items-center gap-4">
+          {CATEGORIES.map((cat) => {
+            const off = hidden.has(cat.key);
+            return (
+              <button
+                key={cat.key}
+                type="button"
+                onClick={() => toggle(cat.key)}
+                aria-pressed={!off}
+                className={`flex items-center gap-1.5 transition-opacity hover:opacity-80 ${off ? 'opacity-40' : 'opacity-100'}`}
+                title={off ? `Show ${cat.label}` : `Hide ${cat.label}`}
+              >
+                <span
+                  aria-hidden="true"
+                  className="h-2.5 w-2.5 rounded-full"
+                  style={{ backgroundColor: resolveColor(c, cat.token), opacity: off ? 0.3 : 0.75 }}
+                />
+                <span className={`text-[10px] text-[var(--text-secondary)] ${off ? 'line-through' : ''}`}>{cat.label}</span>
+              </button>
+            );
+          })}
+        </div>
+        <div className="flex items-center gap-4 text-[10px] text-[var(--text-secondary)]">
+          <span className="flex items-center gap-1.5">
+            <svg width="20" height="2" aria-hidden="true">
+              <line x1="0" y1="1" x2="20" y2="1" stroke={c.borderColor} strokeWidth="1" />
+            </svg>
+            direct relationship
+          </span>
+          <span className="flex items-center gap-1.5">
+            <svg width="20" height="2" aria-hidden="true">
+              <line x1="0" y1="1" x2="20" y2="1" stroke={c.borderColor} strokeWidth="1" strokeDasharray="4 3" />
+            </svg>
+            enrichment / mapping
+          </span>
         </div>
       </div>
     </div>

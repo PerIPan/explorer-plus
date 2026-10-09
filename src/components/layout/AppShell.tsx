@@ -9,7 +9,6 @@ import { useTheme } from '../../contexts/ThemeContext';
 import { Sidebar } from './Sidebar';
 import { ThreatProfileProvider, ProfileLargeModal } from '../profile/ProfilePanel';
 import { SearchBar } from './SearchBar';
-import { RelationshipModel } from '../relationships/RelationshipModel';
 import { Dialog, DialogTab } from '../shared/Dialog';
 
 interface SiteHealth {
@@ -98,6 +97,15 @@ function ApiPanel({ tab }: { tab: 'rest' | 'mcp' | 'a2a' | 'cli' }) {
   );
 }
 
+/**
+ * The "Data Model" diagram, loaded on demand for the same reason as the API
+ * catalogue: its 40 nodes and their descriptions would otherwise ride in the
+ * chunk every page downloads, for a dialog most visitors never open.
+ */
+const RelationshipModelPanel = lazy(() =>
+  import('../relationships/RelationshipModel').then((m) => ({ default: m.RelationshipModelPanel })),
+);
+
 /** Host without the scheme, for the print watermark and the contact line. */
 const SITE_HOST = SITE_URL.replace(/^https?:\/\//, '');
 
@@ -118,6 +126,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [apisTab, setApisTab] = useState<'rest' | 'mcp' | 'a2a' | 'cli'>('rest');
   /** Focus goes back here when the APIs dialog closes. */
   const apisButtonRef = useRef<HTMLButtonElement | null>(null);
+  /** Focus goes back here when the Data Model dialog closes. */
+  const modelButtonRef = useRef<HTMLButtonElement | null>(null);
 
   return (
     /* The Threat Profile controller lives here, not on the homepage, so the
@@ -192,11 +202,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           >
             APIs / MCP / CLI
           </button>
+          {/* Hidden from April to October 2026 while the diagram was out of date;
+              back now that its layout is data with a test behind it. Not on
+              phones: a 40-node canvas needs the width. */}
           <button
+            ref={modelButtonRef}
             type="button"
             onClick={() => setModelOpen(true)}
-            className="hidden flex-shrink-0 px-3 py-1.5 text-xs rounded-md border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--accent-teal)] hover:border-[var(--teal-dim)] transition-colors"
-            title="ATT&CK data model — entity relationships"
+            data-print-hide
+            className="hidden sm:inline-flex flex-shrink-0 px-3 h-8 items-center justify-center rounded-md border border-[var(--border-color)] text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--accent-teal)] hover:border-[var(--teal-dim)] transition-colors"
+            title="How the data connects — every entity, feed and framework, and how each maps onto ATT&CK techniques"
           >
             Data Model
           </button>
@@ -235,7 +250,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </div>
 
-      <RelationshipModel open={modelOpen} onClose={() => setModelOpen(false)} />
+      <Dialog
+        open={modelOpen}
+        onClose={() => setModelOpen(false)}
+        title="Data model — how everything connects"
+        subtitle="ATT&CK techniques at the centre; every entity, feed and framework on this site and how it maps onto them. Click or Tab to a node to open its page — hover or focus for details."
+        returnFocusTo={modelButtonRef}
+        maxWidth="1400px"
+      >
+        <Suspense
+          fallback={<div className="px-6 py-8 text-xs text-[var(--text-secondary)]">Loading the diagram…</div>}
+        >
+          <RelationshipModelPanel onClose={() => setModelOpen(false)} />
+        </Suspense>
+      </Dialog>
 
       {/* Help modal */}
       {helpOpen && (
