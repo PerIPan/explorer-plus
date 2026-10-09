@@ -108,3 +108,15 @@ export const fetchCsfSubcategory = cache(async (subcategoryId: string) => {
   );
   return result.rows[0] ?? null;
 });
+
+/** One D3FEND countermeasure's name and tactic — for /frameworks/d3fend/[d3fendId] metadata and its 404. */
+export const fetchD3fendCountermeasure = cache(async (d3fendId: string) => {
+  const result = await query<{ d3fend_id: string; name: string | null; tactic: string | null }>(
+    `SELECT d3fend_id, MIN(d3fend_name) AS name, MIN(d3fend_tactic) AS tactic
+     FROM defensive_mappings
+     WHERE d3fend_id = $1
+     GROUP BY d3fend_id`,
+    [d3fendId.toUpperCase()],
+  );
+  return result.rows[0] ?? null;
+});
