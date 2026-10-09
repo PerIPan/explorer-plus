@@ -120,14 +120,47 @@ async function updateLogDone(client, logId, status, counters, meta, errorMessage
 
 // IMPORTANT: pg_try_advisory_lock + pg_advisory_unlock are SESSION-scoped.
 // We MUST hold them on the same client instance — pool.query() leases a
-// different connection per call and would silently leak the lock.
+// different connection per call and would silently leak the lock. And the
+// client must be on a DIRECT connection (see directNeonUrl): through Neon's
+// pooler the same client's statements land on different server sessions.
 async function acquireAdvisoryLock(client) {
   const r = await client.query('SELECT pg_try_advisory_lock($1) AS locked', [ADVISORY_LOCK_KEY]);
   return r.rows[0].locked === true;
 }
 
 async function releaseAdvisoryLock(client) {
-  await client.query('SELECT pg_advisory_unlock($1)', [ADVISORY_LOCK_KEY]);
+  const r = await client.query('SELECT pg_advisory_unlock($1) AS released', [ADVISORY_LOCK_KEY]);
+  if (r.rows[0].released !== true) {
+    console.warn('[sync-scf] pg_advisory_unlock returned false — this session did not hold the lock; another session still does (pooled connection?)');
+  }
+}
+
+/**
+ * The direct-endpoint form of a Neon connection string.
+ *
+ * Neon's pooled endpoint (host "ep-…-pooler.<region>…") is PgBouncer in
+ * transaction mode: consecutive statements from one pinned client can run on
+ * different server sessions. This job depends on session state, so through
+ * the pooler (2026-10-09, SCF 2026.3 runs):
+ *   - pg_advisory_unlock ran on a different session from the lock, which then
+ *     stayed held by a pooled server connection that API traffic also uses,
+ *     blocking the next run ("advisory lock held") until that connection died;
+ *   - a statement_timeout another client had leaked onto a pooled session
+ *     cancelled the sector-summary rebuild, and our own session SET would leak
+ *     the same way (app/api/v1/lib/db.ts documents the pooler behaviour).
+ * The direct endpoint is the same host without "-pooler". DATABASE_URL_UNPOOLED
+ * wins when set. Anything that is not a Neon pooler URL is returned unchanged.
+ */
+export function directNeonUrl(url, unpooled = undefined) {
+  if (unpooled) return { url: unpooled, switched: true, via: 'DATABASE_URL_UNPOOLED' };
+  try {
+    const u = new URL(url);
+    if (/-pooler\./.test(u.hostname)) {
+      u.hostname = u.hostname.replace('-pooler.', '.');
+      return { url: u.toString(), switched: true, via: 'host without -pooler' };
+    }
+  } catch { /* not a URL we can parse — use as given */ }
+  return { url, switched: false, via: null };
 }
 
 async function getLastVersion(client) {
@@ -1165,7 +1198,9 @@ async function main() {
   // entire ingest. pg_try_advisory_lock is session-scoped, so leasing different
   // pool connections per query would silently leak the lock + break atomicity
   // of the shadow-table swap (RENAME on connection A, COMMIT on connection B).
-  const pool = new pg.Pool({ connectionString: DATABASE_URL, keepAlive: true, max: 2 });
+  const direct = directNeonUrl(DATABASE_URL, process.env.DATABASE_URL_UNPOOLED);
+  if (direct.switched) console.log(`[sync-scf] using the direct (unpooled) endpoint — ${direct.via}`);
+  const pool = new pg.Pool({ connectionString: direct.url, keepAlive: true, max: 2 });
   let client = null;
   let logId = null;
   let lockAcquired = false;
@@ -1174,9 +1209,10 @@ async function main() {
 
   try {
     client = await pool.connect();
-    // A batch job, not an API request: the role's default statement_timeout is
-    // sized for interactive reads, and the summary rebuilds legitimately run
-    // longer. Session-scoped; the swap still sets its own lock_timeout.
+    // Pin this session's statement_timeout. Neon's default is 0, but on the
+    // pooled endpoint a session could inherit a value another client leaked
+    // (that cancelled the first 2026.3 run). On the direct endpoint this SET
+    // stays in our session and dies with it. The swap sets its own lock_timeout.
     await client.query(`SET statement_timeout = '15min'`);
     logId = await insertLogStart(client);
     if (!(await acquireAdvisoryLock(client))) {

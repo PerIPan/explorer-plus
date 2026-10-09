@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { locateAuthColumns, parseAuthSources, SCF_FALLBACK_URL, resolveCuratedKey, buildCuratedFdiMap, splitRefs, findAuthSheetName } from './scf-parse.mjs';
-import { stripShadowSuffix, shrinkViolations, parseArgs } from '../sync-scf.mjs';
+import { stripShadowSuffix, shrinkViolations, parseArgs, directNeonUrl } from '../sync-scf.mjs';
 
 // Header rows exactly as the two workbook generations ship them.
 const HEADER_2026_1 = ['Geography', 'SCF Column Header', 'Focal Document Identifier (FDI)', 'Source',
@@ -169,4 +169,16 @@ test('findAuthSheetName: every name SCF has shipped, plus a future suffix', () =
   assert.equal(findAuthSheetName(['READ THIS', 'Focal Documents (FD)', 'SCF 2026.3']), 'Focal Documents (FD)');
   assert.equal(findAuthSheetName(['SCF 2027.1', 'Focal Documents v2']), 'Focal Documents v2');
   assert.equal(findAuthSheetName(['SCF 2026.3', 'Risk Catalog']), null);
+});
+
+test('directNeonUrl: pooler host -> direct host; everything else untouched', () => {
+  const pooled = 'postgresql://u:p%40ss@ep-cool-name-123456-pooler.eu-central-1.aws.neon.tech/db?sslmode=require';
+  const d = directNeonUrl(pooled);
+  assert.equal(d.switched, true);
+  assert.equal(new URL(d.url).hostname, 'ep-cool-name-123456.eu-central-1.aws.neon.tech');
+  assert.equal(new URL(d.url).password, 'p%40ss');
+  assert.equal(new URL(d.url).search, '?sslmode=require');
+  assert.equal(new URL(d.url).pathname, '/db');
+  assert.deepEqual(directNeonUrl('postgresql://localhost/scf'), { url: 'postgresql://localhost/scf', switched: false, via: null });
+  assert.equal(directNeonUrl(pooled, 'postgresql://direct/x').url, 'postgresql://direct/x');
 });
