@@ -542,6 +542,12 @@ export const API_CATALOG: readonly ApiEntry[] = [
     example: '/frameworks/d3fend/D3-AM',
   },
   {
+    path: '/frameworks/fair-cam/coverage', method: 'GET', group: 'frameworks', executable: true,
+    summary: 'Every technique with its candidate controls sorted into FAIR-CAM functions (this site\'s classification; availability, not efficacy).',
+    params: [{ name: 'domain', type: 'string', values: ['enterprise-attack', 'ics-attack', 'mobile-attack', 'atlas-attack'] }],
+    example: '/frameworks/fair-cam/coverage?domain=ics-attack',
+  },
+  {
     path: '/frameworks/emulation', method: 'GET', group: 'frameworks', executable: true,
     summary: 'CTID adversary emulation plans — steps, techniques, and how much of the group\'s known Enterprise techniques each plan exercises.',
     params: [{ name: 'group', type: 'string' }, { name: 'technique', type: 'string' }],

@@ -26,7 +26,7 @@ test('collisions are detected at any depth', () => {
 
 // ── the path -> command rule ──────────────────────────────────────────────────
 // Shared by scripts/gen-cli.mjs and src/views/Cli.tsx since the /cli page
-// started rendering commands. `check:cli` already exercises it over all 85 real
+// started rendering commands. `check:cli` already exercises it over all 86 real
 // entries; these pin the shapes that are easy to get wrong and rare enough in
 // the catalogue that a regression could slip past.
 

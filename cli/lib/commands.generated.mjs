@@ -2737,6 +2737,35 @@ export const COMMANDS = [
     "params": []
   },
   {
+    "path": "/frameworks/fair-cam/coverage",
+    "words": [
+      "frameworks",
+      "fair-cam",
+      "coverage"
+    ],
+    "positionals": [],
+    "summary": "Every technique with its candidate controls sorted into FAIR-CAM functions (this site's classification; availability, not efficacy).",
+    "group": "frameworks",
+    "paginated": false,
+    "example": "/frameworks/fair-cam/coverage?domain=ics-attack",
+    "fulltext": null,
+    "transform": null,
+    "params": [
+      {
+        "name": "domain",
+        "type": "string",
+        "required": false,
+        "values": [
+          "enterprise-attack",
+          "ics-attack",
+          "mobile-attack",
+          "atlas-attack"
+        ],
+        "note": null
+      }
+    ]
+  },
+  {
     "path": "/frameworks/emulation",
     "words": [
       "frameworks",

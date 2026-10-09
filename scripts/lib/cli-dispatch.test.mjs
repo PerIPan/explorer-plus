@@ -24,7 +24,7 @@ import {
 import { appSlug } from '../../cli/lib/app-slug.mjs';
 
 test('every catalogue GET endpoint became a command', () => {
-  assert.equal(TREE.length, 85);
+  assert.equal(TREE.length, 86);
   assert.ok(TREE.every((c) => c.path.startsWith('/')));
 });
 
@@ -215,10 +215,10 @@ test('searchSibling finds the full-text list command for a root', () => {
 });
 
 test('every worked example round-trips into a runnable command', () => {
-  /* 83 of 85 entries carry an example that returns 200. Help now prints it, so
+  /* 84 of 86 entries carry an example that returns 200. Help now prints it, so
      a malformed one would be a copy-paste trap rather than a dead comment. */
   const withExample = TREE.filter((c) => c.example);
-  assert.equal(withExample.length, 83);
+  assert.equal(withExample.length, 84);
   for (const cmd of withExample) {
     const line = exampleCommand(cmd);
     assert.ok(line.startsWith('mitrex '), cmd.path);

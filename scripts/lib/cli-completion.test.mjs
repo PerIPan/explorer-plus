@@ -3,7 +3,7 @@
  *
  * Generated from the same command table as the commands themselves, so it
  * cannot offer a resource or a flag that does not exist — which is the only
- * reason shipping completion for 85 commands is maintainable.
+ * reason shipping completion for 86 commands is maintainable.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
