@@ -70,6 +70,6 @@ test('detection is found only when BOTH halves are found (FAIR-CAM §3.2 AND)', 
 test('missingSources names what is not loaded, per side', () => {
   const s = domainSources(WORLD, kindOf);
   assert.deepEqual(missingSources('recognition', s['ics-attack'], false), ['ATT&CK detection strategies', 'Sigma rules']);
-  assert.deepEqual(missingSources('prevention', s['atlas-attack'], true), ['ATT&CK mitigations', 'D3FEND', 'classification of this domain’s mitigations']);
+  assert.deepEqual(missingSources('prevention', s['atlas-attack'], true), ['ATT&CK mitigations', 'D3FEND', 'classification of this technique’s mitigations']);
   assert.deepEqual(missingSources('visibility', s['enterprise-attack'], false), []);
 });

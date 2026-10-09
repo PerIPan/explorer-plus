@@ -132,6 +132,6 @@ export function missingSources(side, src, hasUnmapped) {
   }[side];
   const LABEL = { mitigations: 'ATT&CK mitigations', d3fend: 'D3FEND', dataComponents: 'ATT&CK data components', detectionStrategies: 'ATT&CK detection strategies', sigmaRules: 'Sigma rules' };
   for (const k of need) if (!s[k]) out.push(LABEL[k]);
-  if (hasUnmapped && (side === 'prevention' || side === 'response')) out.push('classification of this domain’s mitigations');
+  if (hasUnmapped && (side === 'prevention' || side === 'response')) out.push('classification of this technique’s mitigations');
   return out;
 }

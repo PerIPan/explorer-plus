@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import { Suspense } from 'react';
 import { fetchD3fendCountermeasure } from '../../../lib/data';
 import { DiamondLoader } from '../../../../src/components/shared/FoldingDiamond';
@@ -24,6 +24,7 @@ export async function generateMetadata({
   return {
     title,
     description,
+    alternates: { canonical: `/frameworks/d3fend/${data.d3fend_id}` },
     openGraph: {
       title: `${title} — MITRE Explorer`,
       description,
@@ -42,6 +43,8 @@ export default async function Page({
 }) {
   const { d3fendId } = await params;
   if (!D3FEND_ID.test(d3fendId)) notFound();
+  // One URL per countermeasure: /frameworks/d3fend/d3-am → /frameworks/d3fend/D3-AM.
+  if (d3fendId !== d3fendId.toUpperCase()) permanentRedirect(`/frameworks/d3fend/${d3fendId.toUpperCase()}`);
   const data = await fetchD3fendCountermeasure(d3fendId);
   if (!data) notFound();
 

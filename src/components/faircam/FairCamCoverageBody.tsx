@@ -44,7 +44,7 @@ export function FairCamCoverageBody({ techniqueIds }: { techniqueIds: string[] }
   if (error || !view) return <p className="text-xs text-[var(--accent-orange)]">FAIR-CAM coverage could not be loaded.</p>;
 
   return (
-    <div className="space-y-3" aria-live="polite">
+    <div className="space-y-3">
       <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
         Whether public knowledge bases list at least one candidate control per side for these techniques — not
         what you have deployed, and not how well it works. Parent techniques include their sub-techniques.
@@ -52,7 +52,7 @@ export function FairCamCoverageBody({ techniqueIds }: { techniqueIds: string[] }
       <StateLegend />
 
       <div>
-        <div className="text-xs font-semibold uppercase tracking-wider text-[var(--text-primary)] mb-1.5">
+        <div className="text-xs font-semibold uppercase tracking-wider text-[var(--text-primary)] mb-1.5" aria-live="polite">
           Gaps — {view.gaps.length} of {view.techniques} techniques
         </div>
         {view.gaps.length === 0 ? (

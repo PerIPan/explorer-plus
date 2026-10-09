@@ -158,7 +158,7 @@ export function RelationshipModelPanel({ onClose }: { onClose: () => void }) {
                 key={n.id}
                 role="link"
                 tabIndex={0}
-                aria-label={`${n.label}: ${n.description}`}
+                aria-label={`${n.label}${n.referenceOnly ? ' (reference only)' : ''}: ${n.description}`}
                 className="cursor-pointer focus:outline-none"
                 onMouseEnter={() => setHoveredNode(n.id)}
                 onMouseLeave={() => setHoveredNode(null)}

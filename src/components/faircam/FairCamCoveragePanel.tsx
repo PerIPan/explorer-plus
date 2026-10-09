@@ -35,7 +35,7 @@ export function FairCamCoveragePanel({ techniqueIds, scopeLabel }: { techniqueId
       </button>
       {open && (
         <div id={bodyId} role="region" aria-label="FAIR-CAM coverage" className="px-4 py-3 bg-[var(--surface-alt)]">
-          <ErrorBoundary fallback={<p className="text-xs text-[var(--accent-orange)]">FAIR-CAM coverage could not be shown.</p>}>
+          <ErrorBoundary key={techniqueIds.join(',')} fallback={<p className="text-xs text-[var(--accent-orange)]">FAIR-CAM coverage could not be shown.</p>}>
             <Suspense fallback={<p className="text-xs italic text-[var(--text-secondary)]">Loading FAIR-CAM coverage…</p>}>
               <Body techniqueIds={techniqueIds} />
             </Suspense>
