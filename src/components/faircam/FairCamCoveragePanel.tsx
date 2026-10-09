@@ -1,6 +1,7 @@
 'use client';
 
-import { Suspense, lazy, useState } from 'react';
+import { Suspense, lazy, useId, useState } from 'react';
+import { ErrorBoundary } from '../shared/ErrorBoundary';
 
 /**
  * Collapsible FAIR-CAM coverage panel for a scenario — a threat profile's
@@ -11,6 +12,7 @@ const Body = lazy(() => import('./FairCamCoverageBody').then((m) => ({ default: 
 
 export function FairCamCoveragePanel({ techniqueIds, scopeLabel }: { techniqueIds: string[]; scopeLabel: string }) {
   const [open, setOpen] = useState(false);
+  const bodyId = useId();
   if (techniqueIds.length === 0) return null;
   return (
     <section className="rounded-lg border border-[var(--border-color)] overflow-hidden">
@@ -18,6 +20,7 @@ export function FairCamCoveragePanel({ techniqueIds, scopeLabel }: { techniqueId
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
+        aria-controls={bodyId}
         className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-[var(--surface-card)] hover:bg-[var(--surface-base)] transition-colors text-left"
       >
         <span className="min-w-0">
@@ -31,10 +34,12 @@ export function FairCamCoveragePanel({ techniqueIds, scopeLabel }: { techniqueId
         </svg>
       </button>
       {open && (
-        <div className="px-4 py-3 bg-[var(--surface-alt)]">
-          <Suspense fallback={<p className="text-xs italic text-[var(--text-secondary)]">Loading FAIR-CAM coverage…</p>}>
-            <Body techniqueIds={techniqueIds} />
-          </Suspense>
+        <div id={bodyId} role="region" aria-label="FAIR-CAM coverage" className="px-4 py-3 bg-[var(--surface-alt)]">
+          <ErrorBoundary fallback={<p className="text-xs text-[var(--accent-orange)]">FAIR-CAM coverage could not be shown.</p>}>
+            <Suspense fallback={<p className="text-xs italic text-[var(--text-secondary)]">Loading FAIR-CAM coverage…</p>}>
+              <Body techniqueIds={techniqueIds} />
+            </Suspense>
+          </ErrorBoundary>
         </div>
       )}
     </section>

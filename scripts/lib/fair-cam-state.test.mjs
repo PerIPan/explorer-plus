@@ -57,3 +57,19 @@ test('scenario summary counts techniques per state and lists only real gaps', ()
   assert.deepEqual(out.gaps[0].missing, ['prevention', 'visibility', 'recognition', 'response']);
   assert.deepEqual(out.gaps[1].missing, ['response']);
 });
+
+import { detectionState, missingSources } from '../../src/lib/fair-cam-state.mjs';
+
+test('detection is found only when BOTH halves are found (FAIR-CAM §3.2 AND)', () => {
+  assert.equal(detectionState({ visibility: 'found', recognition: 'found' }), 'found');
+  assert.equal(detectionState({ visibility: 'found', recognition: 'not-covered' }), 'not-covered'); // ICS/Mobile
+  assert.equal(detectionState({ visibility: 'found', recognition: 'none-found' }), 'none-found');
+  assert.equal(detectionState({ visibility: 'not-covered', recognition: 'not-covered' }), 'not-covered');
+});
+
+test('missingSources names what is not loaded, per side', () => {
+  const s = domainSources(WORLD, kindOf);
+  assert.deepEqual(missingSources('recognition', s['ics-attack'], false), ['ATT&CK detection strategies', 'Sigma rules']);
+  assert.deepEqual(missingSources('prevention', s['atlas-attack'], true), ['ATT&CK mitigations', 'D3FEND', 'classification of this domain’s mitigations']);
+  assert.deepEqual(missingSources('visibility', s['enterprise-attack'], false), []);
+});

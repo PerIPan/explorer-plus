@@ -38,7 +38,7 @@ export const FAIR_CAM_SOURCE = Object.freeze({
 /** One sentence every surface showing FAIR-CAM terms renders. */
 export const FAIR_CAM_ATTRIBUTION =
   'FAIR Controls Analytics Model (FAIR-CAM™) Standard Artifact v1.0, ©2025 FAIR Institute — ' +
-  'licensed CC BY-NC-ND 4.0 — reproduced unmodified.';
+  'licensed CC BY-NC-ND 4.0. FAIR-CAM names, definitions, units and relationships are quoted unmodified.';
 
 /**
  * @typedef {'LEC' | 'VMC' | 'DSC'} DomainId

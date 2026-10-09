@@ -23,7 +23,7 @@ export const RESPONSE = Object.freeze(['eventTermination', 'resilience', 'lossRe
 export const NOT_MODELLED = Object.freeze(['deterrence', 'monitoring', 'lossReduction']);
 
 /**
- * @typedef {{ functions: Record<string, string[]>, counts: { dataComponents: number, detectionStrategies: number, sigmaRules: number }, unmapped: string[], domain: string }} Row
+ * @typedef {{ attackId?: string, functions: Record<string, string[]>, counts: { dataComponents: number, detectionStrategies: number, sigmaRules: number }, unmapped: string[], domain: string }} Row
  * @typedef {{ mitigations: boolean, d3fend: boolean, dataComponents: boolean, detectionStrategies: boolean, sigmaRules: boolean }} DomainSources
  * @typedef {'found' | 'none-found' | 'not-covered'} SideState
  */
@@ -84,13 +84,54 @@ export function techniqueState(row, src) {
 export function scenarioSummary(rows, sources) {
   const sides = /** @type {const} */ (['prevention', 'visibility', 'recognition', 'response']);
   const summary = Object.fromEntries(sides.map((k) => [k, { found: 0, 'none-found': 0, 'not-covered': 0 }]));
-  /** @type {Array<{ attackId?: string, missing: string[] }>} */
+  /** @type {Array<{ attackId: string, missing: string[] }>} */
   const gaps = [];
   for (const r of rows) {
     const st = techniqueState(r, sources[r.domain]);
     for (const k of sides) summary[k][st[k]] += 1;
     const missing = sides.filter((k) => st[k] === 'none-found');
-    if (missing.length) gaps.push({ attackId: /** @type {any} */ (r).attackId, missing });
+    if (missing.length) gaps.push({ attackId: r.attackId ?? '', missing });
   }
   return { techniques: rows.length, summary, gaps };
+}
+
+/**
+ * One state for the detection side as a whole. FAIR-CAM's Loss Event Detection
+ * is an AND (§3.2): it is "found" only when BOTH visible halves (Visibility,
+ * Recognition) have candidates — Monitoring is never knowable here. A real gap
+ * on either half is a gap for the side; otherwise, if a half is merely not
+ * covered by our data, so is the side. One half found and the other unknown is
+ * therefore "not-covered", never "found".
+ *
+ * @param {{ visibility: SideState, recognition: SideState }} st
+ * @returns {SideState}
+ */
+export function detectionState(st) {
+  if (st.visibility === 'found' && st.recognition === 'found') return 'found';
+  if (st.visibility === 'none-found' || st.recognition === 'none-found') return 'none-found';
+  return 'not-covered';
+}
+
+/**
+ * Which loaded-source names a side is missing for a domain — so the UI can say
+ * WHY a side is not covered instead of a fixed sentence.
+ *
+ * @param {'prevention' | 'visibility' | 'recognition' | 'response'} side
+ * @param {DomainSources | undefined} src
+ * @param {boolean} hasUnmapped
+ * @returns {string[]}
+ */
+export function missingSources(side, src, hasUnmapped) {
+  const s = src ?? { mitigations: false, d3fend: false, dataComponents: false, detectionStrategies: false, sigmaRules: false };
+  const out = [];
+  const need = {
+    prevention: ['mitigations', 'd3fend'],
+    visibility: ['dataComponents', 'd3fend'],
+    recognition: ['detectionStrategies', 'sigmaRules', 'd3fend'],
+    response: ['mitigations', 'd3fend'],
+  }[side];
+  const LABEL = { mitigations: 'ATT&CK mitigations', d3fend: 'D3FEND', dataComponents: 'ATT&CK data components', detectionStrategies: 'ATT&CK detection strategies', sigmaRules: 'Sigma rules' };
+  for (const k of need) if (!s[k]) out.push(LABEL[k]);
+  if (hasUnmapped && (side === 'prevention' || side === 'response')) out.push('classification of this domain’s mitigations');
+  return out;
 }

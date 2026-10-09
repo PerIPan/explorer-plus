@@ -1,4 +1,5 @@
 import { Suspense, lazy, useEffect, useRef, useState } from 'react';
+import { ErrorBoundary } from '../shared/ErrorBoundary';
 import { createPortal } from 'react-dom';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
@@ -914,9 +915,11 @@ export function TechniqueMapView({ attackId }: TechniqueMapViewProps) {
 
       {/* FAIR-CAM LENS — candidate controls by function; closed by default, lazy */}
       <MapCard label="FAIR-CAM lens" icon={IconFairCam} defaultOpen={false}>
-        <Suspense fallback={<p className="text-xs italic text-[var(--text-secondary)]">Loading FAIR-CAM coverage…</p>}>
-          <FairCamCard attackId={attackId} />
-        </Suspense>
+        <ErrorBoundary fallback={<p className="text-xs text-[var(--accent-orange)]">FAIR-CAM coverage could not be shown.</p>}>
+          <Suspense fallback={<p className="text-xs italic text-[var(--text-secondary)]">Loading FAIR-CAM coverage…</p>}>
+            <FairCamCard attackId={attackId} />
+          </Suspense>
+        </ErrorBoundary>
       </MapCard>
 
       {/* COMPLIANCE FRAMEWORKS — SCF-backed, closed by default */}

@@ -2,6 +2,8 @@ import { Component, type ReactNode } from 'react';
 
 interface Props {
   children: ReactNode;
+  /** Rendered instead of the full-height page fallback — for small, optional widgets. */
+  fallback?: ReactNode;
 }
 
 interface State {
@@ -24,6 +26,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
+      if (this.props.fallback !== undefined) return this.props.fallback;
       return (
         <div className="flex flex-col items-center justify-center h-64 gap-4 text-[var(--text-secondary)]">
           <p className="text-lg font-medium text-[var(--text-primary)]">Something went wrong</p>

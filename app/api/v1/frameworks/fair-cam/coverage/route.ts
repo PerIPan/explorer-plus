@@ -108,18 +108,29 @@ export async function GET(req: NextRequest) {
     return withCors(errorResponse(400, 'Invalid domain', 'VALIDATION_ERROR'));
   }
 
-  const [rows, mitNames, d3Names] = await Promise.all([
-    query<Raw>(COVERAGE_SQL, [domain]),
-    query<{ id: string; name: string }>('SELECT attack_id AS id, name FROM mitigations WHERE NOT is_revoked AND NOT is_deprecated'),
-    query<{ id: string; name: string | null }>(
-      `SELECT d3fend_id AS id, MIN(d3fend_name) AS name FROM defensive_mappings WHERE d3fend_id ~ '^D3-' GROUP BY d3fend_id`,
-    ),
-  ]);
+  let rows, mitNames, d3Names;
+  try {
+    [rows, mitNames, d3Names] = await Promise.all([
+      query<Raw>(COVERAGE_SQL, [domain]),
+      query<{ id: string; name: string }>('SELECT attack_id AS id, name FROM mitigations WHERE NOT is_revoked AND NOT is_deprecated'),
+      query<{ id: string; name: string | null }>(
+        `SELECT d3fend_id AS id, MIN(d3fend_name) AS name FROM defensive_mappings WHERE d3fend_id ~ '^D3-' GROUP BY d3fend_id`,
+      ),
+    ]);
+  } catch (err) {
+    // A database without one of the source tables (a fresh local seed before
+    // a sync) — say so plainly rather than a bare 500.
+    if ((err as { code?: string }).code === '42P01') {
+      return withCors(errorResponse(503, 'FAIR-CAM coverage sources are not loaded in this database', 'UNAVAILABLE'));
+    }
+    throw err;
+  }
 
   const techniques = rows.rows.map((r) => ({
     attackId: r.attackId,
     name: r.name,
-    domain: r.domain,
+    // techniques.domain is nullable in the schema; the client keys loaded sources by it.
+    domain: r.domain ?? 'unknown',
     ...classifyCoverageRow(r),
   }));
 

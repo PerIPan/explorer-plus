@@ -193,7 +193,12 @@ export function FairCamReference() {
             <ul className="mt-2 space-y-1 text-xs">
               {[...(d3.get(f.id) ?? []).map((id) => ({ id, row: D3FEND_TO_FAIR_CAM[id] })), ...(mit.get(f.id) ?? []).map((id) => ({ id, row: MITIGATION_TO_FAIR_CAM[id] }))].map(({ id, row }) => (
                 <li key={id} className="flex gap-2">
-                  <span className="font-mono text-[var(--accent-orange)] w-20 shrink-0">{id}</span>
+                  <Link
+                    href={id.startsWith('D3-') ? `/frameworks/d3fend/${id}` : `/mitigations/${id}`}
+                    className="font-mono text-[var(--accent-orange)] w-20 shrink-0 hover:underline"
+                  >
+                    {id}
+                  </Link>
                   <span className="text-[var(--text-secondary)]">{row.rationale}{row.functions.length > 1 ? ` (also: ${row.functions.filter((x) => x !== f.id).map((x) => NAME[x]).join(', ')})` : ''}</span>
                 </li>
               ))}
